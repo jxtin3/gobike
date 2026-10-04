@@ -16,6 +16,18 @@ Route::post('/mobile/register', [
     'register',
 ])->middleware('throttle:5,1');
 
+//goggle
+Route::post('/mobile/google', [
+    MobileAuthController::class,
+    'google',
+])->middleware('throttle:10,1');
+
+Route::get('/mobile/me', [
+    MobileAuthController::class,
+    'me',
+])->middleware('auth:sanctum');
+
+//
 Route::post('/mobile/logout', [
     MobileAuthController::class,
     'logout',

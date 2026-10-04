@@ -41,4 +41,8 @@ return [
         'webhook_secret' => env('PAYMONGO_WEBHOOK_SECRET'),
     ],
 
+    'google' => [
+       'client_id' => env('GOOGLE_WEB_CLIENT_ID'),
+   ],
+
 ];
