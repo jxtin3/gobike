@@ -106,10 +106,19 @@ Route::middleware([EnsureAdmin::class])->group(function () {
     Route::resource('/admin/operations/news', AdminNewsController::class)->names('admin.operations.news');
     Route::resource('/admin/operations/pictures', PictureController::class)->names('admin.operations.pictures');
     Route::resource('/admin/operations/users', AdminUserController::class)->names('admin.operations.users');
+
+    Route::patch('/admin/operations/users/{user}/approve', [AdminUserController::class, 'approve'])
+        ->name('admin.operations.users.approve');
+
+    Route::delete('/admin/operations/users/{user}/decline', [AdminUserController::class, 'decline'])
+        ->name('admin.operations.users.decline');
+
     Route::get('/admin/operations/messages', [\App\Http\Controllers\Admin\ContactMessageController::class, 'index'])
-    ->name('admin.operations.messages.index');
+        ->name('admin.operations.messages.index');
+
     Route::patch('/admin/operations/messages/{message}/read', [\App\Http\Controllers\Admin\ContactMessageController::class, 'markRead'])
-    ->name('admin.operations.messages.read');
+        ->name('admin.operations.messages.read');
+
     Route::delete('/admin/operations/messages/{message}', [\App\Http\Controllers\Admin\ContactMessageController::class, 'destroy'])
-    ->name('admin.operations.messages.destroy');
+        ->name('admin.operations.messages.destroy');
 });

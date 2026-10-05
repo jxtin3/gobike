@@ -1,17 +1,40 @@
 @extends('admin.operations.layout')
-@section('title','Operations')
-@section('heading','Operations')
+@section('title', 'Operations')
+@section('heading', 'Operations')
+@section('subheading', 'Manage website content, accounts and inquiries in one place.')
+
 @section('content')
-<div class="stat-grid">
-    <div class="stat-card"><div><div class="label">Total News</div><div class="value">{{ $newsCount }}</div></div></div>
-    <div class="stat-card"><div><div class="label">Published News</div><div class="value">{{ $publishedNewsCount }}</div></div></div>
-    <div class="stat-card"><div><div class="label">Total Pictures</div><div class="value">{{ $pictureCount }}</div></div></div>
-    <div class="stat-card"><div><div class="label">Active Users</div><div class="value">{{ $activeUserCount }} / {{ $userCount }}</div></div></div>
-</div>
-<div class="management-grid">
-    <a class="management-card" href="{{ route('admin.operations.news.index') }}"><span>NEWS</span><h2>Manage OneGoBike news</h2><b>Open management →</b></a>
-    <a class="management-card" href="{{ route('admin.operations.pictures.index') }}"><span>PICTURES</span><h2>Manage gallery pictures</h2><b>Open management →</b></a>
-    <a class="management-card" href="{{ route('admin.operations.users.index') }}"><span>USERS</span><h2>Manage system users</h2><b>Open management →</b></a>
-    <a class="management-card" href="{{ route('admin.operations.messages.index') }}"><span>MESSAGES</span><h2>Read contact messages</h2><b>Open inbox →</b></a>
+@if ($pendingCount > 0)
+    <a class="callout" href="{{ route('admin.operations.users.index', ['filter' => 'pending']) }}">
+        <x-admin.icon name="user-check" />
+        <div>
+            <b>{{ $pendingCount }} GoBiker {{ \Illuminate\Support\Str::plural('sign-up', $pendingCount) }} waiting for approval</b>
+            <span>Review them so they can start their ronda in the mobile app.</span>
+        </div>
+        <span class="btn btn-secondary btn-sm">Review</span>
+    </a>
+@endif
+
+<div class="link-grid">
+    <a class="module" href="{{ route('admin.operations.news.index') }}">
+        <div class="module-top"><span class="stat-icon"><x-admin.icon name="file-text" /></span><h2>News</h2><x-admin.icon class="i chev" name="chevron-right" /></div>
+        <div class="module-num">{{ $newsCount }}<small>{{ $publishedNewsCount }} published</small></div>
+        <p>Write and publish updates for the public website.</p>
+    </a>
+    <a class="module" href="{{ route('admin.operations.pictures.index') }}">
+        <div class="module-top"><span class="stat-icon"><x-admin.icon name="image" /></span><h2>Pictures</h2><x-admin.icon class="i chev" name="chevron-right" /></div>
+        <div class="module-num">{{ $pictureCount }}<small>in the gallery</small></div>
+        <p>Upload and organize photos shown in the public gallery.</p>
+    </a>
+    <a class="module" href="{{ route('admin.operations.users.index') }}">
+        <div class="module-top"><span class="stat-icon"><x-admin.icon name="users" /></span><h2>Users</h2><x-admin.icon class="i chev" name="chevron-right" /></div>
+        <div class="module-num">{{ $userCount }}<small>{{ $pendingCount }} pending</small></div>
+        <p>Manage accounts and approve new GoBikers.</p>
+    </a>
+    <a class="module" href="{{ route('admin.operations.messages.index') }}">
+        <div class="module-top"><span class="stat-icon"><x-admin.icon name="mail" /></span><h2>Messages</h2><x-admin.icon class="i chev" name="chevron-right" /></div>
+        <div class="module-num">{{ $messageCount }}<small>{{ $unreadCount }} unread</small></div>
+        <p>Read and reply to messages from the contact form.</p>
+    </a>
 </div>
 @endsection
