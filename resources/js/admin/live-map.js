@@ -15,7 +15,7 @@
         note: $('map-note'), chip: $('live-chip'), updated: $('last-refresh'),
     };
 
-    const map = L.map(mapEl).setView([16.0435, 120.3334], 12);
+    const map = L.map(mapEl).setView([15.9528, 120.2155], 13);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; OpenStreetMap contributors',
         maxZoom: 19,
@@ -24,7 +24,6 @@
     const markers = new Map();
     let riders = [];
     let loaded = false;
-    let didFit = false;
     let timer = null;
     let controller = null;
     let noteTimer = null;
@@ -141,12 +140,7 @@
         });
 
         renderList(visible);
-        setOverlay(loaded && riders.length === 0 ? 'empty' : 'none');
-
-        if (!didFit && visible.some(hasPos)) {
-            fit();
-            didFit = true;
-        }
+        if (loaded) setOverlay('none');
     }
 
     function fit() {
@@ -217,6 +211,23 @@
         if (window.innerWidth < 1180) mapEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
     });
     document.addEventListener('visibilitychange', () => { if (!document.hidden) { load(); schedule(); } });
+
+    const clock = $('live-clock');
+    const tick = () => {
+        if (!clock) return;
+        const now = new Date();
+        clock.dateTime = now.toISOString();
+        clock.textContent = now.toLocaleString([], {
+            weekday: 'short',
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+        });
+    };
+    tick();
+    setInterval(tick, 1000);
 
     setOverlay('loading');
     load().then(schedule);

@@ -13,7 +13,6 @@
         'pending' => 'Pending approval',
         'GoBiker' => 'GoBikers',
         'User' => 'Users',
-        'Admin' => 'Admins',
     ];
     $hasQuery = filled(request('search')) || $filter !== 'all';
 @endphp

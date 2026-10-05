@@ -3,7 +3,7 @@
 
     if (!mapElement || typeof L === 'undefined') return;
 
-    const map = L.map(mapElement).setView([16.0435, 120.3334], 12);
+    const map = L.map(mapElement).setView([15.9528, 120.2155], 13);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; OpenStreetMap contributors',
         maxZoom: 19,
@@ -12,7 +12,6 @@
     const markers = new Map();
     const colors = { active: '#22c55e', responding: '#f97316', emergency: '#ef4444', offline: '#94a3b8' };
     let latestLocations = [];
-    let hasFitMap = false;
 
     const escapeHtml = (value) => String(value ?? '').replace(/[&<>'"]/g, (character) => ({
         '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#039;', '"': '&quot;'
@@ -84,12 +83,6 @@
         document.getElementById('responding-count').textContent = counts.responding;
         document.getElementById('offline-count').textContent = counts.offline;
         document.getElementById('last-refresh').textContent = `Updated ${new Date().toLocaleTimeString()}`;
-
-        if (!hasFitMap && visible.length) {
-            const points = visible.filter((item) => item.latitude !== null).map((item) => [item.latitude, item.longitude]);
-            if (points.length) map.fitBounds(points, { padding: [30, 30], maxZoom: 15 });
-            hasFitMap = true;
-        }
     }
 
     function loadLocations() {

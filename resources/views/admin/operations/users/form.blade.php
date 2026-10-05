@@ -43,7 +43,7 @@
                     <option value="{{ $r }}" @selected($role === $r)>{{ $r }}</option>
                 @endforeach
             </select>
-            <span class="hint">Admins sign in to this panel. GoBikers and Users sign in to the mobile app.</span>
+            <span class="hint">GoBikers and Users sign in to the mobile app. Admin access stays on the sidebar profile.</span>
         </div>
     </fieldset>
 

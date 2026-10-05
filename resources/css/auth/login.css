@@ -1,9 +1,276 @@
-/* Login — single load-in moment for the credentials panel */
+/* Admin login — split layout */
+.login-body {
+    margin: 0;
+    min-height: 100vh;
+    overflow: hidden;
+    background: #faf8f5;
+    -webkit-font-smoothing: antialiased;
+}
+
+.login-split {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    min-height: 100vh;
+    overflow: hidden;
+}
+
+.login-split-left,
+.login-split-right {
+    min-height: 100vh;
+    transition: transform 0.75s cubic-bezier(0.65, 0, 0.35, 1);
+    will-change: transform;
+}
+
+.login-split-left {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: clamp(2rem, 5vw, 3.5rem);
+    color: #fff;
+    background: #132d6b;
+    background: radial-gradient(120% 140% at 0% 0%, #1a3d8a 0%, #132d6b 45%, #0e2255 100%);
+}
+
+.login-brand-logo {
+    width: auto;
+    height: 56px;
+    filter: brightness(0) invert(1);
+    opacity: 0.95;
+}
+
+.login-brand-kicker {
+    margin: 1rem 0 0;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    opacity: 0.85;
+}
+
+.login-brand-copy h1 {
+    margin: 0 0 1rem;
+    font-family: 'Oswald', ui-sans-serif, system-ui, sans-serif;
+    font-size: clamp(2rem, 4vw, 2.75rem);
+    font-weight: 600;
+    line-height: 1.1;
+    letter-spacing: 0.01em;
+}
+
+.login-brand-copy p {
+    margin: 0;
+    max-width: 28rem;
+    font-size: 1rem;
+    line-height: 1.65;
+    color: rgba(255, 255, 255, 0.82);
+}
+
+.login-brand-foot {
+    margin: 0;
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.55);
+}
+
+.login-split-right {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: clamp(1.5rem, 4vw, 3rem);
+    background: #faf8f5;
+}
+
+.login-form-wrap {
+    width: 100%;
+    max-width: 400px;
+}
+
+.login-form-head {
+    margin-bottom: 2rem;
+}
+
+.login-form-logo {
+    width: 44px;
+    height: 44px;
+    margin-bottom: 1.25rem;
+    object-fit: contain;
+}
+
+.login-form-head h2 {
+    margin: 0 0 0.35rem;
+    font-family: 'Oswald', ui-sans-serif, system-ui, sans-serif;
+    font-size: 1.75rem;
+    font-weight: 600;
+    color: #0d1b2a;
+}
+
+.login-form-head p {
+    margin: 0;
+    font-size: 0.95rem;
+    color: #64748b;
+}
+
+.login-error {
+    margin-bottom: 1.25rem;
+    padding: 0.75rem 1rem;
+    border: 1px solid #fecaca;
+    border-radius: 8px;
+    background: #fef2f2;
+    font-size: 0.875rem;
+    color: #b42318;
+}
+
+.login-error.hidden {
+    display: none;
+}
+
+.login-form {
+    display: grid;
+    gap: 1.25rem;
+}
+
+.login-field label {
+    display: block;
+    margin-bottom: 0.4rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #0d1b2a;
+}
+
+.login-field input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 0.65rem 0;
+    border: 0;
+    border-bottom: 1px solid #cbd5e1;
+    border-radius: 0;
+    background: transparent;
+    font-size: 0.95rem;
+    color: #0d1b2a;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.login-field input::placeholder {
+    color: #94a3b8;
+}
+
+.login-field input:focus {
+    border-bottom-color: #132d6b;
+}
+
+.login-password {
+    position: relative;
+}
+
+.login-password input {
+    padding-right: 2.5rem;
+}
+
+.login-password-toggle {
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    padding: 0.25rem;
+    border: 0;
+    background: transparent;
+    color: #94a3b8;
+    cursor: pointer;
+}
+
+.login-password-toggle:hover {
+    color: #132d6b;
+}
+
+.login-password-toggle svg {
+    width: 1.25rem;
+    height: 1.25rem;
+}
+
+.login-remember {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    color: #64748b;
+    cursor: pointer;
+}
+
+.login-remember input {
+    width: 1rem;
+    height: 1rem;
+    accent-color: #132d6b;
+}
+
+.login-submit {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    width: 100%;
+    margin-top: 0.25rem;
+    padding: 0.85rem 1rem;
+    border: 0;
+    border-radius: 8px;
+    background: #132d6b;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #fff;
+    cursor: pointer;
+    transition: background 0.2s, opacity 0.2s;
+}
+
+.login-submit:hover:not(:disabled) {
+    background: #0e2255;
+}
+
+.login-submit:disabled {
+    opacity: 0.75;
+    cursor: not-allowed;
+}
+
+.login-spinner {
+    width: 1rem;
+    height: 1rem;
+    animation: login-spin 0.7s linear infinite;
+}
+
+.login-spinner.hidden {
+    display: none;
+}
+
+@keyframes login-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.login-footnote {
+    margin: 2rem 0 0;
+    font-size: 0.75rem;
+    color: #94a3b8;
+}
+
+/* Success exit — panels split apart */
+.login-split.is-exiting .login-split-left {
+    transform: translateX(-100%);
+}
+
+.login-split.is-exiting .login-split-right {
+    transform: translateX(100%);
+}
+
+.login-split.is-exiting {
+    pointer-events: none;
+}
+
 @keyframes login-panel-enter {
     from {
         opacity: 0;
-        transform: translateY(10px);
+        transform: translateY(12px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -11,11 +278,51 @@
 }
 
 .login-panel-enter {
-    animation: login-panel-enter .6s cubic-bezier(.16, 1, .3, 1) both;
+    animation: login-panel-enter 0.55s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@media (max-width: 900px) {
+    .login-split {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto 1fr;
+    }
+
+    .login-split-left {
+        min-height: auto;
+        padding: 2rem 1.5rem;
+        gap: 1.5rem;
+    }
+
+    .login-brand-copy h1 {
+        font-size: 1.75rem;
+    }
+
+    .login-brand-foot {
+        display: none;
+    }
+
+    .login-split-right {
+        min-height: auto;
+        align-items: flex-start;
+        padding-top: 2rem;
+    }
+
+    .login-split.is-exiting .login-split-left {
+        transform: translateY(-100%);
+    }
+
+    .login-split.is-exiting .login-split-right {
+        transform: translateY(100%);
+    }
 }
 
 @media (prefers-reduced-motion: reduce) {
     .login-panel-enter {
         animation: none;
+    }
+
+    .login-split-left,
+    .login-split-right {
+        transition: none;
     }
 }

@@ -47,13 +47,13 @@
     </nav>
 
     <div class="side-foot">
-        <div class="profile">
+        <a href="{{ route('admin.profile.show') }}" class="profile" aria-current="{{ $current('admin.profile.*') }}">
             <span class="avatar" aria-hidden="true">{{ $initials }}</span>
             <div class="profile-meta">
                 <b>{{ $me->name }}</b>
                 <span>{{ $me->email }}</span>
             </div>
-        </div>
+        </a>
         <form method="POST" action="{{ route('logout') }}">
             @csrf
             <button type="submit" class="side-logout"><x-admin.icon name="log-out" /> Log out</button>

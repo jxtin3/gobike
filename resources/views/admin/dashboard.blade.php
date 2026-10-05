@@ -3,6 +3,7 @@
 @section('heading', 'Live map')
 @section('subheading', 'See GoBikers on ronda as they move through their barangays.')
 @section('actions')
+    <time class="live-clock" id="live-clock" datetime="" aria-live="polite"></time>
     <span class="live-chip" id="live-chip" data-state="connecting" role="status">
         <i class="live-dot"></i><span id="last-refresh">Connecting…</span>
     </span>

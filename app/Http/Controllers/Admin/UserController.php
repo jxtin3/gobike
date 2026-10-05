@@ -11,7 +11,7 @@ use Illuminate\Validation\Rule;
 
 class UserController extends Controller
 {
-    private array $roles = ['Admin', 'GoBiker', 'User'];
+    private array $roles = ['GoBiker', 'User'];
 
     public function index(Request $request)
     {
@@ -20,6 +20,8 @@ class UserController extends Controller
             : 'all';
 
         $users = User::query()
+            ->where('role', '!=', 'Admin')
+            ->where('is_admin', false)
             ->when($request->search, fn ($q, $v) => $q->where(fn ($q) => $q->where('name', 'like', "%{$v}%")->orWhere('email', 'like', "%{$v}%")))
             ->when($filter === 'pending', fn ($q) => $q->pendingApproval())
             ->when(in_array($filter, $this->roles, true), fn ($q) => $q->where('role', $filter))
@@ -28,12 +30,16 @@ class UserController extends Controller
             ->paginate(10)
             ->withQueryString();
 
-        $byRole = User::query()->selectRaw('role, count(*) as total')->groupBy('role')->pluck('total', 'role');
+        $byRole = User::query()
+            ->where('role', '!=', 'Admin')
+            ->where('is_admin', false)
+            ->selectRaw('role, count(*) as total')
+            ->groupBy('role')
+            ->pluck('total', 'role');
 
         $counts = [
             'all' => $byRole->sum(),
             'pending' => User::pendingApproval()->count(),
-            'Admin' => $byRole['Admin'] ?? 0,
             'GoBiker' => $byRole['GoBiker'] ?? 0,
             'User' => $byRole['User'] ?? 0,
         ];
@@ -56,7 +62,7 @@ class UserController extends Controller
         ]);
 
         $data['password'] = Hash::make($data['password']);
-        $data['is_admin'] = $data['role'] === 'Admin';
+        $data['is_admin'] = false;
         $data['status'] = 'Active'; // accounts created by an admin no need for approval
         User::create($data);
 
@@ -65,26 +71,37 @@ class UserController extends Controller
 
     public function show(User $user)
     {
+        if ($user->is_admin || $user->role === 'Admin') {
+            return redirect()->route('admin.operations.users.index')
+                ->with('error', 'Admin accounts are managed from the sidebar profile.');
+        }
+
         return view('admin.operations.users.show', compact('user'));
     }
 
     public function edit(User $user)
     {
+        if ($user->is_admin || $user->role === 'Admin') {
+            return redirect()->route('admin.operations.users.index')
+                ->with('error', 'Admin accounts are managed from the sidebar profile.');
+        }
+
         return view('admin.operations.users.edit', ['user' => $user, 'roles' => $this->roles]);
     }
 
     public function update(Request $request, User $user)
     {
+        if ($user->is_admin || $user->role === 'Admin') {
+            return redirect()->route('admin.operations.users.index')
+                ->with('error', 'Admin accounts are managed from the sidebar profile.');
+        }
+
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', Rule::unique('users')->ignore($user)],
             'password' => ['nullable', 'confirmed', 'min:8'],
             'role' => ['required', Rule::in($this->roles)],
         ]);
-
-        if ($user->is($request->user()) && $data['role'] !== 'Admin') {
-            return back()->withInput()->with('error', 'You cannot remove your own admin access.');
-        }
 
         if (blank($data['password'] ?? null)) {
             unset($data['password']);
@@ -97,7 +114,7 @@ class UserController extends Controller
             $data['status'] = 'Active';
         }
 
-        $data['is_admin'] = $data['role'] === 'Admin';
+        $data['is_admin'] = false;
         $user->update($data);
 
         return redirect()->route('admin.operations.users.index')->with('success', 'User successfully updated.');
@@ -105,8 +122,8 @@ class UserController extends Controller
 
     public function destroy(User $user)
     {
-        if ($user->is(auth()->user())) {
-            return back()->with('error', 'You cannot delete your own account.');
+        if ($user->is(auth()->user()) || $user->is_admin || $user->role === 'Admin') {
+            return back()->with('error', 'Admin accounts cannot be deleted from user management.');
         }
 
         $user->delete();
