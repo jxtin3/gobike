@@ -1,12 +1,20 @@
-/* Admin login — split layout */
+/* ────────────────────────────────────────────────
+   Admin login — 2-column split layout
+   Left  : solid web blue (#2563EB) with branding
+   Right : clean white form panel
+   Exit  : left slides out left, right slides out right
+──────────────────────────────────────────────── */
+
+/* ── Resets ── */
 .login-body {
     margin: 0;
     min-height: 100vh;
     overflow: hidden;
-    background: #faf8f5;
+    background: #fff;
     -webkit-font-smoothing: antialiased;
 }
 
+/* ── Split grid ── */
 .login-split {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -21,71 +29,178 @@
     will-change: transform;
 }
 
+/* ────────────────────────────────────────────────
+   LEFT PANEL — web blue
+──────────────────────────────────────────────── */
 .login-split-left {
     position: relative;
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
+    justify-content: flex-start;
+    gap: 0;
     padding: clamp(2rem, 5vw, 3.5rem);
     color: #fff;
-    background: #132d6b;
-    background: radial-gradient(120% 140% at 0% 0%, #1a3d8a 0%, #132d6b 45%, #0e2255 100%);
+
+    /* Web blue — solid + very subtle inner radial for depth */
+    background: #2563EB;
+    background: radial-gradient(
+        130% 160% at 0% 0%,
+        #3b82f6 0%,
+        #2563EB 40%,
+        #1d4ed8 100%
+    );
+
+    /* Faint diagonal grid lines (decorative) */
+    background-image:
+        radial-gradient(
+            130% 160% at 0% 0%,
+            #3b82f6 0%,
+            #2563EB 40%,
+            #1d4ed8 100%
+        ),
+        repeating-linear-gradient(
+            -45deg,
+            transparent,
+            transparent 48px,
+            rgba(255,255,255,0.04) 48px,
+            rgba(255,255,255,0.04) 49px
+        );
+}
+
+.login-left-top {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
 }
 
 .login-brand-logo {
     width: auto;
-    height: 56px;
+    height: 52px;
     filter: brightness(0) invert(1);
-    opacity: 0.95;
+    opacity: 0.93;
 }
 
 .login-brand-kicker {
-    margin: 1rem 0 0;
-    font-size: 0.75rem;
+    margin: 0.75rem 0 0;
+    font-size: 0.72rem;
     font-weight: 700;
-    letter-spacing: 0.14em;
+    letter-spacing: 0.15em;
     text-transform: uppercase;
-    opacity: 0.85;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.login-brand-copy {
+    margin-top: 0.5rem;
 }
 
 .login-brand-copy h1 {
-    margin: 0 0 1rem;
+    margin: 0 0 0.6rem;
     font-family: 'Oswald', ui-sans-serif, system-ui, sans-serif;
-    font-size: clamp(2rem, 4vw, 2.75rem);
+    font-size: clamp(1.4rem, 2.5vw, 1.9rem);
     font-weight: 600;
-    line-height: 1.1;
+    line-height: 1.15;
     letter-spacing: 0.01em;
 }
 
 .login-brand-copy p {
     margin: 0;
-    max-width: 28rem;
-    font-size: 1rem;
+    max-width: 26rem;
+    font-size: 0.875rem;
     line-height: 1.65;
-    color: rgba(255, 255, 255, 0.82);
+    color: rgba(255, 255, 255, 0.78);
 }
 
 .login-brand-foot {
-    margin: 0;
-    font-size: 0.8rem;
-    color: rgba(255, 255, 255, 0.55);
+    margin: auto 0 0;
+    font-size: 0.78rem;
+    color: rgba(255, 255, 255, 0.50);
 }
 
+/* ────────────────────────────────────────────────
+   RIGHT PANEL — white form
+──────────────────────────────────────────────── */
 .login-split-right {
     display: flex;
+    flex-direction: column;
     align-items: center;
-    justify-content: center;
-    padding: clamp(1.5rem, 4vw, 3rem);
-    background: #faf8f5;
+    padding: 0;
+    background: #f1f5f9;
 }
 
-.login-form-wrap {
+/* ── Right-panel brand strip (top) ── */
+.login-right-brand {
     width: 100%;
-    max-width: 400px;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 1.1rem 2rem;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+    background: #ffffff;
+}
+
+.login-right-brand-logo {
+    width: 26px;
+    height: 26px;
+    object-fit: contain;
+    flex-shrink: 0;
+}
+
+.login-right-brand-name {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #0d1b2a;
+    letter-spacing: 0.01em;
+}
+
+.login-right-brand-sep {
+    font-size: 0.8rem;
+    color: #94a3b8;
+    margin: 0 0.1rem;
+}
+
+.login-right-brand-desc {
+    font-size: 0.78rem;
+    color: #64748b;
+}
+
+/* ── Form wrap — floating card centered in remaining space ── */
+.login-form-wrap {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    width: 100%;
+    max-width: 460px;
+    margin: 0 auto;
+    padding: clamp(1.5rem, 4vw, 2.5rem) clamp(1.25rem, 4vw, 2.25rem);
+}
+
+/* ── Floating card ── */
+.login-card {
+    background: #ffffff;
+    border: 1px solid rgba(0, 0, 0, 0.07);
+    border-radius: 16px;
+    padding: 2.25rem 2rem;
+    box-shadow:
+        0 2px 4px rgba(0, 0, 0, 0.04),
+        0 8px 24px rgba(0, 0, 0, 0.08),
+        0 28px 60px rgba(37, 99, 235, 0.08);
+    animation: login-card-float 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes login-card-float {
+    from {
+        opacity: 0;
+        transform: translateY(18px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .login-form-head {
-    margin-bottom: 2rem;
+    margin-bottom: 1.75rem;
 }
 
 .login-form-logo {
@@ -96,19 +211,21 @@
 }
 
 .login-form-head h2 {
-    margin: 0 0 0.35rem;
+    margin: 0 0 0.4rem;
     font-family: 'Oswald', ui-sans-serif, system-ui, sans-serif;
-    font-size: 1.75rem;
+    font-size: 1.85rem;
     font-weight: 600;
     color: #0d1b2a;
 }
 
 .login-form-head p {
     margin: 0;
-    font-size: 0.95rem;
+    font-size: 0.9rem;
+    line-height: 1.6;
     color: #64748b;
 }
 
+/* ── Error banner ── */
 .login-error {
     margin-bottom: 1.25rem;
     padding: 0.75rem 1rem;
@@ -119,15 +236,15 @@
     color: #b42318;
 }
 
-.login-error.hidden {
-    display: none;
-}
+.login-error.hidden { display: none; }
 
+/* ── Form layout ── */
 .login-form {
     display: grid;
-    gap: 1.25rem;
+    gap: 1.35rem;
 }
 
+/* ── Fields (underline style, unchanged) ── */
 .login-field label {
     display: block;
     margin-bottom: 0.4rem;
@@ -141,7 +258,7 @@
     box-sizing: border-box;
     padding: 0.65rem 0;
     border: 0;
-    border-bottom: 1px solid #cbd5e1;
+    border-bottom: 1.5px solid #cbd5e1;
     border-radius: 0;
     background: transparent;
     font-size: 0.95rem;
@@ -150,21 +267,15 @@
     transition: border-color 0.2s;
 }
 
-.login-field input::placeholder {
-    color: #94a3b8;
-}
+.login-field input::placeholder { color: #94a3b8; }
 
 .login-field input:focus {
-    border-bottom-color: #132d6b;
+    border-bottom-color: #2563EB;   /* same web blue */
 }
 
-.login-password {
-    position: relative;
-}
-
-.login-password input {
-    padding-right: 2.5rem;
-}
+/* ── Password toggle ── */
+.login-password { position: relative; }
+.login-password input { padding-right: 2.5rem; }
 
 .login-password-toggle {
     position: absolute;
@@ -177,17 +288,12 @@
     background: transparent;
     color: #94a3b8;
     cursor: pointer;
+    transition: color 0.15s;
 }
+.login-password-toggle:hover { color: #2563EB; }
+.login-password-toggle svg { width: 1.2rem; height: 1.2rem; }
 
-.login-password-toggle:hover {
-    color: #132d6b;
-}
-
-.login-password-toggle svg {
-    width: 1.25rem;
-    height: 1.25rem;
-}
-
+/* ── Remember me ── */
 .login-remember {
     display: flex;
     align-items: center;
@@ -196,13 +302,13 @@
     color: #64748b;
     cursor: pointer;
 }
-
 .login-remember input {
     width: 1rem;
     height: 1rem;
-    accent-color: #132d6b;
+    accent-color: #2563EB;
 }
 
+/* ── Submit button — same web blue as left panel ── */
 .login-submit {
     display: flex;
     align-items: center;
@@ -210,49 +316,58 @@
     gap: 0.5rem;
     width: 100%;
     margin-top: 0.25rem;
-    padding: 0.85rem 1rem;
+    padding: 0.875rem 1rem;
     border: 0;
     border-radius: 8px;
-    background: #132d6b;
+    background: #2563EB;
     font-size: 0.95rem;
     font-weight: 600;
     color: #fff;
     cursor: pointer;
-    transition: background 0.2s, opacity 0.2s;
+    transition: background 0.2s, opacity 0.2s, transform 0.15s;
 }
 
 .login-submit:hover:not(:disabled) {
-    background: #0e2255;
+    background: #1d4ed8;
+    transform: translateY(-1px);
+}
+
+.login-submit:active:not(:disabled) {
+    transform: translateY(0);
 }
 
 .login-submit:disabled {
-    opacity: 0.75;
+    opacity: 0.72;
     cursor: not-allowed;
 }
 
+/* ── Spinner ── */
 .login-spinner {
     width: 1rem;
     height: 1rem;
     animation: login-spin 0.7s linear infinite;
 }
-
-.login-spinner.hidden {
-    display: none;
-}
+.login-spinner.hidden { display: none; }
 
 @keyframes login-spin {
-    to {
-        transform: rotate(360deg);
-    }
+    to { transform: rotate(360deg); }
 }
 
+/* ── Footnote ── */
 .login-footnote {
     margin: 2rem 0 0;
     font-size: 0.75rem;
     color: #94a3b8;
 }
 
-/* Success exit — panels split apart */
+/* ────────────────────────────────────────────────
+   EXIT ANIMATION — panels split apart smoothly
+   Left slides to the left, right slides to the right
+──────────────────────────────────────────────── */
+.login-split.is-exiting {
+    pointer-events: none;
+}
+
 .login-split.is-exiting .login-split-left {
     transform: translateX(-100%);
 }
@@ -261,26 +376,9 @@
     transform: translateX(100%);
 }
 
-.login-split.is-exiting {
-    pointer-events: none;
-}
-
-@keyframes login-panel-enter {
-    from {
-        opacity: 0;
-        transform: translateY(12px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.login-panel-enter {
-    animation: login-panel-enter 0.55s cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-
+/* ────────────────────────────────────────────────
+   RESPONSIVE — stack vertically below 900px
+──────────────────────────────────────────────── */
 @media (max-width: 900px) {
     .login-split {
         grid-template-columns: 1fr;
@@ -293,13 +391,8 @@
         gap: 1.5rem;
     }
 
-    .login-brand-copy h1 {
-        font-size: 1.75rem;
-    }
-
-    .login-brand-foot {
-        display: none;
-    }
+    .login-brand-copy h1 { font-size: 1.75rem; }
+    .login-brand-foot { display: none; }
 
     .login-split-right {
         min-height: auto;
@@ -307,20 +400,17 @@
         padding-top: 2rem;
     }
 
+    /* On mobile, slide up/down instead */
     .login-split.is-exiting .login-split-left {
         transform: translateY(-100%);
     }
-
     .login-split.is-exiting .login-split-right {
         transform: translateY(100%);
     }
 }
 
+/* ── Respect reduced-motion preference ── */
 @media (prefers-reduced-motion: reduce) {
-    .login-panel-enter {
-        animation: none;
-    }
-
     .login-split-left,
     .login-split-right {
         transition: none;

@@ -2256,6 +2256,72 @@ a.pager-btn:hover {
     padding-top: .5rem;
 }
 
+/* ─────────────────────────────────────────────────────────────
+   Dashboard entrance animations
+   Sidebar slides from left, content fades up, cards stagger in
+───────────────────────────────────────────────────────────── */
+
+@keyframes adm-fade-up {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes adm-fade-down {
+    from { opacity: 0; transform: translateY(-10px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes adm-slide-left {
+    from { opacity: 0; transform: translateX(-24px); }
+    to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes adm-fade-in {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+/* -- Sidebar -- */
+.adm-side {
+    animation: adm-slide-left 0.9s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* -- Main body wrapper -- */
+.adm-body {
+    animation: adm-fade-in 0.7s ease both;
+}
+
+/* -- Page header (h1, sub, actions) -- */
+.page-head {
+    animation: adm-fade-down 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.15s both;
+}
+
+/* -- Stat cards — stagger each one -- */
+.stat-card:nth-child(1) { animation: adm-fade-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.25s both; }
+.stat-card:nth-child(2) { animation: adm-fade-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.35s both; }
+.stat-card:nth-child(3) { animation: adm-fade-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.45s both; }
+.stat-card:nth-child(4) { animation: adm-fade-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.55s both; }
+.stat-card:nth-child(5) { animation: adm-fade-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.65s both; }
+
+/* -- Map card & rider panel -- */
+.map-card {
+    animation: adm-fade-up 0.85s cubic-bezier(0.16, 1, 0.3, 1) 0.5s both;
+}
+
+.rider-panel {
+    animation: adm-fade-up 0.85s cubic-bezier(0.16, 1, 0.3, 1) 0.65s both;
+}
+
+/* -- Generic cards on other admin pages -- */
+.card:not(.map-card):not(.rider-panel) {
+    animation: adm-fade-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.3s both;
+}
+
+/* -- Alert banners -- */
+.alert {
+    animation: adm-fade-down 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both;
+}
+
 @media (prefers-reduced-motion: reduce) {
 
     *,
@@ -2265,4 +2331,4 @@ a.pager-btn:hover {
         animation-iteration-count: 1 !important;
         transition-duration: .01ms !important;
     }
-}
+}
