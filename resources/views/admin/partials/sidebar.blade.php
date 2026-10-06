@@ -40,6 +40,10 @@
             @endif
         </a>
 
+        <a class="side-link" href="{{ route('admin.operations.patients.index') }}" aria-current="{{ $current('admin.operations.patients.*') }}">
+            <x-admin.icon name="activity" /><span>Patients</span>
+        </a>
+
         <p class="side-group">Insights</p>
         <span class="side-link is-disabled" aria-disabled="true">
             <x-admin.icon name="bar-chart" /><span>Reports</span><span class="badge badge-soft">Soon</span>

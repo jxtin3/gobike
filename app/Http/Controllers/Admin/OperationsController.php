@@ -7,6 +7,8 @@ use App\Models\ContactMessage;
 use App\Models\News;
 use App\Models\Picture;
 use App\Models\User;
+use App\Models\Patient;
+
 
 class OperationsController extends Controller
 {
@@ -20,6 +22,7 @@ class OperationsController extends Controller
             'pendingCount' => User::pendingApproval()->count(),
             'messageCount' => ContactMessage::count(),
             'unreadCount' => ContactMessage::where('is_read', false)->count(),
+            'patientCount' => Patient::count(),
         ]);
     }
 }

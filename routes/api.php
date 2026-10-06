@@ -4,6 +4,8 @@ use App\Http\Controllers\Admin\LocationController;
 use App\Http\Middleware\EnsureAdmin;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\MobileAuthController;
+use App\Http\Controllers\Api\PatientController;
+
 
 // Go Biker mobile authentication
 Route::post('/mobile/login', [
@@ -56,4 +58,9 @@ Route::middleware(['auth:sanctum', 'gobiker'])->prefix('gobiker')->group(functio
         LocationController::class,
         'stopActiveSession',
     ])->name('api.gobiker.active.stop');
+
+    Route::get('/patients', [PatientController::class, 'index'])->name('api.gobiker.patients.index');
+    Route::post('/patients', [PatientController::class, 'store'])->name('api.gobiker.patients.store');
+    Route::put('/patients/{patient}', [PatientController::class, 'update'])->name('api.gobiker.patients.update');
+    Route::delete('/patients/{patient}', [PatientController::class, 'destroy'])->name('api.gobiker.patients.destroy');
 });

@@ -16,6 +16,8 @@ use App\Http\Controllers\Webhook\PayMongoWebhookController;
 use App\Http\Controllers\Webhook\PayPalWebhookController;
 use App\Http\Middleware\EnsureAdmin;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Admin\PatientController as AdminPatientController;
+
 // pages
 Route::get('/', [HomeController::class, 'index']);
 Route::get('/news', [NewsController::class, 'index']);
@@ -111,12 +113,14 @@ Route::middleware([EnsureAdmin::class])->group(function () {
     Route::resource('/admin/operations/pictures', PictureController::class)->names('admin.operations.pictures');
     Route::resource('/admin/operations/users', AdminUserController::class)->names('admin.operations.users');
 
+//operation
     Route::patch('/admin/operations/users/{user}/approve', [AdminUserController::class, 'approve'])
         ->name('admin.operations.users.approve');
 
     Route::delete('/admin/operations/users/{user}/decline', [AdminUserController::class, 'decline'])
         ->name('admin.operations.users.decline');
 
+//messages in admin
     Route::get('/admin/operations/messages', [\App\Http\Controllers\Admin\ContactMessageController::class, 'index'])
         ->name('admin.operations.messages.index');
 
@@ -125,4 +129,11 @@ Route::middleware([EnsureAdmin::class])->group(function () {
 
     Route::delete('/admin/operations/messages/{message}', [\App\Http\Controllers\Admin\ContactMessageController::class, 'destroy'])
         ->name('admin.operations.messages.destroy');
+
+//patient
+    Route::get('/admin/operations/patients', [AdminPatientController::class, 'index'])
+        ->name('admin.operations.patients.index');
+
+    Route::get('/admin/operations/patients/{patient}', [AdminPatientController::class, 'show'])
+        ->name('admin.operations.patients.show');
 });
