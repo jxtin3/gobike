@@ -127,6 +127,22 @@ class LocationController extends Controller
         return response()->json(['message' => 'Active mode stopped.']);
     }
 
+    public function currentSession(Request $request): JsonResponse
+    {
+        $location = Location::where('user_id', $request->user()->id)->first();
+
+        $active = $location
+            && $location->active_start_time
+            && ! $location->active_end_time;
+
+        return response()->json([
+            'active' => (bool) $active,
+            'active_start_time' => $active
+                ? $location->active_start_time->toIso8601String()
+                : null,
+        ]);
+    }
+
     public function sendEmergency(Request $request): JsonResponse
     {
         $data = $request->validate([
