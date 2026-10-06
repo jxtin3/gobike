@@ -30,6 +30,7 @@ class LoginController extends Controller
 
             if ($user && $user->is_admin && ($user->status ?? 'Active') === 'Active') {
                 $redirect = redirect()->intended(route('admin.dashboard'))->getTargetUrl();
+                $request->session()->flash('admin_dashboard_entrance', true);
 
                 if ($request->expectsJson()) {
                     return response()->json(['redirect' => $redirect]);

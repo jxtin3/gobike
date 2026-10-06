@@ -28,18 +28,51 @@ it('shows monthly aggregated reports without patient identity data', function ()
     ]);
 
     $response = $this->actingAs($admin)->get(route('admin.operations.reports.index', [
-        'from' => now()->format('Y-m'),
-        'to' => now()->format('Y-m'),
+        'month' => now()->format('Y-m'),
     ]));
 
     $response->assertOk()
         ->assertSee('Patient check-ups')
         ->assertDontSee('Private Patient Name');
 
-    $charts = $response->viewData('charts');
-    expect($charts[0]['total'])->toBe(1)
-        ->and($charts[1]['total'])->toBe(1)
-        ->and($charts[0]['months'])->toHaveCount(1);
+    $metrics = $response->viewData('metrics');
+    expect($metrics[0]['total'])->toBe(1)
+        ->and($metrics[1]['total'])->toBe(1)
+        ->and($metrics[0]['months'])->toHaveCount(12)
+        ->and($metrics[0]['months'][0]['shortLabel'])->toBe('Jan')
+        ->and($metrics[0]['months'][11]['shortLabel'])->toBe('Dec');
+});
+
+it('makes analytics the admin dashboard and places live operations after the charts', function () {
+    $admin = User::factory()->create(['is_admin' => true]);
+
+    $this->actingAs($admin)
+        ->get(route('admin.dashboard'))
+        ->assertOk()
+        ->assertSee('Analytics dashboard')
+        ->assertSee('Choose a key performance indicator')
+        ->assertSee('data-bar-chart', false)
+        ->assertSee('data-line-chart', false)
+        ->assertSee('data-pie-chart', false)
+        ->assertDontSee('id="map"', false)
+        ->assertDontSee('adm-dashboard-entrance', false)
+        ->assertDontSee('>Operations</span>', false)
+        ->assertDontSee('>Reports</span>', false)
+        ->assertSeeInOrder([
+            'Monthly activity',
+            'Activity trend',
+            'Period breakdown',
+        ]);
+
+    $this->get(route('admin.live-map.index'))
+        ->assertOk()
+        ->assertSee('id="map"', false)
+        ->assertSeeInOrder([
+            'aria-label="GoBiker statuses"',
+            'Emergency',
+            'Responding',
+            'GoBikers',
+        ]);
 });
 
 it('allows admins to edit homepage data and shows the changes publicly', function () {
@@ -87,13 +120,12 @@ it('allows admins to edit homepage data and shows the changes publicly', functio
         ->assertSee('600+');
 });
 
-it('rejects invalid report ranges', function () {
+it('rejects invalid report months', function () {
     $admin = User::factory()->create(['is_admin' => true]);
 
     $this->actingAs($admin)
         ->get(route('admin.operations.reports.index', [
-            'from' => now()->format('Y-m'),
-            'to' => now()->subMonth()->format('Y-m'),
+            'month' => 'not-a-month',
         ]))
-        ->assertSessionHasErrors('from');
+        ->assertSessionHasErrors('month');
 });

@@ -65,17 +65,20 @@
                         fetch($el.action, {
                             method: 'POST',
                             body: new FormData($el),
-                            redirect: 'follow'
+                            headers: {
+                                'Accept': 'application/json',
+                                'X-Requested-With': 'XMLHttpRequest',
+                                'X-CSRF-TOKEN': $el.querySelector('[name=_token]').value
+                            },
+                            credentials: 'same-origin'
                         })
                         .then(res => {
-                            if (res.url && !res.url.includes('/login')) {
-                                /* Auth success — split then navigate */
-                                document.getElementById('loginSplit').classList.add('is-exiting');
-                                setTimeout(() => { window.location.href = res.url; }, 720);
-                            } else {
-                                /* Auth failed — native submit to show validation errors */
-                                $el.submit();
-                            }
+                            if (!res.ok) throw new Error('Login failed');
+                            return res.json();
+                        })
+                        .then(data => {
+                            document.getElementById('loginSplit').classList.add('is-exiting');
+                            setTimeout(() => { window.location.href = data.redirect || '/admin'; }, 720);
                         })
                         .catch(() => {
                             loading = false;

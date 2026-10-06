@@ -12,12 +12,11 @@
 
     <nav class="side-nav">
         <a class="side-link" href="{{ route('admin.dashboard') }}" aria-current="{{ $current('admin.dashboard') }}">
+            <x-admin.icon name="bar-chart" /><span>Dashboard</span>
+        </a>
+        <a class="side-link" href="{{ route('admin.live-map.index') }}" aria-current="{{ $current('admin.live-map.*') }}">
             <x-admin.icon name="map" /><span>Live map</span>
         </a>
-        <a class="side-link" href="{{ route('admin.operations') }}" aria-current="{{ $current('admin.operations') }}">
-            <x-admin.icon name="grid" /><span>Operations</span>
-        </a>
-
         <p class="side-group">Content</p>
         <a class="side-link" href="{{ route('admin.operations.news.index') }}" aria-current="{{ $current('admin.operations.news.*') }}">
             <x-admin.icon name="file-text" /><span>News</span>
@@ -54,10 +53,6 @@
             <x-admin.icon name="activity" /><span>Patients</span>
         </a>
 
-        <p class="side-group">Insights</p>
-        <a class="side-link" href="{{ route('admin.operations.reports.index') }}" aria-current="{{ $current('admin.operations.reports.*') }}">
-            <x-admin.icon name="bar-chart" /><span>Reports</span>
-        </a>
     </nav>
 
     <div class="side-foot">

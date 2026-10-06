@@ -10,7 +10,7 @@
     @vite(['resources/css/admin/admin.css', 'resources/js/admin/admin.js'])
     @stack('head')
 </head>
-<body class="adm{{ request()->routeIs('admin.dashboard') ? ' adm-live-map' : '' }}">
+<body class="adm{{ request()->routeIs('admin.dashboard') ? ' adm-dashboard'.(!empty($dashboardEntrance) ? ' adm-dashboard-entrance' : '') : (request()->routeIs('admin.live-map.*') ? ' adm-live-map' : '') }}">
     <a class="skip-link" href="#main">Skip to content</a>
 
     <div class="adm-shell">
@@ -26,6 +26,7 @@
             </div>
 
             <main id="main" class="adm-main">
+                @unless (request()->routeIs('admin.live-map.*'))
                 <header class="page-head">
                     <div>
                         @hasSection('back')
@@ -36,10 +37,14 @@
                             <p class="page-sub">@yield('subheading')</p>
                         @endif
                     </div>
+                    @hasSection('heading-actions')
+                        <div class="heading-actions">@yield('heading-actions')</div>
+                    @endif
                     @hasSection('actions')
                         <div class="head-actions">@yield('actions')</div>
                     @endif
                 </header>
+                @endunless
 
                 @if (session('success'))
                     <div class="alert success" role="status" data-dismissible data-autodismiss="6000">

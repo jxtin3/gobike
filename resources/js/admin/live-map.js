@@ -3,7 +3,7 @@
     if (!mapEl || typeof L === 'undefined') return;
 
     const REFRESH_MS = 5000;
-    const COLORS = { active: '#16a34a', responding: '#f97316', emergency: '#dc2626', offline: '#94a3b8' };
+    const COLORS = { active: '#16a34a', responding: '#eab308', emergency: '#dc2626', offline: '#94a3b8' };
     const LABELS = { active: 'Active', responding: 'Responding', emergency: 'Emergency', offline: 'Offline' };
     const RANK = { emergency: 0, responding: 1, active: 2, offline: 3 };
 
@@ -15,7 +15,7 @@
         note: $('map-note'), chip: $('live-chip'), updated: $('last-refresh'),
     };
 
-    const map = L.map(mapEl).setView([15.9528, 120.2155], 13);
+    const map = L.map(mapEl).setView([16.05, 120.3], 9);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; OpenStreetMap contributors',
         maxZoom: 19,
@@ -157,12 +157,6 @@
         if (loaded) setOverlay('none');
     }
 
-    function fit() {
-        const points = riders.filter(matches).filter(hasPos).map((r) => [r.latitude, r.longitude]);
-        if (points.length) map.fitBounds(points, { padding: [40, 40], maxZoom: 15 });
-        else notice('No GoBikers with a known location to show.');
-    }
-
     async function load() {
         controller?.abort();
         controller = new AbortController();
@@ -206,7 +200,6 @@
     ['input', 'change'].forEach((type) => {
         [els.search, els.status, els.barangay].forEach((el) => el.addEventListener(type, render));
     });
-    $('fit-map').addEventListener('click', fit);
     $('locate-map').addEventListener('click', () => map.locate({ setView: true, maxZoom: 16 }));
     map.on('locationerror', () => notice('We could not get your location. Allow location access in your browser and try again.'));
     $('map-retry').addEventListener('click', () => { load(); schedule(); });
@@ -220,7 +213,10 @@
         const item = e.target.closest('[data-id]');
         const marker = item && markers.get(item.dataset.id);
         if (!marker) { if (item) notice('This GoBiker has not shared a location yet.'); return; }
-        map.flyTo(marker.getLatLng(), Math.max(map.getZoom(), 15), { duration: 0.6 });
+        map.flyTo(marker.getLatLng(), Math.max(map.getZoom(), 12), {
+            duration: 1.6,
+            easeLinearity: 0.15,
+        });
         marker.openPopup();
         if (window.innerWidth < 1180) mapEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
     });
