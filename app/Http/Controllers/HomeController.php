@@ -2,7 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
+use App\Models\HomePartner;
+use App\Models\ImpactStat;
 
 class HomeController extends Controller
 {
@@ -13,5 +14,11 @@ class HomeController extends Controller
             ->take(3)
             ->get();
 
-        return view('home', compact('latestNews'));
-    }}
+        $partners = HomePartner::orderBy('sort_order')->orderBy('id')->get();
+        $impactStats = ImpactStat::where('section', 'impact')->orderBy('sort_order')->orderBy('id')->get();
+        $impactHighlights = ImpactStat::where('section', 'highlight')->orderBy('sort_order')->orderBy('id')->get();
+        $impactBadge = ImpactStat::where('section', 'badge')->orderBy('sort_order')->orderBy('id')->first();
+
+        return view('home', compact('latestNews', 'partners', 'impactStats', 'impactHighlights', 'impactBadge'));
+    }
+}

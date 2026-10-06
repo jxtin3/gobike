@@ -189,7 +189,7 @@
 
     
     <!-- Shared helpers -->
-    <script defer src="{{ asset('js/counter.js') }}"></script>
+    <script defer src="{{ asset('js/counter.js') }}?v={{ filemtime(public_path('js/counter.js')) }}"></script>
 
     <!-- Alpine.js -->
     <script defer src="{{ asset('js/alpine-intersect.min.js') }}"></script>
@@ -310,4 +310,3 @@
 
 </body>
 </html>
-

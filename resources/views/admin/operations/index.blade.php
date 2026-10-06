@@ -30,6 +30,11 @@
         <p>Upload and organize photos shown in the public gallery.</p>
     </a>
 
+    <a class="module" href="{{ route('admin.operations.homepage-data.index') }}">
+        <div class="module-top"><span class="stat-icon"><x-admin.icon name="edit" /></span><h2>Homepage content</h2><x-admin.icon class="i chev" name="chevron-right" /></div>
+        <p>Manage homepage partnerships and impact statistics.</p>
+    </a>
+
 <!-- Users -->
     <a class="module" href="{{ route('admin.operations.users.index') }}">
         <div class="module-top"><span class="stat-icon"><x-admin.icon name="users" /></span><h2>Users</h2><x-admin.icon class="i chev" name="chevron-right" /></div>

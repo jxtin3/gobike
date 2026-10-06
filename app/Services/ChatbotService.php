@@ -49,6 +49,6 @@ class ChatbotService
             throw new RuntimeException("Gemini request failed: {$reason}");
         }
 
-        return trim($reply);
+        return trim(str_replace('*', '', $reply));
     }
 }

@@ -16,7 +16,7 @@
                 Organization Structure<br/><span class="text-[#2FA7FF]">&amp; History</span>
             </h1>
             <p class="text-base text-white/60 max-w-2xl leading-relaxed">
-                From a small idea of volunterism to a province-wide force of over 2,500 youth volunteers — this is the story and structure of Go Bike.
+                From a small idea of volunteerism to a province-wide force of youth volunteers — this is the story and structure of Go Bike.
             </p>
         </div>
     </div>
@@ -99,7 +99,7 @@
                 ['year'=>'2019','title'=>'The First Ride','desc'=>'A small group of passionate cyclists in Dagupan City began delivering basic first aid and supplies to remote areas unreachable by four-wheeled vehicles.','align'=>'left'],
                 ['year'=>'2021','title'=>'Pandemic Response','desc'=>'During the height of COVID-19, Go Bike transformed into a critical lifeline — distributing medicines and relief goods when public transportation was halted.','align'=>'right'],
                 ['year'=>'2023','title'=>'Official Accreditation','desc'=>'Recognized by the DILG and partnered with local LGUs, formalizing our status as an essential youth-led disaster response and health outreach organization.','align'=>'left'],
-                ['year'=>'2025','title'=>'Provincial Expansion','desc'=>'Now operating across 45 barangays with over 2,500 trained youth volunteers, pushing the boundaries of what community service looks like in the modern era.','align'=>'right'],
+                ['year'=>'2025','title'=>'Provincial Expansion','desc'=>'Now operating across barangays throughout the province, pushing the boundaries of what community service looks like in the modern era.','align'=>'right'],
             ];
             @endphp
 
@@ -115,31 +115,6 @@
                 </div>
                 @endforeach
             </div>
-        </div>
-    </div>
-</section>
-
-<!-- STATS STRIP -->
-<section class="py-14 bg-[#0D1B2A]"
-    x-data="orgCounter()"
-    x-intersect.once="startCounters()"
->
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-            @php
-            $stats = [
-                ['label'=>'Trained Volunteers'],
-                ['label'=>'Barangays Served'],
-                ['label'=>'Years of Service'],
-                ['label'=>"Government Accreditations"],
-            ];
-            @endphp
-            @foreach ($stats as $idx => $stat)
-            <div class="reveal">
-                <p class="text-4xl md:text-5xl font-heading font-black text-white mb-1" x-text="counts[{{ $idx }}].display">0</p>
-                <p class="text-xs font-medium tracking-widest uppercase text-white/45">{{ $stat['label'] }}</p>
-            </div>
-            @endforeach
         </div>
     </div>
 </section>
@@ -165,9 +140,4 @@
     </div>
 </section>
 
-<x-slot:scripts>
-    <script src="{{ asset('js/org-structure.js') }}"></script>
-</x-slot:scripts>
-
 </x-layout>
-

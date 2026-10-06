@@ -27,16 +27,6 @@
     });
 })();
 
-// stat
-function counterSection() {
-    return createCounterAnimation([
-        { target: 2500, suffix: '+', display: '0+' },
-        { target: 45, suffix: '', display: '0' },
-        { target: 18000, suffix: '+', display: '0+' },
-        { target: 2019, suffix: '', display: '0', raw: true },
-    ]);
-}
-
 //  program slider  
 function programSlider() {
     return {

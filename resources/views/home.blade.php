@@ -90,31 +90,18 @@
 
 
 <!-- Partners / Trust Bar -->
+@if ($partners->isNotEmpty())
 <div class="trust-bar overflow-hidden" aria-label="Government affiliations and partners">
     <div class="trust-bar-track-wrap">
         <div class="trust-bar-fade trust-bar-fade--left" aria-hidden="true"></div>
 
         <div class="flex items-center w-max affiliation-track" role="list">
-            @php
-            $partners = [
-                ['label' => 'DOH Pangasinan',      'abbr' => 'DOH'],
-                ['label' => 'DILG Region I',        'abbr' => 'DILG'],
-                ['label' => 'LGU Dagupan',          'abbr' => 'LGU'],
-                ['label' => 'DSWD Pangasinan',      'abbr' => 'DSWD'],
-                ['label' => 'DepEd Region I',       'abbr' => 'DepEd'],
-                ['label' => 'NDRRMC',               'abbr' => 'NDRRMC'],
-                ['label' => 'PRC Philippines',      'abbr' => 'PRC'],
-                ['label' => 'Philippine Red Cross', 'abbr' => 'Red Cross'],
-            ];
-            $scrollPartners = array_merge($partners, $partners, $partners);
-            @endphp
-
-            @foreach ($scrollPartners as $p)
+            @foreach ($partners->concat($partners)->concat($partners) as $partner)
             <div class="trust-badge" role="listitem">
                 <span class="trust-badge-dot" aria-hidden="true"></span>
-                <span class="trust-badge-abbr">{{ $p['abbr'] }}</span>
+                <span class="trust-badge-abbr">{{ $partner->abbreviation }}</span>
                 <span class="trust-badge-divider" aria-hidden="true"></span>
-                <span class="trust-badge-label">{{ $p['label'] }}</span>
+                <span class="trust-badge-label">{{ $partner->name }}</span>
             </div>
             @endforeach
         </div>
@@ -122,6 +109,7 @@
         <div class="trust-bar-fade trust-bar-fade--right" aria-hidden="true"></div>
     </div>
 </div>
+@endif
 
 <!-- SECTION 2 — MANTRA & IMPACT STORIES -->
 <section id="stories" class="bg-white" aria-labelledby="stories-heading">
@@ -444,53 +432,16 @@
 
 <section
     id="impact"
-    class="relative overflow-hidden pb-10 md:pb-5"
+    class="relative overflow-hidden bg-[#0D1B2A] py-10 md:py-5"
     aria-label="Impact statistics"
-    x-data="counterSection()"
-    x-intersect.once="startCounters()"
 >
-
- 
-<div class="max-w-7xl mx-auto px-4 sm:px-6 relative z-10 grid grid-cols-1 md:grid-cols-4 divide-y-2 md:divide-y-0 md:divide-x-2 divide-[#0D1B2A]/30"> 
-        <!-- Stat 1 -->
-        <div class="flex flex-col items-center justify-center text-center py-10">
-            <svg class="w-9 h-9 mb-5 opacity-80" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="white">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 18.75a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Zm12 0a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Z"/>
-                <path stroke-linecap="round" stroke-linejoin="round" d="M9 15v-2.25l3-4.5h3.75L18 15M9 15h9M9 15H4.5l1.9-5.7a1.5 1.5 0 0 1 1.425-1.05H9"/>
-            </svg>
-            <span class="text-stat font-heading font-bold text-white mb-2" x-text="counts[0].display">0</span>
-            <span class="text-white font-bold text-xs tracking-widest uppercase">Trained Youth Volunteers</span>
-        </div>
- 
-        <!-- Stat 2 -->
-        <div class="flex flex-col items-center justify-center text-center py-10">
-            <svg class="w-9 h-9 mb-5 opacity-80" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="white">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/>
-                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z"/>
-            </svg>
-            <span class="text-stat font-heading font-bold text-white mb-2" x-text="counts[1].display">0</span>
-            <span class="text-white font-bold text-xs tracking-widest uppercase">Barangays Served</span>
-        </div>
- 
-        <!-- Stat 3 -->
-        <div class="flex flex-col items-center justify-center text-center py-10">
-            <svg class="w-9 h-9 mb-5 opacity-80" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="white">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6l4 2"/>
-                <path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
-            </svg>
-            <span class="text-stat font-heading font-bold text-white mb-2" x-text="counts[2].display">0</span>
-            <span class="text-white font-bold text-xs tracking-widest uppercase">Volunteer Hours</span>
-        </div>
- 
-        <!-- Stat 4 -->
-        <div class="flex flex-col items-center justify-center text-center py-10">
-            <svg class="w-9 h-9 mb-5 opacity-80" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="white">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3.75 8.25h16.5M4.5 6h15a.75.75 0 0 1 .75.75v13.5a.75.75 0 0 1-.75.75h-15a.75.75 0 0 1-.75-.75V6.75A.75.75 0 0 1 4.5 6Z"/>
-            </svg>
-            <span class="text-stat font-heading font-bold text-white mb-2" x-text="counts[3].display">2019</span>
-            <span class="text-white font-bold text-xs tracking-widest uppercase">Active Since</span>
-        </div>
- 
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 relative z-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 divide-y-2 sm:divide-y-0 sm:divide-x-2 divide-[#0D1B2A]/30">
+        @foreach ($impactStats as $stat)
+            <div class="flex flex-col items-center justify-center text-center py-10 px-4">
+                <span class="text-stat font-heading font-bold text-white mb-2" data-count-up="{{ $stat->value }}">{{ $stat->value }}</span>
+                <span class="text-white font-bold text-xs tracking-widest uppercase">{{ $stat->label }}</span>
+            </div>
+        @endforeach
     </div>
 </section>
  
@@ -518,10 +469,12 @@
                 </div>
 
                 <!-- Floating stat badge -->
-                <div class="absolute -bottom-6 -right-4 sm:-right-6 bg-[#132D6B] text-white rounded-sm px-6 py-5 shadow-xl hidden sm:block">
-                    <div class="font-heading font-bold text-3xl tracking-tight">500+</div>
-                    <div class="text-[10px] text-white/55 uppercase tracking-[0.18em] mt-0.5">Families Reached</div>
-                </div>
+                @if ($impactBadge)
+                    <div class="absolute -bottom-6 -right-4 sm:-right-6 bg-[#132D6B] text-white rounded-sm px-6 py-5 shadow-xl hidden sm:block">
+                        <div class="font-heading font-bold text-3xl tracking-tight" data-count-up="{{ $impactBadge->value }}">{{ $impactBadge->value }}</div>
+                        <div class="text-[10px] text-white/55 uppercase tracking-[0.18em] mt-0.5">{{ $impactBadge->label }}</div>
+                    </div>
+                @endif
 
             </div>
 
@@ -537,26 +490,18 @@
                         <span class="text-[#132D6B]">Community Impact</span>
                     </h2>
                     <p class="text-[#64748B] leading-relaxed text-base">
-                        In 2024, our volunteer cyclists logged over 18,000 hours responding to community needs across 45 barangays. Each ride represents a connection — a health check delivered, a family reached, a community made more resilient.
+                        Our volunteer cyclists respond to community needs across Pangasinan. Each ride represents a connection — a health check delivered, a family reached, a community made more resilient.
                     </p>
                 </div>
 
                 <!-- Impact highlights -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    @php
-                    $highlights = [
-                        ['value' => '300+',   'label' => 'Medical Missions Conducted', 'bg' => 'bg-[#111827]', 'text' => 'text-[#132D6B]'],
-                        ['value' => '12,000', 'label' => 'Beneficiaries Served',        'bg' => 'bg-[#111827]', 'text' => 'text-[#132D6B]'],
-                        ['value' => '45',     'label' => 'Barangays Reached',            'bg' => 'bg-[#111827]', 'text' => 'text-[#132D6B]'],
-                        ['value' => '85%',    'label' => 'Youth-Led Initiatives',        'bg' => 'bg-[#111827]', 'text' => 'text-[#132D6B]'],
-                    ];
-                    @endphp
-                    @foreach ($highlights as $h)
+                    @foreach ($impactHighlights as $highlight)
                     <div class="impact-stat-card">
-                        <div class="w-1 self-stretch rounded-full shrink-0 {{ $h['bg'] }}"></div>
+                        <div class="w-1 self-stretch rounded-full shrink-0 bg-[#111827]"></div>
                         <div>
-                            <div class="font-heading font-bold text-xl {{ $h['text'] }}">{{ $h['value'] }}</div>
-                            <div class="text-xs text-[#64748B] leading-snug mt-0.5">{{ $h['label'] }}</div>
+                            <div class="font-heading font-bold text-xl text-[#132D6B]" data-count-up="{{ $highlight->value }}">{{ $highlight->value }}</div>
+                            <div class="text-xs text-[#64748B] leading-snug mt-0.5">{{ $highlight->label }}</div>
                         </div>
                     </div>
                     @endforeach
@@ -686,4 +631,3 @@
 </x-slot:scripts>
 
 </x-layout>
-

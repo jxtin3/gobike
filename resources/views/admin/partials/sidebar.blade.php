@@ -25,6 +25,9 @@
         <a class="side-link" href="{{ route('admin.operations.pictures.index') }}" aria-current="{{ $current('admin.operations.pictures.*') }}">
             <x-admin.icon name="image" /><span>Pictures</span>
         </a>
+        <a class="side-link" href="{{ route('admin.operations.homepage-data.index') }}" aria-current="{{ $current('admin.operations.homepage-data.*') }}">
+            <x-admin.icon name="edit" /><span>Homepage content</span>
+        </a>
         <a class="side-link" href="{{ route('admin.operations.messages.index') }}" aria-current="{{ $current('admin.operations.messages.*') }}">
             <x-admin.icon name="mail" /><span>Messages</span>
             @if (($navUnread ?? 0) > 0)
@@ -52,9 +55,9 @@
         </a>
 
         <p class="side-group">Insights</p>
-        <span class="side-link is-disabled" aria-disabled="true">
-            <x-admin.icon name="bar-chart" /><span>Reports</span><span class="badge badge-soft">Soon</span>
-        </span>
+        <a class="side-link" href="{{ route('admin.operations.reports.index') }}" aria-current="{{ $current('admin.operations.reports.*') }}">
+            <x-admin.icon name="bar-chart" /><span>Reports</span>
+        </a>
     </nav>
 
     <div class="side-foot">

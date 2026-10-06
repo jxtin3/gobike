@@ -3,6 +3,8 @@
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\LocationController;
 use App\Http\Controllers\Admin\OperationsController;
+use App\Http\Controllers\Admin\HomepageDataController;
+use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Admin\NewsController as AdminNewsController;
 use App\Http\Controllers\Admin\PictureController;
 use App\Http\Controllers\Admin\ProfileController;
@@ -110,6 +112,22 @@ Route::middleware([EnsureAdmin::class])->group(function () {
     Route::get('/admin/profile/edit', [ProfileController::class, 'edit'])->name('admin.profile.edit');
     Route::put('/admin/profile', [ProfileController::class, 'update'])->name('admin.profile.update');
     Route::get('/admin/operations', [OperationsController::class, 'index'])->name('admin.operations');
+    Route::get('/admin/operations/reports', [ReportController::class, 'index'])
+        ->name('admin.operations.reports.index');
+    Route::get('/admin/operations/homepage-data', [HomepageDataController::class, 'index'])
+        ->name('admin.operations.homepage-data.index');
+    Route::post('/admin/operations/homepage-data/partners', [HomepageDataController::class, 'storePartner'])
+        ->name('admin.operations.homepage-data.partners.store');
+    Route::put('/admin/operations/homepage-data/partners/{partner}', [HomepageDataController::class, 'updatePartner'])
+        ->name('admin.operations.homepage-data.partners.update');
+    Route::delete('/admin/operations/homepage-data/partners/{partner}', [HomepageDataController::class, 'destroyPartner'])
+        ->name('admin.operations.homepage-data.partners.destroy');
+    Route::post('/admin/operations/homepage-data/impact-stats', [HomepageDataController::class, 'storeImpactStat'])
+        ->name('admin.operations.homepage-data.impact-stats.store');
+    Route::put('/admin/operations/homepage-data/impact-stats/{impactStat}', [HomepageDataController::class, 'updateImpactStat'])
+        ->name('admin.operations.homepage-data.impact-stats.update');
+    Route::delete('/admin/operations/homepage-data/impact-stats/{impactStat}', [HomepageDataController::class, 'destroyImpactStat'])
+        ->name('admin.operations.homepage-data.impact-stats.destroy');
     Route::resource('/admin/operations/news', AdminNewsController::class)->names('admin.operations.news');
     Route::resource('/admin/operations/pictures', PictureController::class)->names('admin.operations.pictures');
     Route::resource('/admin/operations/users', AdminUserController::class)->names('admin.operations.users');

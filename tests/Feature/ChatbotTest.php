@@ -24,7 +24,7 @@ it('returns a chatbot reply for a valid message', function () {
                     'content' => [
                         'parts' => [
                             [
-                                'text' => 'eyyyyyyow wats ur need.',
+                                'text' => '**Hello!** *How can I help?*',
                             ],
                         ],
                     ],
@@ -39,7 +39,7 @@ it('returns a chatbot reply for a valid message', function () {
 
     $response->assertStatus(200)
         ->assertJson([
-            'reply' => 'eyyyyyyow wats ur need.',
+            'reply' => 'Hello! How can I help?',
         ]);
 });
 
