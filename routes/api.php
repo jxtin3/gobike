@@ -59,6 +59,11 @@ Route::middleware(['auth:sanctum', 'gobiker'])->prefix('gobiker')->group(functio
         'stopActiveSession',
     ])->name('api.gobiker.active.stop');
 
+    Route::post('/emergency', [
+        LocationController::class,
+        'sendEmergency',
+    ])->name('api.gobiker.emergency');
+
     Route::get('/patients', [PatientController::class, 'index'])->name('api.gobiker.patients.index');
     Route::post('/patients', [PatientController::class, 'store'])->name('api.gobiker.patients.store');
     Route::put('/patients/{patient}', [PatientController::class, 'update'])->name('api.gobiker.patients.update');

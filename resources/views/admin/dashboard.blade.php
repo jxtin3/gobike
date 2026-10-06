@@ -18,7 +18,6 @@
 <div class="stat-grid" aria-label="GoBiker statistics">
     <div class="stat-card"><span class="stat-icon"><x-admin.icon name="users" /></span><div><div class="label">Total GoBikers</div><div class="value" id="total-count">–</div></div></div>
     <div class="stat-card"><span class="stat-icon t-ok"><x-admin.icon name="activity" /></span><div><div class="label">Active</div><div class="value" id="active-count">–</div></div></div>
-    <div class="stat-card"><span class="stat-icon t-warn"><x-admin.icon name="navigation" /></span><div><div class="label">Responding</div><div class="value" id="responding-count">–</div></div></div>
     <div class="stat-card"><span class="stat-icon t-bad"><x-admin.icon name="alert-triangle" /></span><div><div class="label">Emergency</div><div class="value" id="emergency-count">–</div></div></div>
     <div class="stat-card"><span class="stat-icon t-off"><x-admin.icon name="clock" /></span><div><div class="label">Offline</div><div class="value" id="offline-count">–</div></div></div>
 </div>

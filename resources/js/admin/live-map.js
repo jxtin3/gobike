@@ -60,15 +60,29 @@
 
     function popup(r) {
         const status = LABELS[r.status] || 'Unknown';
+        const mobile = r.mobile
+            ? `<a href="tel:${esc(r.mobile)}">${esc(r.mobile)}</a>`
+            : 'Not provided';
+
+        const respondBtn = `<button type="button" class="btn btn-sm gb-act gb-act-resp" data-action="responding" data-location="${esc(r.location_id)}">I'm responding</button>`;
+        const resolveBtn = `<button type="button" class="btn btn-sm gb-act gb-act-resolve" data-action="active" data-location="${esc(r.location_id)}">Resolve</button>`;
+        const actions = r.status === 'emergency'
+            ? `<div class="gb-actions">${respondBtn}${resolveBtn}</div>`
+            : r.status === 'responding'
+                ? `<div class="gb-actions">${resolveBtn}</div>`
+                : '';
+
         return `<div class="gb-pop">
             <strong>${esc(r.name)} <em class="s-text s-${esc(r.status)}">${esc(status)}</em></strong>
             <dl>
+                <dt>Mobile</dt><dd>${mobile}</dd>
                 <dt>Barangay</dt><dd>${esc(r.designated_barangay || 'Not assigned')}</dd>
                 <dt>Location</dt><dd>${hasPos(r) ? `${r.latitude.toFixed(5)}, ${r.longitude.toFixed(5)}` : 'Unavailable'}</dd>
                 <dt>Active since</dt><dd>${esc(time(r.active_since, { hour: '2-digit', minute: '2-digit' }) || 'Not active')}</dd>
                 <dt>Time active</dt><dd>${esc(r.time_active)}</dd>
                 <dt>Last seen</dt><dd>${esc(ago(r.last_seen_at))}</dd>
             </dl>
+            ${actions}
         </div>`;
     }
 
@@ -211,6 +225,70 @@
         if (window.innerWidth < 1180) mapEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
     });
     document.addEventListener('visibilitychange', () => { if (!document.hidden) { load(); schedule(); } });
+
+
+    /* Uses the same confirm card as the other admin pages */
+    function askConfirm({ title, text, ok, tone = 'ok' }) {
+        const dlg = document.getElementById('confirmDialog');
+        if (!dlg) return Promise.resolve(window.confirm(`${title}\n${text}`));
+
+        dlg.dataset.tone = tone;
+        dlg.querySelector('[data-cf-title]').textContent = title;
+        dlg.querySelector('[data-cf-text]').textContent = text;
+        const okBtn = dlg.querySelector('[data-cf-ok]');
+        okBtn.textContent = ok;
+        okBtn.className = 'btn ' + (tone === 'ok' ? 'btn-ok' : 'btn-danger');
+
+        return new Promise((resolve) => {
+            let answer = false;
+            const form = dlg.querySelector('form');
+            const onSubmit = (e) => { answer = e.submitter?.value === 'confirm'; };
+            form.addEventListener('submit', onSubmit);
+            dlg.addEventListener('close', () => {
+                form.removeEventListener('submit', onSubmit);
+                resolve(answer);
+            }, { once: true });
+            dlg.showModal();
+        });
+    }
+
+    /* Admin actions inside the popup: "I'm responding" / "Resolve" */
+    document.addEventListener('click', async (e) => {
+        const btn = e.target.closest('.gb-pop [data-action]');
+        if (!btn) return;
+
+        const action = btn.dataset.action;
+        if (action === 'active') {
+            const yes = await askConfirm({
+                title: 'Mark this emergency as resolved?',
+                text: 'The alert will be cleared from the map.',
+                ok: 'Resolve',
+                tone: 'ok',
+            });
+            if (!yes) return;
+        }
+
+        btn.disabled = true;
+        try {
+            const res = await fetch(`/admin/locations/${btn.dataset.location}/status`, {
+                method: 'PATCH',
+                headers: {
+                    Accept: 'application/json',
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content ?? '',
+                },
+                credentials: 'same-origin',
+                body: JSON.stringify({ status: action }),
+            });
+            if (!res.ok) throw new Error(String(res.status));
+            notice(action === 'responding' ? 'Marked as responding.' : 'Emergency resolved.');
+            await load();
+        } catch {
+            notice('Could not update the status. Please try again.');
+            btn.disabled = false;
+        }
+    }, true);
 
     const clock = $('live-clock');
     const tick = () => {

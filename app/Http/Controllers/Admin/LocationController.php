@@ -10,6 +10,9 @@ use Illuminate\Support\Carbon;
 
 class LocationController extends Controller
 {
+    /** Statuses that stay on the map until an admin resolves them. */
+    private const ALERT_STATUSES = ['emergency', 'responding'];
+
     /**
      * Show the admin dashboard with the real-time map.
      */
@@ -25,7 +28,7 @@ class LocationController extends Controller
     {
         $locations = Location::query()
             ->whereNotNull('user_id')
-            ->with('user:id,name')
+            ->with('user:id,name,mobile')
             ->select([
                 'id', 'user_id', 'name', 'role', 'designated_barangay', 'status',
                 'latitude', 'longitude', 'last_seen_at', 'active_start_time',
@@ -42,6 +45,7 @@ class LocationController extends Controller
                     'id' => $location->user_id ?? $location->id,
                     'location_id' => $location->id,
                     'name' => $location->user?->name ?? $location->name ?? 'Unnamed GoBiker',
+                    'mobile' => $location->user?->mobile,
                     'designated_barangay' => $location->designated_barangay,
                     'latitude' => $location->latitude,
                     'longitude' => $location->longitude,
@@ -64,13 +68,16 @@ class LocationController extends Controller
             'longitude' => ['required', 'numeric', 'between:-180,180'],
         ]);
 
+        $current = Location::where('user_id', $request->user()->id)->first();
+
         $location = Location::updateOrCreate(
             ['user_id' => $request->user()->id],
             [
                 'name' => $request->user()->name,
                 'latitude' => $data['latitude'],
                 'longitude' => $data['longitude'],
-                'status' => 'active',
+                // keep an open emergency/responding status until an admin resolves it
+                'status' => $this->isAlert($current?->status) ? strtolower($current->status) : 'active',
                 'last_seen_at' => now(),
             ],
         );
@@ -79,28 +86,30 @@ class LocationController extends Controller
     }
 
     public function startActiveSession(Request $request): JsonResponse
-{
-    $data = $request->validate([
-        'designated_barangay' => ['nullable', 'string', 'max:255'],
-    ]);
+    {
+        $data = $request->validate([
+            'designated_barangay' => ['nullable', 'string', 'max:255'],
+        ]);
 
-    $location = Location::updateOrCreate(
-        ['user_id' => $request->user()->id],
-        [
-            'name'                => $request->user()->name,
-            'role'                => 'GoBiker',
-            'designated_barangay' => $data['designated_barangay'] ?? $request->user()->barangay,
-            'status'              => 'active',
-            'active_start_time'   => now(),
-            'active_end_time'     => null,
-        ],
-    );
+        $current = Location::where('user_id', $request->user()->id)->first();
 
-    return response()->json([
-        'message' => 'Active mode started.',
-        'active_start_time' => $location->active_start_time,
-    ]);
-}
+        $location = Location::updateOrCreate(
+            ['user_id' => $request->user()->id],
+            [
+                'name'                => $request->user()->name,
+                'role'                => 'GoBiker',
+                'designated_barangay' => $data['designated_barangay'] ?? $request->user()->barangay,
+                'status'              => $this->isAlert($current?->status) ? strtolower($current->status) : 'active',
+                'active_start_time'   => now(),
+                'active_end_time'     => null,
+            ],
+        );
+
+        return response()->json([
+            'message' => 'Active mode started.',
+            'active_start_time' => $location->active_start_time,
+        ]);
+    }
 
     public function stopActiveSession(Request $request): JsonResponse
     {
@@ -110,13 +119,66 @@ class LocationController extends Controller
             return response()->json(['message' => 'GoBiker location not found.'], 404);
         }
 
-        $location->update(['status' => 'offline', 'active_end_time' => now()]);
+        $location->update([
+            'status' => $this->isAlert($location->status) ? strtolower($location->status) : 'offline',
+            'active_end_time' => now(),
+        ]);
 
         return response()->json(['message' => 'Active mode stopped.']);
     }
 
+    public function sendEmergency(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'latitude' => ['required', 'numeric', 'between:-90,90'],
+            'longitude' => ['required', 'numeric', 'between:-180,180'],
+        ]);
+
+        Location::updateOrCreate(
+            ['user_id' => $request->user()->id],
+            [
+                'name' => $request->user()->name,
+                'role' => 'GoBiker',
+                'latitude' => $data['latitude'],
+                'longitude' => $data['longitude'],
+                'status' => 'emergency',
+                'last_seen_at' => now(),
+            ],
+        );
+
+        return response()->json(['message' => 'Emergency alert sent to the RHU admin.']);
+    }
+
+    /**
+     * Admin: mark an emergency as "responding", or resolve it (back to active).
+     */
+    public function updateStatus(Request $request, Location $location): JsonResponse
+    {
+        $data = $request->validate([
+            'status' => ['required', 'in:responding,active'],
+        ]);
+
+        if (! $this->isAlert($location->status)) {
+            return response()->json(['message' => 'This GoBiker has no open emergency.'], 422);
+        }
+
+        $location->update(['status' => $data['status']]);
+
+        return response()->json(['message' => 'Status updated.', 'status' => $data['status']]);
+    }
+
+    private function isAlert(?string $status): bool
+    {
+        return in_array(strtolower((string) $status), self::ALERT_STATUSES, true);
+    }
+
     private function currentStatus(Location $location): string
     {
+        // Emergency / responding stay visible until an admin resolves them
+        if ($this->isAlert($location->status)) {
+            return strtolower($location->status);
+        }
+
         if (! $location->last_seen_at || $location->last_seen_at->lt(now()->subSeconds(config('app.location_stale_after_seconds')))) {
             return 'offline';
         }
