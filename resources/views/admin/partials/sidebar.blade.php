@@ -26,11 +26,20 @@
             <x-admin.icon name="image" /><span>Pictures</span>
         </a>
         <a class="side-link" href="{{ route('admin.operations.messages.index') }}" aria-current="{{ $current('admin.operations.messages.*') }}">
+            
             <x-admin.icon name="mail" /><span>Messages</span>
             @if (($navUnread ?? 0) > 0)
                 <span class="badge badge-brand" data-unread-badge>{{ $navUnread }}</span>
             @endif
+
+            <x-admin.icon name="chat" />GoBiker Messages
+            @if($navGobikerUnread > 0)
+                <span class="badge badge-blue ml-auto">{{ $navGobikerUnread }}</span>
+            @endif
+
         </a>
+
+        
 
         <p class="side-group">People</p>
         <a class="side-link" href="{{ route('admin.operations.users.index') }}" aria-current="{{ $current('admin.operations.users.*') }}">

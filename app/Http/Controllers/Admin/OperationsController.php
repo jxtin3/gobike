@@ -23,6 +23,8 @@ class OperationsController extends Controller
             'messageCount' => ContactMessage::count(),
             'unreadCount' => ContactMessage::where('is_read', false)->count(),
             'patientCount' => Patient::count(),
+            'gobikerMessageCount' => GobikerMessage::count(),
+            'gobikerUnreadCount'  => GobikerMessage::where('is_read', false)->count(),
         ]);
     }
 }

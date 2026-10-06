@@ -49,6 +49,7 @@ Route::middleware(['auth:sanctum', 'gobiker'])->prefix('gobiker')->group(functio
         'updateLocation',
     ])->name('api.gobiker.location');
 
+    
     Route::post('/active/start', [
         LocationController::class,
         'startActiveSession',
@@ -68,6 +69,8 @@ Route::middleware(['auth:sanctum', 'gobiker'])->prefix('gobiker')->group(functio
         LocationController::class, 
         'currentSession'
     ])->name('api.gobiker.active.current');
+
+    Route::post('message', [\App\Http\Controllers\Api\GobikerController::class, 'sendMessage']);
     
 
     Route::get('/patients', [PatientController::class, 'index'])->name('api.gobiker.patients.index');
