@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\ContactMessage;
+use App\Models\GobikerMessage;
 use App\Models\News;
 use App\Models\Picture;
 use App\Models\User;

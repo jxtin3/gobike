@@ -137,15 +137,17 @@ Route::middleware([EnsureAdmin::class])->group(function () {
 
     Route::get('/admin/operations/patients/{patient}', [AdminPatientController::class, 'show'])
         ->name('admin.operations.patients.show');
+    Route::delete('/admin/operations/patients/{patient}', [AdminPatientController::class, 'destroy'])
+        ->name('admin.operations.patients.destroy');
 
 // GoBiker → Admin messages
-Route::get('operations/gobiker-messages', [\App\Http\Controllers\Admin\GobikerMessageController::class, 'index'])
+Route::get('/admin/operations/gobiker-messages', [\App\Http\Controllers\Admin\GobikerMessageController::class, 'index'])
     ->name('admin.operations.gobiker-messages.index');
 
-Route::patch('operations/gobiker-messages/{message}/read', [\App\Http\Controllers\Admin\GobikerMessageController::class, 'markRead'])
+Route::patch('/admin/operations/gobiker-messages/{message}/read', [\App\Http\Controllers\Admin\GobikerMessageController::class, 'markRead'])
     ->name('admin.operations.gobiker-messages.mark-read');
     
-Route::delete('operations/gobiker-messages/{message}', [\App\Http\Controllers\Admin\GobikerMessageController::class, 'destroy'])
+Route::delete('/admin/operations/gobiker-messages/{message}', [\App\Http\Controllers\Admin\GobikerMessageController::class, 'destroy'])
     ->name('admin.operations.gobiker-messages.destroy');
 
 

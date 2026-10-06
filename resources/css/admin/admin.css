@@ -283,9 +283,161 @@ body.adm.nav-open {
     color: #fff;
 }
 
+.badge-blue {
+    background: #eff6ff;
+    color: #1d4ed8;
+    border-color: #bfdbfe;
+}
+
 .badge-soft {
     background: #f1f4f9;
     color: var(--ink-3);
+}
+
+.gobiker-search {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0 0 20px;
+    padding: 12px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--r-md);
+    box-shadow: var(--shadow-1);
+}
+
+.gobiker-search-field {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+    min-width: 0;
+    height: 42px;
+    padding: 0 12px;
+    background: #fff;
+    border: 1px solid var(--line-2);
+    border-radius: var(--r-sm);
+    color: var(--ink-3);
+    transition: border-color var(--t), box-shadow var(--t);
+}
+
+.gobiker-search-field:focus-within {
+    border-color: var(--focus);
+    box-shadow: 0 0 0 3px rgba(47, 167, 255, .14);
+}
+
+.gobiker-search-field .i {
+    width: 17px;
+    height: 17px;
+}
+
+.gobiker-search-field input {
+    width: 100%;
+    min-width: 0;
+    height: 100%;
+    padding: 0;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    color: var(--ink);
+}
+
+.gobiker-search-field input::placeholder {
+    color: var(--ink-3);
+}
+
+.gobiker-search-field input:focus-visible {
+    outline: 0;
+}
+
+.gobiker-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-height: 38px;
+    padding: 0 13px;
+    border: 1px solid transparent;
+    border-radius: var(--r-sm);
+    font: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1;
+    text-decoration: none;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background var(--t), border-color var(--t), color var(--t), box-shadow var(--t), transform var(--t);
+}
+
+.gobiker-action:active {
+    transform: translateY(1px);
+}
+
+.gobiker-action-search {
+    background: #fff;
+    border-color: var(--line-2);
+    color: var(--brand);
+}
+
+.gobiker-action-search:hover {
+    background: var(--brand-soft);
+    border-color: #c1c9d6;
+}
+
+.gobiker-action-clear,
+.gobiker-action-read {
+    background: var(--surface);
+    border-color: var(--line-2);
+    color: var(--ink-2);
+}
+
+.gobiker-action-clear:hover,
+.gobiker-action-read:hover {
+    background: var(--brand-soft);
+    border-color: #c1c9d6;
+    color: var(--brand);
+}
+
+.gobiker-message-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.gobiker-action-delete {
+    background: #fff;
+    border-color: var(--bad-line);
+    color: var(--bad);
+}
+
+.gobiker-action-delete:hover {
+    background: var(--bad-bg);
+    border-color: #e9aaa4;
+}
+
+@media (max-width: 640px) {
+    .gobiker-search {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .gobiker-search-field {
+        flex-basis: 100%;
+    }
+
+    .gobiker-search .gobiker-action {
+        flex: 1;
+    }
+
+    .gobiker-message-actions {
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+
+    .gobiker-action {
+        min-height: 36px;
+        padding: 0 10px;
+    }
 }
 
 .side-foot {
@@ -2307,58 +2459,57 @@ a.pager-btn:hover {
     }
 }
 
-/* -- Sidebar -- */
-.adm-side {
+/* -- Live map entrance effects -- */
+.adm-live-map .adm-side {
     animation: adm-slide-left 0.9s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
-/* -- Main body wrapper -- */
-.adm-body {
+.adm-live-map .adm-body {
     animation: adm-fade-in 0.7s ease both;
 }
 
 /* -- Page header (h1, sub, actions) -- */
-.page-head {
+.adm-live-map .page-head {
     animation: adm-fade-down 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.15s both;
 }
 
 /* -- Stat cards — stagger each one -- */
-.stat-card:nth-child(1) {
+.adm-live-map .stat-card:nth-child(1) {
     animation: adm-fade-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.25s both;
 }
 
-.stat-card:nth-child(2) {
+.adm-live-map .stat-card:nth-child(2) {
     animation: adm-fade-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.35s both;
 }
 
-.stat-card:nth-child(3) {
+.adm-live-map .stat-card:nth-child(3) {
     animation: adm-fade-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.45s both;
 }
 
-.stat-card:nth-child(4) {
+.adm-live-map .stat-card:nth-child(4) {
     animation: adm-fade-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.55s both;
 }
 
-.stat-card:nth-child(5) {
+.adm-live-map .stat-card:nth-child(5) {
     animation: adm-fade-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.65s both;
 }
 
 /* -- Map card & rider panel -- */
-.map-card {
+.adm-live-map .map-card {
     animation: adm-fade-up 0.85s cubic-bezier(0.16, 1, 0.3, 1) 0.5s both;
 }
 
-.rider-panel {
+.adm-live-map .rider-panel {
     animation: adm-fade-up 0.85s cubic-bezier(0.16, 1, 0.3, 1) 0.65s both;
 }
 
-/* -- Generic cards on other admin pages -- */
-.card:not(.map-card):not(.rider-panel) {
+/* -- Generic cards on the live map -- */
+.adm-live-map .card:not(.map-card):not(.rider-panel) {
     animation: adm-fade-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.3s both;
 }
 
-/* -- Alert banners -- */
-.alert {
+/* -- Live map alert banners -- */
+.adm-live-map .alert {
     animation: adm-fade-down 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both;
 }
 

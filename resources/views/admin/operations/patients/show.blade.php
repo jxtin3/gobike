@@ -4,6 +4,18 @@
 @section('subheading', 'Recorded ' . $patient->recorded_at->format('F j, Y \a\t g:i A'))
 @section('back', route('admin.operations.patients.index'))
 @section('back_label', 'Patients')
+@section('actions')
+    <form method="POST" action="{{ route('admin.operations.patients.destroy', $patient) }}"
+          data-confirm-title="Delete this patient record?"
+          data-confirm-text="This permanently deletes the record and cannot be undone."
+          data-confirm-ok="Delete record">
+        @csrf
+        @method('DELETE')
+        <button type="submit" class="btn btn-soft-danger">
+            <x-admin.icon name="trash" /> Delete record
+        </button>
+    </form>
+@endsection
 
 @section('content')
 @php

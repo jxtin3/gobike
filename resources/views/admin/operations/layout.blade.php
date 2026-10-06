@@ -10,7 +10,7 @@
     @vite(['resources/css/admin/admin.css', 'resources/js/admin/admin.js'])
     @stack('head')
 </head>
-<body class="adm">
+<body class="adm{{ request()->routeIs('admin.dashboard') ? ' adm-live-map' : '' }}">
     <a class="skip-link" href="#main">Skip to content</a>
 
     <div class="adm-shell">
