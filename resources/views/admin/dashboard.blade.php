@@ -1,7 +1,7 @@
 @extends('admin.operations.layout')
 @section('title', 'Dashboard')
 @section('heading', 'Analytics dashboard')
-@section('subheading', 'Platform activity and performance.')
+@section('subheading', 'Vital signs activity and performance.')
 @section('heading-actions')
     <form class="analytics-title-filter" method="GET" action="{{ route('admin.dashboard') }}">
         <label for="dashboard-month">Month</label>

@@ -26,6 +26,36 @@ it('shows monthly aggregated reports without patient identity data', function ()
         'weight' => 65,
         'recorded_at' => now(),
     ]);
+    Patient::create([
+        'user_id' => $recorder->id,
+        'name' => 'High readings patient',
+        'address' => 'Private address',
+        'contact' => '09123456789',
+        'age' => 45,
+        'sys' => 150,
+        'dia' => 95,
+        'pulse' => 110,
+        'resp' => 24,
+        'temp' => 38,
+        'height' => 170,
+        'weight' => 70,
+        'recorded_at' => now(),
+    ]);
+    Patient::create([
+        'user_id' => $recorder->id,
+        'name' => 'Low readings patient',
+        'address' => 'Private address',
+        'contact' => '09123456789',
+        'age' => 45,
+        'sys' => 85,
+        'dia' => 55,
+        'pulse' => 55,
+        'resp' => 10,
+        'temp' => 35.5,
+        'height' => 170,
+        'weight' => 70,
+        'recorded_at' => now()->startOfYear()->addMonths(6),
+    ]);
 
     $response = $this->actingAs($admin)->get(route('admin.operations.reports.index', [
         'month' => now()->format('Y-m'),
@@ -33,14 +63,29 @@ it('shows monthly aggregated reports without patient identity data', function ()
 
     $response->assertOk()
         ->assertSee('Patient check-ups')
+        ->assertSee('Blood pressure')
+        ->assertSee('Abnormal readings by vital sign')
+        ->assertSee('data-checkups=', false)
         ->assertDontSee('Private Patient Name');
 
-    $metrics = $response->viewData('metrics');
-    expect($metrics[0]['total'])->toBe(1)
-        ->and($metrics[1]['total'])->toBe(1)
-        ->and($metrics[0]['months'])->toHaveCount(12)
-        ->and($metrics[0]['months'][0]['shortLabel'])->toBe('Jan')
-        ->and($metrics[0]['months'][11]['shortLabel'])->toBe('Dec');
+    $analytics = $response->viewData();
+    $vitals = $analytics['vitals'];
+    expect($analytics['checkupsTotal'])->toBe(3)
+        ->and($analytics['checkups'])->toHaveCount(12)
+        ->and($analytics['checkups'][0]['shortLabel'])->toBe('Jan')
+        ->and($analytics['checkups'][11]['shortLabel'])->toBe('Dec')
+        ->and($vitals['blood_pressure']['totalHigh'])->toBe(1)
+        ->and($vitals['blood_pressure']['totalLow'])->toBe(1)
+        ->and($vitals['pulse']['totalHigh'])->toBe(1)
+        ->and($vitals['pulse']['totalLow'])->toBe(1)
+        ->and($vitals['respiration']['totalHigh'])->toBe(1)
+        ->and($vitals['respiration']['totalLow'])->toBe(1)
+        ->and($vitals['temperature']['totalHigh'])->toBe(1)
+        ->and($vitals['temperature']['totalLow'])->toBe(1)
+        ->and($analytics['pie'])->toHaveCount(4)
+        ->and($analytics['pie'][0]['count'])->toBe(2)
+        ->and($analytics['pie'][0]['high'])->toBe(1)
+        ->and($analytics['pie'][0]['low'])->toBe(1);
 });
 
 it('makes analytics the admin dashboard and places live operations after the charts', function () {
@@ -50,7 +95,7 @@ it('makes analytics the admin dashboard and places live operations after the cha
         ->get(route('admin.dashboard'))
         ->assertOk()
         ->assertSee('Analytics dashboard')
-        ->assertSee('Choose a key performance indicator')
+        ->assertSee('Choose a vital sign')
         ->assertSee('data-bar-chart', false)
         ->assertSee('data-line-chart', false)
         ->assertSee('data-pie-chart', false)
@@ -59,9 +104,9 @@ it('makes analytics the admin dashboard and places live operations after the cha
         ->assertDontSee('>Operations</span>', false)
         ->assertDontSee('>Reports</span>', false)
         ->assertSeeInOrder([
+            'Abnormal readings by vital sign',
             'Monthly activity',
-            'Activity trend',
-            'Period breakdown',
+            'Vital-sign screening',
         ]);
 
     $this->get(route('admin.live-map.index'))
