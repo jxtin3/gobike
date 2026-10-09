@@ -1,7 +1,7 @@
 /* HOME / Section 6 — Impact Statistics */
 
 .text-stat {
-    font-size: clamp(2.4rem, 4.5vw, 3.6rem);
+    font-size: clamp(2.1rem, 3.8vw, 3rem);
     line-height: 1;
 }
 

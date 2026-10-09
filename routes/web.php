@@ -129,6 +129,10 @@ Route::middleware([EnsureAdmin::class])->group(function () {
         ->name('admin.operations.homepage-data.impact-stats.update');
     Route::delete('/admin/operations/homepage-data/impact-stats/{impactStat}', [HomepageDataController::class, 'destroyImpactStat'])
         ->name('admin.operations.homepage-data.impact-stats.destroy');
+    Route::get('/admin/operations/news/homepage', [AdminNewsController::class, 'homepage'])
+        ->name('admin.operations.news.homepage');
+    Route::put('/admin/operations/news/homepage', [AdminNewsController::class, 'updateHomepage'])
+        ->name('admin.operations.news.homepage.update');
     Route::resource('/admin/operations/news', AdminNewsController::class)->names('admin.operations.news');
     Route::resource('/admin/operations/pictures', PictureController::class)->names('admin.operations.pictures');
     Route::resource('/admin/operations/users', AdminUserController::class)->names('admin.operations.users');

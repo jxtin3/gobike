@@ -35,7 +35,7 @@
         </a>
 
         <a class="side-link" href="{{ route('admin.operations.gobiker-messages.index') }}" aria-current="{{ $current('admin.operations.gobiker-messages.*') }}">
-            <x-admin.icon name="chat" /><span>GoBiker Messages</span>
+            <x-admin.icon name="message-square" /><span>GoBiker Messages</span>
             @if (($navGobikerUnread ?? 0) > 0)
                 <span class="badge badge-blue">{{ $navGobikerUnread }}</span>
             @endif

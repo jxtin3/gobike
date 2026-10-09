@@ -22,7 +22,7 @@
         </video>
     </div>
 
-    <!-- Directional overlay -->
+    <!--overlay fade -->
     <div class="hero-overlay absolute inset-0 z-10"></div>
 
     <!-- Subtle grain -->
@@ -34,14 +34,6 @@
     <!-- Content -->
     <div class="relative z-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
         <div class="max-w-3xl">
-
-            <!-- Legitimacy badge -->
-            <!-- <div class="hero-accreditation mb-6 reveal">
-                <span class="hero-accreditation-dot"></span>
-                Youth-Led · Pangasinan · Est. 2019
-                <span class="w-px h-3 bg-white/20 mx-1"></span>
-                Accredited by DILG Region I
-            </div> -->
 
             <!-- Main headline -->
             <h1
@@ -81,62 +73,24 @@
         </div>
     </div>
 
-    <!-- Scroll hint -->
-    <!-- <div class="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-2 text-white/40 animate-bounce" aria-hidden="true">
-        <span class="text-[10px] tracking-[0.22em] uppercase font-semibold">Scroll</span>
-        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5"/></svg>
-    </div> -->
+
 </section>
 
 
-<!-- Partners / Trust Bar -->
-@if ($partners->isNotEmpty())
-<div class="trust-bar overflow-hidden" aria-label="Government affiliations and partners">
-    <div class="trust-bar-track-wrap">
-        <div class="trust-bar-fade trust-bar-fade--left" aria-hidden="true"></div>
-
-        <div class="flex items-center w-max affiliation-track" role="list">
-            @foreach ($partners->concat($partners)->concat($partners) as $partner)
-            <div class="trust-badge" role="listitem">
-                <span class="trust-badge-dot" aria-hidden="true"></span>
-                <span class="trust-badge-abbr">{{ $partner->abbreviation }}</span>
-                <span class="trust-badge-divider" aria-hidden="true"></span>
-                <span class="trust-badge-label">{{ $partner->name }}</span>
-            </div>
-            @endforeach
-        </div>
-
-        <div class="trust-bar-fade trust-bar-fade--right" aria-hidden="true"></div>
-    </div>
-</div>
-@endif
 
 <!-- SECTION 2 — MANTRA & IMPACT STORIES -->
 <section id="stories" class="bg-white" aria-labelledby="stories-heading">
 
-    <!-- Mantra -->
-    <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-20 md:py-20 text-center reveal">
-         <span class="mantra-quote" aria-hidden="true">&ldquo;</span>  <!-- qoute -->
-        <h2 class="text-4xl md:text-6xl lg:text-6xl font-heading font-black text-[#111827] uppercase tracking-tighter leading-[1.08] mt-4">
-            We Believe In The
-            <br>
-            <span class="mantra-box"><span id="mantra-word" class="mantra-flip-in">Power of Youth</span></span>
-            <br>
-            To Transform Communities.
-        </h2>
-        <p class="mt-8 text-[#64748B] text-base md:text-lg leading-relaxed max-w-2xl mx-auto">
-            One bicycle. One community. One mission. Empowering a generation of servant leaders dedicated to improving lives through service, compassion, and action.        
-        </p>
-    </div>
+    
 
     <!-- Story Cards -->
-    <div class="w-full flex flex-col gap-8 md:gap-14 pb-12 overflow-x-hidden">
+    <div class="w-full flex flex-col gap-16 md:gap-20 pt-14 md:pt-16 pb-12 overflow-x-hidden">
 
         <!-- Story 1 -->
         <div class="relative flex flex-col md:flex-row items-stretch">
             <div class="w-full md:w-[68%] relative h-[380px] md:h-[520px] overflow-hidden flex-shrink-0">
                 <img
-                    src="{{ asset('images/story-1.jpg') }}"
+                    src="{{ asset('images/storycard.png') }}"
                     class="absolute inset-0 w-full h-full object-cover"
                     alt="Youth responders in action"
                     loading="lazy"
@@ -155,10 +109,9 @@
                 The Clock
             </h3>
             <p class="text-white/65 text-sm md:text-base leading-relaxed mb-8 font-light">
-                In remote barangays, access to immediate care is limited. Our youth responders on bicycles bridge that gap, delivering first aid and critical supplies faster than traditional vehicles ever could.
-            </p>
-            <a href="{{ url('/what-we-do') }}" class="text-sm font-semibold text-[#2FA7FF] hover:text-white transition-colors flex items-center gap-2 group">
-                        Learn about the program
+                Using cargo bikes to be on the move, youth volunteers in Pangasinan make it their mission to help provide basic medical services to residents of Barangay Umanday.            </p>
+            <a href="{{ url('https://www.rappler.com/moveph/262436-pangasinan-youth-volunteers-bike-answer-communtity-health-needs/') }}" class="text-sm font-semibold text-[#2FA7FF] hover:text-white transition-colors flex items-center gap-2 group">
+                        Read the Story in Rappler
                         <svg class="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/></svg>
                     </a>
                 </div>
@@ -167,7 +120,7 @@
 
         <!-- Story 2 -->
         <div class="relative flex flex-col md:flex-row-reverse items-stretch" x-data="{ playing: false }">
-            <div class="w-full md:w-[68%] relative h-[380px] md:h-[550px] overflow-hidden flex-shrink-0 group cursor-pointer"
+            <div class="w-full md:w-[72%] relative h-[440px] md:h-[640px] overflow-hidden flex-shrink-0 group cursor-pointer"
                  @click="playing ? $refs.video.pause() : $refs.video.play(); playing = !playing">
                 <video
                     x-ref="video"
@@ -176,7 +129,7 @@
                     playsinline
                     class="absolute inset-0 w-full h-full object-cover"
                 >
-                    <source src="{{ asset('videos/story-2.mp4') }}" type="video/mp4">
+                    <source src="{{ asset('videos/story_2_video.mp4') }}" type="video/mp4">
                 </video>
                 <div class="absolute inset-0 bg-gradient-to-l from-transparent to-[#1a1a1a]/30 pointer-events-none"></div>
 
@@ -191,24 +144,61 @@
                 </button>
             </div>
             <!-- Text panel -->
-            <div class="reveal reveal-left w-full md:w-[44%] z-10 self-center md:my-12">
-                <div class="story-card bg-[#1a1a1a] p-10 md:p-12 lg:p-16 flex flex-col justify-center text-white h-full transition-all duration-700 ease-in-out transform"
-                :class="playing ? 'md:mr-2 scale-95 md:-translate-x-6' : 'md:-mr-16 scale-100 translate-x-0'">
+            <div class="reveal reveal-left w-full md:w-[56%] z-10 self-center md:my-12">
+                <div class="story-card bg-[#1a1a1a] p-10 md:p-12 lg:p-16 flex flex-col justify-center text-white h-full min-h-[400px] md:min-h-[500px] md:-mr-16 transition-[width] duration-500 ease-in-out"
+                     :class="playing ? 'md:w-[calc(100%_+_4rem)]' : 'md:w-[calc(100%_+_12rem)]'">
                     <div class="story-rule"></div>
-                    <span class="text-[10px] font-bold tracking-[0.2em] uppercase text-[#F97316]/70 mb-3">Youth Leadership</span>
                     <h3 class="text-3xl md:text-4xl font-heading font-bold uppercase mb-5 leading-tight tracking-tight">
                         Empowering The<br>
                         Next Generation
                     </h3>
                     <p class="text-white/65 text-sm md:text-base leading-relaxed mb-8 font-light">
-                        Bicycles do more than transport; they unlock potential. We see young riders turning into community leaders, taking responsibility for the health and safety of their neighbors.
+                        Bicycles do more than transport; they unlock potential. We see young riders turning into community leaders, 
+                        taking responsibility for the health and safety of their neighbors.
                     </p>
-                <div>
-                    <a href="{{ url('/news') }}" class="btn-wbr">
-                        <span>Read Their Stories</span>
-                        <svg class="w-5 h-5 arrow" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/></svg>
-                    </a>
-                </div>
+                
+            </div>
+        </div>
+    </div>
+
+    <!-- Story 3 -->
+    <div class="relative flex flex-col md:flex-row items-stretch" x-data="{ playing: false }">
+        <div class="w-full md:w-[72%] relative h-[440px] md:h-[640px] overflow-hidden flex-shrink-0 group cursor-pointer"
+             @click="playing ? $refs.video.pause() : $refs.video.play(); playing = !playing">
+            <video
+                x-ref="video"
+                loop
+                muted
+                playsinline
+                class="absolute inset-0 w-full h-full object-cover"
+            >
+                <source src="{{ asset('videos/story_2_video.mp4') }}" type="video/mp4">
+            </video>
+            <div class="absolute inset-0 bg-gradient-to-l from-transparent to-[#1a1a1a]/30 pointer-events-none"></div>
+
+            <!-- Play/Pause Button -->
+            <button
+                @click.stop="playing ? $refs.video.pause() : $refs.video.play(); playing = !playing"
+                class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20 w-14 h-14 md:w-16 md:h-16 bg-black/40 hover:bg-black/60 border border-white/20 backdrop-blur-md text-white rounded-full flex items-center justify-center shadow-lg transition-all duration-300 opacity-40 group-hover:opacity-100"
+                aria-label="Play/Pause Video"
+            >
+                <svg x-show="playing" style="display: none;" class="w-6 h-6 md:w-7 md:h-7" fill="currentColor" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M6.75 5.25a.75.75 0 0 1 .75-.75H9a.75.75 0 0 1 .75.75v13.5a.75.75 0 0 1-.75.75H7.5a.75.75 0 0 1-.75-.75V5.25Zm7.5 0A.75.75 0 0 1 15 4.5h1.5a.75.75 0 0 1 .75.75v13.5a.75.75 0 0 1-.75.75H15a.75.75 0 0 1-.75-.75V5.25Z" clip-rule="evenodd" /></svg>
+                <svg x-show="!playing" class="w-6 h-6 md:w-7 md:h-7 ml-0.5 md:ml-1" fill="currentColor" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M4.5 5.653c0-1.427 1.529-2.33 2.779-1.643l11.54 6.347c1.295.712 1.295 2.573 0 3.286L7.28 19.99c-1.25.687-2.779-.217-2.779-1.643V5.653Z" clip-rule="evenodd" /></svg>
+            </button>
+        </div>
+        <!-- Text panel -->
+        <div class="reveal reveal-right w-full md:w-[56%] md:-ml-16 z-10 self-center md:my-12">
+            <div class="story-card bg-[#1a1a1a] p-10 md:p-12 lg:p-16 flex flex-col justify-center text-white h-full min-h-[400px] md:min-h-[500px] md:-mr-16 transition-[width,translate] duration-500 ease-in-out"
+                 :class="playing ? 'md:w-[calc(100%_+_4rem)] md:-translate-x-16' : 'md:w-[calc(100%_+_12rem)] md:-translate-x-32'">
+                <div class="story-rule"></div>
+                <h3 class="text-3xl md:text-4xl font-heading font-bold uppercase mb-5 leading-tight tracking-tight">
+                    Empowering The<br>
+                    Next Generation
+                </h3>
+                <p class="max-w-[30rem] text-white/65 text-sm md:text-base leading-relaxed mb-8 font-light">
+                    Bicycles do more than transport; they unlock potential. We see young riders turning into community leaders, taking responsibility for the health and safety of their neighbors.
+                </p>
+                
             </div>
         </div>
     </div>
@@ -225,22 +215,21 @@
     x-data="programSlider()"
 >
     <!-- Header Bar -->
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-4 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-        <div>
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-4 flex justify-center">
+        <div class="text-center">
             <!-- <span class="section-eyebrow mb-2 inline-flex">Our Programs</span> -->
-            <h2 id="programs-heading" class="text-4xl md:text-5xl font-heading font-bold text-white uppercase">
-                What We Do
+            <h2 id="programs-heading" class="text-4xl md:text-5xl font-heading font-bold text-white uppercase text-center">
+                LEARN MORE ABOUT OUR PROGRAMS
             </h2>
         </div>
-        <!-- <a href="{{ url('/what-we-do') }}" class="text-sm font-bold text-white/70 hover:text-white transition-colors flex items-center gap-2 pb-2 tracking-wide group">
-            View All Programs
-            <svg class="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/></svg>
-        </a> -->
+
     </div>
 
     <!-- Slider -->
     <div
-        class="relative w-full overflow-hidden bg-[#111827] min-h-[580px] md:min-h-[640px]"
+        class="relative w-full overflow-hidden bg-[#111827] min-h-[580px] md:min-h-[640px] touch-pan-y"
+        @touchstart.passive="touchStart($event)"
+        @touchend.passive="touchEnd($event)"
     >
         <!-- Background slides -->
         <template x-for="(prog, index) in programs" :key="index">
@@ -264,7 +253,7 @@
         </template>
 
         <!-- Content Area -->
-        <div class="absolute inset-0 z-20 flex items-center md:items-end pb-12 md:pb-24 px-4 sm:px-8 lg:px-16">
+        <div class="absolute inset-0 z-20 flex items-center md:items-end pb-6 md:pb-12 px-4 sm:px-8 lg:px-16">
             <div class="w-full max-w-5xl relative h-auto">
                 <template x-for="(prog, index) in programs" :key="'c' + index">
                     <div
@@ -275,7 +264,7 @@
                         x-transition:leave="transition ease-in duration-300 absolute inset-0 z-0"
                         x-transition:leave-start="opacity-100"
                         x-transition:leave-end="opacity-0"
-                        class="w-full max-w-sm bg-white/5 backdrop-blur-xl border border-white/10 py-10 px-6 md:py-12 md:px-8 rounded-sm shadow-2xl flex flex-col justify-center min-h-[400px]"
+                        class="w-full max-w-sm py-10 px-6 pb-6 md:px-8 md:py-12 md:pb-8 flex flex-col justify-end min-h-[400px]"
                         @mouseenter="pause()"
                         @mouseleave="resume()"
                     >
@@ -294,31 +283,17 @@
         </div>
 
         <!-- Navigation controls -->
-        <div class="absolute right-6 bottom-8 z-30 flex items-center gap-3">
-            <button
-                @click="prev()"
-                class="w-9 h-9 rounded-none border border-white/20 text-white/60 hover:bg-white/10 hover:text-white transition-all flex items-center justify-center"
-                aria-label="Previous program"
-            >
-                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5"/></svg>
-            </button>
+        <div class="absolute left-1/2 bottom-8 z-30 flex -translate-x-1/2 items-center gap-3">
             <div class="flex gap-2">
                 <template x-for="(prog, index) in programs" :key="'d' + index">
                     <button
                         @click="goTo(index)"
-                        class="h-1.5 rounded-none transition-all duration-300"
-                        :class="active === index ? 'w-7 bg-[#F97316]' : 'w-1.5 bg-white/35 hover:bg-white/60'"
+                        class="h-2 rounded-full transition-all duration-300"
+                        :class="active === index ? 'w-7 bg-[#F97316]' : 'w-2 bg-white/35 hover:bg-white/60'"
                         :aria-label="'Go to slide ' + (index + 1)"
                     ></button>
                 </template>
             </div>
-            <button
-                @click="next()"
-                class="w-9 h-9 rounded-none border border-white/20 text-white/60 hover:bg-white/10 hover:text-white transition-all flex items-center justify-center"
-                aria-label="Next program"
-            >
-                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5"/></svg>
-            </button>
         </div>
     </div>
 
@@ -340,7 +315,7 @@
                 Find What You Need
             </h2>
             <p class="text-[#64748B] mt-3 max-w-md mx-auto text-sm leading-relaxed">
-                Quickly navigate to our key services and programs designed to serve the Pangasinan community.
+                Quickly navigate to our key services and programs designed to serve the community.
             </p>
         </div>
 
@@ -390,13 +365,11 @@
             <a
                 href="{{ url($link['href']) }}"
                 id="quick-link-{{ $i }}"
-                class="quick-card group flex flex-col gap-4 p-6 reveal reveal-delay-{{ $i + 1 }}"
-                style="--card-accent: {{ $link['accent'] }}"
+                class="quick-card flex flex-col gap-4 p-6 reveal reveal-delay-{{ $i + 1 }}"
                 aria-label="{{ $link['title'] }}"
             >
                 <!-- Icon -->
-                <div class="w-12 h-12 rounded-sm {{ $link['bg'] }} flex items-center justify-center shadow-md
-                            transition-transform duration-300 group-hover:scale-105">
+                <div class="w-12 h-12 rounded-sm {{ $link['bg'] }} flex items-center justify-center shadow-md">
                     <svg class="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
                         {!! $link['icon'] !!}
                     </svg>
@@ -412,10 +385,10 @@
                     <p class="text-sm text-[#64748B] leading-relaxed">{{ $link['desc'] }}</p>
                 </div>
 
-                <div class="flex items-center gap-1.5 text-xs font-bold mt-auto transition-colors duration-200"
+                <div class="flex items-center gap-1.5 text-xs font-bold mt-auto"
                      style="color: {{ $link['accent'] }}">
                     Explore
-                    <svg class="w-3.5 h-3.5 group-hover:translate-x-1.5 transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/></svg>
+                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/></svg>
                 </div>
             </a>
             @endforeach
@@ -427,19 +400,16 @@
 
 <!-- SECTION 5 impact stat -->
 
-    <!-- for section below (gradient style)-->
-     <!-- style="background: linear-gradient(to bottom, #0D1B2A 0%, #0D1B2A 38%, #172236 48%, #2A3548 58%, #4B5768 68%, #7C8798 78%, #B8C2CE 88%, #E4E9EF 96%, #F8FAFC 100%);" -->
-
 <section
     id="impact"
-    class="relative overflow-hidden bg-[#0D1B2A] py-10 md:py-5"
+    class="border-y border-slate-200 bg-[#F8FAFC] py-4 md:py-5"
     aria-label="Impact statistics"
 >
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 relative z-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 divide-y-2 sm:divide-y-0 sm:divide-x-2 divide-[#0D1B2A]/30">
+    <div class="mx-auto grid max-w-7xl grid-cols-1 divide-y divide-slate-200 px-4 sm:grid-cols-2 sm:divide-y-0 sm:divide-x sm:px-6 lg:grid-cols-4">
         @foreach ($impactStats as $stat)
-            <div class="flex flex-col items-center justify-center text-center py-10 px-4">
-                <span class="text-stat font-heading font-bold text-white mb-2" data-count-up="{{ $stat->value }}">{{ $stat->value }}</span>
-                <span class="text-white font-bold text-xs tracking-widest uppercase">{{ $stat->label }}</span>
+            <div class="flex flex-col items-center justify-center px-4 py-7 text-center md:py-8">
+                <span class="text-stat font-heading font-semibold tracking-tight text-[#132D6B]" data-count-up="{{ $stat->value }}">{{ $stat->value }}</span>
+                <span class="mt-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-600">{{ $stat->label }}</span>
             </div>
         @endforeach
     </div>
@@ -447,10 +417,9 @@
  
 <!-- 
      SECTION 6 — featured impact -->
-   
 <section
     id="featured-impact"
-    class="py-20 md:py-28 bg-white overflow-hidden"
+    class="bg-white pt-20 pb-10 md:pt-28 md:pb-12 overflow-hidden"
     aria-labelledby="impact-story-heading"
 >
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -530,26 +499,27 @@
 <!-- SECTION 7 — LATEST NEWS -->
 <section
     id="latest-news"
-    class="py-20 md:py-10 bg-white"
+    class="bg-[#F8FAFC] pt-10 pb-16 md:pt-12 md:pb-24"
     aria-labelledby="news-heading"
 >
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-12 reveal">
-            <div>
-                <!-- <span class="inline-flex items-center gap-2 text-[10px] font-semibold tracking-[0.22em] uppercase text-[#F97316] mb-3">
-                    Stay Informed
-                </span> -->
-                <h2 id="news-heading" class="text-4xl md:text-5xl font-heading font-bold text-[#111827] uppercase leading-tight">
-                    Latest News<br/>& Updates
+        <div class="mb-9 flex flex-col gap-6 border-b border-slate-200 pb-7 reveal sm:flex-row sm:items-end sm:justify-between md:mb-12">
+            <div class="max-w-2xl">
+
+                <h2 id="news-heading" class="font-heading text-4xl font-bold uppercase leading-tight text-[#111827] md:text-5xl">
+                    News &amp; Updates
                 </h2>
+                <p class="mt-3 max-w-xl text-sm leading-relaxed text-[#64748B] md:text-base">
+                    The latest stories, activities, and updates from the OneGoBike community.
+                </p>
             </div>
-            <a href="{{ url('/news') }}" class="text-sm font-bold text-[#132D6B] hover:text-[#2FA7FF] transition-colors flex items-center gap-2 pb-2 tracking-wide group">
+            <a href="{{ url('/news') }}" class="group inline-flex min-h-11 shrink-0 items-center justify-center gap-2 border border-[#132D6B]/20 bg-white px-5 py-3 text-xs font-bold uppercase tracking-[0.12em] text-[#132D6B] transition-colors hover:border-[#132D6B] hover:bg-[#132D6B] hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#2FA7FF] focus-visible:ring-offset-2">
                 View All News
-                <svg class="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/></svg>
+                <svg class="h-4 w-4 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/></svg>
             </a>
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 lg:gap-7">
             @if(isset($latestNews) && $latestNews->count() > 0)
                 @foreach($latestNews as $i => $newsItem)
                 <div class="news-card reveal reveal-delay-{{ $i + 1 }}">
@@ -557,19 +527,22 @@
                         <img src="{{ $newsItem->image_path ? asset($newsItem->image_path) : asset('images/gobike-logo.png') }}" alt="{{ $newsItem->title }}" class="news-card-image" loading="lazy">
                     </div>
                     <div class="news-card-content">
-                        <div class="news-card-date">{{ $newsItem->published_at->format('F d, Y') }}</div>
+                        <div class="news-card-date">
+                            <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25m10.5-2.25v2.25M3.75 8.25h16.5M5.25 4.5h13.5A1.5 1.5 0 0 1 20.25 6v14.25H3.75V6a1.5 1.5 0 0 1 1.5-1.5Z"/></svg>
+                            <time datetime="{{ $newsItem->published_at->toDateString() }}">{{ $newsItem->published_at->format('F d, Y') }}</time>
+                        </div>
                         <h3 class="news-card-title">{{ $newsItem->title }}</h3>
                         <p class="news-card-excerpt">{{ $newsItem->summary }}</p>
                         
-                        <a href="{{ url('/news') }}" class="news-card-link mt-auto group">
-                            Read More
-                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/></svg>
+                        <a href="{{ url('/news') }}" class="news-card-link mt-auto group" aria-label="Read more news: {{ $newsItem->title }}">
+                            Read story
+                            <svg class="h-5 w-5 shrink-0 transition-transform duration-200 group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14m-7-7 7 7-7 7"/></svg>
                         </a>
                     </div>
                 </div>
                 @endforeach
             @else
-                <p class="text-[#64748B]">No news available at the moment.</p>
+                <p class="col-span-full border border-dashed border-slate-300 bg-white px-6 py-10 text-center text-sm text-[#64748B]">No news available at the moment.</p>
             @endif
         </div>
     </div>

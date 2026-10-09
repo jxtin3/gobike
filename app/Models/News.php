@@ -16,11 +16,13 @@ class News extends Model
         'category',
         'is_published',
         'published_at',
+        'homepage_position',
     ];
 
     protected $casts = [
         'is_published' => 'boolean',
         'published_at' => 'datetime',
+        'homepage_position' => 'integer',
     ];
 
     // scope to get published news

@@ -31,6 +31,8 @@
 function programSlider() {
     return {
         active: 0,
+        touchStartX: null,
+        touchStartY: null,
         interval: null,
         intervalMs: 5000,
         progress: 0,
@@ -82,6 +84,28 @@ function programSlider() {
         },
         resume() {
             if (!this.interval) this.start();
+        },
+        touchStart(event) {
+            const touch = event.changedTouches[0];
+            this.touchStartX = touch.clientX;
+            this.touchStartY = touch.clientY;
+        },
+        touchEnd(event) {
+            if (this.touchStartX === null || this.touchStartY === null) return;
+
+            const touch = event.changedTouches[0];
+            const deltaX = touch.clientX - this.touchStartX;
+            const deltaY = touch.clientY - this.touchStartY;
+            this.touchStartX = null;
+            this.touchStartY = null;
+
+            if (Math.abs(deltaX) < 50 || Math.abs(deltaX) <= Math.abs(deltaY)) return;
+
+            if (deltaX < 0) {
+                this.next();
+            } else {
+                this.prev();
+            }
         },
         next(manual = true) {
             this.active = (this.active + 1) % this.programs.length;

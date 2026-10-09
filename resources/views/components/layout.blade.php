@@ -101,7 +101,7 @@
                    
                     <a
                         href="{{ url('/donate') }}"
-                        class="inline-flex items-center justify-center px-6 py-2.5 text-xs font-bold tracking-[0.15em] uppercase bg-[#F97316] text-white hover:bg-[#fb923c] shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 rounded-none"
+                        class="inline-flex items-center justify-center px-6 py-2.5 text-xs font-bold tracking-[0.15em] uppercase bg-[#F97316] text-white shadow-md rounded-none"
                     >
                         Donate
                     </a>

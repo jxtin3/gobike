@@ -9,10 +9,17 @@ class HomeController extends Controller
 {
     public function index()
     {
-        $latestNews = \App\Models\News::published()
-            ->orderBy('published_at', 'desc')
-            ->take(3)
+        $featuredNews = \App\Models\News::published()
+            ->whereNotNull('homepage_position')
+            ->orderBy('homepage_position')
             ->get();
+
+        $latestNews = $featuredNews->count() === 3
+            ? $featuredNews
+            : \App\Models\News::published()
+                ->orderBy('published_at', 'desc')
+                ->take(3)
+                ->get();
 
         $partners = HomePartner::orderBy('sort_order')->orderBy('id')->get();
         $impactStats = ImpactStat::where('section', 'impact')->orderBy('sort_order')->orderBy('id')->get();

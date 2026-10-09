@@ -44,6 +44,10 @@
     overflow: hidden;
 }
 
+.story-card p {
+    text-align: justify;
+}
+
 .story-card::after {
     content: '';
     position: absolute;

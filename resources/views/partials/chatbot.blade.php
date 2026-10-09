@@ -14,12 +14,12 @@
         x-transition:leave="transition ease-in duration-150"
         x-transition:leave-start="opacity-100 translate-y-0 scale-100"
         x-transition:leave-end="opacity-0 translate-y-3 scale-95"
-        class="gobot-panel flex h-[24rem] w-[min(22rem,calc(100vw-2.5rem))] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl shadow-black/20"
+        class="gobot-panel flex w-[min(22rem,calc(100vw-2.5rem))] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl shadow-black/20"
         role="dialog"
         aria-label="Chat with GoBot"
     >
         {{-- Header --}}
-        <div class="gobot-header flex items-center gap-3 bg-[#0D1B2A] px-4 py-3.5">
+        <div class="gobot-header flex shrink-0 items-center gap-3 bg-[#0D1B2A] px-4 py-3.5">
             <img
                 src="{{ asset('images/GoBot.jpg') }}"
                 alt=""
@@ -48,7 +48,7 @@
         {{-- Messages --}}
         <div
             x-ref="thread"
-            class="gobot-thread flex-1 space-y-4 overflow-y-auto bg-[#F5F7FB] px-4 py-5"
+            class="gobot-thread min-h-0 flex-1 space-y-4 overflow-y-auto bg-[#F5F7FB] px-4 py-5"
             role="log"
             aria-live="polite"
         >
@@ -76,12 +76,12 @@
             x-show="error"
             x-cloak
             x-text="error"
-            class="border-t border-rose-100 bg-rose-50 px-3 py-1.5 text-xs text-rose-700"
+            class="shrink-0 border-t border-rose-100 bg-rose-50 px-3 py-1.5 text-xs text-rose-700"
             role="alert"
         ></p>
 
         {{-- Input --}}
-        <form @submit.prevent="send()" class="gobot-composer flex items-end gap-2 border-t border-slate-200 bg-white p-3">
+        <form @submit.prevent="send()" class="gobot-composer flex shrink-0 items-end gap-2 border-t border-slate-200 bg-white p-3">
             <label for="gobot-input" class="sr-only">Message</label>
             <textarea
                 id="gobot-input"
@@ -140,11 +140,13 @@
 <style>
     .gobot-panel {
         width: min(22rem, calc(100vw - 2.5rem));
-        height: 24rem;
+        height: min(70dvh, 38rem);
         max-height: calc(100dvh - 7rem);
     }
 
     .gobot-thread {
+        min-height: 0;
+        overscroll-behavior: contain;
         scrollbar-color: #cbd5e1 transparent;
         scrollbar-width: thin;
     }
@@ -196,6 +198,11 @@
             bottom: 1rem;
         }
 
+        .gobot-panel {
+            width: calc(100vw - 2rem);
+            height: min(calc(100dvh - 7rem), 40rem);
+            max-height: calc(100dvh - 7rem);
+        }
     }
 
     @media (prefers-reduced-motion: reduce) {
