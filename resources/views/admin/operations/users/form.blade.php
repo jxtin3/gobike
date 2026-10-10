@@ -16,6 +16,15 @@
                 <label for="email">Email</label>
                 <input class="input @error('email') is-invalid @enderror" id="email" type="email" name="email" required autocomplete="off" value="{{ old('email', $user?->email) }}">
             </div>
+            <div class="field">
+                <label for="mobile">Mobile number</label>
+                <input class="input @error('mobile') is-invalid @enderror" id="mobile" type="tel" name="mobile" inputmode="numeric" pattern="09[0-9]{9}" maxlength="11" autocomplete="tel" value="{{ old('mobile', $user?->mobile) }}">
+                <span class="hint">Use a Philippine mobile number, e.g. 09123456789.</span>
+            </div>
+            <div class="field">
+                <label for="barangay">Barangay</label>
+                <input class="input @error('barangay') is-invalid @enderror" id="barangay" name="barangay" autocomplete="address-level3" value="{{ old('barangay', $user?->barangay) }}">
+            </div>
         </div>
     </fieldset>
 
@@ -23,9 +32,9 @@
         <legend>Password</legend>
         <div class="grid-2">
             <div class="field">
-                <label for="password">{{ $user ? 'New password' : 'Password' }}</label>
+                <label for="password">{{ $user ? 'Set a new password' : 'Password' }}</label>
                 <input class="input @error('password') is-invalid @enderror" id="password" type="password" name="password" autocomplete="new-password" {{ $user ? '' : 'required' }}>
-                <span class="hint">{{ $user ? 'Leave blank to keep the current password.' : 'Minimum 8 characters.' }}</span>
+                <span class="hint">{{ $user ? 'Passwords cannot be viewed. Leave blank to keep the current password.' : 'Minimum 8 characters.' }}</span>
             </div>
             <div class="field">
                 <label for="password_confirmation">Confirm password</label>
@@ -43,7 +52,6 @@
                     <option value="{{ $r }}" @selected($role === $r)>{{ $r }}</option>
                 @endforeach
             </select>
-            <span class="hint">GoBikers and Users sign in to the mobile app. Admin access stays on the sidebar profile.</span>
         </div>
     </fieldset>
 

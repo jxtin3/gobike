@@ -57,6 +57,8 @@ class UserController extends Controller
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'unique:users,email'],
+            'mobile' => ['nullable', 'string', 'regex:/^09[0-9]{9}$/', 'unique:users,mobile'],
+            'barangay' => ['nullable', 'string', 'max:255'],
             'password' => ['required', 'confirmed', 'min:8'],
             'role' => ['required', Rule::in($this->roles)],
         ]);
@@ -99,6 +101,13 @@ class UserController extends Controller
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', Rule::unique('users')->ignore($user)],
+            'mobile' => [
+                'nullable',
+                'string',
+                'regex:/^09[0-9]{9}$/',
+                Rule::unique('users', 'mobile')->ignore($user),
+            ],
+            'barangay' => ['nullable', 'string', 'max:255'],
             'password' => ['nullable', 'confirmed', 'min:8'],
             'role' => ['required', Rule::in($this->roles)],
         ]);

@@ -66,7 +66,7 @@
 
         <aside class="card rider-panel" aria-label="GoBiker list">
             <div class="legend rider-legend" aria-label="GoBiker statuses">
-                <span><i class="status-dot s-active"></i>Active</span>
+                <span><i class="status-dot s-active"></i>Active on Ronda</span>
                 <span><i class="status-dot s-emergency"></i>Emergency</span>
                 <span><i class="status-dot s-responding"></i>Responding</span>
                 <span><i class="status-dot s-offline"></i>Offline</span>

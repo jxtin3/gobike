@@ -182,7 +182,6 @@ class MobileAuthController extends Controller
             'mobile' => $user->mobile,
             'barangay' => $user->barangay,
             'role' => $user->role,
-            'member_since' => $user->created_at?->toDateString(),
         ];
     }
 }

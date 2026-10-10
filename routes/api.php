@@ -5,6 +5,7 @@ use App\Http\Middleware\EnsureAdmin;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\MobileAuthController;
 use App\Http\Controllers\Api\PatientController;
+use App\Http\Controllers\Api\GobikerProfileController;
 
 
 // Go Biker mobile authentication
@@ -44,6 +45,8 @@ Route::middleware([EnsureAdmin::class])->group(function () {
 
 
 Route::middleware(['auth:sanctum', 'gobiker'])->prefix('gobiker')->group(function () {
+    Route::put('/profile', [GobikerProfileController::class, 'update'])->name('api.gobiker.profile.update');
+
     Route::post('/location', [
         LocationController::class,
         'updateLocation',

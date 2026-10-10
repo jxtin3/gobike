@@ -10,16 +10,29 @@ class GobikerMessageController extends Controller
 {
     public function index(Request $request)
     {
+        $search = trim((string) $request->query('search', ''));
+        $statusFilter = in_array($request->query('status'), ['read', 'unread'], true)
+            ? $request->query('status')
+            : null;
+
         $messages = GobikerMessage::with('sender')
-            ->when($request->search, function ($q, $s) {
-                $q->whereHas('sender', fn ($u) => $u->where('name', 'like', "%{$s}%"))
-                  ->orWhere('message', 'like', "%{$s}%");
+            ->when($search !== '', function ($q) use ($search) {
+                $q->where(function ($query) use ($search) {
+                    $query->whereHas('sender', fn ($sender) => $sender->where('name', 'like', "%{$search}%"))
+                        ->orWhere('message', 'like', "%{$search}%");
+                });
             })
+            ->when($statusFilter !== null, fn ($query) => $query->where('is_read', $statusFilter === 'read'))
             ->latest()
             ->paginate(15)
             ->withQueryString();
 
-        return view('admin.operations.gobiker-messages.index', compact('messages'));
+        return view('admin.operations.gobiker-messages.index', [
+            'messages' => $messages,
+            'readMessages' => GobikerMessage::where('is_read', true)->count(),
+            'unreadMessages' => GobikerMessage::where('is_read', false)->count(),
+            'statusFilter' => $statusFilter,
+        ]);
     }
 
     public function markRead(GobikerMessage $message)
