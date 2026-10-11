@@ -1,7 +1,6 @@
 <?php
 
 use App\Http\Controllers\Admin\LocationController;
-use App\Http\Middleware\EnsureAdmin;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\MobileAuthController;
 use App\Http\Controllers\Api\PatientController;
@@ -37,11 +36,6 @@ Route::post('/mobile/logout', [
 ])->middleware('auth:sanctum')->name('api.mobile.logout');
 
 
-//admin
-Route::middleware([EnsureAdmin::class])->group(function () {
-    Route::get('/locations', [LocationController::class, 'index'])->name('api.locations.index');
-    Route::post('/locations', [LocationController::class, 'store'])->name('api.locations.store');
-});
 
 
 Route::middleware(['auth:sanctum', 'gobiker'])->prefix('gobiker')->group(function () {
