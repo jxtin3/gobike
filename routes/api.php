@@ -27,7 +27,7 @@ Route::post('/mobile/google', [
 Route::get('/mobile/me', [
     MobileAuthController::class,
     'me',
-])->middleware('auth:sanctum');
+])->middleware(['auth:sanctum', 'throttle:mobile']);
 
 //
 Route::post('/mobile/logout', [
@@ -38,7 +38,7 @@ Route::post('/mobile/logout', [
 
 
 
-Route::middleware(['auth:sanctum', 'gobiker'])->prefix('gobiker')->group(function () {
+Route::middleware(['auth:sanctum', 'gobiker', 'throttle:mobile'])->prefix('gobiker')->group(function () {
     Route::put('/profile', [GobikerProfileController::class, 'update'])->name('api.gobiker.profile.update');
 
     Route::post('/location', [
