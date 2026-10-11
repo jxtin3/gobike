@@ -107,7 +107,6 @@ Route::middleware([EnsureAdmin::class])->group(function () {
     Route::get('/admin', [DashboardController::class, 'index'])->name('admin.dashboard');
     Route::view('/admin/live-map', 'admin.live-map')->name('admin.live-map.index');
     Route::get('/admin/locations', [LocationController::class, 'index'])->name('admin.locations.index');
-    Route::post('/admin/locations', [LocationController::class, 'store'])->name('admin.locations.store');
     Route::patch('/admin/locations/{location}/status', [LocationController::class, 'updateStatus'])->name('admin.locations.status');
     Route::get('/admin/profile', [ProfileController::class, 'show'])->name('admin.profile.show');
     Route::get('/admin/profile/edit', [ProfileController::class, 'edit'])->name('admin.profile.edit');
