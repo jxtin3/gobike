@@ -32,7 +32,7 @@
 
     <a class="module" href="{{ route('admin.operations.homepage-data.index') }}">
         <div class="module-top"><span class="stat-icon"><x-admin.icon name="edit" /></span><h2>Homepage content</h2><x-admin.icon class="i chev" name="chevron-right" /></div>
-        <p>Manage homepage partnerships and impact statistics.</p>
+        <p>Manage homepage impact statistics.</p>
     </a>
 
 <!-- Users -->

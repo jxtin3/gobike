@@ -104,34 +104,35 @@ Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
 Route::middleware([EnsureAdmin::class])->group(function () {
+
     Route::get('/admin', [DashboardController::class, 'index'])->name('admin.dashboard');
     Route::view('/admin/live-map', 'admin.live-map')->name('admin.live-map.index');
+
     Route::get('/admin/locations', [LocationController::class, 'index'])->name('admin.locations.index');
     Route::patch('/admin/locations/{location}/status', [LocationController::class, 'updateStatus'])->name('admin.locations.status');
+
     Route::get('/admin/profile', [ProfileController::class, 'show'])->name('admin.profile.show');
     Route::get('/admin/profile/edit', [ProfileController::class, 'edit'])->name('admin.profile.edit');
     Route::put('/admin/profile', [ProfileController::class, 'update'])->name('admin.profile.update');
+
     Route::get('/admin/operations', [OperationsController::class, 'index'])->name('admin.operations');
     Route::get('/admin/operations/reports', [ReportController::class, 'index'])
         ->name('admin.operations.reports.index');
     Route::get('/admin/operations/homepage-data', [HomepageDataController::class, 'index'])
         ->name('admin.operations.homepage-data.index');
-    Route::post('/admin/operations/homepage-data/partners', [HomepageDataController::class, 'storePartner'])
-        ->name('admin.operations.homepage-data.partners.store');
-    Route::put('/admin/operations/homepage-data/partners/{partner}', [HomepageDataController::class, 'updatePartner'])
-        ->name('admin.operations.homepage-data.partners.update');
-    Route::delete('/admin/operations/homepage-data/partners/{partner}', [HomepageDataController::class, 'destroyPartner'])
-        ->name('admin.operations.homepage-data.partners.destroy');
+
     Route::post('/admin/operations/homepage-data/impact-stats', [HomepageDataController::class, 'storeImpactStat'])
         ->name('admin.operations.homepage-data.impact-stats.store');
     Route::put('/admin/operations/homepage-data/impact-stats/{impactStat}', [HomepageDataController::class, 'updateImpactStat'])
         ->name('admin.operations.homepage-data.impact-stats.update');
     Route::delete('/admin/operations/homepage-data/impact-stats/{impactStat}', [HomepageDataController::class, 'destroyImpactStat'])
         ->name('admin.operations.homepage-data.impact-stats.destroy');
+
     Route::get('/admin/operations/news/homepage', [AdminNewsController::class, 'homepage'])
         ->name('admin.operations.news.homepage');
     Route::put('/admin/operations/news/homepage', [AdminNewsController::class, 'updateHomepage'])
         ->name('admin.operations.news.homepage.update');
+        
     Route::resource('/admin/operations/news', AdminNewsController::class)->names('admin.operations.news');
     Route::resource('/admin/operations/pictures', PictureController::class)->names('admin.operations.pictures');
     Route::resource('/admin/operations/users', AdminUserController::class)->names('admin.operations.users');
