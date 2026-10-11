@@ -65,7 +65,7 @@ return [
     |
     */
 
-    'timezone' => env('APP_TIMEZONE', 'Asia/Manila', 'UTC'),
+    'timezone' => env('APP_TIMEZONE', 'Asia/Manila'),
 
     'location_stale_after_seconds' => (int) env('LOCATION_STALE_AFTER_SECONDS', 30),
 

@@ -1,118 +1,60 @@
-# OneGoBike Website
+# OneGoBike
 
-A modern, responsive web application developed using **Laravel 12** to serve as the official website for **Go Bike Project**. The platform provides visitors with comprehensive information about the organization's mission, programs, organizational structure, and policies while delivering a clean and engaging user experience.
+Laravel web platform and mobile API for the **Go Bike Project** of PadyaRescue, Inc., a youth-led community responder in Pangasinan, Philippines.
 
----
+## Features
 
-## Overview
+**Public website**
+- Home, About, Programs, Organization Structure, Gallery, News & Updates
+- Donations through PayPal (one-time and monthly) and PayMongo (GCash and online banking)
+- Contact form and Volunteer sign-up form
+- GoBot, an FAQ chatbot powered by Google Gemini
+- Privacy Policy and Terms pages
 
-The OneGoBike Website was designed to strengthen the organization's online presence by providing a centralized platform where users can learn about its advocacy, initiatives, and community impact. The application follows Laravel's MVC architecture and utilizes Blade templating for efficient and maintainable development.
+**Admin panel** (`/admin`)
+- Dashboard with a live GoBiker map and emergency alerts
+- User management, News and Gallery management, Reports, Contact messages
+- Homepage impact statistics
 
----
+**Mobile API** (`/api`, Laravel Sanctum)
+- Registration, login and Google sign-in for the Flutter app
+- GoBiker live location, ronda (patrol) sessions, emergency alerts
+- Patient (community member) records
 
-## Key Features
+## Tech stack
 
-* Responsive user interface compatible with desktop and mobile devices
-* Landing page with interactive sections and smooth animations
-* Organization overview and advocacy presentation
-* Programs and initiatives page
-* Organization Structure page
-* Privacy Policy page
-* Terms and Conditions page
-* Optimized multimedia assets (images and video)
-* Modular Blade component architecture
-* Fast asset compilation through Vite
+Laravel 13, PHP 8.3+, Blade, Tailwind CSS v4, Alpine.js, Vite, Laravel Sanctum, MySQL (SQLite for quick local use).
 
----
-
-## Technology Stack
-
-| Category           | Technology                     |
-| ------------------ | ------------------------------ |
-| Framework          | Laravel 12                     |
-| Language           | PHP 8.2+                       |
-| Frontend           | Blade, HTML5, CSS3, JavaScript |
-| Build Tool         | Vite                           |
-| JavaScript Library | Alpine.js                      |
-| Database           | SQLite (default) / MySQL       |
-| Package Manager    | Composer, npm                  |
-
----
-
-## Project Structure
-
-```text
-OneGoBike/
-├── app/
-├── bootstrap/
-├── config/
-├── database/
-├── public/
-│   ├── images/
-│   ├── js/
-│   └── videos/
-├── resources/
-│   ├── css/
-│   ├── js/
-│   └── views/
-├── routes/
-├── storage/
-├── tests/
-├── composer.json
-├── package.json
-└── vite.config.js
-```
-
----
-
-## Available Pages
-
-* Home
-* About
-* Programs
-* Organization Structure
-* Privacy Policy
-* Terms and Conditions
-
----
-
-## Development
-
-Build production assets:
+## Local setup
 
 ```bash
-npm run build
+composer install
+npm install
+cp .env.example .env
+php artisan key:generate
 ```
 
-Run automated tests:
+Then edit `.env`: set `APP_ENV=local`, `APP_DEBUG=true`, `APP_URL`, `SESSION_SECURE_COOKIE=false`, and your database. After that:
+
+```bash
+php artisan migrate
+php artisan db:seed      # local only: creates demo accounts and fake GoBikers
+npm run dev
+```
+
+## Tests
 
 ```bash
 php artisan test
 ```
 
----
+## Production notes
 
-## Future Enhancements
-
-* Content Management System (CMS)
-* Administrator Dashboard
-* Contact Form Integration
-* Event and Announcement Management
-* News and Blog Module
-* Gallery Management
-* User Authentication
-* Analytics Dashboard
-
----
+- Set `APP_ENV=production` and `APP_DEBUG=false`.
+- Never run `php artisan db:seed` on a live server.
+- The PayPal and PayMongo webhook secrets are required. Webhooks are rejected without them.
+- Never commit the real `.env` file.
 
 ## License
 
-This project is intended for educational and organizational purposes. Licensing terms may be updated according to the project's future distribution requirements.
-
----
-
-## Developers
-
-**OneGoBike Website Development Team**
-
-Built using Laravel and modern web development technologies to support OneGoBike's mission of promoting sustainable transportation and community engagement.
+For educational and organizational use by PadyaRescue, Inc. and the thesis group. Licensing terms may be updated.

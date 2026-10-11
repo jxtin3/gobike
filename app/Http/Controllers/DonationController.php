@@ -85,31 +85,25 @@ class DonationController extends Controller
         PayPalDonationService $paypal,
         PayMongoDonationService $paymongo,
     ): View|RedirectResponse {
-        if ($donation->status !== 'paid') {
-            if ($donation->payment_method === 'paypal' && $donation->frequency === 'monthly' && $request->filled('subscription_id')) {
+    if ($donation->status !== 'paid') {
+        if ($donation->payment_method === 'paypal' && $donation->frequency === 'monthly' && $request->filled('subscription_id') && $donation->paypal_subscription_id) {
             try {
-                $subscription = $paypal->getSubscriptionDetails($request->string('subscription_id')->toString());
+                $subscription = $paypal->getSubscriptionDetails($donation->paypal_subscription_id);
 
                 if ($paypal->isSubscriptionActive($subscription)) {
-                    $donation->update([
-                        'status' => 'paid',
-                        'paypal_subscription_id' => $subscription['id'] ?? $donation->paypal_subscription_id,
-                    ]);
+                    $donation->update(['status' => 'paid']);
                 }
             } catch (\Throwable) {
                 return redirect()
                     ->route('donate.cancel', $donation)
                     ->with('error', 'Subscription could not be confirmed. Please try again.');
             }
-        } elseif ($donation->payment_method === 'paypal' && $request->filled('token')) {
+        } elseif ($donation->payment_method === 'paypal' && $request->filled('token') && $donation->paypal_order_id) {
             try {
-                $capture = $paypal->captureOrder($request->string('token')->toString());
+            $capture = $paypal->captureOrder($donation->paypal_order_id);
 
-                if ($paypal->isCaptureSuccessful($capture)) {
-                    $donation->update([
-                        'status' => 'paid',
-                        'paypal_order_id' => $capture['id'] ?? $donation->paypal_order_id,
-                    ]);
+            if ($paypal->isCaptureSuccessful($capture)) {
+                    $donation->update(['status' => 'paid']);
                 }
             } catch (\Throwable) {
                 return redirect()
