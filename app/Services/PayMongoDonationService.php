@@ -116,7 +116,7 @@ class PayMongoDonationService
         $secret = (string) config('services.paymongo.webhook_secret');
 
         if ($secret === '') {
-            return app()->environment('local', 'testing');
+            return false;
         }
 
         $parts = [];

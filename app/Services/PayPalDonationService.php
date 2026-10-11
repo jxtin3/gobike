@@ -216,10 +216,11 @@ class PayPalDonationService
 
     public function verifyWebhookLocally(array $headers, string $rawBody): bool
     {
-        $webhookId = (string) env('PAYPAL_WEBHOOK_ID', '');
+        $webhookId = (string) config('paypal.webhook_id');
 
+        // No webhook ID configured ==  can't verify the sender, so reject everything.
         if ($webhookId === '') {
-            return app()->environment('local', 'testing');
+            return false;
         }
 
         return $this->client->verifyWebHookLocally($headers, $webhookId, $rawBody);
