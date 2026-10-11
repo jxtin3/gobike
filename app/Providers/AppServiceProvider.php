@@ -7,7 +7,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 use App\Models\GobikerMessage;
-
+use Illuminate\Support\Facades\URL;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -18,6 +18,10 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        if ($this->app->environment('production')) {
+               URL::forceScheme('https');
+        }
+        
         // Runs only when the admin sidebar renders, so public pages are unaffected.
         View::composer('admin.partials.sidebar', function ($view) {
             $view->with([
