@@ -513,10 +513,7 @@
                     The latest stories, activities, and updates from the OneGoBike community.
                 </p>
             </div>
-            <a href="{{ url('/news') }}" class="group inline-flex min-h-11 shrink-0 items-center justify-center gap-2 border border-[#132D6B]/20 bg-white px-5 py-3 text-xs font-bold uppercase tracking-[0.12em] text-[#132D6B] transition-colors hover:border-[#132D6B] hover:bg-[#132D6B] hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#2FA7FF] focus-visible:ring-offset-2">
-                View All News
-                <svg class="h-4 w-4 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/></svg>
-            </a>
+            
         </div>
 
         <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 lg:gap-7">
