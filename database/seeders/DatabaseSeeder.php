@@ -10,12 +10,13 @@ class DatabaseSeeder extends Seeder
 {
     use WithoutModelEvents;
 
-    /**
-     * Seed the application's database.
-     */
     public function run(): void
     {
-        // User::factory(10)->create();
+        if (! app()->environment('local')) {
+            $this->command?->warn('Skipped: demo seed data only runs when APP_ENV=local.');
+
+            return;
+        }
 
         User::factory()->create([
             'name' => 'Test User',
@@ -30,7 +31,6 @@ class DatabaseSeeder extends Seeder
         ]);
 
         $this->call([
-            // NewsSeeder::class,
             LocationSeeder::class,
         ]);
     }
