@@ -67,9 +67,9 @@ Route::post('/contact', [\App\Http\Controllers\ContactController::class, 'store'
     ->middleware('throttle:5,1')
     ->name('contact.store');
 
-//chatbot ----20 requests/minute per IP
+//chatbot :20 requests/minute per IP
 Route::post('/chatbot/message', [ChatbotController::class, 'message'])
-    ->middleware('throttle:20,1')
+    ->middleware('throttle:chatbot')
     ->name('chatbot.message');
 
 

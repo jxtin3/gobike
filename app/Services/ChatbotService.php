@@ -28,6 +28,7 @@ class ChatbotService
 
         $response = Http::withHeaders(['x-goog-api-key' => $apiKey])
             ->acceptJson()
+            ->timeout(20)
             ->post('https://generativelanguage.googleapis.com/v1beta/models/'.config('chatbot.model').':generateContent', [
                 'contents' => $contents,
                 'systemInstruction' => [

@@ -15,7 +15,7 @@ class SendChatMessageRequest extends FormRequest
     {
         return [
             'message' => ['required', 'string', 'max:1000'],
-            'history' => ['array'],
+            'history' => ['array', 'max:12'],
             'history.*.role' => ['required_with:history', 'in:user,model'],
             'history.*.text' => ['required_with:history', 'string', 'max:1000'],
         ];
