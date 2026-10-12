@@ -14,7 +14,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Builder;
 
 
-#[Fillable(['name', 'email', 'password', 'is_admin', 'role', 'status', 'mobile', 'barangay', 'google_id'])]
+#[Fillable(['name', 'email', 'password', 'role', 'status', 'mobile', 'barangay', 'google_id'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
