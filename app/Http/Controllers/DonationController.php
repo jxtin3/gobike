@@ -10,7 +10,9 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use Illuminate\Support\Facades\Log;
 use Throwable;
+
 
 class DonationController extends Controller
 {
@@ -66,13 +68,19 @@ class DonationController extends Controller
                 $donation->update(['paymongo_session_id' => $result['session_id']]);
                 $redirectUrl = $result['checkout_url'];
             }
-        } catch (\Throwable $e) {
-            $donation->update(['status' => 'failed']);
+            } catch (\Throwable $e) {
+                Log::error('Donation checkout failed', [
+                   'donation_id' => $donation->id,
+                   'method' => $donation->payment_method,
+                   'error' => $e->getMessage(),
+                ]);
 
-            return response()->json([
-                'message' => $e->getMessage(),
-            ], 422);
-        }
+                $donation->update(['status' => 'failed']);
+
+                return response()->json([
+                   'message' => 'We could not start the payment right now. Please try again in a moment.',
+                ], 422);
+            }
 
         return response()->json([
             'redirect_url' => $redirectUrl,
@@ -168,9 +176,16 @@ class DonationController extends Controller
 
             return redirect()->away($result['checkout_url']);
         } catch (Throwable $e) {
+            Log::error('Donation retry failed', [
+                'donation_id' => $donation->id,
+                'error' => $e->getMessage(),
+            ]);
+
             return redirect()
                 ->route('donate.cancel', $donation)
-                ->with('error', 'Could not create a new payment session: '.$e->getMessage());
+                ->with('error', 'Could not create a new payment session. Please try again in a moment.');
         }
+
+            
     }
 }

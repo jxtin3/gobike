@@ -18,8 +18,8 @@ class CheckoutDonationRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'amount' => ['required', 'numeric', 'min:1'],
-            'platform_fee' => ['nullable', 'numeric', 'min:0'],
+            'amount' => ['required', 'numeric', 'min:1', 'max:10000'],
+            'platform_fee' => ['nullable', 'numeric', 'min:0', 'max:1000'],
             'frequency' => ['required', Rule::in(['once', 'monthly'])],
             'payment_method' => [
                 'required',

@@ -75,7 +75,7 @@ Route::post('/chatbot/message', [ChatbotController::class, 'message'])
 
 //donation
 Route::get('/donate', [DonationController::class, 'show'])->name('donate');
-Route::post('/donate/checkout', [DonationController::class, 'checkout'])->name('donate.checkout');
+Route::post('/donate/checkout', [DonationController::class, 'checkout'])->middleware('throttle:10,1')->name('donate.checkout');
 Route::get('/donate/success/{donation}', [DonationController::class, 'success'])->name('donate.success');
 Route::get('/donate/cancel/{donation}', [DonationController::class, 'cancel'])->name('donate.cancel');
 Route::get('/donate/retry/{donation}', [DonationController::class, 'retry'])->name('donate.retry');
