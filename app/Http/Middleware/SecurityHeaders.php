@@ -33,18 +33,21 @@ class SecurityHeaders
         return $response;
     }
 
-    private function policy(): string
+        private function policy(): string
     {
+        $dev = implode(' ', $this->devServer());
+        $withDev = fn (string $directive) => trim($directive.' '.$dev);
+
         return implode('; ', [
             "default-src 'self'",
             // Alpine.js and a few inline admin scripts need these two.
-            "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
-            "style-src 'self' 'unsafe-inline'",
+            $withDev("script-src 'self' 'unsafe-inline' 'unsafe-eval'"),
+            $withDev("style-src 'self' 'unsafe-inline'"),
             // Map tiles come from OpenStreetMap.
-            "img-src 'self' data: blob: https://*.tile.openstreetmap.org https://tile.openstreetmap.org",
-            "font-src 'self' data:",
+            $withDev("img-src 'self' data: blob: https://*.tile.openstreetmap.org https://tile.openstreetmap.org"),
+            $withDev("font-src 'self' data:"),
             // The site only talks to itself (donations, chatbot, admin map).
-            "connect-src 'self'",
+            $withDev("connect-src 'self'"),
             // The contact page shows an embedded Google map.
             'frame-src https://www.google.com',
             "object-src 'none'",
@@ -53,4 +56,20 @@ class SecurityHeaders
             "frame-ancestors 'self'",
         ]);
     }
+
+    /**
+     * While `npm run dev` is running locally, Vite serves assets from its own address.
+     * This exception exists only in the local environment, never in production.
+     */
+    private function devServer(): array
+    {
+        if (! app()->environment('local') || ! is_file(public_path('hot'))) {
+            return [];
+        }
+
+        $url = rtrim(trim((string) file_get_contents(public_path('hot'))), '/');
+
+        return $url === '' ? [] : [$url, preg_replace('/^http/', 'ws', $url)];
+    }
+    
 }

@@ -38,3 +38,28 @@ it('allows only the outside sites the project really uses', function () {
         ->toContain("connect-src 'self'")
         ->not->toContain('unpkg.com');
 });
+
+it('allows the Vite dev server only locally while it is running', function () {
+    $hot = public_path('hot');
+
+    if (file_exists($hot)) {
+        $this->markTestSkipped('The Vite dev server is running; stop it to run this test.');
+    }
+
+    config(['security.csp_mode' => 'enforce']);
+
+    try {
+        file_put_contents($hot, 'http://[::1]:5173');
+
+        app()->detectEnvironment(fn () => 'local');
+        $local = $this->get('/')->headers->get('Content-Security-Policy');
+
+        app()->detectEnvironment(fn () => 'production');
+        $production = $this->get('/')->headers->get('Content-Security-Policy');
+    } finally {
+        @unlink($hot);
+    }
+
+    expect($local)->toContain('http://[::1]:5173')->toContain('ws://[::1]:5173');
+    expect($production)->not->toContain('5173');
+});
