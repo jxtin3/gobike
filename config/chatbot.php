@@ -16,7 +16,10 @@ return [
     |--------------------------------------------------------------------------
     */
 
-      'model' => env('GEMINI_MODEL', 'gemini-3.6-flash'),
+      'model' => env('GEMINI_MODEL', 'gemini-3.5-flash'),
+
+      // Used automatically when the main model is overloaded or unreachable.
+      'fallback_model' => env('GEMINI_FALLBACK_MODEL', 'gemini-3.1-flash-lite'),
     /*
     |--------------------------------------------------------------------------
     | OneGoBike chatbot instructions
