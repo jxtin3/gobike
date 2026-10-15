@@ -9,11 +9,15 @@ use App\Http\Controllers\Admin\NewsController as AdminNewsController;
 use App\Http\Controllers\Admin\PictureController;
 use App\Http\Controllers\Admin\ProfileController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
+use App\Http\Controllers\Admin\DonationController as AdminDonationController;
+use App\Http\Controllers\Admin\TrainingRequestController as AdminTrainingRequestController;
+use App\Http\Controllers\Admin\VolunteerApplicationController as AdminVolunteerController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\DonationController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\NewsController;
 use App\Http\Controllers\ChatbotController;
+use App\Http\Controllers\TrainingRequestController;
 use App\Http\Controllers\Webhook\PayMongoWebhookController;
 use App\Http\Controllers\Webhook\PayPalWebhookController;
 use App\Http\Middleware\EnsureAdmin;
@@ -82,6 +86,11 @@ Route::get('/donate/retry/{donation}', [DonationController::class, 'retry'])->na
 
 Route::post('/webhooks/paypal', [PayPalWebhookController::class, 'handle']);
 Route::post('/webhooks/paymongo', [PayMongoWebhookController::class, 'handle']);
+
+// training plan requests
+Route::post('/programs/training-request', [TrainingRequestController::class, 'store'])
+    ->middleware('throttle:5,1')
+    ->name('training-request.store');
 
 
 // privacy / terms
@@ -173,6 +182,28 @@ Route::patch('/admin/operations/gobiker-messages/{message}/read', [\App\Http\Con
 Route::delete('/admin/operations/gobiker-messages/{message}', [\App\Http\Controllers\Admin\GobikerMessageController::class, 'destroy'])
     ->name('admin.operations.gobiker-messages.destroy');
 
+// donations
+    Route::get('/admin/operations/donations', [AdminDonationController::class, 'index'])
+        ->name('admin.operations.donations.index');
 
+// training plan requests
+    Route::get('/admin/operations/training-requests', [AdminTrainingRequestController::class, 'index'])
+        ->name('admin.operations.training-requests.index');
+    Route::patch('/admin/operations/training-requests/{trainingRequest}/status', [AdminTrainingRequestController::class, 'updateStatus'])
+        ->name('admin.operations.training-requests.status');
+
+// volunteer applications
+    Route::get('/admin/operations/volunteers', [AdminVolunteerController::class, 'index'])
+        ->name('admin.operations.volunteers.index');
+    Route::get('/admin/operations/volunteers/{volunteerApplication}', [AdminVolunteerController::class, 'show'])
+        ->name('admin.operations.volunteers.show');
+    Route::patch('/admin/operations/volunteers/{volunteerApplication}/status', [AdminVolunteerController::class, 'updateStatus'])
+        ->name('admin.operations.volunteers.status');
+
+// legal (view-only)
+    Route::view('/admin/operations/legal/privacy', 'admin.operations.legal.privacy')
+        ->name('admin.operations.legal.privacy');
+    Route::view('/admin/operations/legal/terms', 'admin.operations.legal.terms')
+        ->name('admin.operations.legal.terms');
 
 });

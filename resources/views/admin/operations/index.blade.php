@@ -55,5 +55,33 @@
         <div class="module-num">{{ $patientCount }}<small>check-up records</small></div>
         <p>Review check-up records collected by GoBikers on their rondas.</p>
     </a>
+
+<!-- Volunteers -->
+    <a class="module" href="{{ route('admin.operations.volunteers.index') }}">
+        <div class="module-top"><span class="stat-icon"><x-admin.icon name="user-plus" /></span><h2>Volunteers</h2><x-admin.icon class="i chev" name="chevron-right" /></div>
+        <div class="module-num">{{ $volunteerCount }}<small>{{ $volunteerPendingCount }} pending</small></div>
+        <p>Review and manage volunteer sign-up applications.</p>
+    </a>
+
+<!-- Donations -->
+    <a class="module" href="{{ route('admin.operations.donations.index') }}">
+        <div class="module-top"><span class="stat-icon"><x-admin.icon name="dollar-sign" /></span><h2>Donations</h2><x-admin.icon class="i chev" name="chevron-right" /></div>
+        <div class="module-num">{{ $donationCount }}<small>${{ number_format($donationTotal, 2) }} collected</small></div>
+        <p>View all donation submissions and payment records.</p>
+    </a>
+
+<!-- Training Requests -->
+    <a class="module" href="{{ route('admin.operations.training-requests.index') }}">
+        <div class="module-top"><span class="stat-icon"><x-admin.icon name="clipboard" /></span><h2>Training Requests</h2><x-admin.icon class="i chev" name="chevron-right" /></div>
+        <div class="module-num">{{ $trainingCount }}<small>{{ $trainingPendingCount }} pending</small></div>
+        <p>House-to-house training session requests from the website.</p>
+    </a>
+
+<!-- Legal -->
+    <a class="module" href="{{ route('admin.operations.legal.privacy') }}">
+        <div class="module-top"><span class="stat-icon"><x-admin.icon name="shield" /></span><h2>Legal</h2><x-admin.icon class="i chev" name="chevron-right" /></div>
+        <p>Review Privacy Policy and Terms &amp; Conditions.</p>
+    </a>
+
 </div>
 @endsection

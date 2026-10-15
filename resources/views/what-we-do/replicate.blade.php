@@ -482,12 +482,12 @@
             </header>
 
             <button type="button" class="gbp-poster" x-on:click="open = true" aria-label="Open the full diagram">
-                <img src="{{ asset('images/programming.jpg') }}"
+                <img src="{{ asset('images/whatwedo/programming.jpg') }}"
                      alt="ALWAR x Go Bike Project programming diagram" loading="lazy">
                 <span class="gbp-poster-hint">Enlarge</span>
             </button>
 
-            <a href="{{ asset('images/programming.jpg') }}" download class="gbp-download">Download</a>
+            <a href="{{ asset('images/whatwedo/programming.jpg') }}" download class="gbp-download">Download</a>
         </div>
 
         <div class="gbp-lightbox" x-show="open" x-cloak x-transition.opacity
@@ -499,7 +499,7 @@
                         x-on:click="open = false; zoom = false">&times;</button>
             </div>
             <div class="gbp-lb-scroll" x-on:click.self="open = false; zoom = false">
-                <img src="{{ asset('images/programming.jpg') }}"
+                <img src="{{ asset('images/whatwedo/programming.jpg') }}"
                      alt="ALWAR x Go Bike Project programming diagram (enlarged)"
                      x-bind:class="zoom ? 'is-zoom' : ''"
                      x-on:click="zoom = !zoom">

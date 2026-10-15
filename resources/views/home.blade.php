@@ -18,7 +18,7 @@
             class="w-full h-full object-cover object-center"
             id="hero-bg-video"
         >
-            <source src="{{ asset('videos/main-video.mp4') }}" type="video/mp4">
+            <source src="{{ asset('videos/hero-video.mp4') }}" type="video/mp4">
         </video>
     </div>
 
@@ -32,7 +32,7 @@
     <div class="absolute bottom-0 left-0 right-0 h-50 z-10 bg-gradient-to-t from-[#111827]/60 to-transparent" aria-hidden="true"></div>
 
     <!-- Content -->
-    <div class="relative z-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+    <div class="relative z-20 w-full px-6 sm:px-10 md:px-12 lg:px-16 xl:px-20 2xl:px-24 pt-16 md:pt-20">
         <div class="max-w-3xl">
 
             <!-- Main headline -->
@@ -90,7 +90,7 @@
         <div class="relative flex flex-col md:flex-row items-stretch">
             <div class="w-full md:w-[68%] relative h-[380px] md:h-[520px] overflow-hidden flex-shrink-0">
                 <img
-                    src="{{ asset('images/storycard.png') }}"
+                    src="{{ asset('images/homepage/story1.JPG') }}"
                     class="absolute inset-0 w-full h-full object-cover"
                     alt="Youth responders in action"
                     loading="lazy"
@@ -125,11 +125,10 @@
                 <video
                     x-ref="video"
                     loop
-                    muted
                     playsinline
                     class="absolute inset-0 w-full h-full object-cover"
                 >
-                    <source src="{{ asset('videos/story_2_video.mp4') }}" type="video/mp4">
+                    <source src="{{ asset('videos/First-Video.mp4') }}" type="video/mp4">
                 </video>
                 <div class="absolute inset-0 bg-gradient-to-l from-transparent to-[#1a1a1a]/30 pointer-events-none"></div>
 
@@ -168,11 +167,10 @@
             <video
                 x-ref="video"
                 loop
-                muted
                 playsinline
                 class="absolute inset-0 w-full h-full object-cover"
             >
-                <source src="{{ asset('videos/story_2_video.mp4') }}" type="video/mp4">
+                <source src="{{ asset('videos/Second-Video.mp4') }}" type="video/mp4">
             </video>
             <div class="absolute inset-0 bg-gradient-to-l from-transparent to-[#1a1a1a]/30 pointer-events-none"></div>
 
@@ -429,7 +427,7 @@
             <div class="relative reveal">
                 <div class="relative rounded-sm overflow-hidden shadow-lg aspect-[4/3]">
                     <img
-                        src="{{ asset('images/impact-story.jpg') }}"
+                        src="{{ asset('images/homepage/impact-story.jpg') }}"
                         alt="Community gathering around bicycles at sunset"
                         class="w-full h-full object-cover transition-transform duration-700 hover:scale-[1.04]"
                         loading="lazy"
@@ -555,7 +553,7 @@
 >
     <!-- Background Map -->
     <div class="absolute inset-0 z-0 bg-[#F8FAFC]">
-        <img src="{{ asset('images/pangasinan-map.png') }}" alt="Map of Pangasinan" class="w-full h-full object-cover opacity-[0.3] mix-blend-multiply scale-105">
+        <img src="{{ asset('images/homepage/pangasinan-map.png') }}" alt="Map of Pangasinan" class="w-full h-full object-cover opacity-[0.3] mix-blend-multiply scale-105">
         <!-- Light overlay to fade and ensure text remains readable -->
         <!-- <div class="absolute inset-0 bg-gradient-to-t from-[#F8FAFC]/50 via-transparent to-[#F8FAFC]/90"></div> -->
     </div>

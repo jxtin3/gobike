@@ -10,7 +10,7 @@
     <!-- Background image -->
     <div class="absolute inset-0 z-0">
         <img
-            src="{{ asset('images/prog-1.jpg') }}"
+            src="{{ asset('images/whatwedo/prog-1.jpg') }}"
             alt="OneGoBike Programs"
             class="w-full h-full object-cover object-center opacity-40"
         />
@@ -67,7 +67,7 @@
             @foreach ($programsList as $idx => $prog)
             <div class="group bg-white rounded-sm overflow-hidden shadow-sm border border-[#F1F5F9] card-lift reveal reveal-delay-{{ $idx % 2 + 1 }}">
                 <div class="h-64 overflow-hidden relative">
-                    <img src="{{ asset('images/' . $prog['img']) }}" alt="{{ $prog['title'] }}" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                    <img src="{{ asset('images/whatwedo/' . $prog['img']) }}" alt="{{ $prog['title'] }}" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
                     <div class="absolute inset-0 bg-black/10 group-hover:bg-black/0 transition-colors duration-300"></div>
                 </div>
                 <div class="p-8">
@@ -285,41 +285,46 @@
                     </div>
                 </div>
 
-                <!-- Right: form -->
                 <div class="lg:col-span-3">
-                    <form action="#" method="POST" class="space-y-5">
+                    @if(session('training_success'))
+                        <div style="background:rgba(21,128,61,0.15);border:1px solid rgba(21,128,61,0.3);border-radius:6px;padding:16px 20px;margin-bottom:20px;color:#86efac;font-size:14px;display:flex;align-items:center;gap:10px">
+                            <svg class="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
+                            {{ session('training_success') }}
+                        </div>
+                    @endif
+                    <form action="{{ route('training-request.store') }}" method="POST" class="space-y-5">
                         @csrf
                         <input type="hidden" name="tier" :value="selected">
 
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
                             <div>
                                 <label class="block text-[10px] font-bold tracking-widest uppercase text-white/40 mb-2">Full Name <span class="text-[#F97316]">*</span></label>
-                                <input type="text" name="name" placeholder="Juan dela Cruz" required
+                                <input type="text" name="name" placeholder="Juan dela Cruz" required value="{{ old('name') }}"
                                     class="w-full px-4 py-3.5 bg-white/5 border border-white/10 text-sm text-white placeholder-white/25 focus:outline-none focus:border-[#2FA7FF] focus:bg-white/8 transition-all duration-200">
                             </div>
                             <div>
                                 <label class="block text-[10px] font-bold tracking-widest uppercase text-white/40 mb-2">Phone Number</label>
-                                <input type="tel" name="phone" placeholder="+63 900 000 0000"
+                                <input type="tel" name="phone" placeholder="+63 900 000 0000" value="{{ old('phone') }}"
                                     class="w-full px-4 py-3.5 bg-white/5 border border-white/10 text-sm text-white placeholder-white/25 focus:outline-none focus:border-[#2FA7FF] focus:bg-white/8 transition-all duration-200">
                             </div>
                         </div>
 
                         <div>
                             <label class="block text-[10px] font-bold tracking-widest uppercase text-white/40 mb-2">Email Address <span class="text-[#F97316]">*</span></label>
-                            <input type="email" name="email" placeholder="juan@gmail.com" required
+                            <input type="email" name="email" placeholder="juan@gmail.com" required value="{{ old('email') }}"
                                 class="w-full px-4 py-3.5 bg-white/5 border border-white/10 text-sm text-white placeholder-white/25 focus:outline-none focus:border-[#2FA7FF] focus:bg-white/8 transition-all duration-200">
                         </div>
 
                         <div>
                             <label class="block text-[10px] font-bold tracking-widest uppercase text-white/40 mb-2">Home Address <span class="text-[#F97316]">*</span></label>
-                            <input type="text" name="address" placeholder="Barangay, Municipality, Pangasinan" required
+                            <input type="text" name="address" placeholder="Barangay, Municipality, Pangasinan" required value="{{ old('address') }}"
                                 class="w-full px-4 py-3.5 bg-white/5 border border-white/10 text-sm text-white placeholder-white/25 focus:outline-none focus:border-[#2FA7FF] focus:bg-white/8 transition-all duration-200">
                         </div>
 
                         <div>
                             <label class="block text-[10px] font-bold tracking-widest uppercase text-white/40 mb-2">Message / Preferred Schedule</label>
                             <textarea name="message" rows="4" placeholder="Any special requirements, preferred schedule or questions..."
-                                class="w-full px-4 py-3.5 bg-white/5 border border-white/10 text-sm text-white placeholder-white/25 focus:outline-none focus:border-[#2FA7FF] focus:bg-white/8 transition-all duration-200 resize-none"></textarea>
+                                class="w-full px-4 py-3.5 bg-white/5 border border-white/10 text-sm text-white placeholder-white/25 focus:outline-none focus:border-[#2FA7FF] focus:bg-white/8 transition-all duration-200 resize-none">{{ old('message') }}</textarea>
                         </div>
 
                         <div class="flex flex-col sm:flex-row gap-4 items-start sm:items-center pt-2">

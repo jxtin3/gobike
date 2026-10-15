@@ -46,8 +46,8 @@
             ? 'is-scrolled'
             : ''"
     >
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex items-center justify-between h-16 md:h-20">
+        <div class="w-full px-6 sm:px-10 md:px-12 lg:px-16 xl:px-20 2xl:px-24">
+            <div class="flex items-center justify-between h-16 md:h-20 lg:h-[84px]">
 
                 <!-- Logo -->
                 <a
@@ -56,18 +56,18 @@
                     aria-label="OneGoBike Home"
                 >
                     <div class="flex flex-col leading-none">
-                        <span class="font-heading text-xl font-bold tracking-wider">
+                        <span class="font-heading text-xl md:text-2xl font-bold tracking-wider">
                             <span class="text-[#F97316]">One</span><span class="text-[#2FA7FF]">GoBike</span>
                         </span>
-                        <span class="text-[9px] font-semibold tracking-[0.2em] text-white/50 uppercase">Community Responders</span>
+                        <span class="text-[9px] md:text-[10px] font-semibold tracking-[0.2em] text-white/50 uppercase mt-0.5">Community Responders</span>
                     </div>
                 </a>
 
                 <!-- Desktop Navigation  -->
-                <nav class="hidden md:flex items-center gap-7" aria-label="Primary navigation">
+                <nav class="hidden md:flex items-center gap-7 lg:gap-8" aria-label="Primary navigation">
                     <!-- home -->
                     <div x-data="{ open: false }" class="relative" @mouseenter="open = true" @mouseleave="open = false">
-                        <button type="button" class="nav-underline text-sm font-medium tracking-wide transition-colors duration-200 text-white/90 hover:text-white flex items-center gap-1 pb-1">
+                        <button type="button" class="nav-underline text-sm md:text-[15px] font-medium tracking-wide transition-colors duration-200 text-white/90 hover:text-white flex items-center gap-1 pb-1">
                             Who We Are
                             <svg class="w-3.5 h-3.5 opacity-70" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5"/></svg>
                         </button>
@@ -82,7 +82,7 @@
 
                     <!-- community -->
                     <div x-data="{ open: false }" class="relative" @mouseenter="open = true" @mouseleave="open = false">
-                        <button type="button" class="nav-underline text-sm font-medium tracking-wide transition-colors duration-200 text-white/90 hover:text-white flex items-center gap-1 pb-1">
+                        <button type="button" class="nav-underline text-sm md:text-[15px] font-medium tracking-wide transition-colors duration-200 text-white/90 hover:text-white flex items-center gap-1 pb-1">
                             Join The Movement
                             <svg class="w-3.5 h-3.5 opacity-70" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5"/></svg>
                         </button>
@@ -97,11 +97,11 @@
                 </nav>
 
                 <!-- Right Side call to action (cta)  -->
-                <div class="hidden md:flex items-center gap-3">
+                <div class="hidden md:flex items-center gap-3 mr-4 md:mr-8 lg:mr-14 xl:mr-20 2xl:mr-24">
                    
                     <a
                         href="{{ url('/donate') }}"
-                        class="inline-flex items-center justify-center px-6 py-2.5 text-xs font-bold tracking-[0.15em] uppercase bg-[#F97316] text-white shadow-md rounded-none"
+                        class="inline-flex items-center justify-center px-6 py-2.5 md:px-7 md:py-2.5 text-xs font-bold tracking-[0.15em] uppercase bg-[#F97316] hover:bg-[#ea580c] transition-colors duration-200 text-white shadow-md rounded-none"
                     >
                         Donate
                     </a>
@@ -144,7 +144,7 @@
             class="md:hidden bg-[#0D1B2A]/97 backdrop-blur-lg border-t border-white/10"
             @click.outside="mobileOpen = false"
         >
-            <nav class="max-w-7xl mx-auto px-4 py-4 flex flex-col gap-1" aria-label="Mobile navigation">
+            <nav class="w-full px-6 py-4 flex flex-col gap-1" aria-label="Mobile navigation">
                 <div x-data="{ open: false }" class="flex flex-col">
                     <button type="button" @click="open = !open" class="flex items-center justify-between w-full px-4 py-3 text-base font-medium rounded-none transition-colors duration-200 text-white/90 hover:bg-white/10 hover:text-white">
                         <span>Who We Are</span>
@@ -218,12 +218,6 @@
                     </a>
                     <p class="text-sm text-white/55 leading-relaxed max-w-sm">
                         Empowering communities through health initiatives, disaster preparedness, volunteer engagement, and community-driven services that create lasting impact.                    </p>
-                    <!-- Government accreditation note -->
-                    <div class="flex flex-wrap gap-2 mt-1">
-                        <span class="inline-block text-[9px] font-bold tracking-[0.14em] uppercase px-2.5 py-1 border border-white/10 text-white/40 rounded-sm">DILG Accredited</span>
-                        <span class="inline-block text-[9px] font-bold tracking-[0.14em] uppercase px-2.5 py-1 border border-white/10 text-white/40 rounded-sm">DOH Partner</span>
-                        <span class="inline-block text-[9px] font-bold tracking-[0.14em] uppercase px-2.5 py-1 border border-white/10 text-white/40 rounded-sm">LGU Recognized</span>
-                    </div>
                     <!-- Social Icons -->
                     <div class="flex items-center gap-2.5 mt-2" role="list" aria-label="Social media links">
                         <a href="https://www.facebook.com/gobikeprojectofficial" target="_blank" rel="noopener noreferrer" role="listitem" class="w-9 h-9 rounded-none bg-white/8 border border-white/10 flex items-center justify-center hover:bg-[#2FA7FF] hover:border-[#2FA7FF] transition-all duration-200" aria-label="Facebook">

@@ -18,7 +18,7 @@
 
     <div class="donate-bg">
         <img
-            src="{{ asset('images/c5.jpg') }}"
+            src="{{ asset('images/donate/c5.jpg') }}"
             alt="Bicycle rider on a dusty path"
             class="donate-bg__img"
             :class="{ 'is-zoomed': donorType === 'organization' }"

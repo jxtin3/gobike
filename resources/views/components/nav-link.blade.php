@@ -26,7 +26,7 @@
     <a
         href="{{ $href }}"
         {{ $attributes->merge([
-            'class' => 'nav-underline text-sm font-medium tracking-wide transition-colors duration-200 '
+            'class' => 'nav-underline text-sm md:text-[15px] font-medium tracking-wide transition-colors duration-200 '
                      . ($isActive
                          ? 'text-white'
                          : 'text-white/90 hover:text-white')

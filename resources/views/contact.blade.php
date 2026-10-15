@@ -9,7 +9,7 @@
     <!-- Background image -->
     <div class="absolute inset-0 z-0">
         <img
-            src="{{ asset('images/story-3.jpg') }}"
+            src="{{ asset('images/reachus/story-3.jpg') }}"
             alt="Go Bike community"
             class="w-full h-full object-cover object-center opacity-20"
         />

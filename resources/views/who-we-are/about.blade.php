@@ -7,7 +7,7 @@
 <section class="relative pt-32 pb-24 md:pt-48 md:pb-36 overflow-hidden bg-[#0D1B2A]">
     <div class="absolute inset-0 z-0">
         <img
-            src="{{ asset('images/story-3.jpg') }}"
+            src="{{ asset('images/about/story-3.jpg') }}"
             alt="OneGoBike Volunteers"
             class="w-full h-full object-cover object-top opacity-30"
         />

@@ -17,12 +17,13 @@ class DatabaseSeeder extends Seeder
 
             return;
         }
+//userfor mobile
+        // User::factory()->create([
+        //     'name' => 'Test User',
+        //     'email' => 'test@example.com',
+        // ]);
 
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-        ]);
-
+//admin
         User::factory()->create([
             'name' => 'Admin User',
             'email' => 'admin@onegobike.com',

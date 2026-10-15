@@ -59,7 +59,9 @@
                 <h3 id="mm-name"></h3>
                 <span id="mm-status" class="status-pill"></span>
             </div>
-            <button type="button" id="mm-close" aria-label="Close">×</button>
+            <button type="button" id="mm-close" class="modal-close-btn" aria-label="Close dialog">
+                <x-admin.icon name="x" />
+            </button>
         </div>
         <div class="msg-meta">
             <div><span>Email</span><b id="mm-email"></b></div>
