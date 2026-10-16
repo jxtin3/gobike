@@ -117,50 +117,218 @@
 </section>
 
 <!-- THEORY OF CHANGE -->
-<section class="py-10 md:py-10 bg-white">
+<section class="py-12 md:py-16 bg-white overflow-hidden">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-center">
 
-            <div class="reveal">
-                <span class="inline-flex items-center gap-2 text-[10px] font-bold tracking-[0.22em] uppercase text-[#F97316] mb-4">How We Create Impact</span>
-                <h2 class="text-3xl md:text-4xl font-heading font-bold text-[#111827] uppercase tracking-tight mb-6">Theory of Change</h2>
-                <p class="text-[#64748B] leading-relaxed mb-6">
+            <!-- LEFT: Description (Less space, 4 of 12 columns) -->
+            <div class="lg:col-span-4 reveal">
+                <span class="inline-flex items-center gap-2 text-[10px] font-bold tracking-[0.22em] uppercase text-[#F97316] mb-3">
+                    <span class="w-1.5 h-1.5 rounded-full bg-[#F97316]"></span>
+                    How We Create Impact
+                </span>
+                <h2 class="text-3xl md:text-4xl font-heading font-bold text-[#111827] uppercase tracking-tight mb-4">Theory of Change</h2>
+                <p class="text-[#64748B] text-sm md:text-base leading-relaxed mb-4">
                     We believe sustainable change begins with empowered young people. By equipping youth volunteers with the skills, networks, and resources to serve their communities, we create a ripple effect that strengthens entire provinces.
                 </p>
-                <p class="text-[#64748B] leading-relaxed">
+                <p class="text-[#64748B] text-sm md:text-base leading-relaxed mb-6">
                     Every training session, every barangay visit, and every life touched contributes to a more resilient, health-conscious Pangasinan — where communities look after one another without waiting for external intervention.
                 </p>
+
             </div>
 
-            <div class="space-y-0 reveal reveal-delay-1">
+            <!-- RIGHT: Triangle / Pyramid Process Flow (8 of 12 columns) -->
+            <div class="lg:col-span-8 reveal reveal-delay-1" x-data="{ activeTier: null, activeMobile: null }">
                 @php
-                $toc = [
-                    ['label'=>'Inputs',    'color'=>'#F97316','items'=>['Youth volunteers','Partner LGUs & NGOs','Bicycles & equipment','Training curricula']],
-                    ['label'=>'Activities','color'=>'#132D6B','items'=>['Community response drills','Health outreach missions','Leadership development','Disaster preparedness training']],
-                    ['label'=>'Outputs',  'color'=>'#2FA7FF','items'=>['Trained volunteer responders','Served barangays','Medical consultations','Relief goods distributed']],
-                    ['label'=>'Outcomes', 'color'=>'#16A34A','items'=>['Faster emergency response','Improved community health','Youth leadership growth','Stronger Bayanihan culture']],
-                    ['label'=>'Impact',   'color'=>'#F97316','items'=>['A resilient, self-sustaining Pangasinan where no community is left behind']],
+                $tocTiers = [
+                    [
+                        'step'      => '01',
+                        'label'     => 'Inputs',
+                        'color'     => '#38BDF8',
+                        'foldColor' => '#0284C7',
+                        'leftPoly'  => '240,16 275,108 204,108',
+                        'foldPoly'  => '204,108 199,120 228,108',
+                        'numX'      => 238,
+                        'numY'      => 76,
+                        'foX'       => 256,
+                        'foY'       => 16,
+                        'foW'       => 660,
+                        'foH'       => 92,
+                        'items'     => ['Youth volunteers', 'Partner LGUs & NGOs', 'Bicycles & equipment', 'Training curricula'],
+                    ],
+                    [
+                        'step'      => '02',
+                        'label'     => 'Activities',
+                        'color'     => '#0284C7',
+                        'foldColor' => '#0369A1',
+                        'leftPoly'  => '199,120 280,120 314,212 163,212',
+                        'foldPoly'  => '163,212 158,224 188,212',
+                        'numX'      => 238,
+                        'numY'      => 170,
+                        'foX'       => 296,
+                        'foY'       => 120,
+                        'foW'       => 660,
+                        'foH'       => 92,
+                        'items'     => ['Community response drills', 'Health outreach missions', 'Leadership development', 'Disaster preparedness training'],
+                    ],
+                    [
+                        'step'      => '03',
+                        'label'     => 'Outputs',
+                        'color'     => '#0369A1',
+                        'foldColor' => '#075985',
+                        'leftPoly'  => '158,224 319,224 354,316 122,316',
+                        'foldPoly'  => '122,316 117,328 148,316',
+                        'numX'      => 238,
+                        'numY'      => 274,
+                        'foX'       => 335,
+                        'foY'       => 224,
+                        'foW'       => 660,
+                        'foH'       => 92,
+                        'items'     => ['Trained volunteer responders', 'Served barangays', 'Medical consultations', 'Relief goods distributed'],
+                    ],
+                    [
+                        'step'      => '04',
+                        'label'     => 'Outcomes',
+                        'color'     => '#0C4A6E',
+                        'foldColor' => '#082F49',
+                        'leftPoly'  => '117,328 359,328 394,420 81,420',
+                        'foldPoly'  => '81,420 76,432 108,420',
+                        'numX'      => 238,
+                        'numY'      => 378,
+                        'foX'       => 375,
+                        'foY'       => 328,
+                        'foW'       => 660,
+                        'foH'       => 92,
+                        'items'     => ['Faster emergency response', 'Improved community health', 'Youth leadership growth', 'Stronger Bayanihan culture'],
+                    ],
+                    [
+                        'step'      => '05',
+                        'label'     => 'Impact',
+                        'color'     => '#0D1B2A',
+                        'foldColor' => '#081524',
+                        'leftPoly'  => '76,432 398,432 433,524 40,524',
+                        'foldPoly'  => null,
+                        'numX'      => 238,
+                        'numY'      => 482,
+                        'foX'       => 414,
+                        'foY'       => 432,
+                        'foW'       => 660,
+                        'foH'       => 92,
+                        'items'     => ['A resilient, self-sustaining Pangasinan where no community is left behind'],
+                    ],
                 ];
                 @endphp
 
-                @foreach ($toc as $ti => $step)
-                <div class="flex gap-4 relative">
-                    @if (!$loop->last)
-                    <div class="absolute left-[18px] top-10 bottom-0 w-0.5" style="background: linear-gradient(to bottom, {{ $step['color'] }}40, transparent)"></div>
-                    @endif
-                    <div class="shrink-0 w-9 h-9 rounded-full flex items-center justify-center text-white text-xs font-bold font-heading z-10" style="background-color: {{ $step['color'] }}">
-                        {{ $ti + 1 }}
-                    </div>
-                    <div class="pb-8 flex-1">
-                        <h4 class="text-sm font-heading font-bold uppercase tracking-widest mb-2" style="color: {{ $step['color'] }}">{{ $step['label'] }}</h4>
-                        <div class="flex flex-wrap gap-2">
-                            @foreach ($step['items'] as $item)
-                            <span class="text-xs px-3 py-1.5 rounded-sm border font-medium text-[#374151]" style="border-color: {{ $step['color'] }}25; background-color: {{ $step['color'] }}08">{{ $item }}</span>
-                            @endforeach
-                        </div>
-                    </div>
+                <!-- Desktop / Tablet: Full Geometric Triangle Process SVG -->
+                <div class="toc-pyramid-container hidden sm:block">
+                    <svg viewBox="0 0 1080 540" class="toc-pyramid-svg" aria-label="Theory of Change Pyramid Process Flow">
+                        <defs>
+                            <!-- Drop shadow along diagonal cut -->
+                            <filter id="toc-tier-shadow" x="-15%" y="-15%" width="140%" height="140%">
+                                <feDropShadow dx="6" dy="2" stdDeviation="5" flood-color="#0F172A" flood-opacity="0.25"/>
+                            </filter>
+                            <!-- Drop shadow under origami fold ribbon -->
+                            <filter id="toc-fold-shadow" x="-25%" y="-25%" width="150%" height="150%">
+                                <feDropShadow dx="0" dy="3" stdDeviation="2.5" flood-color="#000000" flood-opacity="0.32"/>
+                            </filter>
+                        </defs>
+
+                        @foreach ($tocTiers as $tier)
+                        <g class="toc-pyramid-tier" data-step="{{ $tier['step'] }}">
+                            <!-- Expandable Right Parallelogram Description Bar -->
+                            <foreignObject x="{{ $tier['foX'] }}" y="{{ $tier['foY'] }}" width="{{ $tier['foW'] }}" height="{{ $tier['foH'] }}" style="overflow: visible;">
+                                <div xmlns="http://www.w3.org/1999/xhtml"
+                                     class="toc-desc-bar"
+                                     :class="{ 'is-expanded': activeTier === '{{ $tier['step'] }}' }"
+                                     @click="activeTier = activeTier === '{{ $tier['step'] }}' ? null : '{{ $tier['step'] }}'"
+                                     style="background-color: {{ $tier['color'] }};"
+                                     title="Click to expand"
+                                >
+                                    <div class="h-full flex flex-col justify-center pl-8 pr-7 py-2 text-white select-none">
+                                        <div class="flex items-center justify-between mb-1">
+                                            <h4 class="font-heading font-bold uppercase tracking-wider text-base lg:text-[17px] text-white leading-none">
+                                                {{ $tier['label'] }}
+                                            </h4>
+                                            <!-- Expand / close toggle indicator -->
+                                            <div class="flex items-center gap-1 text-[10px] font-semibold tracking-wider uppercase text-white/70 hover:text-white transition-colors pr-2">
+                                                <span x-text="activeTier === '{{ $tier['step'] }}' ? 'Close' : 'Expand'"></span>
+                                                <svg class="w-3.5 h-3.5 transition-transform duration-300" :class="{ 'rotate-180': activeTier === '{{ $tier['step'] }}' }" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7" />
+                                                </svg>
+                                            </div>
+                                        </div>
+                                        <p class="text-white/90 text-xs lg:text-[13px] leading-relaxed font-sans font-normal" :class="{ 'line-clamp-2': activeTier !== '{{ $tier['step'] }}' }">
+                                            @foreach ($tier['items'] as $item)
+                                                <span>{{ $item }}</span>@if (!$loop->last)<span class="text-white/40 mx-2 select-none">•</span>@endif
+                                            @endforeach
+                                        </p>
+                                    </div>
+                                </div>
+                            </foreignObject>
+
+                            <!-- Left Triangular / Trapezoid Block with Shadow -->
+                            <polygon
+                                points="{{ $tier['leftPoly'] }}"
+                                fill="{{ $tier['color'] }}"
+                                filter="url(#toc-tier-shadow)"
+                                class="toc-tier-shape"
+                            />
+
+                            <!-- 3D Origami Ribbon Fold (hanging into gap) -->
+                            @if (!empty($tier['foldPoly']))
+                            <polygon
+                                points="{{ $tier['foldPoly'] }}"
+                                fill="{{ $tier['foldColor'] }}"
+                                filter="url(#toc-fold-shadow)"
+                            />
+                            @endif
+
+                            <!-- Step Number inside Left Block -->
+                            <text
+                                x="{{ $tier['numX'] }}"
+                                y="{{ $tier['numY'] }}"
+                                fill="#ffffff"
+                                font-family="'Oswald', sans-serif"
+                                font-size="24"
+                                font-weight="700"
+                                letter-spacing="0.05em"
+                                text-anchor="middle"
+                                dominant-baseline="central"
+                                style="text-shadow: 0 2px 4px rgba(0,0,0,0.3); pointer-events: none;"
+                            >{{ $tier['step'] }}</text>
+                        </g>
+                        @endforeach
+                    </svg>
                 </div>
-                @endforeach
+
+                <!-- Mobile Cascade: Responsive Stacked Cards with Ribbon Accent -->
+                <div class="sm:hidden space-y-3.5">
+                    @foreach ($tocTiers as $tier)
+                    <div
+                        class="toc-mobile-card text-white p-4"
+                        :class="{ 'is-expanded': activeMobile === '{{ $tier['step'] }}' }"
+                        @click="activeMobile = activeMobile === '{{ $tier['step'] }}' ? null : '{{ $tier['step'] }}'"
+                        style="background-color: {{ $tier['color'] }}"
+                        title="Click to expand"
+                    >
+                        @if (!empty($tier['foldPoly']))
+                        <div class="toc-mobile-fold" style="border-top-color: {{ $tier['foldColor'] }}; border-right-color: transparent;"></div>
+                        @endif
+                        <div class="flex items-center justify-between mb-1.5">
+                            <h4 class="font-heading font-bold uppercase tracking-wider text-base text-white">{{ $tier['label'] }}</h4>
+                            <div class="flex items-center gap-2">
+                                <span class="text-[10px] font-semibold text-white/70" x-text="activeMobile === '{{ $tier['step'] }}' ? 'Close' : 'Expand'"></span>
+                                <span class="text-xs font-bold font-heading px-2 py-0.5 rounded bg-black/20 text-white">{{ $tier['step'] }}</span>
+                            </div>
+                        </div>
+                        <p class="text-white/90 text-xs leading-relaxed font-sans font-normal" :class="{ 'line-clamp-2': activeMobile !== '{{ $tier['step'] }}' }">
+                            @foreach ($tier['items'] as $item)
+                                <span>{{ $item }}</span>@if (!$loop->last)<span class="text-white/40 mx-1.5">•</span>@endif
+                            @endforeach
+                        </p>
+                    </div>
+                    @endforeach
+                </div>
             </div>
 
         </div>

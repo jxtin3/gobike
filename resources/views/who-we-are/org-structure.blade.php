@@ -4,7 +4,7 @@
 >
 
 <!-- HERO -->
-<section class="relative pt-32 pb-20 md:pt-44 md:pb-28 overflow-hidden bg-[#0D1B2A]">
+<section class="relative pt-32 pb-24 md:pt-48 md:pb-36 overflow-hidden bg-[#0D1B2A]">
     <div class="absolute inset-0 z-0">
         <div class="absolute inset-0 bg-gradient-to-br from-[#132D6B]/60 via-[#0D1B2A] to-[#0D1B2A]"></div>
         <div class="absolute top-0 right-0 w-[600px] h-[600px] bg-[#2FA7FF]/5 rounded-full blur-3xl"></div>

@@ -24,7 +24,7 @@
 .gbp-hero {
     position: relative;
     overflow: hidden;
-    padding: 8rem 0 4rem;
+    padding: 8rem 0 6rem;
     color: #fff;
     background: linear-gradient(135deg, var(--gbp-navy-deep), var(--gbp-navy) 60%, #1d4fa8);
 }
@@ -441,9 +441,16 @@
     font-weight: 600;
 }
 
+@media (min-width: 768px) {
+    .gbp-hero {
+        padding-top: 12rem;
+        padding-bottom: 9rem;
+    }
+}
+
 @media (max-width: 900px) {
     .gbp-hero {
-        padding-top: 7rem;
+        padding-top: 8rem;
     }
 
     .gbp-section {

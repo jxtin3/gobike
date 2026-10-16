@@ -1,11 +1,11 @@
 <x-layout title="News & Updates | Go Bike Project" description="Stay informed on our latest field operations and news.">
-    <!-- Header Spacing -->
-    <div class="pt-24 md:pt-32 pb-30 bg-[#0D1B2A]">
+    <!-- Hero -->
+    <section class="relative pt-32 pb-24 md:pt-48 md:pb-36 overflow-hidden bg-[#0D1B2A]">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center reveal">
-            <h1 class="text-4xl md:text-5xl font-heading font-bold text-white uppercase mb-4">News & Updates</h1>
-            <p class="text-white/70 max-w-2xl mx-auto">Stay informed on our latest field operations, announcements, and community impact stories across Pangasinan.</p>
+            <h1 class="text-5xl md:text-6xl lg:text-7xl font-heading font-bold text-white uppercase mb-4 tracking-tight leading-none drop-shadow-lg">News &amp; Updates</h1>
+            <p class="text-white/65 max-w-2xl mx-auto text-base md:text-lg leading-relaxed">Stay informed on our latest field operations, announcements, and community impact stories across Pangasinan.</p>
         </div>
-    </div>
+    </section>
 
     <!-- Main Content -->
     <div class="py-16 md:py-24 bg-[#F8FAFC]">

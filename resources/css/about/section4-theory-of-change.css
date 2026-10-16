@@ -1,28 +1,63 @@
 /* ABOUT / Section 4 — Theory of Change */
 
-.toc-connector {
-    background: linear-gradient(to bottom, currentColor 40%, transparent 100%);
-}
-
-.toc-step-bubble {
-    flex-shrink: 0;
-    width: 2.25rem;
-    height: 2.25rem;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-size: 0.75rem;
-    font-weight: 700;
-    z-index: 10;
+.toc-pyramid-container {
     position: relative;
+    width: 100%;
 }
 
-.toc-tag {
-    font-size: 0.7rem;
-    padding: 0.375rem 0.75rem;
-    border-radius: 2px;
-    font-weight: 500;
-    color: #374151;
+.toc-pyramid-svg {
+    display: block;
+    width: 100%;
+    height: auto;
+    filter: drop-shadow(0 10px 25px rgba(15, 23, 42, 0.08));
+    overflow: visible;
+}
+
+.toc-pyramid-tier {
+    cursor: default;
+}
+
+/* The expandable right description bar */
+.toc-desc-bar {
+    height: 100%;
+    width: 475px;
+    clip-path: polygon(0 0, calc(100% - 35px) 0, 100% 100%, 35px 100%);
+    cursor: pointer;
+    transition: width 0.35s cubic-bezier(0.16, 1, 0.3, 1), filter 0.3s ease;
+    filter: drop-shadow(0 2px 6px rgba(13, 27, 42, 0.15));
+    user-select: none;
+}
+
+.toc-desc-bar.is-expanded {
+    width: 625px;
+    filter: drop-shadow(0 8px 24px rgba(13, 27, 42, 0.32));
+}
+
+.toc-desc-bar:focus {
+    outline: none;
+}
+
+/* Mobile Pyramid Cascade */
+.toc-mobile-card {
+    position: relative;
+    border-radius: 4px;
+    overflow: visible;
+    box-shadow: 0 4px 12px rgba(13, 27, 42, 0.08);
+    cursor: pointer;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.toc-mobile-card.is-expanded {
+    box-shadow: 0 10px 24px rgba(13, 27, 42, 0.22);
+}
+
+.toc-mobile-fold {
+    position: absolute;
+    bottom: -8px;
+    left: 8px;
+    width: 0;
+    height: 0;
+    border-style: solid;
+    border-width: 8px 8px 0 0;
+    filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.25));
 }

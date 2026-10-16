@@ -1,11 +1,10 @@
 <x-layout title="Gallery | Go Bike Project" description="View our gallery showcase of youth responders and community events.">
-    <!-- Header Spacing -->
-    <div class="pt-24 md:pt-32 pb-30 bg-[#0D1B2A]">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center reveal">
-            <h1 class="text-4xl md:text-5xl font-heading font-bold text-white uppercase mb-4">Gallery Showcase</h1>
-            <p class="text-white/70 max-w-2xl mx-auto">Explore moments of impact, community resilience, and volunteer dedication captured during our field operations across Pangasinan.</p>
-        </div>
+<section class="relative pt-32 pb-24 md:pt-48 md:pb-36 overflow-hidden bg-[#0D1B2A]">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center reveal">
+        <h1 class="text-5xl md:text-6xl lg:text-7xl font-heading font-bold text-white uppercase mb-4 tracking-tight leading-none drop-shadow-lg">Gallery Showcase</h1>
+        <p class="text-white/65 max-w-2xl mx-auto text-base md:text-lg leading-relaxed">Explore moments of impact, community resilience, and volunteer dedication captured during our field operations across Pangasinan.</p>
     </div>
+</section>
 
     <!-- Main Content -->
     <div class="py-16 md:py-24 bg-[#F8FAFC]" x-data="{ activeModal: null }">
