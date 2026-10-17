@@ -27,6 +27,12 @@ use App\Http\Controllers\Admin\PatientController as AdminPatientController;
 // pages
 Route::get('/', [HomeController::class, 'index']);
 Route::get('/news', [NewsController::class, 'index']);
+Route::get('/our-story', function () {
+    return view('News.our-story');
+})->name('our-story');
+Route::get('/news/our-story', function () {
+    return view('News.our-story');
+});
 
 Route::get('/gallery', function () {
     $pictures = \App\Models\Picture::latest()->paginate(12);
@@ -95,12 +101,14 @@ Route::post('/programs/training-request', [TrainingRequestController::class, 'st
 
 // privacy / terms
 Route::get('/privacy-policy', function () {
-    return view('pages.privacy');
-});
+    $document = \App\Models\LegalDocument::getByKey('privacy');
+    return view('pages.privacy', compact('document'));
+})->name('privacy-policy');
 
 Route::get('/terms', function () {
-    return view('pages.terms');
-});
+    $document = \App\Models\LegalDocument::getByKey('terms');
+    return view('pages.terms', compact('document'));
+})->name('terms');
 
 
 // Auth routes
@@ -137,11 +145,6 @@ Route::middleware([EnsureAdmin::class])->group(function () {
     Route::delete('/admin/operations/homepage-data/impact-stats/{impactStat}', [HomepageDataController::class, 'destroyImpactStat'])
         ->name('admin.operations.homepage-data.impact-stats.destroy');
 
-    Route::get('/admin/operations/news/homepage', [AdminNewsController::class, 'homepage'])
-        ->name('admin.operations.news.homepage');
-    Route::put('/admin/operations/news/homepage', [AdminNewsController::class, 'updateHomepage'])
-        ->name('admin.operations.news.homepage.update');
-        
     Route::resource('/admin/operations/news', AdminNewsController::class)->names('admin.operations.news');
     Route::resource('/admin/operations/pictures', PictureController::class)->names('admin.operations.pictures');
     Route::resource('/admin/operations/users', AdminUserController::class)->names('admin.operations.users');
@@ -200,10 +203,15 @@ Route::delete('/admin/operations/gobiker-messages/{message}', [\App\Http\Control
     Route::patch('/admin/operations/volunteers/{volunteerApplication}/status', [AdminVolunteerController::class, 'updateStatus'])
         ->name('admin.operations.volunteers.status');
 
-// legal (view-only)
-    Route::view('/admin/operations/legal/privacy', 'admin.operations.legal.privacy')
+// legal (editable)
+    Route::get('/admin/operations/legal/privacy', [\App\Http\Controllers\Admin\LegalDocumentController::class, 'editPrivacy'])
         ->name('admin.operations.legal.privacy');
-    Route::view('/admin/operations/legal/terms', 'admin.operations.legal.terms')
+    Route::put('/admin/operations/legal/privacy', [\App\Http\Controllers\Admin\LegalDocumentController::class, 'updatePrivacy'])
+        ->name('admin.operations.legal.privacy.update');
+
+    Route::get('/admin/operations/legal/terms', [\App\Http\Controllers\Admin\LegalDocumentController::class, 'editTerms'])
         ->name('admin.operations.legal.terms');
+    Route::put('/admin/operations/legal/terms', [\App\Http\Controllers\Admin\LegalDocumentController::class, 'updateTerms'])
+        ->name('admin.operations.legal.terms.update');
 
 });

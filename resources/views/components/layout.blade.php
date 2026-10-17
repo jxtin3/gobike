@@ -293,11 +293,15 @@
     </footer>
 
     <!-- GoBot chat widget -->
-    @include('partials.chatbot')
+    @if ($showChatbot ?? true)
+        @include('partials.chatbot')
+    @endif
 
     <!-- Back-to-top visibility script + scroll reveal  -->
     <script src="{{ asset('js/layout.js') }}"></script>
-    <script src="{{ asset('js/chatbot.js') }}"></script>
+    @if ($showChatbot ?? true)
+        <script src="{{ asset('js/chatbot.js') }}"></script>
+    @endif
 
     <!-- Extra scripts slot  -->
     {{ $scripts ?? '' }}

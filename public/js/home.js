@@ -1,32 +1,4 @@
 
-//  Mantra 
-(function () {
-    const words = ['Power of Youth', 'Community Action', 'Local Leadership', 'Collective Purpose'];
-    let index = 0;
-
-    function flipWord() {
-        const el = document.getElementById('mantra-word');
-        if (!el) return;
-
-        el.classList.remove('mantra-flip-in');
-        el.classList.add('mantra-flip-out');
-
-        setTimeout(() => {
-            index = (index + 1) % words.length;
-            el.textContent = words[index];
-
-            el.classList.remove('mantra-flip-out');
-            void el.offsetWidth;
-            el.classList.add('mantra-flip-in');
-        }, 250);
-    }
-
-    document.addEventListener('DOMContentLoaded', function () {
-        const el = document.getElementById('mantra-word');
-        if (el) setInterval(flipWord, 2800);
-    });
-})();
-
 //  program slider  
 function programSlider() {
     return {
@@ -34,36 +6,50 @@ function programSlider() {
         touchStartX: null,
         touchStartY: null,
         interval: null,
-        intervalMs: 5000,
+        intervalMs: 4000,
         progress: 0,
         progressInterval: null,
         programs: [
             {
-                img: '/images/homepage/prog-1.jpg',
+                img: '/images/homepage/gobike.JPG',
                 accent: '#F97316',
                 title: 'Go Bike',
-                desc: 'Promoting health, mobility, and sustainable livelihoods on two wheels.',
+                desc: 'Transforming young volunteers into active community responders by equipping them with the skills, awareness, and spirit of volunteerism to respond to community needs, promote safety and lend a helping a hand when it matters most',
                 href: '/what-we-do'
             },
             {
-                img: '/images/homepage/story-2.jpg',
+                img: '/images/homepage/alwar.jpg',
                 accent: '#2FA7FF',
-                title: 'Community Outreach',
-                desc: 'Engaging local communities through livelihood programs, nutrition drives, and educational workshops that build long-term capacity and self-reliance.',
+                title: 'Alwar',
+                desc: 'Continuing to empower students within school communities to become proactive young responders, equiped with knowledge, skills, and compassion to promote safety, preparedness, and services to others.',
                 href: '/what-we-do'
             },
             {
-                img: '/images/homepage/story-3.jpg',
+                img: '/images/homepage/ronda_kalusugan.jpg',
                 accent: '#F97316',
-                title: 'Volunteer Mobilization',
-                desc: 'Recruiting, training, and deploying youth cyclists as community responders — building a network ready to act during emergencies and routine service.',
+                title: 'Ronda Kalusugan',
+                desc: 'Mobilizing volunteers to reach communites with basic healthcare services, including blood pressure monitoring and blood sugar checking, promoting early awareness and making essential health checks more accessible to everyone.',
                 href: '/what-we-do'
             },
             {
-                img: '/images/homepage/home.jpg',
+                img: '/images/homepage/padyakaalaman.png',
                 accent: '#132D6B',
-                title: 'Disaster Preparedness',
-                desc: 'Equipping communities with the knowledge, tools, and confidence to prepare for, respond to, and recover from natural disasters — before they strike.',
+                title: 'PadyaKaalaman',
+                desc: 'Making knowledge accessible through educational initiatives that inspire curiosity, encourage learning, and open opportunities for learners.',
+                href: '/what-we-do'
+            },
+            {
+                img: '/images/homepage/padyakaisipan.jpeg',
+                accent: '#2FA7FF',
+                title: 'Padyakaisipan',
+                desc: 'Promoting mental health awareness by creating safe spaces for conversations breaking the stigma surrounding mental healt, and encouraging young people to prioritize emotional well-being, understanding, and support for one another.',
+                href: '/what-we-do'
+            },
+            {
+                img: '/images/homepage/hatake.jpeg',
+                accent: '#F97316',
+                title: 'Hatake Farm',
+                desc: 'Bridging communities together through sustainable farming, food security, and shared harvests that nurture both the land and the people.',
                 href: '/what-we-do'
             }
         ],

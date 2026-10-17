@@ -28,16 +28,6 @@ return new class extends Migration
 
         $now = now();
 
-        DB::table('home_partners')->insert([
-            ['name' => 'DOH Pangasinan', 'abbreviation' => 'DOH', 'sort_order' => 0, 'created_at' => $now, 'updated_at' => $now],
-            ['name' => 'DILG Region I', 'abbreviation' => 'DILG', 'sort_order' => 1, 'created_at' => $now, 'updated_at' => $now],
-            ['name' => 'LGU Dagupan', 'abbreviation' => 'LGU', 'sort_order' => 2, 'created_at' => $now, 'updated_at' => $now],
-            ['name' => 'DSWD Pangasinan', 'abbreviation' => 'DSWD', 'sort_order' => 3, 'created_at' => $now, 'updated_at' => $now],
-            ['name' => 'DepEd Region I', 'abbreviation' => 'DepEd', 'sort_order' => 4, 'created_at' => $now, 'updated_at' => $now],
-            ['name' => 'NDRRMC', 'abbreviation' => 'NDRRMC', 'sort_order' => 5, 'created_at' => $now, 'updated_at' => $now],
-            ['name' => 'PRC Philippines', 'abbreviation' => 'PRC', 'sort_order' => 6, 'created_at' => $now, 'updated_at' => $now],
-            ['name' => 'Philippine Red Cross', 'abbreviation' => 'Red Cross', 'sort_order' => 7, 'created_at' => $now, 'updated_at' => $now],
-        ]);
 
         DB::table('impact_stats')->insert([
             ['section' => 'impact', 'label' => 'Trained Youth Volunteers', 'value' => '2,500+', 'sort_order' => 0, 'created_at' => $now, 'updated_at' => $now],

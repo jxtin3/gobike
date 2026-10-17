@@ -37,38 +37,12 @@ it('allows admins to edit the publication date of news', function () {
     expect($news->fresh()->published_at->toDateString())->toBe('2026-09-20');
 });
 
-it('lets admins choose and order the three homepage news stories', function () {
-    $admin = User::factory()->create(['is_admin' => true]);
-    $stories = collect(['First choice', 'Second choice', 'Third choice'])->map(
-        fn ($title, $index) => News::create([
-            'title' => $title,
-            'slug' => 'homepage-choice-'.$index,
-            'body' => 'Story body',
-            'is_published' => true,
-            'published_at' => now()->subDays($index),
-        ])
-    );
-
-    $this->actingAs($admin)
-        ->get(route('admin.operations.news.homepage'))
-        ->assertOk()
-        ->assertSee('Homepage story 1')
-        ->assertSee('Save homepage stories');
-
-    $orderedStories = [$stories[2], $stories[0], $stories[1]];
-
-    $this->put(route('admin.operations.news.homepage.update'), [
-        'news' => array_map(fn (News $story) => $story->id, $orderedStories),
-    ])->assertRedirect(route('admin.operations.news.homepage'))
-        ->assertSessionHasNoErrors();
-
-    expect($orderedStories[0]->fresh()->homepage_position)->toBe(1)
-        ->and($orderedStories[1]->fresh()->homepage_position)->toBe(2)
-        ->and($orderedStories[2]->fresh()->homepage_position)->toBe(3);
-
+it('displays the three permanent news stories on the homepage', function () {
     $this->get('/')
         ->assertOk()
-        ->assertSeeInOrder(['Third choice', 'First choice', 'Second choice']);
+        ->assertSee('Youth Responders Mobilize for Community Health Missions')
+        ->assertSee('Empowering Local Responders with Life-Saving Skills')
+        ->assertSee('Strengthening Community Disaster Response with LGUs');
 });
 // $response->assertRedirect('if what is route'); -- use this if assertStatus got eeror
 
