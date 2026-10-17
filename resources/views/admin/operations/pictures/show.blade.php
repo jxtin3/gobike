@@ -1,42 +1,25 @@
 @extends('admin.operations.layout')
-@section('title','Picture Details')
-@section('heading','Picture Details')
-@section('content')
+@section('title','View Media')
+@section('heading','Media Viewer')
+@section('back', route('admin.operations.pictures.index'))
+@section('back_label', 'Back to Gallery')
 
-<div class="picture-detail">
-    <div class="picture-detail-media">
-        <img src="{{ asset('storage/'.$picture->image_path) }}" alt="{{ $picture->title }}">
+@section('content')
+<div style="max-width: 900px; margin: 0 auto; background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+    <div style="background: #000; text-align: center; max-height: 70vh; display: flex; align-items: center; justify-content: center; min-height: 300px;">
+        @if($picture->isVideo())
+            <video src="{{ asset('storage/'.$picture->image_path) }}" controls autoplay style="max-height: 70vh; max-width: 100%; width: auto;"></video>
+        @else
+            <img src="{{ asset('storage/'.$picture->image_path) }}" alt="Gallery media" style="max-height: 70vh; max-width: 100%; object-contain: fit;">
+        @endif
     </div>
 
-    <div class="picture-detail-card">
-        <div>
-            <span class="picture-detail-label">Title</span>
-            <p class="title">{{ $picture->title }}</p>
-        </div>
-
-        @if($picture->description)
-        <div>
-            <span class="picture-detail-label">Description</span>
-            <p class="copy">{{ $picture->description }}</p>
-        </div>
-        @endif
-
-        <div class="picture-detail-meta">
-            <div>
-                <span>Uploaded By</span>
-                <p>{{ $picture->uploader?->name ?? 'Unknown' }}</p>
-            </div>
-            <div>
-                <span>Upload Date</span>
-                <p>{{ $picture->created_at->format('F d, Y') }}</p>
-            </div>
-        </div>
-
-        <div class="picture-detail-actions">
-            <a class="primary-button" href="{{ route('admin.operations.pictures.edit', $picture) }}">Edit Picture</a>
-            <a class="map-button" href="{{ route('admin.operations.pictures.index') }}">← Back to Pictures</a>
-        </div>
+    <div style="padding: 1.25rem 1.5rem; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #e2e8f0;">
+        <a class="btn btn-secondary" href="{{ route('admin.operations.pictures.index') }}">← Back to Pictures</a>
+        <form method="POST" action="{{ route('admin.operations.pictures.destroy', $picture) }}">
+            @csrf @method('DELETE')
+            <button class="btn btn-soft-danger" type="submit" onclick="return confirm('Remove this item?')">Remove</button>
+        </form>
     </div>
 </div>
-
 @endsection

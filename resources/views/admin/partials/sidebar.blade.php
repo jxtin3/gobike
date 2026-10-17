@@ -67,11 +67,8 @@
         </a>
 
         <p class="side-group">Legal</p>
-        <a class="side-link" href="{{ route('admin.operations.legal.privacy') }}" aria-current="{{ $current('admin.operations.legal.privacy') }}">
-            <x-admin.icon name="shield" /><span>Privacy Policy</span>
-        </a>
-        <a class="side-link" href="{{ route('admin.operations.legal.terms') }}" aria-current="{{ $current('admin.operations.legal.terms') }}">
-            <x-admin.icon name="file-text" /><span>Terms &amp; Conditions</span>
+        <a class="side-link" href="{{ route('admin.operations.legal.terms') }}" aria-current="{{ $current('admin.operations.legal.*') }}">
+            <x-admin.icon name="file-text" /><span>Terms &amp; Privacy</span>
         </a>
 
     </nav>
