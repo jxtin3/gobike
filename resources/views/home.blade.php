@@ -79,7 +79,7 @@
 
 
 
-<!-- SECTION 2 — MANTRA & IMPACT STORIES -->
+<!-- SECTION 2 — IMPACT STORIES -->
 <section id="stories" class="bg-white" aria-labelledby="stories-heading">
 
     
