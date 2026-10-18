@@ -69,11 +69,11 @@
 <div class="gbp">
 
     {{-- HERO --}}
-    <section class="gbp-hero">
-        <div class="gbp-wrap">
+    <section class="gbp-hero min-h-[460px] md:min-h-[500px] flex flex-col justify-center !pt-28 !pb-16 md:!pt-32 md:!pb-20">
+        <div class="gbp-wrap w-full">
             <!-- <a href="{{ url('/news') }}" class="gbp-back">← Back to News &amp; Updates</a> -->
-            <h1 class="gbp-title">Become a  <em>Go Biker</em></h1>
-            <p class="gbp-lead">
+            <h1 class="gbp-title text-4xl md:text-5xl lg:text-6xl uppercase tracking-tight leading-tight">Become a  <em>Go Biker</em></h1>
+            <p class="gbp-lead text-base md:text-lg leading-relaxed">
                 Ride with a youth-led network of community responders — bringing health,
                 safety, and disaster resilience to barangays across Pangasinan.
             </p>

@@ -4,33 +4,30 @@
 >
 
 <!-- HERO SECTION -->
-<section class="relative pt-32 pb-24 md:pt-48 md:pb-36 overflow-hidden bg-[#0D1B2A]">
+<section class="relative min-h-[460px] md:min-h-[500px] flex flex-col justify-center pt-28 pb-16 md:pt-32 md:pb-20 overflow-hidden bg-[#0D1B2A]">
 
     <!-- Background image -->
     <div class="absolute inset-0 z-0">
         <img
-            src="{{ asset('images/reachus/story-3.jpg') }}"
+            src="{{ asset('images/about/about.jpg') }}"
             alt="Go Bike community"
-            class="w-full h-full object-cover object-center opacity-20"
+            class="w-full h-full object-cover object-[center_35%] opacity-45"
         />
-        <div class="absolute inset-0 bg-gradient-to-b from-[#0D1B2A]/70 via-[#0D1B2A]/50 to-[#0D1B2A]"></div>
+        <div class="absolute inset-0 bg-gradient-to-b from-[#0D1B2A]/80 via-[#0D1B2A]/40 to-[#0D1B2A]/60"></div>
     </div>
 
     <!-- Decorative orbs -->
     <div class="absolute top-20 left-10 w-72 h-72 rounded-full bg-[#2FA7FF]/8 blur-3xl pointer-events-none z-0"></div>
     <div class="absolute bottom-10 right-10 w-96 h-96 rounded-full bg-[#F97316]/8 blur-3xl pointer-events-none z-0"></div>
 
-    <div class="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center reveal">
-        
-        <h1 class="text-5xl md:text-6xl lg:text-7xl font-heading font-bold text-white mb-6 uppercase tracking-tight leading-none drop-shadow-lg">
+    <div class="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center reveal w-full">
+        <h1 class="text-4xl md:text-5xl lg:text-6xl font-heading font-bold text-white mb-5 uppercase tracking-tight leading-tight drop-shadow-lg">
             We'd Love To<br/>
             <span class="text-[#F97316]">Hear From You.</span>
         </h1>
         <p class="text-base md:text-lg text-white/60 max-w-xl mx-auto leading-relaxed">
             Have a question, a partnership idea, or want to get involved? Reach out - our team is always ready to connect.
         </p>
-
-        
     </div>
 </section>
 

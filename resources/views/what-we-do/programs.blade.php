@@ -6,20 +6,20 @@
 >
 
 <!-- HERO SECTION -->
-<section class="relative pt-32 pb-24 md:pt-48 md:pb-36 overflow-hidden bg-[#0D1B2A]">
+<section class="relative min-h-[460px] md:min-h-[500px] flex flex-col justify-center pt-28 pb-16 md:pt-32 md:pb-20 overflow-hidden bg-[#0D1B2A]">
     <!-- Background image -->
     <div class="absolute inset-0 z-0">
         <img
-            src="{{ asset('images/whatwedo/prog-1.jpg') }}"
+            src="{{ asset('images/about/about.jpg') }}"
             alt="OneGoBike Programs"
-            class="w-full h-full object-cover object-center opacity-40"
+            class="w-full h-full object-cover object-[center_35%] opacity-45"
         />
-        <div class="absolute inset-0 bg-gradient-to-b from-[#0D1B2A] via-transparent to-[#0D1B2A]"></div>
+        <div class="absolute inset-0 bg-gradient-to-b from-[#0D1B2A]/80 via-[#0D1B2A]/40 to-[#0D1B2A]/60"></div>
     </div>
 
     <!-- Content -->
-    <div class="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center reveal">
-        <h1 class="text-5xl md:text-6xl lg:text-7xl font-heading font-bold text-white mb-6 uppercase tracking-tight leading-none drop-shadow-lg">
+    <div class="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center reveal w-full">
+        <h1 class="text-4xl md:text-5xl lg:text-6xl font-heading font-bold text-white mb-5 uppercase tracking-tight leading-tight drop-shadow-lg">
             Impact In<br/>
             <span class="text-[#2FA7FF]">Motion.</span>
         </h1>
@@ -38,42 +38,66 @@
             @php
             $programsList = [
                 [
-                    'title' => 'Health & Medical Outreach',
-                    'desc' => 'Deploying bicycle-mounted medical responders to remote areas. Our volunteers provide basic first aid, distribute vitamins, and assist local health units during medical missions.',
-                    'img' => 'story-1.jpg',
+                    'title' => 'Go Bike',
+                    'desc' => 'Transforming young volunteers into active community responders by equipping them with the skills, awareness, and spirit of volunteerism to respond to community needs, promote safety and lend a helping hand when it matters most.',
+                    'img_path' => 'images/whatwedo/gobike.jpg',
                     'accent' => '#F97316',
+                    'url' => url('/what-we-do/programs/gobike'),
                 ],
                 [
-                    'title' => 'Disaster Preparedness',
-                    'desc' => 'Equipping the youth with essential survival skills, emergency response training, and the logistical capability to act rapidly when natural disasters strike Pangasinan.',
-                    'img' => 'impact-story.jpg',
+                    'title' => 'Alwar',
+                    'desc' => 'Continuing to empower students within school communities to become proactive young responders, equipped with knowledge, skills, and compassion to promote safety, preparedness, and services to others.',
+                    'img_path' => 'images/whatwedo/programs/alwar.jpg',
                     'accent' => '#2FA7FF',
+                    'url' => url('/what-we-do/programs/alwar'),
                 ],
                 [
-                    'title' => 'Youth Volunteer Mobilization',
-                    'desc' => 'We train the next generation of leaders. Through our volunteer program, young Pangasinenses learn discipline, civic duty, and the spirit of Bayanihan.',
-                    'img' => 'story-2.jpg',
-                    'accent' => '#16A34A',
+                    'title' => 'Ronda Kalusugan',
+                    'desc' => 'Mobilizing volunteers to reach communities with basic healthcare services, including blood pressure monitoring and blood sugar checking, promoting early awareness and making essential health checks more accessible to everyone.',
+                    'img_path' => 'images/whatwedo/ronda.jpg',
+                    'accent' => '#F97316',
+                    'url' => url('/what-we-do/programs/ronda-kalusugan'),
                 ],
                 [
-                    'title' => 'Livelihood & Community Action',
-                    'desc' => 'Beyond emergency response, we engage in community building. This includes livelihood workshops, environmental clean-ups, and supporting local cycling micro-businesses.',
-                    'img' => 'story-3.jpg',
+                    'title' => 'PadyaKaalaman',
+                    'desc' => 'Making knowledge accessible through educational initiatives that inspire curiosity, encourage learning, and open opportunities for learners.',
+                    'img_path' => 'images/whatwedo/padyakaalaman.jpg',
                     'accent' => '#132D6B',
-                ]
+                    'url' => url('/what-we-do/programs/padyakaalaman'),
+                ],
+                [
+                    'title' => 'Padyakaisipan',
+                    'desc' => 'Promoting mental health awareness by creating safe spaces for conversations, breaking the stigma surrounding mental health, and encouraging young people to prioritize emotional well-being, understanding, and support for one another.',
+                    'img_path' => 'images/whatwedo/padyakaisipan.jpg',
+                    'accent' => '#2FA7FF',
+                    'url' => url('/what-we-do/programs/padyakaisipan'),
+                ],
+                [
+                    'title' => 'Hatake Farm',
+                    'desc' => 'Bridging communities together through sustainable farming, food security, and shared harvests that nurture both the land and the people.',
+                    'img_path' => 'images/whatwedo/hatake.jpg',
+                    'accent' => '#16A34A',
+                    'url' => url('/what-we-do/programs/hatake'),
+                ],
             ];
             @endphp
 
             @foreach ($programsList as $idx => $prog)
             <div class="group bg-white rounded-sm overflow-hidden shadow-sm border border-[#F1F5F9] card-lift reveal reveal-delay-{{ $idx % 2 + 1 }}">
                 <div class="h-64 overflow-hidden relative">
-                    <img src="{{ asset('images/whatwedo/' . $prog['img']) }}" alt="{{ $prog['title'] }}" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
-                    <div class="absolute inset-0 bg-black/10 group-hover:bg-black/0 transition-colors duration-300"></div>
+                    <img src="{{ asset($prog['img_path']) }}" alt="{{ $prog['title'] }}" class="w-full h-full object-cover" />
+                    <div class="absolute inset-0 bg-black/10"></div>
                 </div>
                 <div class="p-8">
-                    <h3 class="text-2xl font-heading font-bold text-[#111827] mb-3 group-hover:text-[#132D6B] transition-colors">{{ $prog['title'] }}</h3>
+                    <h3 class="text-2xl font-heading font-bold text-[#111827] mb-3">
+                        @if(!empty($prog['url']))
+                            <a href="{{ $prog['url'] }}" class="hover:underline">{{ $prog['title'] }}</a>
+                        @else
+                            {{ $prog['title'] }}
+                        @endif
+                    </h3>
                     <p class="text-[#64748B] leading-relaxed mb-6">{{ $prog['desc'] }}</p>
-                    <a href="#" class="program-card-link">
+                    <a href="{{ $prog['url'] ?? '#' }}" class="program-card-link">
                         View Details
                         <svg class="w-4 h-4 program-card-link__arrow" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/></svg>
                     </a>

@@ -4,22 +4,22 @@
 >
 
 <!-- HERO -->
-<section class="relative pt-32 pb-24 md:pt-48 md:pb-36 overflow-hidden bg-[#0D1B2A]">
+<section class="relative min-h-[460px] md:min-h-[500px] flex flex-col justify-center pt-28 pb-16 md:pt-32 md:pb-20 overflow-hidden bg-[#0D1B2A]">
     <div class="absolute inset-0 z-0">
         <img
-            src="{{ asset('images/about/story-3.jpg') }}"
+            src="{{ asset('images/about/about.jpg') }}"
             alt="OneGoBike Volunteers"
-            class="w-full h-full object-cover object-top opacity-30"
+            class="w-full h-full object-cover object-[center_35%] opacity-45"
         />
-        <div class="absolute inset-0 bg-gradient-to-b from-[#0D1B2A]/80 via-transparent to-[#0D1B2A]"></div>
+        <div class="absolute inset-0 bg-gradient-to-b from-[#0D1B2A]/80 via-[#0D1B2A]/40 to-[#0D1B2A]/60"></div>
     </div>
 
-    <div class="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center reveal">
+    <div class="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center reveal w-full">
         <!-- <span class="inline-flex items-center gap-2 text-[10px] font-bold tracking-[0.22em] uppercase text-[#F97316] mb-4">
             <span class="w-2 h-2 rounded-full bg-[#F97316]"></span>
             Our Initiatives
         </span> -->
-        <h1 class="text-5xl md:text-6xl lg:text-7xl font-heading font-bold text-white mb-6 uppercase tracking-tight leading-none drop-shadow-lg">
+        <h1 class="text-4xl md:text-5xl lg:text-6xl font-heading font-bold text-white mb-5 uppercase tracking-tight leading-tight drop-shadow-lg">
             Driven by Youth.<br/>
             <span class="text-[#2FA7FF]">Powered by Service.</span>
         </h1>

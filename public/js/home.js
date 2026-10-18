@@ -11,7 +11,7 @@ function programSlider() {
         progressInterval: null,
         programs: [
             {
-                img: '/images/homepage/gobike.JPG',
+                img: '/images/homepage/go_bike.jpg',
                 accent: '#F97316',
                 title: 'Go Bike',
                 desc: 'Transforming young volunteers into active community responders by equipping them with the skills, awareness, and spirit of volunteerism to respond to community needs, promote safety and lend a helping a hand when it matters most',

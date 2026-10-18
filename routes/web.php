@@ -64,9 +64,41 @@ Route::get('/what-we-do', function () {
     return view('what-we-do.programs');
 });
 
+Route::get('/what-we-do/programs/gobike', function () {
+    return view('what-we-do.programs.gobike');
+})->name('programs.gobike');
+
+Route::get('/what-we-do/programs/alwar', function () {
+    return view('what-we-do.programs.alwar');
+})->name('programs.alwar');
+
+Route::get('/what-we-do/programs/ronda-kalusugan', function () {
+    return view('what-we-do.programs.ronda-kalusugan');
+})->name('programs.ronda-kalusugan');
+
+Route::get('/what-we-do/programs/padyakaalaman', function () {
+    return view('what-we-do.programs.padyakaalaman');
+})->name('programs.padyakaalaman');
+
+Route::get('/what-we-do/programs/padyakaisipan', function () {
+    return view('what-we-do.programs.padyakaisipan');
+})->name('programs.padyakaisipan');
+
+Route::get('/what-we-do/programs/hatake', function () {
+    return view('what-we-do.programs.hatake');
+})->name('programs.hatake');
+
+Route::redirect('/programs/gobike', '/what-we-do/programs/gobike');
+Route::redirect('/programs/alwar', '/what-we-do/programs/alwar');
+Route::redirect('/programs/ronda-kalusugan', '/what-we-do/programs/ronda-kalusugan');
+Route::redirect('/programs/padyakaalaman', '/what-we-do/programs/padyakaalaman');
+Route::redirect('/programs/padyakaisipan', '/what-we-do/programs/padyakaisipan');
+Route::redirect('/programs/hatake', '/what-we-do/programs/hatake');
 Route::redirect('/programs', '/what-we-do');
 
 Route::redirect('/community', '/news');
+
+Route::redirect('/reach-us', '/contact');
 
 Route::get('/contact', function () {
     return view('contact');

@@ -1,7 +1,16 @@
 <x-layout title="Gallery | Go Bike Project" description="View our gallery showcase of youth responders and community events.">
-<section class="relative pt-32 pb-24 md:pt-48 md:pb-36 overflow-hidden bg-[#0D1B2A]">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center reveal">
-        <h1 class="text-5xl md:text-6xl lg:text-7xl font-heading font-bold text-white uppercase mb-4 tracking-tight leading-none drop-shadow-lg">Gallery Showcase</h1>
+<section class="relative min-h-[460px] md:min-h-[500px] flex flex-col justify-center pt-28 pb-16 md:pt-32 md:pb-20 overflow-hidden bg-[#0D1B2A]">
+    <div class="absolute inset-0 z-0">
+        <img
+            src="{{ asset('images/about/about.jpg') }}"
+            alt="OneGoBike Gallery"
+            class="w-full h-full object-cover object-[center_35%] opacity-45"
+        />
+        <div class="absolute inset-0 bg-gradient-to-b from-[#0D1B2A]/80 via-[#0D1B2A]/40 to-[#0D1B2A]/60"></div>
+    </div>
+
+    <div class="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center reveal w-full">
+        <h1 class="text-4xl md:text-5xl lg:text-6xl font-heading font-bold text-white uppercase mb-5 tracking-tight leading-tight drop-shadow-lg">Gallery Showcase</h1>
         <p class="text-white/65 max-w-2xl mx-auto text-base md:text-lg leading-relaxed">Explore moments of impact, community resilience, and volunteer dedication captured during our field operations across Pangasinan.</p>
     </div>
 </section>
