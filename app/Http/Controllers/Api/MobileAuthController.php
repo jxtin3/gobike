@@ -83,7 +83,7 @@ class MobileAuthController extends Controller
         }
 
         try {
-            $client = new GoogleClient(['client_id' => $clientId]);
+            $client = app(GoogleClient::class, ['config' => ['client_id' => $clientId]]);
             $payload = $client->verifyIdToken($request->input('id_token'));
         } catch (\Throwable $e) {
             Log::warning('Google token verification failed: '.$e->getMessage());
@@ -108,6 +108,13 @@ class MobileAuthController extends Controller
         if ($user) {
             if ($user->google_id && $user->google_id !== $googleId) {
                 return response()->json(['message' => 'This email is linked to a different Google account.'], 403);
+            }
+
+            // Anyone can register an email with a password without proving they own it.
+            // Google has now proven who owns it, so cut off whoever set that password.
+            if (! $user->google_id && ! $user->email_verified_at && ! $user->is_admin) {
+                $user->password = Str::random(40);
+                $user->tokens()->delete();
             }
 
             $user->google_id = $googleId;

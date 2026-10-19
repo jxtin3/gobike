@@ -13,13 +13,7 @@ class LocationController extends Controller
     /** Statuses that stay on the map until an admin resolves them. */
     private const ALERT_STATUSES = ['emergency', 'responding'];
 
-    /**
-     * Show the admin dashboard with the real-time map.
-     */
-    public function dashboard()
-    {
-        return view('admin.dashboard');
-    }
+    
 
     /**
      * Return all active locations as JSON for the map widget.
@@ -208,28 +202,7 @@ class LocationController extends Controller
         return sprintf('%02d:%02d:%02d', intdiv($seconds, 3600), intdiv($seconds % 3600, 60), $seconds % 60);
     }
 
-    /**
-     * Store a location payload from the admin or seed routine.
-     */
-    public function store(Request $request): JsonResponse
-    {
-        $data = $request->validate([
-            'name' => ['nullable', 'string', 'max:255'],
-            'role' => ['nullable', 'string', 'max:255'],
-            'latitude' => ['required', 'numeric'],
-            'longitude' => ['required', 'numeric'],
-            'status' => ['nullable', 'string', 'max:255'],
-        ]);
+    
 
-        $location = Location::create([
-            'user_id' => auth()->id(),
-            'name' => $data['name'] ?? 'System Update',
-            'role' => $data['role'] ?? 'Volunteer',
-            'latitude' => $data['latitude'],
-            'longitude' => $data['longitude'],
-            'status' => $data['status'] ?? 'Active',
-        ]);
-
-        return response()->json($location->fresh(), 201);
-    }
+    
 }

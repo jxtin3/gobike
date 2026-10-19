@@ -57,6 +57,6 @@ it('returns an error when the chatbot service fails', function () {
 
     $response->assertStatus(500)
         ->assertJson([
-            'message' => "Sorry, I'm having a trouble responding right now. Please try again later.",
+            'message' => "Sorry, I'm not available to respond right now. Please try again later.",
         ]);
 });

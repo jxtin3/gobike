@@ -1,40 +1,46 @@
-<x-layout title="Privacy Policy | Go Bike Project">
-    <section class="bg-[#0D1B2A] min-h-screen pt-32 md:pt-40 pb-20 text-white relative overflow-hidden">
+<x-layout 
+    title="{{ $document->title ?? 'Privacy Policy' }} | Go Bike Project"
+    description="Privacy Policy and data protection commitments for Go Bike Project."
+>
+    <!-- HERO SECTION (Matching About page height and styling) -->
+    <section class="relative pt-32 pb-24 md:pt-48 md:pb-36 overflow-hidden bg-[#0D1B2A]">
         <!-- Decorative blobs -->
         <div class="absolute top-0 right-0 w-96 h-96 bg-[#2FA7FF]/10 rounded-full blur-3xl pointer-events-none"></div>
         <div class="absolute bottom-0 left-0 w-96 h-96 bg-[#F97316]/10 rounded-full blur-3xl pointer-events-none"></div>
         
+        <div class="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center reveal">
+            <h1 class="text-5xl md:text-6xl lg:text-7xl font-heading font-bold text-white mb-4 uppercase tracking-tight leading-none drop-shadow-lg">
+                {{ $document->title ?? 'Privacy Policy' }}
+            </h1>
+            <p class="text-[#2FA7FF] font-semibold tracking-wide text-sm uppercase">
+                Last updated: {{ $document->last_updated ?? date('F d, Y') }}
+            </p>
+        </div>
+    </section>
+
+    <!-- CONTENT SECTION -->
+    <section class="py-16 md:py-24 bg-[#0D1B2A] text-white border-t border-white/5 relative overflow-hidden">
         <div class="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h1 class="text-4xl md:text-5xl font-heading font-bold text-white mb-4">Privacy Policy</h1>
-            <p class="text-[#2FA7FF] font-semibold tracking-wide text-sm mb-12 uppercase">Last updated: {{ date('F d, Y') }}</p>
-
-            <div class="space-y-8 text-white/75 leading-relaxed">
-                <div>
-                    <h2 class="text-2xl font-heading font-bold text-white mb-3">1. Information We Collect</h2>
-                    <p>We collect information that you provide directly to us when you volunteer, donate, or contact us. This may include your name, email address, phone number, and any other information you choose to provide.</p>
-                </div>
-
-                <div>
-                    <h2 class="text-2xl font-heading font-bold text-white mb-3">2. How We Use Your Information</h2>
-                    <p>We use the information we collect to operate our programs, communicate with you, process donations, and improve our community services across Pangasinan.</p>
-                </div>
-
-                <div>
-                    <h2 class="text-2xl font-heading font-bold text-white mb-3">3. Sharing of Information</h2>
-                    <p>We do not share your personal information with third parties except as necessary to provide our services, coordinate with our government partners (such as DILG or DOH), or comply with the law.</p>
-                </div>
-
-                <div>
-                    <h2 class="text-2xl font-heading font-bold text-white mb-3">4. Security</h2>
-                    <p>We take reasonable measures to help protect your personal information from loss, theft, misuse, and unauthorized access, disclosure, alteration, and destruction.</p>
-                </div>
-
-                <div>
-                    <h2 class="text-2xl font-heading font-bold text-white mb-3">5. Contact Us</h2>
-                    <p>If you have any questions about this Privacy Policy, please contact our community desk at <a href="{{ url('/contact') }}" class="text-[#2FA7FF] hover:text-white transition-colors underline underline-offset-4">our contact page</a>.</p>
-                </div>
+            <div class="space-y-10 text-white/80 leading-relaxed text-base md:text-lg">
+                @forelse ($document->sections ?? [] as $section)
+                    <div class="reveal">
+                        @if (!empty($section['title']))
+                            <h2 class="text-2xl md:text-3xl font-heading font-bold text-white mb-3">
+                                {{ $section['title'] }}
+                            </h2>
+                        @endif
+                        @if (!empty($section['content']))
+                            <div class="space-y-4 text-white/75 leading-relaxed">
+                                {!! $document->renderSectionContent($section['content']) !!}
+                            </div>
+                        @endif
+                    </div>
+                @empty
+                    <div class="text-center py-12 text-white/50">
+                        <p>No content has been published yet. Please check back later.</p>
+                    </div>
+                @endforelse
             </div>
         </div>
     </section>
 </x-layout>
-

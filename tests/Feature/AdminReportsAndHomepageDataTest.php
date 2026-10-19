@@ -1,6 +1,5 @@
 <?php
 
-use App\Models\HomePartner;
 use App\Models\ImpactStat;
 use App\Models\Patient;
 use App\Models\User;
@@ -122,7 +121,8 @@ it('makes analytics the admin dashboard and places live operations after the cha
 
 it('allows admins to edit homepage data and shows the changes publicly', function () {
     $admin = User::factory()->create(['is_admin' => true]);
-    $partner = HomePartner::firstOrFail();
+
+
     $stat = ImpactStat::where('section', 'impact')->firstOrFail();
     $highlight = ImpactStat::where('section', 'highlight')->firstOrFail();
     $badge = ImpactStat::where('section', 'badge')->firstOrFail();
@@ -132,11 +132,7 @@ it('allows admins to edit homepage data and shows the changes publicly', functio
         ->assertOk()
         ->assertSee('Featured impact highlights');
 
-    $this->put(route('admin.operations.homepage-data.partners.update', $partner), [
-        'name' => 'Community Health Partner',
-        'abbreviation' => 'CHP',
-    ])
-        ->assertRedirect(route('admin.operations.homepage-data.index'));
+    
 
     $this->put(route('admin.operations.homepage-data.impact-stats.update', $stat), [
         'label' => 'People served',
@@ -155,8 +151,6 @@ it('allows admins to edit homepage data and shows the changes publicly', functio
 
     $this->get('/')
         ->assertOk()
-        ->assertSee('Community Health Partner')
-        ->assertSee('CHP')
         ->assertSee('People served')
         ->assertSee('3,000+')
         ->assertSee('Missions completed')

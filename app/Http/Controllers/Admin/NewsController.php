@@ -20,51 +20,6 @@ class NewsController extends Controller
         return view('admin.operations.news.index', compact('news'));
     }
 
-    public function homepage()
-    {
-        $publishedNews = News::published()->orderByDesc('published_at')->get();
-        $selectedNews = News::published()
-            ->whereNotNull('homepage_position')
-            ->orderBy('homepage_position')
-            ->pluck('id')
-            ->all();
-
-        if (count($selectedNews) !== 3) {
-            $selectedNews = $publishedNews->take(3)->pluck('id')->all();
-        }
-
-        return view('admin.operations.news.homepage', compact('publishedNews', 'selectedNews'));
-    }
-
-    public function updateHomepage(Request $request)
-    {
-        $data = $request->validate([
-            'news' => ['required', 'array', 'size:3'],
-            'news.*' => [
-                'required',
-                'integer',
-                'distinct',
-                Rule::exists('news', 'id'),
-            ],
-        ]);
-
-        if (News::published()->whereIn('id', $data['news'])->count() !== 3) {
-            throw ValidationException::withMessages([
-                'news' => 'Choose three published stories for the homepage.',
-            ]);
-        }
-
-        DB::transaction(function () use ($data) {
-            News::query()->update(['homepage_position' => null]);
-
-            foreach ($data['news'] as $index => $newsId) {
-                News::whereKey($newsId)->update(['homepage_position' => $index + 1]);
-            }
-        });
-
-        return redirect()->route('admin.operations.news.homepage')->with('success', 'Homepage news successfully updated.');
-    }
-
     public function create() { return view('admin.operations.news.create'); }
 
     public function store(Request $request)

@@ -40,7 +40,7 @@
         </div>
 
         <div class="rep-photo">
-            <img src="{{ asset('images/gbike.jpg') }}"
+            <img src="{{ asset('images/whatwedo/gbike.jpg') }}"
                  alt="Go Bike Project training participants holding their certificates"
                  loading="lazy">
         </div>

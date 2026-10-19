@@ -18,7 +18,7 @@
             class="w-full h-full object-cover object-center"
             id="hero-bg-video"
         >
-            <source src="{{ asset('videos/main-video.mp4') }}" type="video/mp4">
+            <source src="{{ asset('videos/hero-video.mp4') }}" type="video/mp4">
         </video>
     </div>
 
@@ -32,7 +32,7 @@
     <div class="absolute bottom-0 left-0 right-0 h-50 z-10 bg-gradient-to-t from-[#111827]/60 to-transparent" aria-hidden="true"></div>
 
     <!-- Content -->
-    <div class="relative z-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+    <div class="relative z-20 w-full px-6 sm:px-10 md:px-12 lg:px-16 xl:px-20 2xl:px-24 pt-16 md:pt-20">
         <div class="max-w-3xl">
 
             <!-- Main headline -->
@@ -51,12 +51,13 @@
 
             <!-- Sub-headline -->
             <p class="text-base md:text-lg font-semibold text-white/75 mb-3 font-heading tracking-widest uppercase reveal">
-                Building Healthier Communities Through Service
+                Building Healthier and more Disaster-Resilient Communities <br>One Ride at a Time
             </p>
 
             <!-- Body text -->
             <p class="text-base md:text-lg text-white/60 leading-relaxed mb-10 max-w-xl reveal">
-                Mobilizing volunteers, responders, and community leaders to strengthen health, preparedness, and community resilience.            </p>
+                Bridging Partners, mobilizing volunteers to provide responsive services to the adaptive challenges of the community.
+            </p>
 
             <!-- CTA(call to action) -->
             <div class="flex flex-col sm:flex-row gap-4 mt-2 reveal">
@@ -78,7 +79,7 @@
 
 
 
-<!-- SECTION 2 — MANTRA & IMPACT STORIES -->
+<!-- SECTION 2 — IMPACT STORIES -->
 <section id="stories" class="bg-white" aria-labelledby="stories-heading">
 
     
@@ -90,7 +91,7 @@
         <div class="relative flex flex-col md:flex-row items-stretch">
             <div class="w-full md:w-[68%] relative h-[380px] md:h-[520px] overflow-hidden flex-shrink-0">
                 <img
-                    src="{{ asset('images/storycard.png') }}"
+                    src="{{ asset('images/homepage/story1.JPG') }}"
                     class="absolute inset-0 w-full h-full object-cover"
                     alt="Youth responders in action"
                     loading="lazy"
@@ -103,11 +104,9 @@
             <div class="reveal reveal-right w-full md:w-[44%] md:-ml-16 z-10 self-center md:my-12">
                 <div class="story-card bg-[#1a1a1a] p-10 md:p-12 lg:p-16 flex flex-col justify-center text-white h-full">
                     <div class="story-rule"></div>
-                    <span class="text-[10px] font-bold tracking-[0.2em] uppercase text-[#F97316]/70 mb-3">Field Operations</span>
                     <h3 class="text-3xl md:text-4xl font-heading font-bold uppercase mb-5 leading-tight tracking-tight">
-                        Racing Against<br>
-                The Clock
-            </h3>
+                        In Pangasinan, youth volunteers bike to answer the community's healthier needs.
+                    </h3>
             <p class="text-white/65 text-sm md:text-base leading-relaxed mb-8 font-light">
                 Using cargo bikes to be on the move, youth volunteers in Pangasinan make it their mission to help provide basic medical services to residents of Barangay Umanday.            </p>
             <a href="{{ url('https://www.rappler.com/moveph/262436-pangasinan-youth-volunteers-bike-answer-communtity-health-needs/') }}" class="text-sm font-semibold text-[#2FA7FF] hover:text-white transition-colors flex items-center gap-2 group">
@@ -125,11 +124,10 @@
                 <video
                     x-ref="video"
                     loop
-                    muted
                     playsinline
                     class="absolute inset-0 w-full h-full object-cover"
                 >
-                    <source src="{{ asset('videos/story_2_video.mp4') }}" type="video/mp4">
+                    <source src="{{ asset('videos/First-Video.mp4') }}" type="video/mp4">
                 </video>
                 <div class="absolute inset-0 bg-gradient-to-l from-transparent to-[#1a1a1a]/30 pointer-events-none"></div>
 
@@ -149,12 +147,11 @@
                      :class="playing ? 'md:w-[calc(100%_+_4rem)]' : 'md:w-[calc(100%_+_12rem)]'">
                     <div class="story-rule"></div>
                     <h3 class="text-3xl md:text-4xl font-heading font-bold uppercase mb-5 leading-tight tracking-tight">
-                        Empowering The<br>
-                        Next Generation
+                        Pedaling Toward A Better Tomorrow
                     </h3>
                     <p class="text-white/65 text-sm md:text-base leading-relaxed mb-8 font-light">
-                        Bicycles do more than transport; they unlock potential. We see young riders turning into community leaders, 
-                        taking responsibility for the health and safety of their neighbors.
+                        For seven years, the Go Bike Project has turned every ride into an opportunity to serve, bridging communities together through youth volunteerism,
+                        environmental action, health, safety and disaster preparedness.
                     </p>
                 
             </div>
@@ -168,11 +165,10 @@
             <video
                 x-ref="video"
                 loop
-                muted
                 playsinline
                 class="absolute inset-0 w-full h-full object-cover"
             >
-                <source src="{{ asset('videos/story_2_video.mp4') }}" type="video/mp4">
+                <source src="{{ asset('videos/Second-Video.mp4') }}" type="video/mp4">
             </video>
             <div class="absolute inset-0 bg-gradient-to-l from-transparent to-[#1a1a1a]/30 pointer-events-none"></div>
 
@@ -429,7 +425,7 @@
             <div class="relative reveal">
                 <div class="relative rounded-sm overflow-hidden shadow-lg aspect-[4/3]">
                     <img
-                        src="{{ asset('images/impact-story.jpg') }}"
+                        src="{{ asset('images/homepage/article.jpeg') }}"
                         alt="Community gathering around bicycles at sunset"
                         class="w-full h-full object-cover transition-transform duration-700 hover:scale-[1.04]"
                         loading="lazy"
@@ -479,8 +475,8 @@
                 <!-- CTAs -->
                 <div class="flex flex-col sm:flex-row gap-4 mt-1">
                     <a
-                        href="{{ url('/about') }}"
-                        class="group inline-flex items-center justify-center gap-2 px-7 py-3.5 text-sm font-semibold bg-[#132D6B] text-white hover:bg-[#132D6B] transition-all duration-300 shadow-sm hover:shadow-md rounded-none"
+                        href="{{ route('our-story') }}"
+                        class="group inline-flex items-center justify-center gap-2 px-7 py-3.5 text-sm font-semibold bg-[#132D6B] text-white hover:bg-[#1a387f] transition-all duration-300 shadow-sm hover:shadow-md rounded-none"
                     >
                         Our Full Story
                         <svg class="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/></svg>
@@ -496,7 +492,7 @@
     </div>
 </section>
 
-<!-- SECTION 7 — LATEST NEWS -->
+<!-- SECTION 7 — NEWS -->
 <section
     id="latest-news"
     class="bg-[#F8FAFC] pt-10 pb-16 md:pt-12 md:pb-24"
@@ -510,40 +506,74 @@
                     News &amp; Updates
                 </h2>
                 <p class="mt-3 max-w-xl text-sm leading-relaxed text-[#64748B] md:text-base">
-                    The latest stories, activities, and updates from the OneGoBike community.
+                    Our stories, activities, and updates from the OneGoBike community.
                 </p>
             </div>
-            <a href="{{ url('/news') }}" class="group inline-flex min-h-11 shrink-0 items-center justify-center gap-2 border border-[#132D6B]/20 bg-white px-5 py-3 text-xs font-bold uppercase tracking-[0.12em] text-[#132D6B] transition-colors hover:border-[#132D6B] hover:bg-[#132D6B] hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#2FA7FF] focus-visible:ring-offset-2">
-                View All News
-                <svg class="h-4 w-4 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/></svg>
-            </a>
+            
         </div>
 
         <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 lg:gap-7">
-            @if(isset($latestNews) && $latestNews->count() > 0)
-                @foreach($latestNews as $i => $newsItem)
-                <div class="news-card reveal reveal-delay-{{ $i + 1 }}">
-                    <div class="news-card-image-wrap">
-                        <img src="{{ $newsItem->image_path ? asset($newsItem->image_path) : asset('images/gobike-logo.png') }}" alt="{{ $newsItem->title }}" class="news-card-image" loading="lazy">
-                    </div>
-                    <div class="news-card-content">
-                        <div class="news-card-date">
-                            <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25m10.5-2.25v2.25M3.75 8.25h16.5M5.25 4.5h13.5A1.5 1.5 0 0 1 20.25 6v14.25H3.75V6a1.5 1.5 0 0 1 1.5-1.5Z"/></svg>
-                            <time datetime="{{ $newsItem->published_at->toDateString() }}">{{ $newsItem->published_at->format('F d, Y') }}</time>
-                        </div>
-                        <h3 class="news-card-title">{{ $newsItem->title }}</h3>
-                        <p class="news-card-excerpt">{{ $newsItem->summary }}</p>
-                        
-                        <a href="{{ url('/news') }}" class="news-card-link mt-auto group" aria-label="Read more news: {{ $newsItem->title }}">
-                            Read story
-                            <svg class="h-5 w-5 shrink-0 transition-transform duration-200 group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14m-7-7 7 7-7 7"/></svg>
-                        </a>
-                    </div>
+            <!-- Permanent Story 1 -->
+            <div class="news-card reveal reveal-delay-1">
+                <div class="news-card-image-wrap">
+                    <img src="{{ asset('images/homepage/hapi.JPG') }}" alt="Youth Responders Mobilize for Community Health Missions" class="news-card-image" loading="lazy">
                 </div>
-                @endforeach
-            @else
-                <p class="col-span-full border border-dashed border-slate-300 bg-white px-6 py-10 text-center text-sm text-[#64748B]">No news available at the moment.</p>
-            @endif
+                <div class="news-card-content">
+                    <!-- <div class="news-card-date">
+                        <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25m10.5-2.25v2.25M3.75 8.25h16.5M5.25 4.5h13.5A1.5 1.5 0 0 1 20.25 6v14.25H3.75V6a1.5 1.5 0 0 1 1.5-1.5Z"/></svg>
+                        <time datetime="2026-10-14">October 14, 2026</time>
+                    </div> -->
+                    <h3 class="news-card-title">Padyarescue Incorporated won the 2024 Healthy Aging Prize for Asian Innovation</h3>
+                    <p class="news-card-excerpt">The program stood out for using trained youth volunteers on bicycles to bring basic health monitoring, including blood pressure and blood sugar checks, closer to older people in their communities.</p>
+                    
+                    <a href="{{ url('https://ahwin.org/2024-hapi-winners/') }}" class="news-card-link mt-auto group" aria-label="Read more news: Youth Responders Mobilize for Community Health Missions">
+                        Read story
+                        <svg class="h-5 w-5 shrink-0 transition-transform duration-200 group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14m-7-7 7 7-7 7"/></svg>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Permanent Story 2 -->
+            <div class="news-card reveal reveal-delay-2">
+                <div class="news-card-image-wrap">
+                    <img src="{{ asset('images/homepage/healthcare.JPG') }}" alt="Empowering Local Responders with Life-Saving Skills" class="news-card-image" loading="lazy">
+                </div>
+                <div class="news-card-content">
+                    <!-- <div class="news-card-date">
+                        <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25m10.5-2.25v2.25M3.75 8.25h16.5M5.25 4.5h13.5A1.5 1.5 0 0 1 20.25 6v14.25H3.75V6a1.5 1.5 0 0 1 1.5-1.5Z"/></svg>
+                        <time datetime="2026-10-08">October 08, 2026</time>
+                    </div> -->
+                    <h3 class="news-card-title">GMA News Features Go Bike Project: Bringing Healthcare and Bayanihan Closer to Communities</h3>
+                    <p class="news-card-excerpt">Through compassion, preparedness, and bayanihan, Go Bike continues to show how young people can help build healthier and more resilient communities.</p>
+                    
+                    <a href="{{ url('https://www.gmanetwork.com/news/lifestyle/healthandwellness/784472/in-pangasinan-a-community-pantry-on-wheels-with-free-healthcare-services-too/story/') }}" class="news-card-link mt-auto group" aria-label="Read more news: Empowering Local Responders with Life-Saving Skills">
+                        Read story
+                        <svg class="h-5 w-5 shrink-0 transition-transform duration-200 group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14m-7-7 7 7-7 7"/></svg>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Permanent Story 3 -->
+            <!-- <div class="news-card reveal reveal-delay-3">
+                <div class="news-card-image-wrap">
+                    <img src="{{ asset('images/homepage/story-3.jpg') }}" alt="Strengthening Community Disaster Response with LGUs" class="news-card-image" loading="lazy">
+                </div>
+                <div class="news-card-content">
+                    <div class="news-card-date">
+                        <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25m10.5-2.25v2.25M3.75 8.25h16.5M5.25 4.5h13.5A1.5 1.5 0 0 1 20.25 6v14.25H3.75V6a1.5 1.5 0 0 1 1.5-1.5Z"/></svg>
+                        <time datetime="2026-09-29">September 29, 2026</time>
+                    </div>
+                    <h3 class="news-card-title">Daily Tribune Recognizes Go Bike Project's Commitment to Youth-Led Disaster Preparedness</h3>
+                    <p class="news-card-excerpt">Working alongside local government units and disaster response teams to establish faster alert systems and rapid bicycle mobility during emergencies.</p>
+                    
+                    <a href="{{ url('/news') }}" class="news-card-link mt-auto group" aria-label="Read more news: Strengthening Community Disaster Response with LGUs">
+                        Read story
+                        <svg class="h-5 w-5 shrink-0 transition-transform duration-200 group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14m-7-7 7 7-7 7"/></svg>
+                    </a>
+                </div>
+            </div> -->
+
+            
         </div>
     </div>
 </section>
@@ -558,7 +588,7 @@
 >
     <!-- Background Map -->
     <div class="absolute inset-0 z-0 bg-[#F8FAFC]">
-        <img src="{{ asset('images/pangasinan-map.png') }}" alt="Map of Pangasinan" class="w-full h-full object-cover opacity-[0.3] mix-blend-multiply scale-105">
+        <img src="{{ asset('images/homepage/pangasinan-map.png') }}" alt="Map of Pangasinan" class="w-full h-full object-cover opacity-[0.3] mix-blend-multiply scale-105">
         <!-- Light overlay to fade and ensure text remains readable -->
         <!-- <div class="absolute inset-0 bg-gradient-to-t from-[#F8FAFC]/50 via-transparent to-[#F8FAFC]/90"></div> -->
     </div>

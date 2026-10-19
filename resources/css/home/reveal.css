@@ -1,6 +1,6 @@
 /* HOME / Scroll-Reveal Delay Utilities */
 
-.reveal-delay-1 { animation-delay: 80ms; }
-.reveal-delay-2 { animation-delay: 160ms; }
-.reveal-delay-3 { animation-delay: 240ms; }
-.reveal-delay-4 { animation-delay: 320ms; }
+.reveal-delay-1 { animation-delay: 60ms; transition-delay: 60ms; }
+.reveal-delay-2 { animation-delay: 120ms; transition-delay: 120ms; }
+.reveal-delay-3 { animation-delay: 180ms; transition-delay: 180ms; }
+.reveal-delay-4 { animation-delay: 240ms; transition-delay: 240ms; }

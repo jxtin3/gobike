@@ -39,6 +39,15 @@
         </div>
     </fieldset>
 
+    <fieldset class="form-section">
+        <legend>Confirm it's you</legend>
+        <div class="field">
+            <label for="current_password">Current password</label>
+            <input class="input @error('current_password') is-invalid @enderror" id="current_password" type="password" name="current_password" autocomplete="current-password">
+            <span class="hint">Required only when changing your email or password.</span>
+        </div>
+    </fieldset>
+
     <div class="form-actions">
         <button class="btn btn-primary" type="submit">Save changes</button>
         <a class="btn btn-secondary" href="{{ route('admin.profile.show') }}">Cancel</a>

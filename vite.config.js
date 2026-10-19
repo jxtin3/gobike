@@ -1,6 +1,5 @@
 import { defineConfig } from 'vite';
 import laravel from 'laravel-vite-plugin';
-import { google } from 'laravel-vite-plugin/fonts';
 import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig({
@@ -14,14 +13,7 @@ export default defineConfig({
                 'resources/js/admin/admin.js',
             ],
             refresh: true,
-            fonts: [
-                google('Inter', {
-                    weights: [300, 400, 500, 600, 700, 800],
-                }),
-                google('Oswald', {
-                    weights: [300, 400, 500, 600, 700],
-                }),
-            ],
+
         }),
         tailwindcss(),
     ],

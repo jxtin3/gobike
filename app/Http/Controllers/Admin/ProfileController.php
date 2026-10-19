@@ -22,15 +22,22 @@ class ProfileController extends Controller
         ]);
     }
 
+    
     public function update(Request $request)
     {
         $user = $request->user();
 
+        $changingSensitive = $request->input('email') !== $user->email
+            || filled($request->input('password'));
+
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', Rule::unique('users')->ignore($user)],
-            'password' => ['nullable', 'confirmed', 'min:8'],
+            'password' => ['nullable', 'confirmed', 'min:12'],
+            'current_password' => [Rule::requiredIf($changingSensitive), 'nullable', 'current_password'],
         ]);
+
+        unset($data['current_password']);
 
         if (blank($data['password'] ?? null)) {
             unset($data['password']);
@@ -40,4 +47,7 @@ class ProfileController extends Controller
 
         return redirect()->route('admin.profile.show')->with('success', 'Profile updated successfully.');
     }
+
+
+
 }

@@ -9,13 +9,21 @@ use Srmklive\PayPal\Services\PayPal as PayPalClient;
 
 class PayPalDonationService
 {
-    private PayPalClient $client;
+    private ?PayPalClient $client = null;
 
-    public function __construct()
+    /**
+     * The PayPal client is created only when a PayPal call is actually needed,
+     * so building this service never contacts PayPal.
+     */
+    private function client(): PayPalClient
     {
-        $this->client = new PayPalClient;
-        $this->client->setApiCredentials(config('paypal'));
-        $this->client->getAccessToken();
+        if ($this->client === null) {
+            $this->client = new PayPalClient;
+            $this->client->setApiCredentials(config('paypal'));
+            $this->client->getAccessToken();
+        }
+
+        return $this->client;
     }
 
     /**
@@ -29,7 +37,7 @@ class PayPalDonationService
             throw new RuntimeException('PayPal is not configured. Add PAYPAL_SANDBOX_CLIENT_ID and PAYPAL_SANDBOX_CLIENT_SECRET to your .env file.');
         }
 
-        $response = $this->client->createOrder([
+        $response = $this->client()->createOrder([
             'intent' => 'CAPTURE',
             'purchase_units' => [
                 [
@@ -206,7 +214,7 @@ class PayPalDonationService
      */
     public function captureOrder(string $orderId): array
     {
-        return $this->client->capturePaymentOrder($orderId);
+        return $this->client()->capturePaymentOrder($orderId);
     }
 
     public function isCaptureSuccessful(array $response): bool
@@ -214,14 +222,44 @@ class PayPalDonationService
         return ($response['status'] ?? '') === 'COMPLETED';
     }
 
+
+    
     public function verifyWebhookLocally(array $headers, string $rawBody): bool
     {
-        $webhookId = (string) env('PAYPAL_WEBHOOK_ID', '');
+        $webhookId = (string) config('paypal.webhook_id');
 
+        // No webhook ID configured means we cannot verify the sender, so reject everything.
         if ($webhookId === '') {
-            return app()->environment('local', 'testing');
+            return false;
         }
 
-        return $this->client->verifyWebHookLocally($headers, $webhookId, $rawBody);
-    }
+        $normalized = array_change_key_case($headers, CASE_LOWER);
+
+        // Reject anything missing PayPal's signature headers before making any outside call.
+        foreach ([
+            'paypal-transmission-id',
+            'paypal-transmission-time',
+            'paypal-transmission-sig',
+            'paypal-auth-algo',
+            'paypal-cert-url',
+        ] as $required) {
+            if (blank($normalized[$required] ?? null)) {
+                return false;
+            }
+        }
+
+        // The signing certificate must be hosted by PayPal, never at an address the sender picked.
+        $certUrl = (string) $normalized['paypal-cert-url'];
+        $host = parse_url($certUrl, PHP_URL_HOST);
+
+        if (parse_url($certUrl, PHP_URL_SCHEME) !== 'https'
+            || ! is_string($host)
+            || ! preg_match('/(^|\.)paypal\.com$/i', $host)) {
+            return false;
+        }
+
+        return $this->client()->verifyWebHookLocally($headers, $webhookId, $rawBody);
+    }  
+
+
 }

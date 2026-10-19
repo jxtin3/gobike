@@ -8,6 +8,8 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
+use Laravel\Sanctum\PersonalAccessToken;
+
 
 class GobikerProfileController extends Controller
 {
@@ -61,6 +63,12 @@ class GobikerProfileController extends Controller
 
         if (array_key_exists('password', $data)) {
             $user->password = Hash::make($data['password']);
+
+            // Log out every other device, but keep the phone making this request.
+            $current = $user->currentAccessToken();
+            $user->tokens()
+                ->when($current instanceof PersonalAccessToken, fn ($query) => $query->where('id', '!=', $current->id))
+                ->delete();
         }
 
         $user->save();

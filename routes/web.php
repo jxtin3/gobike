@@ -9,11 +9,15 @@ use App\Http\Controllers\Admin\NewsController as AdminNewsController;
 use App\Http\Controllers\Admin\PictureController;
 use App\Http\Controllers\Admin\ProfileController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
+use App\Http\Controllers\Admin\DonationController as AdminDonationController;
+use App\Http\Controllers\Admin\TrainingRequestController as AdminTrainingRequestController;
+use App\Http\Controllers\Admin\VolunteerApplicationController as AdminVolunteerController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\DonationController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\NewsController;
 use App\Http\Controllers\ChatbotController;
+use App\Http\Controllers\TrainingRequestController;
 use App\Http\Controllers\Webhook\PayMongoWebhookController;
 use App\Http\Controllers\Webhook\PayPalWebhookController;
 use App\Http\Middleware\EnsureAdmin;
@@ -23,6 +27,12 @@ use App\Http\Controllers\Admin\PatientController as AdminPatientController;
 // pages
 Route::get('/', [HomeController::class, 'index']);
 Route::get('/news', [NewsController::class, 'index']);
+Route::get('/our-story', function () {
+    return view('News.our-story');
+})->name('our-story');
+Route::get('/news/our-story', function () {
+    return view('News.our-story');
+});
 
 Route::get('/gallery', function () {
     $pictures = \App\Models\Picture::latest()->paginate(12);
@@ -54,9 +64,41 @@ Route::get('/what-we-do', function () {
     return view('what-we-do.programs');
 });
 
+Route::get('/what-we-do/programs/gobike', function () {
+    return view('what-we-do.programs.gobike');
+})->name('programs.gobike');
+
+Route::get('/what-we-do/programs/alwar', function () {
+    return view('what-we-do.programs.alwar');
+})->name('programs.alwar');
+
+Route::get('/what-we-do/programs/ronda-kalusugan', function () {
+    return view('what-we-do.programs.ronda-kalusugan');
+})->name('programs.ronda-kalusugan');
+
+Route::get('/what-we-do/programs/padyakaalaman', function () {
+    return view('what-we-do.programs.padyakaalaman');
+})->name('programs.padyakaalaman');
+
+Route::get('/what-we-do/programs/padyakaisipan', function () {
+    return view('what-we-do.programs.padyakaisipan');
+})->name('programs.padyakaisipan');
+
+Route::get('/what-we-do/programs/hatake', function () {
+    return view('what-we-do.programs.hatake');
+})->name('programs.hatake');
+
+Route::redirect('/programs/gobike', '/what-we-do/programs/gobike');
+Route::redirect('/programs/alwar', '/what-we-do/programs/alwar');
+Route::redirect('/programs/ronda-kalusugan', '/what-we-do/programs/ronda-kalusugan');
+Route::redirect('/programs/padyakaalaman', '/what-we-do/programs/padyakaalaman');
+Route::redirect('/programs/padyakaisipan', '/what-we-do/programs/padyakaisipan');
+Route::redirect('/programs/hatake', '/what-we-do/programs/hatake');
 Route::redirect('/programs', '/what-we-do');
 
 Route::redirect('/community', '/news');
+
+Route::redirect('/reach-us', '/contact');
 
 Route::get('/contact', function () {
     return view('contact');
@@ -67,15 +109,15 @@ Route::post('/contact', [\App\Http\Controllers\ContactController::class, 'store'
     ->middleware('throttle:5,1')
     ->name('contact.store');
 
-//chatbot ----20 requests/minute per IP
+//chatbot :20 requests/minute per IP
 Route::post('/chatbot/message', [ChatbotController::class, 'message'])
-    ->middleware('throttle:20,1')
+    ->middleware('throttle:chatbot')
     ->name('chatbot.message');
 
 
 //donation
 Route::get('/donate', [DonationController::class, 'show'])->name('donate');
-Route::post('/donate/checkout', [DonationController::class, 'checkout'])->name('donate.checkout');
+Route::post('/donate/checkout', [DonationController::class, 'checkout'])->middleware('throttle:10,1')->name('donate.checkout');
 Route::get('/donate/success/{donation}', [DonationController::class, 'success'])->name('donate.success');
 Route::get('/donate/cancel/{donation}', [DonationController::class, 'cancel'])->name('donate.cancel');
 Route::get('/donate/retry/{donation}', [DonationController::class, 'retry'])->name('donate.retry');
@@ -83,15 +125,22 @@ Route::get('/donate/retry/{donation}', [DonationController::class, 'retry'])->na
 Route::post('/webhooks/paypal', [PayPalWebhookController::class, 'handle']);
 Route::post('/webhooks/paymongo', [PayMongoWebhookController::class, 'handle']);
 
+// training plan requests
+Route::post('/programs/training-request', [TrainingRequestController::class, 'store'])
+    ->middleware('throttle:5,1')
+    ->name('training-request.store');
+
 
 // privacy / terms
 Route::get('/privacy-policy', function () {
-    return view('pages.privacy');
-});
+    $document = \App\Models\LegalDocument::getByKey('privacy');
+    return view('pages.privacy', compact('document'));
+})->name('privacy-policy');
 
 Route::get('/terms', function () {
-    return view('pages.terms');
-});
+    $document = \App\Models\LegalDocument::getByKey('terms');
+    return view('pages.terms', compact('document'));
+})->name('terms');
 
 
 // Auth routes
@@ -104,35 +153,30 @@ Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
 Route::middleware([EnsureAdmin::class])->group(function () {
+
     Route::get('/admin', [DashboardController::class, 'index'])->name('admin.dashboard');
     Route::view('/admin/live-map', 'admin.live-map')->name('admin.live-map.index');
+
     Route::get('/admin/locations', [LocationController::class, 'index'])->name('admin.locations.index');
-    Route::post('/admin/locations', [LocationController::class, 'store'])->name('admin.locations.store');
     Route::patch('/admin/locations/{location}/status', [LocationController::class, 'updateStatus'])->name('admin.locations.status');
+
     Route::get('/admin/profile', [ProfileController::class, 'show'])->name('admin.profile.show');
     Route::get('/admin/profile/edit', [ProfileController::class, 'edit'])->name('admin.profile.edit');
     Route::put('/admin/profile', [ProfileController::class, 'update'])->name('admin.profile.update');
+
     Route::get('/admin/operations', [OperationsController::class, 'index'])->name('admin.operations');
     Route::get('/admin/operations/reports', [ReportController::class, 'index'])
         ->name('admin.operations.reports.index');
     Route::get('/admin/operations/homepage-data', [HomepageDataController::class, 'index'])
         ->name('admin.operations.homepage-data.index');
-    Route::post('/admin/operations/homepage-data/partners', [HomepageDataController::class, 'storePartner'])
-        ->name('admin.operations.homepage-data.partners.store');
-    Route::put('/admin/operations/homepage-data/partners/{partner}', [HomepageDataController::class, 'updatePartner'])
-        ->name('admin.operations.homepage-data.partners.update');
-    Route::delete('/admin/operations/homepage-data/partners/{partner}', [HomepageDataController::class, 'destroyPartner'])
-        ->name('admin.operations.homepage-data.partners.destroy');
+
     Route::post('/admin/operations/homepage-data/impact-stats', [HomepageDataController::class, 'storeImpactStat'])
         ->name('admin.operations.homepage-data.impact-stats.store');
     Route::put('/admin/operations/homepage-data/impact-stats/{impactStat}', [HomepageDataController::class, 'updateImpactStat'])
         ->name('admin.operations.homepage-data.impact-stats.update');
     Route::delete('/admin/operations/homepage-data/impact-stats/{impactStat}', [HomepageDataController::class, 'destroyImpactStat'])
         ->name('admin.operations.homepage-data.impact-stats.destroy');
-    Route::get('/admin/operations/news/homepage', [AdminNewsController::class, 'homepage'])
-        ->name('admin.operations.news.homepage');
-    Route::put('/admin/operations/news/homepage', [AdminNewsController::class, 'updateHomepage'])
-        ->name('admin.operations.news.homepage.update');
+
     Route::resource('/admin/operations/news', AdminNewsController::class)->names('admin.operations.news');
     Route::resource('/admin/operations/pictures', PictureController::class)->names('admin.operations.pictures');
     Route::resource('/admin/operations/users', AdminUserController::class)->names('admin.operations.users');
@@ -173,6 +217,33 @@ Route::patch('/admin/operations/gobiker-messages/{message}/read', [\App\Http\Con
 Route::delete('/admin/operations/gobiker-messages/{message}', [\App\Http\Controllers\Admin\GobikerMessageController::class, 'destroy'])
     ->name('admin.operations.gobiker-messages.destroy');
 
+// donations
+    Route::get('/admin/operations/donations', [AdminDonationController::class, 'index'])
+        ->name('admin.operations.donations.index');
 
+// training plan requests
+    Route::get('/admin/operations/training-requests', [AdminTrainingRequestController::class, 'index'])
+        ->name('admin.operations.training-requests.index');
+    Route::patch('/admin/operations/training-requests/{trainingRequest}/status', [AdminTrainingRequestController::class, 'updateStatus'])
+        ->name('admin.operations.training-requests.status');
+
+// volunteer applications
+    Route::get('/admin/operations/volunteers', [AdminVolunteerController::class, 'index'])
+        ->name('admin.operations.volunteers.index');
+    Route::get('/admin/operations/volunteers/{volunteerApplication}', [AdminVolunteerController::class, 'show'])
+        ->name('admin.operations.volunteers.show');
+    Route::patch('/admin/operations/volunteers/{volunteerApplication}/status', [AdminVolunteerController::class, 'updateStatus'])
+        ->name('admin.operations.volunteers.status');
+
+// legal (editable)
+    Route::get('/admin/operations/legal/privacy', [\App\Http\Controllers\Admin\LegalDocumentController::class, 'editPrivacy'])
+        ->name('admin.operations.legal.privacy');
+    Route::put('/admin/operations/legal/privacy', [\App\Http\Controllers\Admin\LegalDocumentController::class, 'updatePrivacy'])
+        ->name('admin.operations.legal.privacy.update');
+
+    Route::get('/admin/operations/legal/terms', [\App\Http\Controllers\Admin\LegalDocumentController::class, 'editTerms'])
+        ->name('admin.operations.legal.terms');
+    Route::put('/admin/operations/legal/terms', [\App\Http\Controllers\Admin\LegalDocumentController::class, 'updateTerms'])
+        ->name('admin.operations.legal.terms.update');
 
 });

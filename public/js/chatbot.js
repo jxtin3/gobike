@@ -106,7 +106,7 @@ document.addEventListener('alpine:init', () => {
                 const data = await res.json().catch(() => ({}));
 
                 if (!res.ok) {
-                    const fallback = "Sorry, I'm having a trouble responding right now. Please try again later.";
+                    const fallback = "Sorry, I'm not available to respond right now. Please try again later.";
                     this.messages.push({
                         role: 'model',
                         text: data.message || data.reply || fallback,

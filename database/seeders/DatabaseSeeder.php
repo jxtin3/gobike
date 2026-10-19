@@ -10,18 +10,20 @@ class DatabaseSeeder extends Seeder
 {
     use WithoutModelEvents;
 
-    /**
-     * Seed the application's database.
-     */
     public function run(): void
     {
-        // User::factory(10)->create();
+        if (! app()->environment('local')) {
+            $this->command?->warn('Skipped: demo seed data only runs when APP_ENV=local.');
 
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-        ]);
+            return;
+        }
+//userfor mobile
+        // User::factory()->create([
+        //     'name' => 'Test User',
+        //     'email' => 'test@example.com',
+        // ]);
 
+//admin
         User::factory()->create([
             'name' => 'Admin User',
             'email' => 'admin@onegobike.com',
@@ -30,7 +32,6 @@ class DatabaseSeeder extends Seeder
         ]);
 
         $this->call([
-            // NewsSeeder::class,
             LocationSeeder::class,
         ]);
     }

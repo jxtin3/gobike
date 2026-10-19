@@ -7,7 +7,6 @@
         <input name="search" value="{{ request('search') }}" placeholder="Search news...">
         <button class="map-button">Search</button>
     </form>
-    <a class="map-button" href="{{ route('admin.operations.news.homepage') }}">Manage homepage news</a>
     <a class="primary-button" href="{{ route('admin.operations.news.create') }}">+ Add news</a>
 </div>
 <div class="table-wrap">

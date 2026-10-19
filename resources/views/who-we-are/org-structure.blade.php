@@ -4,15 +4,19 @@
 >
 
 <!-- HERO -->
-<section class="relative pt-32 pb-20 md:pt-44 md:pb-28 overflow-hidden bg-[#0D1B2A]">
+<section class="relative min-h-[460px] md:min-h-[500px] flex flex-col justify-center pt-28 pb-16 md:pt-32 md:pb-20 overflow-hidden bg-[#0D1B2A]">
     <div class="absolute inset-0 z-0">
-        <div class="absolute inset-0 bg-gradient-to-br from-[#132D6B]/60 via-[#0D1B2A] to-[#0D1B2A]"></div>
-        <div class="absolute top-0 right-0 w-[600px] h-[600px] bg-[#2FA7FF]/5 rounded-full blur-3xl"></div>
+        <img
+            src="{{ asset('images/about/about.jpg') }}"
+            alt="OneGoBike Volunteers"
+            class="w-full h-full object-cover object-[center_35%] opacity-45"
+        />
+        <div class="absolute inset-0 bg-gradient-to-b from-[#0D1B2A]/80 via-[#0D1B2A]/40 to-[#0D1B2A]/60"></div>
     </div>
 
-    <div class="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
         <div class="reveal">
-            <h1 class="text-4xl md:text-5xl lg:text-6xl font-heading font-bold text-white mb-5 uppercase tracking-tight leading-none">
+            <h1 class="text-4xl md:text-5xl lg:text-6xl font-heading font-bold text-white mb-5 uppercase tracking-tight leading-tight drop-shadow-lg">
                 Organization Structure<br/><span class="text-[#2FA7FF]">&amp; History</span>
             </h1>
             <p class="text-base text-white/60 max-w-2xl leading-relaxed">
@@ -122,7 +126,7 @@
 <!-- CTA -->
 <section class="relative py-40 text-center px-4 overflow-hidden">
     <div class="absolute inset-0 z-0">
-        <img src="{{ asset('images/1.jpg') }}" alt="volunteers background" class="w-full h-full object-cover">
+        <img src="{{ asset('images/about/1.jpg') }}" alt="volunteers background" class="w-full h-full object-cover">
         <div class="absolute inset-0 bg-gradient-to-b from-[#132D6B]/20 to-[#0D1B2A]/80"></div>
     </div>
     <div class="relative z-10 max-w-2xl mx-auto reveal">

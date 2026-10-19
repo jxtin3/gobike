@@ -16,7 +16,7 @@
                 <th>Name</th>
                 <th>Email</th>
                 <th>Topic</th>
-                <!-- <th>Action</th> -->
+                <th scope="col"><span class="sr-only">Actions</span></th>
             </tr>
         </thead>
         <tbody>
@@ -41,7 +41,7 @@
                 <td>{{ $item->email }}</td>
                 <td><span class="topic-tag">{{ $topic }}</span></td>
                 <td class="actions">
-                    <button type="button" class="map-button view-message">View</button>
+                    <span class="view-text">View</span>
                 </td>
             </tr>
             @empty
@@ -59,7 +59,9 @@
                 <h3 id="mm-name"></h3>
                 <span id="mm-status" class="status-pill"></span>
             </div>
-            <button type="button" id="mm-close" aria-label="Close">×</button>
+            <button type="button" id="mm-close" class="modal-close-btn" aria-label="Close dialog">
+                <x-admin.icon name="x" />
+            </button>
         </div>
         <div class="msg-meta">
             <div><span>Email</span><b id="mm-email"></b></div>
@@ -98,40 +100,7 @@
     </div>
 </dialog>
 
-<style>
-    .topic-tag { display: inline-block; padding: 2px 8px; border-radius: 4px; background: rgba(255,255,255,.06); font-size: 13px; }
-    .message-row:hover { background: rgba(255,255,255,.03); }
-    .msg-modal { margin: auto; padding: 0; width: min(780px, 94vw); max-height: 88vh; overflow: auto;
-        background: #0f1a2e; color: #e5e7eb; border: 1px solid rgba(255,255,255,.14); border-radius: 14px; box-shadow: 0 30px 60px rgba(0,0,0,0.6); }
-    .msg-modal::backdrop { background: rgba(0,0,0,.75); backdrop-filter: blur(5px); }
-    .msg-inner { padding: 32px 36px; }
-    .msg-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 24px; border-bottom: 1px solid rgba(255,255,255,.08); padding-bottom: 16px; }
-    .msg-head h3 { font-size: 24px; font-weight: 700; color: #fff; margin-bottom: 6px; }
-    .msg-head button { background: none; border: 0; color: #94a3b8; font-size: 30px; line-height: 1; cursor: pointer; transition: color .2s; }
-    .msg-head button:hover { color: #fff; }
-    .msg-meta { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px 24px; margin-bottom: 24px; background: rgba(255,255,255,.02); padding: 18px 20px; border-radius: 8px; border: 1px solid rgba(255,255,255,.04); }
-    .msg-meta span { display: block; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: #64748b; margin-bottom: 4px; }
-    .msg-meta b { font-weight: 600; word-break: break-word; color: #cbd5e1; font-size: 14px; }
-    .msg-body-wrapper { margin-bottom: 24px; }
-    .msg-body-label { display: block; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: #64748b; margin-bottom: 8px; }
-    .msg-body { white-space: pre-wrap; word-break: break-word; line-height: 1.7; padding: 22px 24px;
-        background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.06); border-radius: 10px; color: #f8fafc; font-size: 15px; min-height: 120px; }
-    .msg-foot { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 24px; padding-top: 18px; border-top: 1px solid rgba(255,255,255,.08); }
-    .danger-button { background: #ef4444; color: #fff; border: 0; padding: 11px 20px; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 14px; transition: background .2s; }
-    .danger-button:hover { background: #dc2626; }
-
-    /* Delete Confirm Modal */
-    .confirm-modal { margin: auto; padding: 0; width: min(420px, 90vw); border: 1px solid rgba(255,255,255,.12); border-radius: 12px; background: #0f1a2e; color: #e5e7eb; box-shadow: 0 25px 60px rgba(0,0,0,0.6); }
-    .confirm-modal::backdrop { background: rgba(0,0,0,.75); backdrop-filter: blur(4px); }
-    .confirm-inner { padding: 24px; text-align: center; }
-    .confirm-icon { width: 48px; height: 48px; border-radius: 50%; background: rgba(239,68,68,.15); color: #ef4444; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; }
-    .confirm-inner h3 { font-size: 20px; font-weight: 700; color: #fff; margin-bottom: 8px; }
-    .confirm-inner p { font-size: 14px; color: #94a3b8; line-height: 1.5; margin-bottom: 24px; }
-    .confirm-inner p strong { color: #f1f5f9; }
-    .confirm-actions { display: flex; gap: 12px; justify-content: center; }
-    .cancel-button { background: rgba(255,255,255,.08); color: #cbd5e1; border: 0; padding: 10px 18px; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 13px; transition: background .2s; }
-    .cancel-button:hover { background: rgba(255,255,255,.15); color: #fff; }
-</style>
+<!-- Gobiker messages styles moved to resources/css/admin/admin.css -->
 
 <script>
 (function () {
@@ -197,4 +166,3 @@
 })();
 </script>
 @endsection
-

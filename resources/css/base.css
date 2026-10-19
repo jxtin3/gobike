@@ -47,43 +47,43 @@ body {
 @keyframes fadeInUp {
     from {
         opacity: 0;
+        transform: translateY(18px);
     }
 
     to {
         opacity: 1;
-    }
-}
-
-@keyframes fadeInLeft {
-    from {
-        opacity: 0;
-        transform: translateX(-28px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateX(0);
-    }
-}
-
-@keyframes fadeInRight {
-    from {
-        opacity: 0;
-        transform: translateX(28px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateX(0);
+        transform: translateY(0);
     }
 }
 
 .reveal {
     opacity: 0;
+    transform: translateY(18px);
+    transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1), transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    will-change: opacity, transform;
 }
 
 .reveal.visible {
-    animation: fadeInUp 0.65s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.reveal-left {
+    transform: translateX(-64px);
+    transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.reveal-right {
+    transform: translateX(64px);
+    transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .reveal {
+        opacity: 1 !important;
+        transform: none !important;
+        transition: none !important;
+    }
 }
 
 

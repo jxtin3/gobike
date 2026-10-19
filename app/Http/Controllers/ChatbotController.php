@@ -19,7 +19,7 @@ class ChatbotController extends Controller
             report($e);
 
             return response()->json([
-                'message' => "Sorry, I'm having a trouble responding right now. Please try again later.",
+                'message' => "Sorry, I'm not available to respond right now. Please try again later.",
             ], 500);
         }
 

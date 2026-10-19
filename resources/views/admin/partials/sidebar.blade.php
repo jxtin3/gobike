@@ -6,8 +6,8 @@
 @endphp
 <aside class="adm-side" id="adm-side" data-side aria-label="Admin navigation">
     <a href="{{ route('admin.dashboard') }}" class="side-brand">
-        <img src="{{ asset('images/gobike-logo.png') }}" alt="">
-        <span><b>OneGoBike</b><small>Admin</small></span>
+        <img src="{{ asset('images/gobike-logo-transparent.png') }}" alt="OneGoBike">
+        <span><b>Go Bike</b><small>Admin</small></span>
     </a>
 
     <nav class="side-nav">
@@ -51,6 +51,24 @@
 
         <a class="side-link" href="{{ route('admin.operations.patients.index') }}" aria-current="{{ $current('admin.operations.patients.*') }}">
             <x-admin.icon name="activity" /><span>Patients</span>
+        </a>
+
+        <a class="side-link" href="{{ route('admin.operations.volunteers.index') }}" aria-current="{{ $current('admin.operations.volunteers.*') }}">
+            <x-admin.icon name="user-plus" /><span>Volunteers</span>
+        </a>
+
+        <p class="side-group">Finance</p>
+        <a class="side-link" href="{{ route('admin.operations.donations.index') }}" aria-current="{{ $current('admin.operations.donations.*') }}">
+            <x-admin.icon name="dollar-sign" /><span>Donations</span>
+        </a>
+
+        <a class="side-link" href="{{ route('admin.operations.training-requests.index') }}" aria-current="{{ $current('admin.operations.training-requests.*') }}">
+            <x-admin.icon name="clipboard" /><span>Training Requests</span>
+        </a>
+
+        <p class="side-group">Legal</p>
+        <a class="side-link" href="{{ route('admin.operations.legal.terms') }}" aria-current="{{ $current('admin.operations.legal.*') }}">
+            <x-admin.icon name="file-text" /><span>Terms &amp; Privacy</span>
         </a>
 
     </nav>

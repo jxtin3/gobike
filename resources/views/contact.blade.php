@@ -4,45 +4,30 @@
 >
 
 <!-- HERO SECTION -->
-<section class="relative pt-10 pb-28 md:pt-35 md:pb-15 overflow-hidden bg-[#0D1B2A]">
+<section class="relative min-h-[460px] md:min-h-[500px] flex flex-col justify-center pt-28 pb-16 md:pt-32 md:pb-20 overflow-hidden bg-[#0D1B2A]">
 
     <!-- Background image -->
     <div class="absolute inset-0 z-0">
         <img
-            src="{{ asset('images/story-3.jpg') }}"
+            src="{{ asset('images/about/about.jpg') }}"
             alt="Go Bike community"
-            class="w-full h-full object-cover object-center opacity-20"
+            class="w-full h-full object-cover object-[center_35%] opacity-45"
         />
-        <div class="absolute inset-0 bg-gradient-to-b from-[#0D1B2A]/70 via-[#0D1B2A]/50 to-[#0D1B2A]"></div>
+        <div class="absolute inset-0 bg-gradient-to-b from-[#0D1B2A]/80 via-[#0D1B2A]/40 to-[#0D1B2A]/60"></div>
     </div>
 
     <!-- Decorative orbs -->
     <div class="absolute top-20 left-10 w-72 h-72 rounded-full bg-[#2FA7FF]/8 blur-3xl pointer-events-none z-0"></div>
     <div class="absolute bottom-10 right-10 w-96 h-96 rounded-full bg-[#F97316]/8 blur-3xl pointer-events-none z-0"></div>
 
-    <div class="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center reveal">
-        
-        <h1 class="text-5xl md:text-6xl lg:text-7xl font-heading font-bold text-white mb-6 uppercase tracking-tight leading-none drop-shadow-lg">
+    <div class="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center reveal w-full">
+        <h1 class="text-4xl md:text-5xl lg:text-6xl font-heading font-bold text-white mb-5 uppercase tracking-tight leading-tight drop-shadow-lg">
             We'd Love To<br/>
             <span class="text-[#F97316]">Hear From You.</span>
         </h1>
         <p class="text-base md:text-lg text-white/60 max-w-xl mx-auto leading-relaxed">
-            Have a question, a partnership idea, or want to get involved? Reach out — our team is always ready to connect.
+            Have a question, a partnership idea, or want to get involved? Reach out - our team is always ready to connect.
         </p>
-
-        <!-- Quick stats -->
-        <div class="mt-14 grid grid-cols-3 gap-4 max-w-lg mx-auto">
-            @foreach([
-                ['value' => '24h',   'label' => 'Response Time'],
-                ['value' => '100+',  'label' => 'Volunteers'],
-                ['value' => '6+',    'label' => 'Years Active'],
-            ] as $stat)
-            <div class="bg-white/5 border border-white/10 rounded-sm px-4 py-5 backdrop-blur-sm">
-                <p class="text-2xl font-heading font-bold text-white mb-1">{{ $stat['value'] }}</p>
-                <p class="text-[10px] font-semibold tracking-[0.15em] uppercase text-white/40">{{ $stat['label'] }}</p>
-            </div>
-            @endforeach
-        </div>
     </div>
 </section>
 
@@ -71,9 +56,9 @@
                 </div>
                 <span class="text-[9px] font-bold tracking-[0.2em] uppercase text-[#2FA7FF] mb-2 block">Location</span>
                 <h3 class="text-base font-heading font-bold text-[#111827] mb-2 uppercase tracking-wide">Visit Us</h3>
-                <p class="text-sm text-[#64748B] leading-relaxed">Pangasinan, Philippines</p>
-                <a href="https://maps.google.com/?q=Pangasinan,Philippines" target="_blank" rel="noopener"
-                   class="mt-4 inline-flex items-center gap-1.5 text-xs font-semibold text-[#2FA7FF] hover:gap-2.5 transition-all duration-200">
+                <p class="text-sm text-[#64748B] leading-relaxed">Bugallon, Pangasinan, Philippines</p>
+                <a href="https://maps.google.com/?q=15.954506,120.217065" target="_blank" rel="noopener"
+                   class="mt-4 inline-flex items-center gap-1.5 text-xs font-semibold text-[#2FA7FF] opacity-100 hover:gap-2.5 transition-all duration-200">
                     Open Map
                     <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/></svg>
                 </a>
@@ -89,9 +74,9 @@
                 </div>
                 <span class="text-[9px] font-bold tracking-[0.2em] uppercase text-[#F97316] mb-2 block">Email</span>
                 <h3 class="text-base font-heading font-bold text-[#111827] mb-2 uppercase tracking-wide">Write To Us</h3>
-                <p class="text-sm text-[#64748B] leading-relaxed break-all">onegobike@gmail.com</p>
+                <p class="text-sm text-[#64748B] leading-relaxed break-all">gobike@pydn.org</p>
                 <a href="mailto:onegobike@gmail.com"
-                   class="mt-4 inline-flex items-center gap-1.5 text-xs font-semibold text-[#F97316] hover:gap-2.5 transition-all duration-200">
+                   class="mt-4 inline-flex items-center gap-1.5 text-xs font-semibold text-[#F97316] opacity-100 hover:gap-2.5 transition-all duration-200">
                     Send Email
                     <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/></svg>
                 </a>
@@ -108,8 +93,8 @@
                 <span class="text-[9px] font-bold tracking-[0.2em] uppercase text-[#2FA7FF] mb-2 block">Facebook</span>
                 <h3 class="text-base font-heading font-bold text-[#111827] mb-2 uppercase tracking-wide">Follow Us</h3>
                 <p class="text-sm text-[#64748B] leading-relaxed">@gobikeprojectofficial</p>
-                <a href="https://www.facebook.com/gobikeprojectofficial" target="_blank" rel="noopener"
-                   class="mt-4 inline-flex items-center gap-1.5 text-xs font-semibold text-[#2FA7FF] hover:gap-2.5 transition-all duration-200">
+                <a href="https://www.facebook.com/share/19bhjcFGCL/" target="_blank" rel="noopener"
+                   class="mt-4 inline-flex items-center gap-1.5 text-xs font-semibold text-[#2FA7FF] opacity-100 hover:gap-2.5 transition-all duration-200">
                     View Page
                     <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/></svg>
                 </a>
@@ -126,7 +111,7 @@
                 <span class="text-[9px] font-bold tracking-[0.2em] uppercase text-[#2FA7FF] mb-2 block relative z-10">Emergency / Hotline</span>
                 <h3 class="text-base font-heading font-bold text-white mb-2 uppercase tracking-wide relative z-10">Call Us</h3>
                 <p class="text-sm text-white/70 leading-relaxed relative z-10">Available for urgent community needs</p>
-                <a href="tel:+63" class="mt-4 inline-flex items-center gap-1.5 text-xs font-semibold text-[#2FA7FF] hover:gap-2.5 transition-all duration-200 relative z-10">
+                <a href="tel:+639764290145" class="mt-4 inline-flex items-center gap-1.5 text-xs font-semibold text-[#2FA7FF] hover:gap-2.5 transition-all duration-200 relative z-10">
                     View Number
                     <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/></svg>
                 </a>
@@ -415,13 +400,7 @@
         ></iframe>
         <div class="absolute inset-0 bg-[#132D6B]/20 pointer-events-none mix-blend-multiply"></div>
 
-        <!-- Location badge -->
-        <div class="absolute top-4 right-4 z-10" x-show="isOnline">
-            <div class="contact-location-badge">
-                <div class="contact-location-dot"></div>
-                <span class="text-[9px] font-bold text-white/85 tracking-widest uppercase">Pangasinan, Philippines</span>
-            </div>
-        </div>
+        
     </div>
 </section>
 
