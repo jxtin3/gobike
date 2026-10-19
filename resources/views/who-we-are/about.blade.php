@@ -7,7 +7,7 @@
 <section class="relative min-h-[460px] md:min-h-[500px] flex flex-col justify-center pt-28 pb-16 md:pt-32 md:pb-20 overflow-hidden bg-[#0D1B2A]">
     <div class="absolute inset-0 z-0">
         <img
-            src="{{ asset('images/about/about.jpg') }}"
+            src="{{ asset('images/whoweare/about/about.jpg') }}"
             alt="OneGoBike Volunteers"
             class="w-full h-full object-cover object-[center_35%] opacity-45"
         />

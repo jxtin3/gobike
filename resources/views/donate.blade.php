@@ -113,7 +113,7 @@
                     </div>
 
                     {{-- Once / Monthly toggle --}}
-                    <div class="donate-freq">
+                    <!-- <div class="donate-freq">
                         <button
                             id="freq-once"
                             class="donate-freq__btn"
@@ -132,7 +132,7 @@
                         <p class="donate-freq__note" style="padding-top: 0.5rem;">
                             Monthly donations are processed via PayPal.
                         </p>
-                    </div>
+                    </div> -->
 
                     {{-- Preset amounts --}}
                     <div class="donate-amounts">
