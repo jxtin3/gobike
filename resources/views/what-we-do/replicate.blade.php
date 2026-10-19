@@ -144,8 +144,6 @@
     {{-- HERO --}}
     <section class="gbp-hero">
         <div class="gbp-wrap">
-            <a href="{{ url('/') }}" class="gbp-back">← Back to Home</a>
-            <span class="gbp-eyebrow">Go Bike Program</span>
             <h1 class="gbp-title">ALWAR x Go Bike Project <em>Programming</em></h1>
             <p class="gbp-lead">
                 The complete chapter blueprint — from building partnerships and training Go Bikers

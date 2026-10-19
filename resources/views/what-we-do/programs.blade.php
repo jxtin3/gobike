@@ -10,11 +10,11 @@
     <!-- Background image -->
     <div class="absolute inset-0 z-0">
         <img
-            src="{{ asset('images/about/about.jpg') }}"
+            src="{{ asset('images/whatwedo/whatwedo.png') }}"
             alt="OneGoBike Programs"
             class="w-full h-full object-cover object-[center_35%] opacity-45"
         />
-        <div class="absolute inset-0 bg-gradient-to-b from-[#0D1B2A]/80 via-[#0D1B2A]/40 to-[#0D1B2A]/60"></div>
+        <div class="absolute inset-0 bg-gradient-to-b from-[#0D1B2A]/80 via-[#0D1B2A]/40 to-[#0D1B2A]/50"></div>
     </div>
 
     <!-- Content -->

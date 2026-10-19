@@ -183,7 +183,7 @@ header a:visited {
     background-color: transparent;
     border: 2px solid #F97316;
     color: #F97316;
-    transition: color 0.4s ease-in-out, border-color 0.4s ease-in-out;
+    transition: color 0.45s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.45s cubic-bezier(0.4, 0, 0.2, 1);
     z-index: 1;
 }
 
@@ -192,9 +192,9 @@ header a:visited {
     position: absolute;
     inset: -2px;
     background-color: #F97316;
-    transform: scaleX(0);
-    transform-origin: left center;
-    transition: transform 0.5s cubic-bezier(0.86, 0, 0.07, 1);
+    transform: scaleY(0);
+    transform-origin: bottom center;
+    transition: transform 0.45s cubic-bezier(0.4, 0, 0.2, 1);
     z-index: -1;
 }
 
@@ -256,10 +256,10 @@ header a:visited {
     color: #111827;
 }
 
-/*  orange →  fill to white  */
+/*  white ghost →  fill to white on hover  */
 .btn-wbr.btn-wbr-orange {
-    background-color: #F97316;
-    border-color: #F97316;
+    background-color: transparent;
+    border-color: white;
     color: white;
 }
 
@@ -280,11 +280,6 @@ header a:visited {
 }
 
 
-/*  ─── Site Header — smooth scroll transition ───────────────────────────
-    The border-b is always present but starts fully transparent.
-    All properties ease together over 500ms so the border never
-    "snaps in" before the background has faded.
-*/
 .site-header {
     background-color: rgba(13, 27, 42, 0);
     backdrop-filter: blur(0px);

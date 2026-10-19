@@ -7,11 +7,11 @@
 <section class="relative min-h-[460px] md:min-h-[500px] flex flex-col justify-center pt-28 pb-16 md:pt-32 md:pb-20 overflow-hidden bg-[#0D1B2A]">
     <div class="absolute inset-0 z-0">
         <img
-            src="{{ asset('images/about/about.jpg') }}"
+            src="{{ asset('images/whoweare/orgstructure/about.jpg') }}"
             alt="OneGoBike Volunteers"
             class="w-full h-full object-cover object-[center_35%] opacity-45"
         />
-        <div class="absolute inset-0 bg-gradient-to-b from-[#0D1B2A]/80 via-[#0D1B2A]/40 to-[#0D1B2A]/60"></div>
+        <div class="absolute inset-0 bg-gradient-to-b from-[#0D1B2A]/80 via-[#0D1B2A]/40 to-[#0D1B2A]/55"></div>
     </div>
 
     <div class="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
@@ -126,7 +126,7 @@
 <!-- CTA -->
 <section class="relative py-40 text-center px-4 overflow-hidden">
     <div class="absolute inset-0 z-0">
-        <img src="{{ asset('images/about/1.jpg') }}" alt="volunteers background" class="w-full h-full object-cover">
+        <img src="{{ asset('images/whoweare/orgstructure/training1.png') }}" alt="training of volunters" class="w-full h-full object-cover">
         <div class="absolute inset-0 bg-gradient-to-b from-[#132D6B]/20 to-[#0D1B2A]/80"></div>
     </div>
     <div class="relative z-10 max-w-2xl mx-auto reveal">

@@ -39,8 +39,8 @@
         </div>
 
         <div class="vol-promo-photo">
-            {{-- Swap for a different photo if you have one, so it isn't the same as the Replicate card --}}
-            <img src="{{ asset('images/jointhemovement/1.jpg') }}"
+            
+            <img src="{{ asset('images/jointhemovement/responder.jpg') }}"
                  alt="Go Bike volunteers"
                  loading="lazy">
         </div>
