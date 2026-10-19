@@ -13,6 +13,9 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // returns the proxy's address and $request->isSecure() is false.
+        $middleware->trustProxies(at: '*');
+
         $middleware->alias([
             'admin' => \App\Http\Middleware\EnsureAdmin::class,
             'gobiker' => \App\Http\Middleware\EnsureGoBiker::class,
@@ -23,7 +26,7 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
         $middleware->append(\App\Http\Middleware\SecurityHeaders::class);
     })
-        ->withExceptions(function (Exceptions $exceptions): void {
+    ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->expectsJson()
                 || $request->is('api/*')
