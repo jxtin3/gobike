@@ -24,7 +24,7 @@
                     @foreach($news as $i => $newsItem)
                     <div class="bg-white border border-slate-100 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col h-full rounded-sm overflow-hidden reveal reveal-delay-{{ $i + 1 }}">
                         <div class="relative w-full aspect-video overflow-hidden bg-slate-100">
-                            <img src="{{ $newsItem->image_path ? asset($newsItem->image_path) : asset('images/gobike-logo.png') }}" alt="{{ $newsItem->title }}" class="w-full h-full object-cover" loading="lazy">
+                            <img src="{{ $newsItem->image_path ? \App\Support\Media::url($newsItem->image_path) : asset('images/gobike-logo.png') }}" alt="{{ $newsItem->title }}" class="w-full h-full object-cover" loading="lazy">
                         </div>
                         <div class="p-6 flex flex-col flex-grow">
                             <div class="text-xs font-semibold text-slate-500 mb-2">{{ $newsItem->published_at->format('F d, Y') }}</div>

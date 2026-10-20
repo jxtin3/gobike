@@ -4,13 +4,11 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\News;
-use Illuminate\Support\Facades\DB;
+use App\Support\Media;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
-use Illuminate\Support\Carbon;
-use Illuminate\Validation\Rule;
-use Illuminate\Validation\ValidationException;
 
 class NewsController extends Controller
 {
@@ -28,7 +26,7 @@ class NewsController extends Controller
         $data['slug'] = Str::slug($data['title']).'-'.Str::lower(Str::random(6));
         $data['is_published'] = $data['status'] === 'Published';
         $data['published_at'] = $data['is_published'] ? $data['published_at'] : null;
-        if ($request->hasFile('image')) $data['image_path'] = $request->file('image')->store('news', 'public');
+        if ($request->hasFile('image')) $data['image_path'] = $request->file('image')->store('news', Media::disk());
         unset($data['image'], $data['status']);
         News::create($data);
         return redirect()->route('admin.operations.news.index')->with('success', 'News successfully added.');
@@ -46,8 +44,8 @@ class NewsController extends Controller
             $data['homepage_position'] = null;
         }
         if ($request->hasFile('image')) {
-            if ($news->image_path) Storage::disk('public')->delete($news->image_path);
-            $data['image_path'] = $request->file('image')->store('news', 'public');
+            if ($news->image_path) Storage::disk(Media::disk())->delete($news->image_path);
+            $data['image_path'] = $request->file('image')->store('news', Media::disk());
         }
         unset($data['image'], $data['status']);
         $news->update($data);
@@ -56,7 +54,7 @@ class NewsController extends Controller
 
     public function destroy(News $news)
     {
-        if ($news->image_path) Storage::disk('public')->delete($news->image_path);
+        if ($news->image_path) Storage::disk(Media::disk())->delete($news->image_path);
         $news->delete();
         return back()->with('success', 'News successfully deleted.');
     }

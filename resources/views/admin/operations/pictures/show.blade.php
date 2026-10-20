@@ -8,9 +8,9 @@
 <div style="max-width: 900px; margin: 0 auto; background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
     <div style="background: #000; text-align: center; max-height: 70vh; display: flex; align-items: center; justify-content: center; min-height: 300px;">
         @if($picture->isVideo())
-            <video src="{{ asset('storage/'.$picture->image_path) }}" controls autoplay style="max-height: 70vh; max-width: 100%; width: auto;"></video>
+            <video src="{{ \App\Support\Media::url($picture->image_path) }}" controls autoplay style="max-height: 70vh; max-width: 100%; width: auto;"></video>
         @else
-            <img src="{{ asset('storage/'.$picture->image_path) }}" alt="Gallery media" style="max-height: 70vh; max-width: 100%; object-contain: fit;">
+            <img src="{{ \App\Support\Media::url($picture->image_path) }}" alt="Gallery media" style="max-height: 70vh; max-width: 100%; object-contain: fit;">
         @endif
     </div>
 

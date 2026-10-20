@@ -32,7 +32,7 @@
                 <span class="field-hint">(JPG, PNG, WebP · max 5 MB)</span>
             </label>
             @if($picture)
-                <img class="form-preview" src="{{ asset('storage/'.$picture->image_path) }}" alt="{{ $picture->title }}">
+                <img class="form-preview" src="{{ \App\Support\Media::url($picture->image_path) }}" alt="{{ $picture->title }}">
             @endif
             <input id="pic-image" type="file" name="image" accept="image/jpeg,image/png,image/webp" {{ $picture ? '' : 'required' }}>
         </div>

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Picture;
+use App\Support\Media;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -54,7 +55,7 @@ class PictureController extends Controller
         foreach ($files as $file) {
             if (!$file || !$file->isValid()) continue;
 
-            $path = $file->store('pictures', 'public');
+            $path = $file->store('pictures', Media::disk());
             $title = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
 
             $pic = Picture::create([
@@ -66,7 +67,7 @@ class PictureController extends Controller
 
             $created[] = [
                 'id' => $pic->id,
-                'src' => asset('storage/' . $path),
+                'src' => Media::url($path),
                 'isVideo' => $pic->isVideo(),
             ];
         }
@@ -100,8 +101,10 @@ class PictureController extends Controller
 
     public function destroy(Picture $picture)
     {
-        if ($picture->image_path && Storage::disk('public')->exists($picture->image_path)) {
-            Storage::disk('public')->delete($picture->image_path);
+        $disk = Storage::disk(Media::disk());
+
+        if ($picture->image_path && $disk->exists($picture->image_path)) {
+            $disk->delete($picture->image_path);
         }
         $picture->delete();
 
