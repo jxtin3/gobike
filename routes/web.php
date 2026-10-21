@@ -14,7 +14,9 @@ use App\Http\Controllers\Admin\TrainingRequestController as AdminTrainingRequest
 use App\Http\Controllers\Admin\VolunteerApplicationController as AdminVolunteerController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\DonationController;
+use App\Http\Controllers\GalleryController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\LegalDocumentController;
 use App\Http\Controllers\NewsController;
 use App\Http\Controllers\ChatbotController;
 use App\Http\Controllers\TrainingRequestController;
@@ -27,66 +29,37 @@ use App\Http\Controllers\Admin\PatientController as AdminPatientController;
 // pages
 Route::get('/', [HomeController::class, 'index']);
 Route::get('/news', [NewsController::class, 'index']);
-Route::get('/our-story', function () {
-    return view('News.our-story');
-})->name('our-story');
-Route::get('/news/our-story', function () {
-    return view('News.our-story');
-});
+Route::view('/our-story', 'News.our-story')->name('our-story');
+Route::view('/news/our-story', 'News.our-story');
 
-Route::get('/gallery', function () {
-    $pictures = \App\Models\Picture::latest()->paginate(12);
-    return view('join-the-movement.gallery', compact('pictures'));
-});
+Route::get('/gallery', GalleryController::class);
 
-Route::get('/volunteer', function () {
-    return view('join-the-movement.volunteer');
-})->name('volunteer');
+Route::view('/volunteer', 'join-the-movement.volunteer')->name('volunteer');
 
 Route::post('/volunteer', [\App\Http\Controllers\VolunteerController::class, 'store'])
     ->middleware('throttle:5,1')
     ->name('volunteer.store');
     
 
-Route::get('/about', function () {
-    return view('who-we-are.about');
-});
+Route::view('/about', 'who-we-are.about');
 
-Route::get('/org-structure', function () {
-    return view('who-we-are.org-structure');
-});
+Route::view('/org-structure', 'who-we-are.org-structure');
 
-Route::get('/replicate-go-bike', function () {
-    return view('what-we-do.replicate');
-})->name('replicate');
+Route::view('/replicate-go-bike', 'what-we-do.replicate')->name('replicate');
 
-Route::get('/what-we-do', function () {
-    return view('what-we-do.programs');
-});
+Route::view('/what-we-do', 'what-we-do.programs');
 
-Route::get('/what-we-do/programs/gobike', function () {
-    return view('what-we-do.programs.gobike');
-})->name('programs.gobike');
+Route::view('/what-we-do/programs/gobike', 'what-we-do.programs.gobike')->name('programs.gobike');
 
-Route::get('/what-we-do/programs/alwar', function () {
-    return view('what-we-do.programs.alwar');
-})->name('programs.alwar');
+Route::view('/what-we-do/programs/alwar', 'what-we-do.programs.alwar')->name('programs.alwar');
 
-Route::get('/what-we-do/programs/ronda-kalusugan', function () {
-    return view('what-we-do.programs.ronda-kalusugan');
-})->name('programs.ronda-kalusugan');
+Route::view('/what-we-do/programs/ronda-kalusugan', 'what-we-do.programs.ronda-kalusugan')->name('programs.ronda-kalusugan');
 
-Route::get('/what-we-do/programs/padyakaalaman', function () {
-    return view('what-we-do.programs.padyakaalaman');
-})->name('programs.padyakaalaman');
+Route::view('/what-we-do/programs/padyakaalaman', 'what-we-do.programs.padyakaalaman')->name('programs.padyakaalaman');
 
-Route::get('/what-we-do/programs/padyakaisipan', function () {
-    return view('what-we-do.programs.padyakaisipan');
-})->name('programs.padyakaisipan');
+Route::view('/what-we-do/programs/padyakaisipan', 'what-we-do.programs.padyakaisipan')->name('programs.padyakaisipan');
 
-Route::get('/what-we-do/programs/hatake', function () {
-    return view('what-we-do.programs.hatake');
-})->name('programs.hatake');
+Route::view('/what-we-do/programs/hatake', 'what-we-do.programs.hatake')->name('programs.hatake');
 
 Route::redirect('/programs/gobike', '/what-we-do/programs/gobike');
 Route::redirect('/programs/alwar', '/what-we-do/programs/alwar');
@@ -100,9 +73,7 @@ Route::redirect('/community', '/news');
 
 Route::redirect('/reach-us', '/contact');
 
-Route::get('/contact', function () {
-    return view('contact');
-});
+Route::view('/contact', 'contact');
 
 // limit visitor to send 5 messages/min in contact page
 Route::post('/contact', [\App\Http\Controllers\ContactController::class, 'store'])
@@ -132,15 +103,9 @@ Route::post('/programs/training-request', [TrainingRequestController::class, 'st
 
 
 // privacy / terms
-Route::get('/privacy-policy', function () {
-    $document = \App\Models\LegalDocument::getByKey('privacy');
-    return view('pages.privacy', compact('document'));
-})->name('privacy-policy');
+Route::get('/privacy-policy', [LegalDocumentController::class, 'privacy'])->name('privacy-policy');
 
-Route::get('/terms', function () {
-    $document = \App\Models\LegalDocument::getByKey('terms');
-    return view('pages.terms', compact('document'));
-})->name('terms');
+Route::get('/terms', [LegalDocumentController::class, 'terms'])->name('terms');
 
 
 // Auth routes
