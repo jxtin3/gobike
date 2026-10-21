@@ -1,0 +1,36 @@
+/*
+ * SITE GLOBALS — element defaults the public pages were designed with.
+ *
+ * These used to come from admin/dashboard.css, which was bundled into the public stylesheet by
+ * mistake and also forced dark-mode form controls (`color-scheme: dark`). That file is no longer
+ * part of app.css; these rules keep every page looking as designed.
+ *
+ * Note: they are unlayered, so they win over Tailwind utilities on the same elements — e.g. links
+ * take their surrounding text colour, and an <h1> styled only with Tailwind classes gets this
+ * font. Use a CSS class (as most page styles do) to style these elements differently.
+ * Keep this import where it is in app.css (after the page styles) so the cascade stays the same.
+ */
+
+body {
+    font-family: Inter, Arial, sans-serif;
+    margin: 0;
+    background: #07111f;
+    color: #e2e8f0;
+}
+
+a {
+    color: inherit;
+    text-decoration: none;
+}
+
+h1,
+h2,
+p {
+    margin-top: 0;
+}
+
+h1 {
+    margin-bottom: 0.35rem;
+    font: 600 2rem/1.1 Oswald, sans-serif;
+    letter-spacing: 0.02em;
+}
