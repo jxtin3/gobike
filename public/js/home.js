@@ -5,6 +5,10 @@ function programSlider() {
         active: 0,
         touchStartX: null,
         touchStartY: null,
+        dragging: false,
+        dragged: false,
+        dragStartX: null,
+        dragStartY: null,
         interval: null,
         intervalMs: 4000,
         progress: 0,
@@ -53,6 +57,20 @@ function programSlider() {
                 href: '/what-we-do'
             }
         ],
+        // Position of a slide relative to the active one: 0 = centre, -1/1 = peeking at the sides,
+        // anything further is parked off-screen. Wraps around so the carousel loops.
+        offset(index) {
+            const n = this.programs.length;
+            let o = (index - this.active + n) % n;
+            if (o > n / 2) o -= n;
+            return o;
+        },
+        slideClass(index) {
+            const o = this.offset(index);
+            if (o === 0) return 'is-active';
+            if (Math.abs(o) === 1) return 'is-side';
+            return 'is-hidden';
+        },
         init() {
             this.start();
         },
@@ -87,6 +105,31 @@ function programSlider() {
 
             if (Math.abs(deltaX) < 50 || Math.abs(deltaX) <= Math.abs(deltaY)) return;
 
+            if (deltaX < 0) {
+                this.next();
+            } else {
+                this.prev();
+            }
+        },
+        // Mouse: click and drag left/right to change slides (touch uses touchStart/touchEnd above)
+        pointerStart(event) {
+            if (event.pointerType !== 'mouse' || event.button !== 0) return;
+            this.dragStartX = event.clientX;
+            this.dragStartY = event.clientY;
+            this.dragging = true;
+            this.dragged = false;
+        },
+        pointerEnd(event) {
+            if (!this.dragging) return;
+            this.dragging = false;
+
+            const deltaX = event.clientX - this.dragStartX;
+            const deltaY = event.clientY - this.dragStartY;
+            if (Math.abs(deltaX) < 50 || Math.abs(deltaX) <= Math.abs(deltaY)) return;
+
+            // a real drag: don't let the release count as a click on the "Learn More" link
+            this.dragged = true;
+            setTimeout(() => { this.dragged = false; }, 150);
             if (deltaX < 0) {
                 this.next();
             } else {

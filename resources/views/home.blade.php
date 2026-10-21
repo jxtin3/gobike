@@ -223,78 +223,59 @@
 
     </div>
 
-    <!-- Slider -->
+    <!-- Carousel: active program in the centre, neighbours peek at the sides -->
     <div
-        class="relative w-full overflow-hidden bg-[#111827] min-h-[580px] md:min-h-[640px] touch-pan-y"
+        class="prog-carousel touch-pan-y select-none"
+        :class="dragging ? 'is-dragging' : ''"
+        role="region"
+        aria-roledescription="carousel"
+        aria-label="Our programs"
+        @mouseenter="pause()"
+        @mouseleave="resume()"
         @touchstart.passive="touchStart($event)"
         @touchend.passive="touchEnd($event)"
+        @pointerdown="pointerStart($event)"
+        @pointerup.window="pointerEnd($event)"
+        @pointercancel.window="dragging = false"
+        @dragstart.prevent
+        @click.capture="if (dragged) { $event.preventDefault(); $event.stopPropagation(); dragged = false }"
     >
-        <!-- Background slides -->
-        <template x-for="(prog, index) in programs" :key="index">
-            <div
-                x-show="active === index"
-                x-transition:enter="transition-opacity duration-1000 z-10"
-                x-transition:enter-start="opacity-0"
-                x-transition:enter-end="opacity-100"
-                x-transition:leave="transition-opacity duration-1000 z-0"
-                x-transition:leave-start="opacity-100"
-                x-transition:leave-end="opacity-0"
-                class="absolute inset-0 w-full h-full"
-            >
-                <img :src="prog.img" :alt="prog.title"
-                     class="absolute inset-0 w-full h-full object-cover transform transition-transform duration-[10s] ease-out"
-                     :class="active === index ? 'scale-105' : 'scale-100'">
-                <!-- Rich overlay -->
-                <div class="absolute inset-0 bg-gradient-to-t from-[#111827] via-[#111827]/50 to-transparent opacity-100"></div>
-                <div class="absolute inset-0" :style="'background: radial-gradient(ellipse at 80% 20%, ' + prog.accent + '18 0%, transparent 60%)'"></div>
-            </div>
-        </template>
-
-        <!-- Content Area -->
-        <div class="absolute inset-0 z-20 flex items-center md:items-end pb-6 md:pb-12 px-4 sm:px-8 lg:px-16">
-            <div class="w-full max-w-5xl relative h-auto">
-                <template x-for="(prog, index) in programs" :key="'c' + index">
-                    <div
-                        x-show="active === index"
-                        x-transition:enter="transition ease-out duration-700 delay-200 z-10 relative"
-                        x-transition:enter-start="opacity-0 translate-y-8"
-                        x-transition:enter-end="opacity-100 translate-y-0"
-                        x-transition:leave="transition ease-in duration-300 absolute inset-0 z-0"
-                        x-transition:leave-start="opacity-100"
-                        x-transition:leave-end="opacity-0"
-                        class="w-full max-w-sm py-10 px-6 pb-6 md:px-8 md:py-12 md:pb-8 flex flex-col justify-end min-h-[400px]"
-                        @mouseenter="pause()"
-                        @mouseleave="resume()"
-                    >
-                        <h3 class="text-3xl md:text-4xl font-heading font-extrabold text-white mb-6 uppercase tracking-wide drop-shadow-md leading-tight" x-text="prog.title"></h3>
-                        <p class="text-white/80 text-sm md:text-base font-light mb-10 leading-relaxed drop-shadow-sm max-w-sm" x-text="prog.desc"></p>
-                        <a
-                            :href="prog.href"
-                            class="group inline-flex items-center justify-center gap-3 px-6 py-3 text-xs md:text-sm font-bold text-white border border-white/30 transition-all duration-300 tracking-[0.15em] uppercase rounded-none shadow-lg"
-                        >
-                            Learn More
-                            <svg class="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/></svg>
+        <div class="prog-track">
+            <template x-for="(prog, index) in programs" :key="index">
+                <article
+                    class="prog-slide"
+                    :class="slideClass(index)"
+                    :style="'--o:' + offset(index)"
+                    :aria-hidden="(active !== index).toString()"
+                    @click="if (active !== index) goTo(index)"
+                >
+                    <img :src="prog.img" :alt="prog.title" class="prog-slide-img" draggable="false">
+                    <div class="prog-slide-shade"></div>
+                    <div class="prog-slide-body">
+                        <h3 class="prog-slide-title" x-text="prog.title"></h3>
+                        <p class="prog-slide-desc" x-text="prog.desc"></p>
+                        <a :href="prog.href" :tabindex="active === index ? 0 : -1" class="btn-wbr btn-wbr-light">
+                            <span>Learn More</span>
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/></svg>
                         </a>
                     </div>
-                </template>
-            </div>
+                </article>
+            </template>
         </div>
 
-        <!-- Navigation controls -->
-        <div class="absolute left-1/2 bottom-8 z-30 flex -translate-x-1/2 items-center gap-3">
-            <div class="flex gap-2">
-                <template x-for="(prog, index) in programs" :key="'d' + index">
-                    <button
-                        @click="goTo(index)"
-                        class="h-2 rounded-full transition-all duration-300"
-                        :class="active === index ? 'w-7 bg-[#F97316]' : 'w-2 bg-white/35 hover:bg-white/60'"
-                        :aria-label="'Go to slide ' + (index + 1)"
-                    ></button>
-                </template>
-            </div>
+        <!-- Dots -->
+        <div class="prog-dots">
+            <template x-for="(prog, index) in programs" :key="'d' + index">
+                <button
+                    type="button"
+                    @click="goTo(index)"
+                    class="h-2 rounded-full transition-all duration-300"
+                    :class="active === index ? 'w-7 bg-[#F97316]' : 'w-2 bg-white/35 hover:bg-white/60'"
+                    :aria-label="'Show ' + prog.title"
+                    :aria-current="(active === index).toString()"
+                ></button>
+            </template>
         </div>
-    </div>
-
     </div>
 </section>
 
@@ -610,7 +591,7 @@
 
 
 <x-slot:scripts>
-    <script src="{{ asset('js/home.js') }}"></script>
+    <script src="{{ asset('js/home.js') }}?v={{ filemtime(public_path('js/home.js')) }}"></script>
 </x-slot:scripts>
 
 </x-layout>
