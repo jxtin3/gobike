@@ -139,10 +139,15 @@
     $private = ['Donations', 'Financial Grants', 'Endowment', 'Small Scale Funding', 'Partnership Events or other PPAs'];
 @endphp
 
-<div class="gbp">
+<div class="gbp gbp-simple">
 
     {{-- HERO --}}
-    <section class="gbp-hero">
+    <section class="gbp-hero gbp-hero--photo">
+        <div class="gbp-hero-bg" aria-hidden="true">
+            <img src="{{ asset('images/whatwedo/gobike.jpg') }}" alt="" fetchpriority="high">
+        </div>
+        <div class="gbp-hero-shade" aria-hidden="true"></div>
+
         <div class="gbp-wrap">
             <h1 class="gbp-title">ALWAR x Go Bike Project <em>Programming</em></h1>
             <p class="gbp-lead">
@@ -155,7 +160,16 @@
 
     {{-- JOURNEY NAV --}}
     <nav class="gbp-journey" aria-label="Programming sections">
-        <ul class="gbp-journey-list">
+        {{-- Touch: native swipe. Mouse: click-and-drag to scroll sideways. --}}
+        <ul class="gbp-journey-list"
+            x-data="{ down: false, moved: false, startX: 0, startLeft: 0 }"
+            x-bind:class="down && moved ? 'is-dragging' : ''"
+            x-on:pointerdown="if ($event.pointerType === 'mouse') { down = true; moved = false; startX = $event.clientX; startLeft = $el.scrollLeft }"
+            x-on:pointermove="if (down) { const dx = $event.clientX - startX; if (Math.abs(dx) > 5) moved = true; $el.scrollLeft = startLeft - dx }"
+            x-on:pointerup.window="down = false"
+            x-on:pointerleave="down = false"
+            x-on:dragstart.prevent
+            x-on:click.capture="if (moved) { $event.preventDefault(); $event.stopPropagation(); moved = false }">
             @foreach ($journey as $j)
                 <li>
                     <a href="#{{ $j[0] }}"><b>{{ $loop->iteration }}</b>{{ $j[1] }}</a>
@@ -395,11 +409,11 @@
             <ol class="gbp-alwar">
                 @foreach ($alwar as $step)
                     <li class="gbp-card">
-                        @if ($step[1])<span class="gbp-tag">{{ $step[1] }}</span>@endif
+                        @if ($step[1])<span class="gbp-tag is-{{ strtolower($step[1]) }}">{{ $step[1] }}</span>@endif
                         <span class="gbp-num">{{ $loop->iteration }}</span>
                         <h3 class="gbp-h3">{{ $step[0] }}</h3>
                         @if (count($step[2]))
-                            <ul class="gbp-chips">
+                            <ul class="gbp-dash">
                                 @foreach ($step[2] as $tag)<li>{{ $tag }}</li>@endforeach
                             </ul>
                         @endif
@@ -482,7 +496,6 @@
             <button type="button" class="gbp-poster" x-on:click="open = true" aria-label="Open the full diagram">
                 <img src="{{ asset('images/whatwedo/programming.jpg') }}"
                      alt="ALWAR x Go Bike Project programming diagram" loading="lazy">
-                <span class="gbp-poster-hint">Enlarge</span>
             </button>
 
             <a href="{{ asset('images/whatwedo/programming.jpg') }}" download class="gbp-download">Download</a>

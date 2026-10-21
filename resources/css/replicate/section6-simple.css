@@ -1,0 +1,477 @@
+/*
+ * REPLICATE / Simple look for every section below the hero.
+ * Flat and plain: square corners, thin borders, one orange accent.
+ * Scoped to .gbp-simple so the volunteer page (which shares the base .gbp-* classes) is unchanged.
+ */
+
+.gbp-simple {
+    --gbp-border: #E2E8F0;
+    --gbp-border-strong: #CBD5E1;
+}
+
+/* Sections + headings */
+.gbp-simple .gbp-section {
+    padding: 4rem 0;
+}
+
+.gbp-simple .gbp-section.is-soft {
+    background: #F8FAFC;
+}
+
+.gbp-simple .gbp-head {
+    max-width: none;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--gbp-border);
+}
+
+.gbp-simple .gbp-h3 {
+    font-size: 1rem;
+}
+
+/* Cards */
+.gbp-simple .gbp-card {
+    padding: 1.5rem;
+    border: 1px solid var(--gbp-border);
+    border-radius: 0;
+    background: #fff;
+    box-shadow: none;
+}
+
+/* Numbers: plain orange numerals instead of filled circles */
+.gbp-simple .gbp-num {
+    display: block;
+    flex: none;
+    width: auto;
+    min-width: 1.75rem;
+    height: auto;
+    border-radius: 0;
+    background: none;
+    color: var(--gbp-orange);
+    font-family: 'Oswald', 'Inter', sans-serif;
+    font-size: 1.5rem;
+    line-height: 1.1;
+}
+
+/* Chips become plain square tags */
+.gbp-simple .gbp-chips li {
+    padding: 0.4rem 0.8rem;
+    border: 1px solid var(--gbp-border-strong);
+    border-radius: 0;
+    background: #fff;
+    font-size: 0.85rem;
+}
+
+/* 01 Partnership: one bordered list, no arrow badges */
+.gbp-simple .gbp-flow {
+    gap: 0;
+    border: 1px solid var(--gbp-border);
+    background: #fff;
+}
+
+.gbp-simple .gbp-flow-step {
+    padding: 1.25rem 1.5rem;
+    border: 0;
+    border-bottom: 1px solid var(--gbp-border);
+    border-radius: 0;
+}
+
+.gbp-simple .gbp-flow-step:last-child {
+    border-bottom: 0;
+}
+
+.gbp-simple .gbp-flow-step:not(:last-child)::after {
+    display: none;
+}
+
+/* 02 Training */
+.gbp-simple .gbp-check {
+    display: block;
+    width: auto;
+    height: auto;
+    margin-bottom: 0.5rem;
+    border-radius: 0;
+    background: none;
+    color: var(--gbp-orange);
+}
+
+.gbp-simple .gbp-price {
+    gap: 0;
+    margin-top: 1.5rem;
+    border: 1px solid var(--gbp-border);
+    border-radius: 0;
+    background: #fff;
+    color: var(--gbp-ink);
+}
+
+.gbp-simple .gbp-price > div {
+    background: #fff;
+}
+
+.gbp-simple .gbp-price > div + div {
+    border-left: 1px solid var(--gbp-border);
+}
+
+.gbp-simple .gbp-price > div.is-main {
+    background: #fff;
+    box-shadow: inset 0 3px 0 var(--gbp-orange);
+}
+
+.gbp-simple .gbp-price span {
+    color: var(--gbp-muted);
+    opacity: 1;
+}
+
+.gbp-simple .gbp-price strong {
+    color: var(--gbp-navy);
+}
+
+.gbp-simple .gbp-price > div.is-main strong {
+    color: var(--gbp-orange);
+}
+
+.gbp-simple .gbp-price-note {
+    border-top: 1px solid var(--gbp-border);
+    background: #F8FAFC;
+    color: var(--gbp-muted);
+}
+
+/* 03 Leadership: a plain numbered list */
+.gbp-simple .gbp-timeline {
+    max-width: none;
+    border: 1px solid var(--gbp-border);
+    background: #fff;
+}
+
+.gbp-simple .gbp-timeline::before {
+    display: none;
+}
+
+.gbp-simple .gbp-timeline li {
+    gap: 1rem;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--gbp-border);
+}
+
+.gbp-simple .gbp-timeline li:last-child {
+    border-bottom: 0;
+}
+
+.gbp-simple .gbp-timeline p,
+.gbp-simple .gbp-timeline li:last-child p {
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: none;
+    color: var(--gbp-ink);
+    font-weight: 500;
+}
+
+.gbp-simple .gbp-timeline li:last-child p {
+    color: var(--gbp-navy);
+    font-weight: 700;
+}
+
+/* 04 Roles */
+.gbp-simple .gbp-oversight {
+    padding: 1rem 1.25rem;
+    border: 1px solid var(--gbp-border);
+    border-left: 4px solid var(--gbp-navy);
+    border-radius: 0;
+    background: #fff;
+    color: var(--gbp-ink);
+}
+
+.gbp-simple .gbp-oversight strong {
+    color: var(--gbp-navy);
+}
+
+/* 05 Activities */
+.gbp-simple .gbp-chain-box {
+    border: 1px solid var(--gbp-border);
+    border-top: 3px solid var(--gbp-navy);
+    border-radius: 0;
+}
+
+.gbp-simple .gbp-chain-box:not(:last-child)::after {
+    color: var(--gbp-border-strong);
+    font-weight: 400;
+}
+
+.gbp-simple .gbp-chain-box.is-award {
+    border-top-color: var(--gbp-orange);
+    background: #fff;
+}
+
+.gbp-simple .gbp-chain-box.is-award h3 {
+    color: var(--gbp-navy);
+}
+
+/* 07 ALWAR */
+.gbp-simple .gbp-tag {
+    padding: 0.15rem 0.5rem;
+    border: 1px solid var(--gbp-orange);
+    border-radius: 0;
+    background: none;
+    color: var(--gbp-orange);
+}
+
+/* 08 Risk: neutral columns with a thin colour edge */
+.gbp-simple .gbp-risk-col {
+    border: 1px solid var(--gbp-border);
+    border-radius: 0;
+    background: #fff;
+}
+
+.gbp-simple .gbp-risk-col.is-risk {
+    border-left: 4px solid var(--gbp-orange);
+    background: #fff;
+}
+
+.gbp-simple .gbp-risk-col.is-fix {
+    border-left: 4px solid var(--gbp-blue);
+    background: #fff;
+}
+
+.gbp-simple .gbp-risk-arrow {
+    color: var(--gbp-border-strong);
+    font-weight: 400;
+}
+
+.gbp-simple .gbp-risk-fix-text {
+    color: var(--gbp-ink);
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+/* 09 Co-creation */
+.gbp-simple .gbp-private {
+    border: 1px solid var(--gbp-border);
+    border-top: 3px solid var(--gbp-navy);
+    border-radius: 0;
+    background: #fff;
+    color: var(--gbp-ink);
+}
+
+.gbp-simple .gbp-private .gbp-label {
+    color: var(--gbp-muted);
+}
+
+.gbp-simple .gbp-private .gbp-chips li {
+    border-color: var(--gbp-border-strong);
+    background: #fff;
+    color: var(--gbp-navy);
+}
+
+/* Outcome banner */
+.gbp-simple .gbp-outcome {
+    background: var(--gbp-navy-deep);
+}
+
+/* Full diagram */
+.gbp-simple .gbp-poster {
+    border: 1px solid var(--gbp-border);
+    border-radius: 0;
+    box-shadow: none;
+}
+
+.gbp-simple .gbp-poster-hint {
+    border-radius: 0;
+    font-size: 0.7rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+.gbp-simple .gbp-download {
+    padding: 0.9rem 2rem;
+    border-radius: 0;
+    font-size: 0.8125rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+
+.gbp-simple .gbp-download:hover {
+    transform: none;
+}
+
+.gbp-simple .gbp-lb-scroll img {
+    border-radius: 0;
+}
+
+@media (max-width: 900px) {
+    .gbp-simple .gbp-section {
+        padding: 3rem 0;
+    }
+
+    .gbp-simple .gbp-price > div + div {
+        border-top: 1px solid var(--gbp-border);
+        border-left: 0;
+    }
+}
+
+/* ---------- Polish pass ---------- */
+
+/* Lists: a little more air between items */
+.gbp-simple .gbp-bullets {
+    gap: 0.75rem;
+    margin-top: 1rem;
+}
+
+.gbp-simple .gbp-bullets li {
+    line-height: 1.65;
+}
+
+.gbp-simple .gbp-note {
+    line-height: 1.65;
+}
+
+/* 02 Training: roomier inclusion cards */
+.gbp-simple .gbp-grid-5 {
+    gap: 1.5rem;
+}
+
+.gbp-simple .gbp-grid-5 .gbp-card .gbp-h3 {
+    margin-bottom: 0.5rem;
+}
+
+.gbp-simple .gbp-price > div {
+    padding: 1.5rem 1.75rem;
+}
+
+.gbp-simple .gbp-price-note {
+    padding: 1rem 1.75rem;
+}
+
+/* 05 Activities: consistent vertical rhythm */
+.gbp-simple .gbp-activity-top {
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.gbp-simple .gbp-chain {
+    gap: 2.25rem;
+    margin-bottom: 2rem;
+}
+
+.gbp-simple .gbp-chain-box {
+    padding: 1.5rem;
+}
+
+.gbp-simple .gbp-chain-box h3 {
+    margin-bottom: 0.75rem;
+    letter-spacing: 0.03em;
+}
+
+.gbp-simple .gbp-chain-box ul {
+    line-height: 1.85;
+}
+
+.gbp-simple .gbp-grid-2 {
+    gap: 1.5rem;
+}
+
+/* 07 ALWAR: Entry is green, Exit is red; sub-items are a dash list */
+.gbp-simple .gbp-tag.is-entry {
+    border-color: #16A34A;
+    background: #F0FDF4;
+    color: #15803D;
+}
+
+.gbp-simple .gbp-tag.is-exit {
+    border-color: #DC2626;
+    background: #FEF2F2;
+    color: #B91C1C;
+}
+
+.gbp-simple .gbp-alwar {
+    gap: 1.5rem;
+}
+
+.gbp-dash {
+    display: grid;
+    gap: 0.5rem;
+    margin: 0.75rem 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.gbp-dash li {
+    position: relative;
+    padding-left: 1.1rem;
+    color: var(--gbp-ink);
+    font-size: 0.92rem;
+    line-height: 1.5;
+}
+
+.gbp-dash li::before {
+    content: '\2013';
+    position: absolute;
+    left: 0;
+    color: var(--gbp-muted);
+}
+
+/* 08 Risk: breathing room inside each column and between rows */
+.gbp-simple .gbp-risk {
+    gap: 1.25rem;
+    margin-bottom: 1.5rem;
+}
+
+.gbp-simple .gbp-risk-col {
+    padding: 1.5rem 1.75rem;
+}
+
+.gbp-simple .gbp-risk-tag {
+    margin-bottom: 0.9rem;
+}
+
+.gbp-simple .gbp-risk-fix-text {
+    line-height: 1.7;
+}
+
+/* 09 Co-creation: two wider columns so the text isn't cramped */
+.gbp-simple .gbp-grid-gov {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+    align-items: stretch;
+}
+
+.gbp-simple .gbp-grid-gov .gbp-card {
+    padding: 1.75rem 2rem;
+}
+
+.gbp-simple .gbp-grid-gov .gbp-h3 {
+    font-size: 1.1rem;
+}
+
+.gbp-simple .gbp-grid-gov .gbp-bullets {
+    gap: 1rem;
+    margin-top: 1.25rem;
+}
+
+.gbp-simple .gbp-grid-gov .gbp-bullets.is-small li {
+    padding-left: 1.25rem;
+    font-size: 0.95rem;
+    line-height: 1.7;
+}
+
+.gbp-simple .gbp-private {
+    margin-top: 1.5rem;
+    padding: 1.5rem 2rem;
+}
+
+@media (max-width: 760px) {
+    .gbp-simple .gbp-grid-gov {
+        grid-template-columns: 1fr;
+    }
+
+    .gbp-simple .gbp-grid-gov .gbp-card {
+        padding: 1.5rem;
+    }
+}
+
+/* Download button sits on the right, under the diagram */
+.gbp-simple .gbp-download {
+    display: flex;
+    width: max-content;
+    margin-left: auto;
+}

@@ -69,15 +69,18 @@
 <div class="gbp">
 
     {{-- HERO --}}
-    <section class="gbp-hero min-h-[460px] md:min-h-[500px] flex flex-col justify-center !pt-28 !pb-16 md:!pt-32 md:!pb-20">
-        <div class="gbp-wrap w-full">
-            <!-- <a href="{{ url('/news') }}" class="gbp-back">← Back to News &amp; Updates</a> -->
-            <h1 class="gbp-title text-4xl md:text-5xl lg:text-6xl uppercase tracking-tight leading-tight">Become a  <em>Go Biker</em></h1>
-            <p class="gbp-lead text-base md:text-lg leading-relaxed">
-                Ride with a youth-led network of community responders — bringing health,
-                safety, and disaster resilience to barangays across Pangasinan.
+    <section class="gbp-hero gbp-hero--photo">
+        <div class="gbp-hero-bg" aria-hidden="true">
+            <img src="{{ asset('images/homepage/go_bike.jpg') }}" alt="" fetchpriority="high" style="object-position: center 40%;">
+        </div>
+        <div class="gbp-hero-shade" aria-hidden="true"></div>
+
+        <div class="gbp-wrap">
+            <h1 class="gbp-title">Become a <em>Go Biker</em></h1>
+            <p class="gbp-lead">
+                Join the Go Bike Project and become part of a community of trained, empowered, and service-driven volunteers. 
+                Together, let's promote health, strengthen disaster resilience, and create safer, more resilient communities!
             </p>
-            <a href="#signup" class="gbp-hero-link">Sign up now</a>
         </div>
     </section>
 

@@ -130,7 +130,27 @@
     padding: 1rem 1.5rem;
     list-style: none;
     overflow-x: auto;
-    scrollbar-width: thin;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    cursor: grab;
+    user-select: none;
+    -webkit-user-select: none;
+    /* soft fade at both edges hints that the bar scrolls sideways */
+    -webkit-mask-image: linear-gradient(to right, transparent, #000 1.25rem, #000 calc(100% - 1.25rem), transparent);
+    mask-image: linear-gradient(to right, transparent, #000 1.25rem, #000 calc(100% - 1.25rem), transparent);
+}
+
+.gbp-journey-list::-webkit-scrollbar {
+    display: none;
+}
+
+.gbp-journey-list.is-dragging {
+    cursor: grabbing;
+}
+
+.gbp-journey-list li {
+    flex: none;
 }
 
 .gbp-journey-list a {
@@ -146,41 +166,39 @@
     font-weight: 600;
     white-space: nowrap;
     text-decoration: none;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    position: relative;
-    overflow: hidden;
-}
-
-.gbp-journey-list a::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: var(--gbp-navy);
-    opacity: 0;
-    transform: translateY(100%);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    z-index: 0;
-}
-
-.gbp-journey-list a:hover::before {
-    opacity: 1;
-    transform: translateY(0);
-}
-
-.gbp-journey-list a b,
-.gbp-journey-list a {
-    position: relative;
-    z-index: 1;
+    -webkit-user-drag: none;
+    transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
 }
 
 .gbp-journey-list a:visited {
     color: var(--gbp-navy);
 }
 
-.gbp-journey-list a:hover {
+.gbp-journey-list a:hover,
+.gbp-journey-list a:visited:hover,
+.gbp-journey-list a:focus-visible {
     background: var(--gbp-navy);
     border-color: var(--gbp-navy);
     color: #fff;
+    outline: none;
+}
+
+.gbp-journey-list b {
+    display: grid;
+    place-items: center;
+    width: 1.4rem;
+    height: 1.4rem;
+    border-radius: 50%;
+    background: var(--gbp-navy);
+    color: #fff;
+    font-size: 0.7rem;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.gbp-journey-list a:hover b,
+.gbp-journey-list a:focus-visible b {
+    background: var(--gbp-sky);
+    color: var(--gbp-navy);
 }
 
 .gbp-journey-list b {
@@ -463,5 +481,59 @@
 
     .gbp-floating-nav {
         display: none !important;
+    }
+}
+
+/* Photo hero (replicate page only; the volunteer page keeps the plain gradient hero) */
+.gbp-hero.gbp-hero--photo {
+    display: flex;
+    align-items: center;
+    min-height: 480px;
+    padding: 8.5rem 0 5rem;
+    background: #0D1B2A;
+}
+
+.gbp-hero.gbp-hero--photo::after {
+    display: none;
+}
+
+.gbp-hero-bg {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+}
+
+.gbp-hero-bg img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center 30%;
+}
+
+.gbp-hero-shade {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    background:
+        linear-gradient(to bottom, rgba(13, 27, 42, 0.65), rgba(13, 27, 42, 0) 35%),
+        linear-gradient(115deg, rgba(13, 27, 42, 0.9) 0%, rgba(13, 27, 42, 0.65) 55%, rgba(13, 27, 42, 0.3) 100%);
+}
+
+.gbp-hero.gbp-hero--photo .gbp-wrap {
+    width: 100%;
+}
+
+.gbp-hero--photo .gbp-title em {
+    color: #2FA7FF;
+}
+
+.gbp-hero--photo .gbp-lead {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+@media (min-width: 768px) {
+    .gbp-hero.gbp-hero--photo {
+        min-height: 560px;
+        padding: 10rem 0 6rem;
     }
 }
