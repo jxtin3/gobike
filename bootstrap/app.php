@@ -13,7 +13,8 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        // returns the proxy's address and $request->isSecure() is false.
+        // Laravel Cloud runs behind a load balancer / reverse proxy. Trust all proxies so
+        // X-Forwarded-* headers (like client IP and HTTPS scheme) are properly resolved.
         $middleware->trustProxies(at: '*');
 
         $middleware->alias([
