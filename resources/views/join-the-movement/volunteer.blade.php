@@ -45,15 +45,6 @@
         ['Deployment', 'Join your chapter and take your place in the duty rotation.'],
     ];
 
-    $interests = [
-        'Health outreach',
-        'Disaster preparedness',
-        'First aid & response',
-        'Bike repair & maintenance',
-        'Advocacy campaigns',
-        'Documentation & media',
-    ];
-
     $faqs = [
         ['What is the minimum age to volunteer?',
          'Our youth responder program accepts volunteers aged 13 to 25. Minors aged 13-17 need written parental consent to take part in active field training and dispatch activities.'],
@@ -295,18 +286,6 @@
                         {{-- Volunteering --}}
                         <fieldset class="vol-fieldset">
                             <legend class="vol-legend">Your Volunteering</legend>
-
-                            <div class="vol-field" style="margin-bottom:1rem;">
-                                <span class="vol-label">Areas you're interested in <small>(choose any)</small></span>
-                                <div class="vol-chips">
-                                    @foreach ($interests as $interest)
-                                        <label class="vol-chip">
-                                            <input type="checkbox" value="{{ $interest }}" x-model="form.interests">
-                                            <span>{{ $interest }}</span>
-                                        </label>
-                                    @endforeach
-                                </div>
-                            </div>
 
                             <div class="vol-row">
                                 <div class="vol-field">

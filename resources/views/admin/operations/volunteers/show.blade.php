@@ -50,20 +50,6 @@
         <section class="detail-card">
             <h2 class="detail-card-title">Volunteer Details</h2>
             <dl class="detail-dl">
-                <div>
-                    <dt>Interests</dt>
-                    <dd>
-                        @if($application->interests && count($application->interests))
-                            <div class="pill-group">
-                                @foreach($application->interests as $interest)
-                                    <span class="pill pill-info">{{ $interest }}</span>
-                                @endforeach
-                            </div>
-                        @else
-                            —
-                        @endif
-                    </dd>
-                </div>
                 <div><dt>Availability</dt><dd>{{ ucfirst($application->availability) }}</dd></div>
                 <div><dt>Has a bike</dt><dd>{{ $application->has_bike ? 'Yes' : 'No' }}</dd></div>
             </dl>

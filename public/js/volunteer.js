@@ -11,7 +11,6 @@ document.addEventListener('alpine:init', () => {
             barangay: '',
             municipality: '',
             province: 'Pangasinan',
-            interests: [],
             availability: '',
             hasBike: '',
             motivation: '',

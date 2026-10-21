@@ -17,7 +17,6 @@ class VolunteerApplication extends Model
         'barangay',
         'municipality',
         'province',
-        'interests',
         'availability',
         'has_bike',
         'motivation',
@@ -32,7 +31,6 @@ class VolunteerApplication extends Model
     protected function casts(): array
     {
         return [
-            'interests'        => 'array',
             'has_bike'         => 'boolean',
             'guardian_consent' => 'boolean',
         ];
