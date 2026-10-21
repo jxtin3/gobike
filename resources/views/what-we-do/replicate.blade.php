@@ -13,6 +13,7 @@
         ['alwar', 'ALWAR'],
         ['risk', 'Risk & Conflict'],
         ['cocreation', 'Co-Creation'],
+        ['inquire', 'Inquire & Pay'],
     ];
 
     $partnershipSteps = [
@@ -154,7 +155,15 @@
                 The complete chapter blueprint — from building partnerships and training Go Bikers
                 to daily operations, risk management and government co-creation.
             </p>
-            <a href="#full-diagram" class="gbp-hero-link">View the complete diagram</a>
+            <div class="gbp-hero-actions">
+                <a href="#inquire" class="gbp-btn-primary">
+                    <span>Inquire now</span>
+                </a>
+                <a href="#full-diagram" class="btn-wbr btn-wbr-light">
+                    <span>View the complete diagram</span>
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 13.5 12 21m0 0-7.5-7.5M12 21V3"/></svg>
+                </a>
+            </div>
         </div>
     </section>
 
@@ -263,15 +272,20 @@
                 @endforeach
             </div>
 
+            {{-- Prices come from config/replication.php, the same values used to charge online payments --}}
             <div class="gbp-price">
-                <div><span>1 class</span><strong>15 trainees</strong></div>
-                <div class="is-main"><span>Total cost</span><strong>₱30,000.00</strong></div>
-                <div><span>Each additional trainee</span><strong>₱2,000</strong></div>
+                <div><span>1 class</span><strong>{{ config('replication.class_size') }} trainees</strong></div>
+                <div class="is-main"><span>Total cost</span><strong>₱{{ number_format(config('replication.class_fee'), 2) }}</strong></div>
+                <div><span>Each additional trainee</span><strong>₱{{ number_format(config('replication.additional_trainee_fee')) }}</strong></div>
                 <p class="gbp-price-note">
                     Complete payment via check should be made to PRI 3 days before the conduct of the
-                    training. Official Receipt will be issued by PRI as a donation.
+                    training, or pay early online through GCash or online banking. Official Receipt will be
+                    issued by PRI as a donation.
                 </p>
             </div>
+            <p class="gbp-price-cta">
+                <a href="#inquire">Inquire or pay the training fee online &rarr;</a>
+            </p>
         </div>
     </section>
 
@@ -481,6 +495,9 @@
     <section class="gbp-outcome">
         <p>Safe, Proactive, Responsive, Healthier, and More <span>Disaster Resilient Communities!</span></p>
     </section>
+
+    {{-- 10. INQUIRE & PAY --}}
+    @include('what-we-do.partials.replicate-inquire')
 
     {{-- FULL DIAGRAM + LIGHTBOX --}}
     <section id="full-diagram" class="gbp-section is-soft"

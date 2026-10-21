@@ -3,9 +3,14 @@
 namespace App\Services;
 
 use App\Models\Donation;
+use App\Models\ReplicationRequest;
 use Illuminate\Support\Facades\Http;
 use RuntimeException;
 
+/**
+ * PayMongo checkout (GCash and online banking) for donations and for
+ * Go Biker's Training fees paid early from the Replicate Go Bike page.
+ */
 class PayMongoDonationService
 {
     private string $secretKey;
@@ -22,45 +27,83 @@ class PayMongoDonationService
      */
     public function createCheckoutSession(Donation $donation): array
     {
-        if ($this->secretKey === '') {
-            throw new RuntimeException('PayMongo is not configured. Add PAYMONGO_SECRET_KEY to your .env file.');
-        }
-
         $paymentMethodTypes = $donation->payment_method === 'gcash'
             ? ['gcash']
             : ['dob'];
 
-        $amountCentavos = (int) round((float) $donation->amount_php * 100);
+        return $this->createSession([
+            'billing' => [
+                'name' => $donation->donor_name,
+                'email' => $donation->email,
+                'phone' => $donation->phone,
+            ],
+            'line_items' => [
+                [
+                    'name' => 'Go Bike Donation',
+                    'amount' => (int) round((float) $donation->amount_php * 100),
+                    'currency' => 'PHP',
+                    'quantity' => 1,
+                ],
+            ],
+            'payment_method_types' => $paymentMethodTypes,
+            'success_url' => route('donate.success', $donation),
+            'cancel_url' => route('donate.cancel', $donation),
+            'reference_number' => $donation->uuid,
+            'send_email_receipt' => true,
+            'description' => 'Go Bike donation from '.$donation->donor_name,
+            'metadata' => [
+                'donation_uuid' => $donation->uuid,
+            ],
+        ]);
+    }
+
+    /**
+     * Checkout for the Go Biker's Training fee of a chapter replication inquiry.
+     *
+     * @return array{checkout_url: string, session_id: string}
+     */
+    public function createTrainingCheckoutSession(ReplicationRequest $inquiry): array
+    {
+        return $this->createSession([
+            'billing' => [
+                'name' => $inquiry->contact_name,
+                'email' => $inquiry->email,
+                'phone' => $inquiry->phone,
+            ],
+            'line_items' => [
+                [
+                    'name' => "Go Biker's Training ({$inquiry->trainees} trainees)",
+                    'amount' => (int) round((float) $inquiry->amount_php * 100),
+                    'currency' => 'PHP',
+                    'quantity' => 1,
+                ],
+            ],
+            'payment_method_types' => config('replication.payment_methods'),
+            'success_url' => route('replicate.inquiry.show', ['replicationRequest' => $inquiry, 'payment' => 'success']),
+            'cancel_url' => route('replicate.inquiry.show', ['replicationRequest' => $inquiry, 'payment' => 'cancelled']),
+            'reference_number' => $inquiry->reference,
+            'send_email_receipt' => true,
+            'description' => "Go Biker's Training for {$inquiry->organization} ({$inquiry->reference})",
+            'metadata' => [
+                'replication_uuid' => $inquiry->uuid,
+            ],
+        ]);
+    }
+
+    /**
+     * @param  array<string, mixed>  $attributes  PayMongo checkout session attributes
+     * @return array{checkout_url: string, session_id: string}
+     */
+    private function createSession(array $attributes): array
+    {
+        if ($this->secretKey === '') {
+            throw new RuntimeException('PayMongo is not configured. Add PAYMONGO_SECRET_KEY to your .env file.');
+        }
 
         $response = Http::withBasicAuth($this->secretKey, '')
             ->acceptJson()
             ->post("{$this->baseUrl}/checkout_sessions", [
-                'data' => [
-                    'attributes' => [
-                        'billing' => [
-                            'name' => $donation->donor_name,
-                            'email' => $donation->email,
-                            'phone' => $donation->phone,
-                        ],
-                        'line_items' => [
-                            [
-                                'name' => 'Go Bike Donation',
-                                'amount' => $amountCentavos,
-                                'currency' => 'PHP',
-                                'quantity' => 1,
-                            ],
-                        ],
-                        'payment_method_types' => $paymentMethodTypes,
-                        'success_url' => route('donate.success', $donation),
-                        'cancel_url' => route('donate.cancel', $donation),
-                        'reference_number' => $donation->uuid,
-                        'send_email_receipt' => true,
-                        'description' => 'Go Bike donation from '.$donation->donor_name,
-                        'metadata' => [
-                            'donation_uuid' => $donation->uuid,
-                        ],
-                    ],
-                ],
+                'data' => ['attributes' => $attributes],
             ]);
 
         if (! $response->successful()) {

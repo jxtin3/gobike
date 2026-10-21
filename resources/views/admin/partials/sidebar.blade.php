@@ -66,6 +66,10 @@
             <x-admin.icon name="clipboard" /><span>Training Requests</span>
         </a>
 
+        <a class="side-link" href="{{ route('admin.operations.chapter-inquiries.index') }}" aria-current="{{ $current('admin.operations.chapter-inquiries.*') }}">
+            <x-admin.icon name="navigation" /><span>Chapter Inquiries</span>
+        </a>
+
         <p class="side-group">Legal</p>
         <a class="side-link" href="{{ route('admin.operations.legal.terms') }}" aria-current="{{ $current('admin.operations.legal.*') }}">
             <x-admin.icon name="file-text" /><span>Legal Pages</span>

@@ -1,0 +1,366 @@
+/* REPLICATE / Section 7 — Inquire & pay (form on /replicate-go-bike, status page /replicate-go-bike/inquiry/{uuid}) */
+
+/* Solid orange button, same size as the .btn-wbr buttons */
+.gbp-btn-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 1rem 2.5rem;
+    border: 2px solid #F97316;
+    background: #F97316;
+    color: #fff;
+    font-size: 0.8125rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    text-decoration: none;
+    transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+.gbp-btn-primary:visited {
+    color: #fff;
+}
+
+.gbp-btn-primary:hover {
+    border-color: #ea580c;
+    background: #ea580c;
+}
+
+.gbp-hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+/* Link under the training price strip */
+.gbp-price-cta {
+    margin: 1rem 0 0;
+    font-size: 0.95rem;
+    font-weight: 600;
+}
+
+.gbp-price-cta a {
+    color: #2563EB;
+    text-decoration: none;
+}
+
+.gbp-price-cta a:hover {
+    text-decoration: underline;
+}
+
+/* Form + summary layout */
+.gbp-inquire-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+    gap: 1.5rem;
+    align-items: start;
+}
+
+.gbp-inquire-aside {
+    display: grid;
+    gap: 1.25rem;
+}
+
+@media (min-width: 901px) {
+    .gbp-inquire-aside {
+        position: sticky;
+        top: 7rem;
+    }
+}
+
+@media (max-width: 900px) {
+    .gbp-inquire-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.gbp-simple .gbp-inquire-form {
+    padding: 2rem;
+}
+
+@media (max-width: 640px) {
+    .gbp-simple .gbp-inquire-form {
+        padding: 1.25rem;
+    }
+}
+
+.gbp-inquire-consent {
+    margin-bottom: 1.25rem;
+}
+
+.gbp-error-list {
+    margin: 0;
+    padding-left: 1.1rem;
+    list-style: disc;
+}
+
+/* Payment choice */
+.gbp-pay-options {
+    display: grid;
+    gap: 0.75rem;
+}
+
+.gbp-pay-option {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.85rem;
+    padding: 1rem 1.1rem;
+    border: 1px solid #E2E8F0;
+    background: #fff;
+    cursor: pointer;
+    transition: border-color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.gbp-pay-option:hover {
+    border-color: #CBD5E1;
+}
+
+.gbp-pay-option.is-selected {
+    border-color: var(--gbp-navy);
+    background: #F8FAFC;
+    box-shadow: inset 3px 0 0 #F97316;
+}
+
+.gbp-pay-option input {
+    flex: none;
+    width: 1.05rem;
+    height: 1.05rem;
+    margin-top: 0.2rem;
+    accent-color: var(--gbp-navy);
+}
+
+.gbp-pay-option b {
+    display: block;
+    color: var(--gbp-navy);
+    font-size: 0.95rem;
+}
+
+.gbp-pay-option small {
+    display: block;
+    margin-top: 0.2rem;
+    color: var(--gbp-muted);
+    font-size: 0.82rem;
+    line-height: 1.55;
+}
+
+/* Fee summary */
+.gbp-fee-rows {
+    margin: 0.5rem 0 1rem;
+}
+
+.gbp-fee-rows > div {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.65rem 0;
+    border-bottom: 1px solid #F1F5F9;
+    font-size: 0.9rem;
+}
+
+.gbp-fee-rows dt {
+    color: var(--gbp-muted);
+}
+
+.gbp-fee-rows dd {
+    margin: 0;
+    color: var(--gbp-navy);
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.gbp-fee-rows > .is-total {
+    align-items: center;
+    padding-top: 0.9rem;
+    border-bottom: 0;
+}
+
+.gbp-fee-rows > .is-total dt {
+    color: var(--gbp-navy);
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.gbp-fee-rows > .is-total dd {
+    color: #F97316;
+    font-family: 'Oswald', 'Inter', sans-serif;
+    font-size: 1.75rem;
+    font-weight: 700;
+}
+
+/* Inquiry status page */
+.gbi {
+    padding: 9rem 1.5rem 5rem;
+    background: #F8FAFC;
+}
+
+.gbi-card {
+    max-width: 44rem;
+    margin: 0 auto;
+    padding: 2.25rem;
+    border: 1px solid #E2E8F0;
+    border-top: 4px solid #F97316;
+    background: #fff;
+}
+
+@media (max-width: 640px) {
+    .gbi-card {
+        padding: 1.5rem;
+    }
+}
+
+.gbi-kicker {
+    margin: 0 0 0.75rem;
+    color: #F97316;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+}
+
+.gbi-badge {
+    display: inline-block;
+    margin-bottom: 1rem;
+    padding: 0.3rem 0.75rem;
+    border: 1px solid #CBD5E1;
+    color: #475569;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+.gbi-badge.is-ok {
+    border-color: #16A34A;
+    background: #F0FDF4;
+    color: #15803D;
+}
+
+.gbi-badge.is-warn {
+    border-color: #F97316;
+    background: #FFF7ED;
+    color: #C2410C;
+}
+
+.gbi-title {
+    margin: 0 0 0.75rem;
+    color: #0D1B2A;
+    font-family: 'Oswald', 'Inter', sans-serif;
+    font-size: clamp(1.75rem, 4vw, 2.4rem);
+    font-weight: 700;
+    line-height: 1.15;
+    text-transform: uppercase;
+}
+
+.gbi-text {
+    margin: 0 0 1.5rem;
+    color: #475569;
+    line-height: 1.75;
+}
+
+.gbi-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1.25rem;
+    margin-bottom: 2rem;
+}
+
+.gbi-link {
+    color: #2563EB;
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.gbi-link:hover {
+    text-decoration: underline;
+}
+
+.gbi-summary {
+    margin: 0 0 1.25rem;
+    border-top: 1px solid #E2E8F0;
+}
+
+.gbi-summary > div {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid #F1F5F9;
+    font-size: 0.92rem;
+}
+
+.gbi-summary dt {
+    color: #64748B;
+}
+
+.gbi-summary dd {
+    margin: 0;
+    color: #0D1B2A;
+    font-weight: 600;
+    text-align: right;
+}
+
+.gbi-help {
+    margin: 0;
+    color: #64748B;
+    font-size: 0.85rem;
+    line-height: 1.6;
+}
+
+.gbi-help a {
+    color: #2563EB;
+}
+
+/* Shared by the status pages: confirm panel + danger button (e.g. cancelling a monthly donation) */
+.gbi-btn-danger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.9rem 1.75rem;
+    border: 2px solid #DC2626;
+    background: #fff;
+    color: #B91C1C;
+    font: inherit;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.gbi-btn-danger:hover {
+    background: #DC2626;
+    color: #fff;
+}
+
+.gbi-confirm {
+    margin-bottom: 2rem;
+    padding: 1.25rem 1.25rem 0.25rem;
+    border: 1px solid #FECACA;
+    border-left: 4px solid #DC2626;
+    background: #FEF2F2;
+}
+
+.gbi-confirm p {
+    margin: 0 0 1rem;
+    color: #7F1D1D;
+    font-size: 0.92rem;
+    line-height: 1.6;
+}
+
+.gbi-confirm .gbi-actions {
+    margin-bottom: 1rem;
+}
+
+.gbi-link-btn {
+    padding: 0;
+    border: 0;
+    background: none;
+    font-family: inherit;
+    cursor: pointer;
+}

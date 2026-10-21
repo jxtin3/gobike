@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Webhook;
 
 use App\Http\Controllers\Controller;
 use App\Models\Donation;
+use App\Models\ReplicationRequest;
 use App\Services\PayMongoDonationService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -28,6 +29,17 @@ class PayMongoWebhookController extends Controller
             $uuid = $metadata['donation_uuid'] ?? null;
             $referenceNumber = $attributes['reference_number'] ?? null;
             $paymentId = $attributes['payments'][0]['id'] ?? null;
+
+            // Go Biker's Training fee paid from the Replicate Go Bike page
+            if ($replicationUuid = $metadata['replication_uuid'] ?? null) {
+                $inquiry = ReplicationRequest::where('uuid', $replicationUuid)->first();
+
+                if ($inquiry && ! $inquiry->isPaid()) {
+                    $inquiry->markPaid($paymentId);
+                }
+
+                return response('OK', 200);
+            }
 
             $donation = null;
 

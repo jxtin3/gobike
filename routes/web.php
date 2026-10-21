@@ -19,6 +19,8 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\LegalDocumentController;
 use App\Http\Controllers\NewsController;
 use App\Http\Controllers\ChatbotController;
+use App\Http\Controllers\ReplicationRequestController;
+use App\Http\Controllers\Admin\ReplicationRequestController as AdminReplicationRequestController;
 use App\Http\Controllers\TrainingRequestController;
 use App\Http\Controllers\Webhook\PayMongoWebhookController;
 use App\Http\Controllers\Webhook\PayPalWebhookController;
@@ -47,6 +49,16 @@ Route::view('/about', 'who-we-are.about');
 Route::view('/org-structure', 'who-we-are.org-structure');
 
 Route::view('/replicate-go-bike', 'what-we-do.replicate')->name('replicate');
+
+// chapter replication inquiries + early online payment of the training fee
+Route::post('/replicate-go-bike/inquiry', [ReplicationRequestController::class, 'store'])
+    ->middleware('throttle:5,1')
+    ->name('replicate.inquiry.store');
+Route::get('/replicate-go-bike/inquiry/{replicationRequest}', [ReplicationRequestController::class, 'show'])
+    ->name('replicate.inquiry.show');
+Route::get('/replicate-go-bike/inquiry/{replicationRequest}/pay', [ReplicationRequestController::class, 'pay'])
+    ->middleware('throttle:10,1')
+    ->name('replicate.inquiry.pay');
 
 Route::view('/what-we-do', 'what-we-do.programs');
 
@@ -194,6 +206,14 @@ Route::delete('/admin/operations/gobiker-messages/{message}', [\App\Http\Control
         ->name('admin.operations.training-requests.index');
     Route::patch('/admin/operations/training-requests/{trainingRequest}/status', [AdminTrainingRequestController::class, 'updateStatus'])
         ->name('admin.operations.training-requests.status');
+
+// chapter replication inquiries
+    Route::get('/admin/operations/chapter-inquiries', [AdminReplicationRequestController::class, 'index'])
+        ->name('admin.operations.chapter-inquiries.index');
+    Route::get('/admin/operations/chapter-inquiries/{replicationRequest}', [AdminReplicationRequestController::class, 'show'])
+        ->name('admin.operations.chapter-inquiries.show');
+    Route::patch('/admin/operations/chapter-inquiries/{replicationRequest}', [AdminReplicationRequestController::class, 'update'])
+        ->name('admin.operations.chapter-inquiries.update');
 
 // volunteer applications
     Route::get('/admin/operations/volunteers', [AdminVolunteerController::class, 'index'])
