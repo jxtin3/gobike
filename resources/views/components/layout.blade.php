@@ -16,7 +16,7 @@
     <meta property="og:url"         content="{{ url()->current() }}" />
     <meta property="og:title"       content="{{ $title ?? 'Go Bike — Youth-Led Community Health Responders' }}" />
     <meta property="og:description" content="{{ $description ?? 'Promotes community engagement and educational initiatives, empowering communities to build a healthier, greener, and sustainable future' }}" />
-    <meta property="og:image"       content="{{ asset('images/gobike-logo.png') }}" />
+    <meta property="og:image"       content="{{ $image ?? asset('images/gobike-logo.png') }}" />
 
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="{{ asset('images/gobike-logo.png') }}" />

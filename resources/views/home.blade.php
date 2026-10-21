@@ -518,17 +518,13 @@
             <!-- Permanent Story 1 -->
             <div class="news-card reveal reveal-delay-1">
                 <div class="news-card-image-wrap">
-                    <img src="{{ asset('images/homepage/hapi.jpg') }}" alt="Youth Responders Mobilize for Community Health Missions" class="news-card-image" loading="lazy">
+                    <img src="{{ asset('images/homepage/hapi.jpg') }}" alt="Padyarescue volunteers receiving the 2024 Healthy Aging Prize for Asian Innovation" class="news-card-image" loading="lazy">
                 </div>
                 <div class="news-card-content">
-                    <!-- <div class="news-card-date">
-                        <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25m10.5-2.25v2.25M3.75 8.25h16.5M5.25 4.5h13.5A1.5 1.5 0 0 1 20.25 6v14.25H3.75V6a1.5 1.5 0 0 1 1.5-1.5Z"/></svg>
-                        <time datetime="2026-10-14">October 14, 2026</time>
-                    </div> -->
                     <h3 class="news-card-title">Padyarescue Incorporated won the 2024 Healthy Aging Prize for Asian Innovation</h3>
                     <p class="news-card-excerpt">The program stood out for using trained youth volunteers on bicycles to bring basic health monitoring, including blood pressure and blood sugar checks, closer to older people in their communities.</p>
                     
-                    <a href="{{ url('https://ahwin.org/2024-hapi-winners/') }}" class="news-card-link mt-auto group" aria-label="Read more news: Youth Responders Mobilize for Community Health Missions">
+                    <a href="https://ahwin.org/2024-hapi-winners/" target="_blank" rel="noopener" class="news-card-link mt-auto group" aria-label="Read story: Padyarescue Incorporated won the 2024 Healthy Aging Prize for Asian Innovation (opens in a new tab)">
                         Read story
                         <svg class="h-5 w-5 shrink-0 transition-transform duration-200 group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14m-7-7 7 7-7 7"/></svg>
                     </a>
@@ -538,25 +534,21 @@
             <!-- Permanent Story 2 -->
             <div class="news-card reveal reveal-delay-2">
                 <div class="news-card-image-wrap">
-                    <img src="{{ asset('images/homepage/healthcare.jpg') }}" alt="Empowering Local Responders with Life-Saving Skills" class="news-card-image" loading="lazy">
+                    <img src="{{ asset('images/homepage/healthcare.jpg') }}" alt="Go Bike volunteers bringing free health services to a community in Pangasinan" class="news-card-image" loading="lazy">
                 </div>
                 <div class="news-card-content">
-                    <!-- <div class="news-card-date">
-                        <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25m10.5-2.25v2.25M3.75 8.25h16.5M5.25 4.5h13.5A1.5 1.5 0 0 1 20.25 6v14.25H3.75V6a1.5 1.5 0 0 1 1.5-1.5Z"/></svg>
-                        <time datetime="2026-10-08">October 08, 2026</time>
-                    </div> -->
                     <h3 class="news-card-title">GMA News Features Go Bike Project: Bringing Healthcare and Bayanihan Closer to Communities</h3>
                     <p class="news-card-excerpt">Through compassion, preparedness, and bayanihan, Go Bike continues to show how young people can help build healthier and more resilient communities.</p>
                     
-                    <a href="{{ url('https://www.gmanetwork.com/news/lifestyle/healthandwellness/784472/in-pangasinan-a-community-pantry-on-wheels-with-free-healthcare-services-too/story/') }}" class="news-card-link mt-auto group" aria-label="Read more news: Empowering Local Responders with Life-Saving Skills">
+                    <a href="https://www.gmanetwork.com/news/lifestyle/healthandwellness/784472/in-pangasinan-a-community-pantry-on-wheels-with-free-healthcare-services-too/story/" target="_blank" rel="noopener" class="news-card-link mt-auto group" aria-label="Read story: GMA News Features Go Bike Project (opens in a new tab)">
                         Read story
                         <svg class="h-5 w-5 shrink-0 transition-transform duration-200 group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14m-7-7 7 7-7 7"/></svg>
                     </a>
                 </div>
             </div>
 
-            <!-- Permanent Story 3 -->
-            <!-- <div class="news-card reveal reveal-delay-3">
+            {{-- Permanent Story 3 (hidden for now)
+            <div class="news-card reveal reveal-delay-3">
                 <div class="news-card-image-wrap">
                     <img src="{{ asset('images/reachus/story-3.jpg') }}" alt="Strengthening Community Disaster Response with LGUs" class="news-card-image" loading="lazy">
                 </div>
@@ -573,9 +565,8 @@
                         <svg class="h-5 w-5 shrink-0 transition-transform duration-200 group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14m-7-7 7 7-7 7"/></svg>
                     </a>
                 </div>
-            </div> -->
-
-            
+            </div>
+            --}}
         </div>
     </div>
 </section>

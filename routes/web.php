@@ -28,9 +28,10 @@ use App\Http\Controllers\Admin\PatientController as AdminPatientController;
 
 // pages
 Route::get('/', [HomeController::class, 'index']);
-Route::get('/news', [NewsController::class, 'index']);
+Route::get('/news', [NewsController::class, 'index'])->name('news.index');
 Route::view('/our-story', 'News.our-story')->name('our-story');
-Route::view('/news/our-story', 'News.our-story');
+Route::redirect('/news/our-story', '/our-story', 301);
+Route::get('/news/{slug}', [NewsController::class, 'show'])->name('news.show');
 
 Route::get('/gallery', GalleryController::class);
 
