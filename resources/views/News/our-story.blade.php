@@ -151,11 +151,11 @@
                         For Go Bike, every ride can represent a purpose, every volunteer can become a catalyst for change, and every community can become a place where bayanihan moves forward.
                     </p>
 
-                    @if(file_exists(public_path('images/homepage/gobike.jpeg')))
+                    @if(file_exists(public_path('images/homepage/go_bike.jpg')))
                     <figure class="my-6">
                         <div class="overflow-hidden rounded-sm bg-slate-100 border border-slate-100">
                             <img
-                                src="{{ asset('images/homepage/gobike.jpeg') }}"
+                                src="{{ asset('images/homepage/go_bike.jpg') }}"
                                 alt="Go Bike Project volunteers in action"
                                 class="w-full h-auto object-cover max-h-[440px]"
                                 loading="lazy"

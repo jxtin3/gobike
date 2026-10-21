@@ -116,7 +116,7 @@
                 <figure class="my-8">
                     <div class="overflow-hidden rounded-sm bg-slate-100 border border-slate-100">
                         <img
-                            src="{{ asset('images/whatwedo/programs/ronda.JPG') }}"
+                            src="{{ asset('images/whatwedo/programs/ronda.jpg') }}"
                             alt="Ronda Kalusugan — Go Bike conducting community health rounds"
                             class="w-full h-auto object-cover max-h-[440px]"
                             loading="lazy"
@@ -159,7 +159,7 @@
                 <figure class="my-8">
                     <div class="overflow-hidden rounded-sm bg-slate-100 border border-slate-100">
                         <img
-                            src="{{ asset('images/homepage/hapi.JPG') }}"
+                            src="{{ asset('images/homepage/hapi.jpg') }}"
                             alt="Padyarescue Incorporated receives the Healthy Aging Prize for Asian Innovation"
                             class="w-full h-auto object-cover max-h-[440px]"
                             loading="lazy"

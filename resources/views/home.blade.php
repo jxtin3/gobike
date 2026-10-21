@@ -91,7 +91,7 @@
         <div class="relative flex flex-col md:flex-row items-stretch">
             <div class="w-full md:w-[68%] relative h-[380px] md:h-[520px] overflow-hidden flex-shrink-0">
                 <img
-                    src="{{ asset('images/homepage/story1.JPG') }}"
+                    src="{{ asset('images/homepage/story1.jpg') }}"
                     class="absolute inset-0 w-full h-full object-cover"
                     alt="Youth responders in action"
                     loading="lazy"
@@ -516,7 +516,7 @@
             <!-- Permanent Story 1 -->
             <div class="news-card reveal reveal-delay-1">
                 <div class="news-card-image-wrap">
-                    <img src="{{ asset('images/homepage/hapi.JPG') }}" alt="Youth Responders Mobilize for Community Health Missions" class="news-card-image" loading="lazy">
+                    <img src="{{ asset('images/homepage/hapi.jpg') }}" alt="Youth Responders Mobilize for Community Health Missions" class="news-card-image" loading="lazy">
                 </div>
                 <div class="news-card-content">
                     <!-- <div class="news-card-date">
@@ -536,7 +536,7 @@
             <!-- Permanent Story 2 -->
             <div class="news-card reveal reveal-delay-2">
                 <div class="news-card-image-wrap">
-                    <img src="{{ asset('images/homepage/healthcare.JPG') }}" alt="Empowering Local Responders with Life-Saving Skills" class="news-card-image" loading="lazy">
+                    <img src="{{ asset('images/homepage/healthcare.jpg') }}" alt="Empowering Local Responders with Life-Saving Skills" class="news-card-image" loading="lazy">
                 </div>
                 <div class="news-card-content">
                     <!-- <div class="news-card-date">
@@ -556,7 +556,7 @@
             <!-- Permanent Story 3 -->
             <!-- <div class="news-card reveal reveal-delay-3">
                 <div class="news-card-image-wrap">
-                    <img src="{{ asset('images/homepage/story-3.jpg') }}" alt="Strengthening Community Disaster Response with LGUs" class="news-card-image" loading="lazy">
+                    <img src="{{ asset('images/reachus/story-3.jpg') }}" alt="Strengthening Community Disaster Response with LGUs" class="news-card-image" loading="lazy">
                 </div>
                 <div class="news-card-content">
                     <div class="news-card-date">

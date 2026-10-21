@@ -44,7 +44,7 @@
             <figure class="mb-10">
                 <div class="overflow-hidden rounded-sm bg-slate-100 shadow-sm border border-slate-100">
                     <img
-                        src="{{ asset('images/whatwedo/programs/ALWAR PROGRAM.jpg') }}"
+                        src="{{ asset('images/whatwedo/programs/alwar-program.jpg') }}"
                         alt="ALWAR — Association of Learners Working for Altruism and Resilience"
                         class="w-full h-auto object-cover max-h-[520px]"
                         loading="eager"

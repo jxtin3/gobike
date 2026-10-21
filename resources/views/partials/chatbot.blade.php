@@ -21,7 +21,7 @@
         {{-- Header --}}
         <div class="gobot-header flex shrink-0 items-center gap-3 bg-[#0D1B2A] px-4 py-3.5">
             <img
-                src="{{ asset('images/GoBot.jpg') }}"
+                src="{{ asset('images/gobot.jpg') }}"
                 alt=""
                 class="h-10 w-10 rounded-full object-cover ring-2 ring-white/20"
             >
@@ -129,7 +129,7 @@
             class="group relative flex h-14 w-14 items-center justify-center overflow-hidden rounded-full border-2 border-white bg-white shadow-lg shadow-black/20 ring-1 ring-black/5 transition-transform duration-200 hover:scale-105 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#2FA7FF] focus-visible:ring-offset-2"
         >
             <img
-                src="{{ asset('images/GoBot.jpg') }}"
+                src="{{ asset('images/gobot.jpg') }}"
                 alt="GoBot"
                 class="h-full w-full object-cover"
             >
