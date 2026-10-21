@@ -278,13 +278,13 @@
     </footer>
 
     <!-- GoBot chat widget -->
-    @if ($showChatbot ?? true)
+    @if (($showChatbot ?? true) && request()->is('/'))
         @include('partials.chatbot')
     @endif
 
     <!-- Back-to-top visibility script + scroll reveal  -->
     <script src="{{ asset('js/layout.js') }}"></script>
-    @if ($showChatbot ?? true)
+    @if (($showChatbot ?? true) && request()->is('/'))
         <script src="{{ asset('js/chatbot.js') }}"></script>
     @endif
 

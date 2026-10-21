@@ -56,7 +56,7 @@
                 <div :class="msg.role === 'user' ? 'flex justify-end' : 'flex justify-start'">
                     <div
                         :class="msg.role === 'user' ? 'gobot-bubble gobot-bubble-user' : 'gobot-bubble gobot-bubble-assistant'"
-                        x-text="msg.text"
+                        x-text="msg.shown ?? msg.text"
                     ></div>
                 </div>
             </template>
@@ -96,7 +96,7 @@
             ></textarea>
             <button
                 type="submit"
-                :disabled="loading || !input.trim()"
+                :disabled="loading || typing || !input.trim()"
                 aria-label="Send"
                 class="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#F97316] text-white shadow-sm transition-all hover:bg-orange-600 hover:shadow focus:outline-none focus-visible:ring-2 focus-visible:ring-[#F97316]/40 disabled:cursor-not-allowed disabled:opacity-50"
             >
@@ -107,17 +107,20 @@
         </form>
     </div>
 
-    {{-- Launcher + hover tooltip --}}
-    <div class="relative" @mouseenter="hovered = true" @mouseleave="hovered = false">
-        <div
-            x-show="hovered && !open"
+    {{-- Launcher + always-visible notice (clicking the notice also opens the chat) --}}
+    <div class="relative">
+        <button
+            type="button"
+            @click="toggle()"
+            x-show="!open"
             x-cloak
-            x-transition.opacity.duration.150ms
-            class="pointer-events-none absolute bottom-full right-0 mb-2 whitespace-nowrap rounded-lg bg-[#0D1B2A] px-3 py-1.5 text-xs font-medium text-white shadow-lg"
+            tabindex="-1"
+            aria-hidden="true"
+            class="absolute bottom-full right-0 mb-4 cursor-pointer whitespace-nowrap rounded-lg bg-[#0D1B2A] px-3.5 py-2 text-sm font-semibold text-white shadow-lg"
         >
             Chat with GoBot
-            <span class="absolute -bottom-1 right-5 h-2 w-2 rotate-45 bg-[#0D1B2A]"></span>
-        </div>
+            <span class="absolute -bottom-1 right-[1.5rem] h-2 w-2 rotate-45 bg-[#0D1B2A]"></span>
+        </button>
 
         <button
             type="button"

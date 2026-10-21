@@ -1,9 +1,11 @@
 document.addEventListener('alpine:init', () => {
     Alpine.data('chatbotWidget', () => ({
         open: false,
-        hovered: false,
         input: '',
         loading: false,
+        typing: false,
+        typeTimer: null,
+        typeFinish: null,
         error: '',
         messages: [],
         welcomed: false,
@@ -28,6 +30,7 @@ document.addEventListener('alpine:init', () => {
         close() {
             this.open = false;
             this.error = '';
+            this.finishTyping();
             this.cancelWelcome();
         },
 
@@ -39,11 +42,9 @@ document.addEventListener('alpine:init', () => {
 
             this.welcomeTimer = setTimeout(() => {
                 this.welcomeTimer = null;
-                this.messages.push({ role: 'model', text: this.welcomeText });
                 this.welcomed = true;
                 this.loading = false;
-                this.$nextTick(() => {
-                    this.scrollToBottom();
+                this.typeMessage(this.welcomeText).then(() => {
                     this.$refs.input?.focus();
                 });
             }, 1200);
@@ -58,6 +59,51 @@ document.addEventListener('alpine:init', () => {
             if (!this.welcomed) {
                 this.loading = false;
             }
+        },
+
+        // Reveal a bot reply a few characters at a time. The full text stays in `text`
+        // (used for chat history); `shown` is what the bubble displays.
+        typeMessage(text) {
+            return new Promise((resolve) => {
+                const instant = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+                this.messages.push({ role: 'model', text, shown: instant ? text : '' });
+                const index = this.messages.length - 1;
+                this.$nextTick(() => this.scrollToBottom());
+
+                if (instant) {
+                    resolve();
+                    return;
+                }
+
+                // Longer answers type a little faster so they never take more than ~4 seconds.
+                const step = Math.max(1, Math.ceil(text.length / 200));
+                let pos = 0;
+                this.typing = true;
+
+                this.typeFinish = () => {
+                    clearInterval(this.typeTimer);
+                    this.typeTimer = null;
+                    this.typeFinish = null;
+                    this.messages[index].shown = text;
+                    this.typing = false;
+                    this.$nextTick(() => this.scrollToBottom());
+                    resolve();
+                };
+
+                this.typeTimer = setInterval(() => {
+                    pos += step;
+                    if (pos >= text.length) {
+                        this.typeFinish();
+                        return;
+                    }
+                    this.messages[index].shown = text.slice(0, pos);
+                    this.scrollToBottom();
+                }, 20);
+            });
+        },
+
+        finishTyping() {
+            if (this.typeFinish) this.typeFinish();
         },
 
         scrollToBottom() {
@@ -78,7 +124,7 @@ document.addEventListener('alpine:init', () => {
 
         async send() {
             const text = this.input.trim();
-            if (!text || this.loading) return;
+            if (!text || this.loading || this.typing) return;
 
             this.error = '';
             this.input = '';
@@ -117,10 +163,8 @@ document.addEventListener('alpine:init', () => {
                     return;
                 }
 
-                this.messages.push({
-                    role: 'model',
-                    text: data.reply || 'Sorry, I could not generate a reply.',
-                });
+                this.loading = false;
+                await this.typeMessage(data.reply || 'Sorry, I could not generate a reply.');
             } catch (e) {
                 const fallback = 'Failed to reach GoBot. Please check your connection and try again.';
                 this.error = fallback;
