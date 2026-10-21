@@ -591,12 +591,7 @@
     <!-- Background Map -->
     <div class="absolute inset-0 z-0 bg-[#F8FAFC]">
         <img src="{{ asset('images/homepage/pangasinan-map.png') }}" alt="Map of Pangasinan" class="w-full h-full object-cover opacity-[0.3] mix-blend-multiply scale-105">
-        <!-- Light overlay to fade and ensure text remains readable -->
-        <!-- <div class="absolute inset-0 bg-gradient-to-t from-[#F8FAFC]/50 via-transparent to-[#F8FAFC]/90"></div> -->
     </div>
- 
-    <!--  Grid pattern overlay -->
-    <!-- <div class="cta-grid-pattern absolute inset-0 opacity-30" aria-hidden="true" style="filter: invert(1);"></div>  -->
  
  
     <div class="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center reveal">
