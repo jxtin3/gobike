@@ -44,7 +44,7 @@
                 <div class="login-card">
 
                 <div class="login-form-head">
-                    <h2>Welcome back</h2>
+                    <h2>Go Bike Admin</h2>
                     <p>Sign in to manage donations, news, and volunteer operations.</p>
                 </div>
 
