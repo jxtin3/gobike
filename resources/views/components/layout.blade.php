@@ -66,8 +66,14 @@
                 <!-- Desktop Navigation  -->
                 <nav class="hidden md:flex items-center gap-7 lg:gap-8" aria-label="Primary navigation">
                     <!-- home -->
-                    <div x-data="{ open: false }" class="relative" @mouseenter="open = true" @mouseleave="open = false">
-                        <button type="button" class="nav-underline text-sm md:text-[15px] font-medium tracking-wide transition-colors duration-200 text-white/90 hover:text-white flex items-center gap-1 pb-1">
+                    {{-- Hover opens the menu; clicking the label pins it open until an item is clicked,
+                         the label is clicked again, you click elsewhere, or press Esc. --}}
+                    <div x-data="{ open: false, pinned: false }" class="relative"
+                         @mouseenter="open = true" @mouseleave="open = pinned"
+                         @click.outside="pinned = false; open = false"
+                         @keydown.escape.window="pinned = false; open = false"
+                         @menu-pin.window="if ($event.detail !== 'who') { pinned = false; open = false }">
+                        <button type="button" @click="pinned = !pinned; open = true; if (pinned) $dispatch('menu-pin', 'who')" aria-haspopup="true" :aria-expanded="open.toString()" class="nav-underline text-sm md:text-[15px] font-medium tracking-wide transition-colors duration-200 text-white/90 hover:text-white flex items-center gap-1 pb-1">
                             Who We Are
                             <svg class="w-3.5 h-3.5 opacity-70" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5"/></svg>
                         </button>
@@ -81,8 +87,12 @@
                     <x-nav-link href="{{ url('/what-we-do') }}">What We Do</x-nav-link> 
 
                     <!-- community -->
-                    <div x-data="{ open: false }" class="relative" @mouseenter="open = true" @mouseleave="open = false">
-                        <button type="button" class="nav-underline text-sm md:text-[15px] font-medium tracking-wide transition-colors duration-200 text-white/90 hover:text-white flex items-center gap-1 pb-1">
+                    <div x-data="{ open: false, pinned: false }" class="relative"
+                         @mouseenter="open = true" @mouseleave="open = pinned"
+                         @click.outside="pinned = false; open = false"
+                         @keydown.escape.window="pinned = false; open = false"
+                         @menu-pin.window="if ($event.detail !== 'join') { pinned = false; open = false }">
+                        <button type="button" @click="pinned = !pinned; open = true; if (pinned) $dispatch('menu-pin', 'join')" aria-haspopup="true" :aria-expanded="open.toString()" class="nav-underline text-sm md:text-[15px] font-medium tracking-wide transition-colors duration-200 text-white/90 hover:text-white flex items-center gap-1 pb-1">
                             Join The Movement
                             <svg class="w-3.5 h-3.5 opacity-70" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5"/></svg>
                         </button>
@@ -101,7 +111,7 @@
                    
                     <a
                         href="{{ url('/donate') }}"
-                        class="inline-flex items-center justify-center px-6 py-2.5 md:px-7 md:py-2.5 text-xs font-bold tracking-[0.15em] uppercase bg-[#F97316] hover:bg-[#ea580c] transition-colors duration-200 text-white shadow-md rounded-none"
+                        class="inline-flex items-center justify-center px-8 py-3.5 lg:px-10 text-sm font-bold tracking-[0.15em] uppercase bg-[#F97316] hover:bg-[#ea580c] transition-colors duration-200 text-white shadow-md rounded-none"
                     >
                         Donate
                     </a>

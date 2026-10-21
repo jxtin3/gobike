@@ -1,5 +1,28 @@
 /* CONTACT / Section 5 — CTA */
 
-.contact-cta-wrapper {
-    /*  */
+/* Solid orange button, same size as the .btn-wbr buttons used by the other CTAs */
+.contact-cta-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 1rem 2.5rem;
+    border: 2px solid #F97316;
+    background: #F97316;
+    color: #fff;
+    font-size: 0.8125rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    text-decoration: none;
+    transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+.contact-cta-primary:visited {
+    color: #fff;
+}
+
+.contact-cta-primary:hover {
+    border-color: #ea580c;
+    background: #ea580c;
 }

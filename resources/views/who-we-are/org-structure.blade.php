@@ -126,7 +126,7 @@
 <!-- CTA -->
 <section class="relative py-40 text-center px-4 overflow-hidden">
     <div class="absolute inset-0 z-0">
-        <img src="{{ asset('images/whoweare/orgstructure/training1.png') }}" alt="training of volunters" class="w-full h-full object-cover">
+        <img src="{{ asset('images/whoweare/orgstructure/training.JPG') }}" alt="training of volunters" class="w-full h-full object-cover">
         <div class="absolute inset-0 bg-gradient-to-b from-[#132D6B]/20 to-[#0D1B2A]/80"></div>
     </div>
     <div class="relative z-10 max-w-2xl mx-auto reveal">
