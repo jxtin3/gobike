@@ -4135,3 +4135,89 @@ a.pager-btn:hover {
     width: 16px;
     height: 16px;
 }
+
+/* ---------- Donation detail modal ---------- */
+.don-modal {
+    width: min(640px, 94vw);
+}
+
+.don-modal .msg-inner {
+    padding: 28px 30px;
+}
+
+.don-meta {
+    grid-template-columns: 1fr 1fr;
+    gap: 14px 20px;
+    margin-bottom: 0;
+}
+
+.don-meta .don-wide {
+    grid-column: 1 / -1;
+}
+
+.don-monthly {
+    margin-top: 16px;
+    padding: 16px 20px;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    background: #fff;
+}
+
+.don-monthly[hidden],
+.don-monthly form[hidden] {
+    display: none;
+}
+
+.don-monthly-title {
+    margin: 0 0 12px;
+    color: #64748b;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+}
+
+.don-monthly-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px 20px;
+    margin-bottom: 14px;
+}
+
+.don-monthly-grid .don-label {
+    display: block;
+    margin-bottom: 4px;
+    color: #64748b;
+    font-size: 11px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+}
+
+.don-monthly-grid b {
+    color: #334155;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.don-monthly form {
+    margin: 0;
+}
+
+.don-foot {
+    margin-top: 20px;
+}
+
+.don-foot form {
+    margin: 0;
+}
+
+@media (max-width: 520px) {
+    .don-modal .msg-inner {
+        padding: 22px 18px;
+    }
+
+    .don-meta,
+    .don-monthly-grid {
+        grid-template-columns: 1fr;
+    }
+}

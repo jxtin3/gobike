@@ -1,6 +1,6 @@
 <x-layout
     title="Donate | Go Bike Project"
-    description="Support Go Bike Project by donating today. Your generous contribution will help provide a life-changing bicycles and community services to people."
+    description="Support the Go Bike Project with a one-time or monthly donation. Your gift helps youth volunteers bring health, safety and emergency response to communities across Pangasinan."
 >
 
 {{-- Full-page donate wrapper --}}
@@ -32,8 +32,8 @@
         <div class="donate-hero__content">
             <h1 class="donate-hero__title">Saving lives<br>One ride at a Time</h1>
             <p class="donate-hero__sub">
-                Your generous support helps provide life-changing<br>
-                to people around the world!
+                Your generous support helps our youth volunteers bring<br>
+                life-saving care and services to communities across Pangasinan.
             </p>
 
             {{-- Share bar --}}
@@ -76,8 +76,8 @@
                         <div class="donate-expired-banner__body">
                             <p class="donate-expired-banner__title">Session expired</p>
                             <p class="donate-expired-banner__text">
-                                Your BPI / online banking session timed out before the payment could be completed.
-                                Click below to get a fresh link — no need to re-enter your details.
+                                Your GCash or online banking session timed out before the payment was completed.
+                                Click below to get a fresh link. There's no need to re-enter your details.
                             </p>
                             <a
                                 href="{{ route('donate.retry', $cancelledDonation) }}"
@@ -113,7 +113,7 @@
                     </div>
 
                     {{-- Once / Monthly toggle --}}
-                    <!-- <div class="donate-freq">
+                    <div class="donate-freq">
                         <button
                             id="freq-once"
                             class="donate-freq__btn"
@@ -130,9 +130,9 @@
 
                     <div x-show="freq === 'monthly'" x-collapse>
                         <p class="donate-freq__note" style="padding-top: 0.5rem;">
-                            Monthly donations are processed via PayPal.
+                            Monthly donations are processed via PayPal and renew every month. You can cancel anytime.
                         </p>
-                    </div> -->
+                    </div>
 
                     {{-- Preset amounts --}}
                     <div class="donate-amounts">
@@ -141,7 +141,7 @@
                                 class="donate-amount__btn"
                                 :class="{ 'is-active': amount === amt && !customMode }"
                                 @click="selectPreset(amt)"
-                                x-text="'$' + amt"
+                                x-text="'$' + amt + (freq === 'monthly' ? '/mo' : '')"
                             ></button>
                         </template>
                     </div>
@@ -167,6 +167,12 @@
                         @click="goStep2()"
                         :disabled="effectiveAmount <= 0"
                     >Donate</button>
+
+                    <p class="donate-help">
+                        <b>Already giving monthly?</b> You can cancel anytime in your PayPal account
+                        (Settings &rarr; Payments &rarr; Manage automatic payments), or email us at
+                        <a href="mailto:gobike@pydn.org">gobike@pydn.org</a> and we'll cancel it for you.
+                    </p>
                 </div>
 
                  <!-- ---- STEP 2: Your Details ----  -->
@@ -327,7 +333,7 @@
                             :class="{ 'is-active': paymentMethod === 'bank' }"
                             :disabled="freq === 'monthly'"
                             @click="paymentMethod = 'bank'"
-                        >ATM / Bank</button>
+                        >Online Banking</button>
                     </div>
 
                     <p class="donate-freq__note" x-show="freq === 'monthly'" x-cloak>
@@ -389,7 +395,7 @@
                     {{-- Bank / ATM panel --}}
                     <div x-show="paymentMethod === 'bank'" x-collapse class="donate-form">
                         <div class="donate-pay-panel donate-pay-panel--bank">
-                            <p class="donate-pay-panel__title">Pay via Bank / Online Banking</p>
+                            <p class="donate-pay-panel__title">Pay with Online Banking</p>
                             <p class="donate-pay-panel__text">
                                 You will be redirected to pay through your bank's online portal. Supported banks include BPI, UnionBank, BDO, Metrobank, and Landbank.
                             </p>
@@ -427,6 +433,14 @@
                         </div>
 
                         <p x-show="submitError" x-text="submitError" class="donate-pay-error" role="alert"></p>
+
+                        <p class="donate-legal">
+                            <span x-show="freq === 'monthly'" x-cloak>Your donation renews every month until you cancel, and you can cancel anytime. </span>
+                            By donating, you agree to our
+                            <a href="{{ route('terms') }}" target="_blank" rel="noopener">Terms &amp; Conditions</a>
+                            (including our refund policy) and
+                            <a href="{{ route('privacy-policy') }}" target="_blank" rel="noopener">Privacy Policy</a>.
+                        </p>
                     </div>
 
                     {{-- Donate CTA --}}
@@ -443,7 +457,7 @@
                             <span x-show="!isSubmitting">Donate with </span>
                             <!-- <span x-show="!isSubmitting" x-text="paymentMethodLabel()"></span> -->
                             <span x-show="isSubmitting">Redirecting…</span>
-                            <span x-show="!isSubmitting" x-text="'$' + totalAmount.toFixed(2)"></span>
+                            <span x-show="!isSubmitting" x-text="'$' + totalAmount.toFixed(2) + (freq === 'monthly' ? ' / month' : '')"></span>
                         </button>
                     </div>
                 </div>
@@ -455,10 +469,30 @@
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
                         </div>
                         <h2 class="donate-thankyou__title">Thank You!</h2>
-                        <p class="donate-thankyou__sub">
-                            Your donation of <strong>${{ number_format($paidDonation->total_usd, 2) }}</strong> has been received.<br>
-                            Your gift is an investment in the next generation's potential.
+                        @if ($paidDonation->isMonthlySubscription())
+                            <p class="donate-thankyou__sub">
+                                Your monthly donation of <strong>${{ number_format($paidDonation->total_usd, 2) }}</strong> is set up.<br>
+                                PayPal will charge it every month until you cancel.
+                            </p>
+                        @else
+                            <p class="donate-thankyou__sub">
+                                Your donation of <strong>${{ number_format($paidDonation->total_usd, 2) }}</strong>
+                                @if ($paidDonation->payment_method !== 'paypal' && $paidDonation->amount_php)
+                                    (₱{{ number_format($paidDonation->amount_php, 2) }})
+                                @endif
+                                has been received.<br>
+                                Your gift is an investment in the next generation's potential.
+                            </p>
+                        @endif
+                        <p class="donate-thankyou__details">
+                            Reference: <strong>{{ $paidDonation->reference }}</strong><br>
+                            {{ $paidDonation->payment_method === 'paypal' ? 'PayPal' : 'PayMongo' }} has emailed your payment receipt.
                         </p>
+                        @if ($paidDonation->isMonthlySubscription())
+                            <a href="{{ route('donate.monthly', $paidDonation) }}" class="donate-thankyou__manage">
+                                Manage or cancel your monthly donation
+                            </a>
+                        @endif
                         <a href="{{ url('/') }}" class="donate-cta donate-cta--center">Back to Home</a>
                     </div>
                 </div>
@@ -472,7 +506,7 @@
 </div> <!-- ---- /donate-page ----  -->
 
 <x-slot:scripts>
-<script src="{{ asset('js/donate.js') }}"></script>
+<script src="{{ asset('js/donate.js') }}?v={{ filemtime(public_path('js/donate.js')) }}"></script>
 </x-slot:scripts>
 
 </x-layout>

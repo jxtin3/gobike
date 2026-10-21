@@ -99,7 +99,7 @@ class DonationController extends Controller
                 $subscription = $paypal->getSubscriptionDetails($donation->paypal_subscription_id);
 
                 if ($paypal->isSubscriptionActive($subscription)) {
-                    $donation->update(['status' => 'paid']);
+                    $donation->update(['status' => 'paid', 'subscription_status' => 'active']);
                 }
             } catch (\Throwable) {
                 return redirect()
@@ -137,6 +137,62 @@ class DonationController extends Controller
         return view('donate', [
             'paidDonation' => $donation->fresh(),
         ]);
+    }
+
+    /**
+     * Private page where a donor manages their monthly donation (link shown on the thank-you screen).
+     */
+    public function manageMonthly(Donation $donation, PayPalDonationService $paypal): View
+    {
+        abort_unless($donation->isMonthlySubscription(), 404);
+
+        $nextChargeAt = null;
+
+        // Refresh from PayPal so the page is right even if a webhook was missed (e.g. cancelled in PayPal).
+        try {
+            $subscription = $paypal->getSubscriptionDetails($donation->paypal_subscription_id);
+            $status = $paypal->localSubscriptionStatus($subscription);
+
+            if ($status && $status !== $donation->subscription_status) {
+                $donation->update([
+                    'subscription_status' => $status,
+                    'cancelled_at' => $status === 'cancelled' ? ($donation->cancelled_at ?? now()) : $donation->cancelled_at,
+                ]);
+            }
+
+            $next = $subscription['billing_info']['next_billing_time'] ?? null;
+            $nextChargeAt = $next && $status === 'active' ? \Illuminate\Support\Carbon::parse($next) : null;
+        } catch (Throwable $e) {
+            Log::warning('Could not refresh PayPal subscription', ['donation_id' => $donation->id, 'error' => $e->getMessage()]);
+        }
+
+        return view('donate-monthly', [
+            'donation' => $donation->fresh()->loadCount('payments'),
+            'nextChargeAt' => $nextChargeAt,
+        ]);
+    }
+
+    public function cancelMonthly(Donation $donation, PayPalDonationService $paypal): RedirectResponse
+    {
+        abort_unless($donation->isMonthlySubscription(), 404);
+
+        if (! $donation->canCancelSubscription()) {
+            return redirect()->route('donate.monthly', $donation);
+        }
+
+        try {
+            $paypal->cancelSubscription($donation->paypal_subscription_id, 'Cancelled by the donor on the Go Bike website.');
+        } catch (Throwable $e) {
+            return redirect()->route('donate.monthly', $donation)->with(
+                'error',
+                'We could not cancel your monthly donation right now. Please try again in a few minutes, or cancel it in your PayPal account.'
+            );
+        }
+
+        $donation->update(['subscription_status' => 'cancelled', 'cancelled_at' => now()]);
+
+        return redirect()->route('donate.monthly', $donation)
+            ->with('success', 'Your monthly donation has been cancelled. You will not be charged again.');
     }
 
     public function cancel(Donation $donation): View

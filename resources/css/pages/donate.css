@@ -1004,3 +1004,59 @@
 .donate-expired-banner__btn:active {
     transform: translateY(0);
 }
+/* -- Terms / privacy notice above the donate button -- */
+.donate-legal {
+    margin: 0.85rem 0 0;
+    color: var(--donate-muted, #6b7280);
+    font-size: 0.75rem;
+    line-height: 1.55;
+}
+
+.donate-legal a {
+    color: #2563EB;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+/* -- Thank-you details (reference, amount in PHP, monthly management) -- */
+.donate-thankyou__details {
+    margin: 0 0 1.25rem;
+    color: var(--donate-muted, #6b7280);
+    font-size: 0.82rem;
+    line-height: 1.6;
+}
+
+.donate-thankyou__details strong {
+    color: #111827;
+}
+
+.donate-thankyou__manage {
+    display: block;
+    margin: 0 0 1.25rem;
+    color: #2563EB;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+/* -- "Already giving monthly?" help under the first step -- */
+.donate-help {
+    margin: 1rem 1.75rem 0;
+    padding-top: 0.9rem;
+    border-top: 1px solid #e5e7eb;
+    color: var(--donate-muted, #6b7280);
+    font-size: 0.75rem;
+    line-height: 1.6;
+    text-align: center;
+}
+
+.donate-help b {
+    color: #374151;
+}
+
+.donate-help a {
+    color: #2563EB;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}

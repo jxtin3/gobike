@@ -7,6 +7,8 @@ use App\Models\Donation;
 use App\Services\PayPalDonationService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Log;
 
 class PayPalWebhookController extends Controller
 {
@@ -22,23 +24,32 @@ class PayPalWebhookController extends Controller
         }
 
         $payload = $request->json()->all();
-        $eventType = $payload['event_type'] ?? '';
+        $resource = $payload['resource'] ?? [];
 
-        if ($eventType === 'PAYMENT.CAPTURE.COMPLETED') {
-            $this->markPaidFromCapture($payload);
-        } elseif ($eventType === 'CHECKOUT.ORDER.APPROVED') {
-            $this->captureAndMarkPaid($payload, $paypal);
-        } elseif ($eventType === 'BILLING.SUBSCRIPTION.ACTIVATED' || $eventType === 'PAYMENT.SALE.COMPLETED') {
-            $this->markPaidFromSubscription($payload);
-        }
+        match ($payload['event_type'] ?? '') {
+            // One-time donations
+            'PAYMENT.CAPTURE.COMPLETED' => $this->markPaidFromCapture($resource),
+            'CHECKOUT.ORDER.APPROVED' => $this->captureAndMarkPaid($resource, $paypal),
+
+            // Monthly donations (subscriptions); resource.id is the subscription id
+            'BILLING.SUBSCRIPTION.ACTIVATED',
+            'BILLING.SUBSCRIPTION.RE-ACTIVATED' => $this->updateSubscription($resource['id'] ?? null, 'active'),
+            'BILLING.SUBSCRIPTION.SUSPENDED' => $this->updateSubscription($resource['id'] ?? null, 'suspended'),
+            'BILLING.SUBSCRIPTION.CANCELLED' => $this->updateSubscription($resource['id'] ?? null, 'cancelled'),
+            'BILLING.SUBSCRIPTION.EXPIRED' => $this->updateSubscription($resource['id'] ?? null, 'expired'),
+            'BILLING.SUBSCRIPTION.PAYMENT.FAILED' => Log::warning('PayPal monthly donation payment failed', ['subscription_id' => $resource['id'] ?? null]),
+
+            // Each monthly charge; resource.billing_agreement_id is the subscription id
+            'PAYMENT.SALE.COMPLETED' => $this->recordSubscriptionPayment($resource),
+
+            default => null,
+        };
 
         return response('OK', 200);
     }
 
-   
-    private function markPaidFromCapture(array $payload): void
+    private function markPaidFromCapture(array $resource): void
     {
-        $resource = $payload['resource'] ?? [];
         $orderId = $resource['supplementary_data']['related_ids']['order_id'] ?? null;
 
         if (! $orderId) {
@@ -52,29 +63,58 @@ class PayPalWebhookController extends Controller
         }
     }
 
-
-    private function markPaidFromSubscription(array $payload): void
+    private function updateSubscription(?string $subscriptionId, string $status): void
     {
-        $resource = $payload['resource'] ?? [];
+        $donation = $subscriptionId ? Donation::where('paypal_subscription_id', $subscriptionId)->first() : null;
 
-        // BILLING.SUBSCRIPTION.ACTIVATED: resource.id is the subscription id.
-        // PAYMENT.SALE.COMPLETED: resource.billing_agreement_id is the subscription id.
-        $subscriptionId = $resource['billing_agreement_id'] ?? $resource['id'] ?? null;
-
-        if (! $subscriptionId) {
+        if (! $donation) {
             return;
         }
 
-        $donation = Donation::where('paypal_subscription_id', $subscriptionId)->first();
+        $updates = ['subscription_status' => $status];
 
-        if ($donation && $donation->status !== 'paid') {
-            $donation->update(['status' => 'paid']);
+        if ($status === 'active') {
+            $updates['status'] = 'paid';
         }
+
+        if ($status === 'cancelled' && ! $donation->cancelled_at) {
+            $updates['cancelled_at'] = now();
+        }
+
+        $donation->update($updates);
     }
-  
-    private function captureAndMarkPaid(array $payload, PayPalDonationService $paypal): void
+
+    private function recordSubscriptionPayment(array $resource): void
     {
-        $resource = $payload['resource'] ?? [];
+        $subscriptionId = $resource['billing_agreement_id'] ?? null;
+        $saleId = $resource['id'] ?? null;
+        $donation = $subscriptionId ? Donation::where('paypal_subscription_id', $subscriptionId)->first() : null;
+
+        if (! $donation || ! $saleId) {
+            return;
+        }
+
+        $donation->payments()->firstOrCreate(
+            ['gateway_payment_id' => $saleId],
+            [
+                'gateway' => 'paypal',
+                'amount' => $resource['amount']['total'] ?? $donation->total_usd,
+                'currency' => $resource['amount']['currency'] ?? 'USD',
+                'paid_at' => isset($resource['create_time']) ? Carbon::parse($resource['create_time']) : now(),
+            ],
+        );
+
+        // A successful charge means the subscription is running (unless it was cancelled since).
+        $donation->update([
+            'status' => 'paid',
+            'subscription_status' => in_array($donation->subscription_status, ['cancelled', 'expired'], true)
+                ? $donation->subscription_status
+                : 'active',
+        ]);
+    }
+
+    private function captureAndMarkPaid(array $resource, PayPalDonationService $paypal): void
+    {
         $referenceId = $resource['purchase_units'][0]['reference_id'] ?? null;
         $orderId = $resource['id'] ?? null;
 

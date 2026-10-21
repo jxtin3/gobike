@@ -8,8 +8,6 @@ function donateApp(config = {}) {
         customAmount: '',
         donorType: 'individual',
         platformFee: 1.88,
-        showEmailReceipt: false,
-        receiptEmail: '',
         paymentMethod: 'gcash',
         usdToPhp: config.usdToPhp ?? 58,
         checkoutUrl: config.checkoutUrl ?? '/donate/checkout',
@@ -103,7 +101,7 @@ function donateApp(config = {}) {
         },
 
         paymentMethodLabel() {
-            const labels = { gcash: 'GCash', paypal: 'PayPal', bank: 'Bank / Online Banking' };
+            const labels = { gcash: 'GCash', paypal: 'PayPal', bank: 'Online Banking' };
             return labels[this.paymentMethod] ?? 'Payment';
         },
 
@@ -131,7 +129,6 @@ function donateApp(config = {}) {
                 state: this.form.state,
                 country: this.form.country,
                 other_country: this.form.country === 'other' ? this.form.otherCountry : null,
-                receipt_email: this.showEmailReceipt ? this.receiptEmail : null,
             };
 
             try {

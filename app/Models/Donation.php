@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
 
 class Donation extends Model
@@ -24,8 +25,17 @@ class Donation extends Model
         'payment_method',
         'status',
         'paypal_order_id', 'paypal_subscription_id',
+        'subscription_status', 'cancelled_at',
         'paymongo_session_id', 'paymongo_payment_id',
         'receipt_email',
+    ];
+
+    /** Readable labels for a monthly donation's PayPal subscription state. */
+    public const SUBSCRIPTION_LABELS = [
+        'active' => 'Active',
+        'suspended' => 'Paused (payment failed)',
+        'cancelled' => 'Cancelled',
+        'expired' => 'Ended',
     ];
 
     protected function casts(): array
@@ -34,7 +44,43 @@ class Donation extends Model
             'amount_usd' => 'decimal:2',
             'amount_php' => 'decimal:2',
             'platform_fee_usd' => 'decimal:2',
+            'cancelled_at' => 'datetime',
         ];
+    }
+
+    public function payments(): HasMany
+    {
+        return $this->hasMany(DonationPayment::class);
+    }
+
+    /** A confirmed monthly donation backed by a PayPal subscription. */
+    public function isMonthlySubscription(): bool
+    {
+        return $this->frequency === 'monthly'
+            && $this->status === 'paid'
+            && filled($this->paypal_subscription_id);
+    }
+
+    /** Monthly donations can be cancelled while PayPal may still charge them. */
+    public function canCancelSubscription(): bool
+    {
+        return $this->isMonthlySubscription()
+            && in_array($this->subscription_status ?? 'active', ['active', 'suspended'], true);
+    }
+
+    public function getSubscriptionLabelAttribute(): ?string
+    {
+        if (! $this->isMonthlySubscription()) {
+            return null;
+        }
+
+        return self::SUBSCRIPTION_LABELS[$this->subscription_status ?? 'active'] ?? ucfirst((string) $this->subscription_status);
+    }
+
+    /** Short reference donors can quote when they contact us, e.g. GBD-3F2A9C1D. */
+    public function getReferenceAttribute(): string
+    {
+        return 'GBD-'.strtoupper(substr(str_replace('-', '', (string) $this->uuid), 0, 8));
     }
 
     protected static function booted(): void

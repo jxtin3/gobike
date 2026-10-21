@@ -207,6 +207,69 @@ class PayPalDonationService
         return ($subscription['status'] ?? '') === 'ACTIVE';
     }
 
+    /**
+     * Stop a monthly donation. PayPal will not charge it again.
+     * A subscription that is already cancelled counts as success.
+     */
+    public function cancelSubscription(string $subscriptionId, string $reason): void
+    {
+        $response = Http::withToken($this->getAccessToken())
+            ->acceptJson()
+            ->post("{$this->apiBaseUrl()}/v1/billing/subscriptions/{$subscriptionId}/cancel", [
+                'reason' => mb_substr($reason, 0, 128),
+            ]);
+
+        if ($response->successful()) {
+            return;
+        }
+
+        $issue = $response->json('details.0.issue');
+
+        if ($response->status() === 422 && $issue === 'SUBSCRIPTION_STATUS_INVALID') {
+            return; // already cancelled or expired
+        }
+
+        Log::error('PayPal subscription cancellation failed', ['subscription_id' => $subscriptionId, 'response' => $response->json()]);
+
+        throw new RuntimeException('PayPal subscription cancellation failed: '.($response->json('message') ?? $response->body()));
+    }
+
+    /**
+     * Could PayPal still charge this subscription? Used before deleting a donation record.
+     *
+     * @return 'billing'|'stopped'|'not_found'
+     *
+     * @throws RuntimeException when PayPal can't be reached or answers unexpectedly
+     */
+    public function subscriptionBillingState(string $subscriptionId): string
+    {
+        $response = Http::withToken($this->getAccessToken())
+            ->acceptJson()
+            ->get("{$this->apiBaseUrl()}/v1/billing/subscriptions/{$subscriptionId}");
+
+        if ($response->status() === 404) {
+            return 'not_found';
+        }
+
+        if (! $response->successful()) {
+            throw new RuntimeException('Could not check the PayPal subscription: '.$response->status());
+        }
+
+        return in_array($response->json('status'), ['ACTIVE', 'SUSPENDED', 'APPROVED'], true) ? 'billing' : 'stopped';
+    }
+
+    /** Map PayPal's subscription status to ours (active, suspended, cancelled, expired), or null if still pending. */
+    public function localSubscriptionStatus(array $subscription): ?string
+    {
+        return match ($subscription['status'] ?? '') {
+            'ACTIVE' => 'active',
+            'SUSPENDED' => 'suspended',
+            'CANCELLED' => 'cancelled',
+            'EXPIRED' => 'expired',
+            default => null,
+        };
+    }
+
 
     
     /**

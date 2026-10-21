@@ -105,6 +105,10 @@ Route::post('/donate/checkout', [DonationController::class, 'checkout'])->middle
 Route::get('/donate/success/{donation}', [DonationController::class, 'success'])->name('donate.success');
 Route::get('/donate/cancel/{donation}', [DonationController::class, 'cancel'])->name('donate.cancel');
 Route::get('/donate/retry/{donation}', [DonationController::class, 'retry'])->name('donate.retry');
+Route::get('/donate/monthly/{donation}', [DonationController::class, 'manageMonthly'])->name('donate.monthly');
+Route::post('/donate/monthly/{donation}/cancel', [DonationController::class, 'cancelMonthly'])
+    ->middleware('throttle:5,1')
+    ->name('donate.monthly.cancel');
 
 Route::post('/webhooks/paypal', [PayPalWebhookController::class, 'handle']);
 Route::post('/webhooks/paymongo', [PayMongoWebhookController::class, 'handle']);
@@ -200,6 +204,10 @@ Route::delete('/admin/operations/gobiker-messages/{message}', [\App\Http\Control
 // donations
     Route::get('/admin/operations/donations', [AdminDonationController::class, 'index'])
         ->name('admin.operations.donations.index');
+    Route::post('/admin/operations/donations/{donation}/cancel-subscription', [AdminDonationController::class, 'cancelSubscription'])
+        ->name('admin.operations.donations.cancel-subscription');
+    Route::delete('/admin/operations/donations/{donation}', [AdminDonationController::class, 'destroy'])
+        ->name('admin.operations.donations.destroy');
 
 // training plan requests
     Route::get('/admin/operations/training-requests', [AdminTrainingRequestController::class, 'index'])
