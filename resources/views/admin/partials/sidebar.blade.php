@@ -68,7 +68,7 @@
 
         <p class="side-group">Legal</p>
         <a class="side-link" href="{{ route('admin.operations.legal.terms') }}" aria-current="{{ $current('admin.operations.legal.*') }}">
-            <x-admin.icon name="file-text" /><span>Terms &amp; Privacy</span>
+            <x-admin.icon name="file-text" /><span>Legal Pages</span>
         </a>
 
     </nav>

@@ -277,15 +277,22 @@
         <div class="border-t border-white/[0.07] relative z-10">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 flex flex-col sm:flex-row items-center justify-between gap-3 text-[11px] text-white/30">
                 <p>&copy; {{ date('Y') }} OneGoBike. All rights reserved. &middot; Pangasinan, Philippines</p>
-                <div class="flex items-center gap-4">
-                    <a href="{{ url('/privacy-policy') }}" class="hover:text-white/60 transition-colors duration-200">Privacy Policy</a>
+                <div class="flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
+                    <a href="{{ route('privacy-policy') }}" class="hover:text-white/60 transition-colors duration-200">Privacy Policy</a>
                     <span class="opacity-30">&middot;</span>
-                    <a href="{{ url('/terms') }}" class="hover:text-white/60 transition-colors duration-200">Terms &amp; Conditions</a>
+                    <a href="{{ route('terms') }}" class="hover:text-white/60 transition-colors duration-200">Terms &amp; Conditions</a>
+                    <span class="opacity-30">&middot;</span>
+                    <a href="{{ route('cookie-policy') }}" class="hover:text-white/60 transition-colors duration-200">Cookie Policy</a>
+                    <span class="opacity-30">&middot;</span>
+                    <button type="button" @click="$dispatch('open-cookie-settings')" class="cursor-pointer hover:text-white/60 transition-colors duration-200">Cookie settings</button>
                 </div>
             </div>
         </div>
 
     </footer>
+
+    <!-- Cookie consent banner -->
+    @include('partials.cookie-consent')
 
     <!-- GoBot chat widget -->
     @if (($showChatbot ?? true) && request()->is('/'))

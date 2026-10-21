@@ -352,6 +352,13 @@
                                 class="w-full px-4 py-3.5 bg-white/5 border border-white/10 text-sm text-white placeholder-white/25 focus:outline-none focus:border-[#2FA7FF] focus:bg-white/8 transition-all duration-200 resize-none">{{ old('message') }}</textarea>
                         </div>
 
+                        <p class="text-xs text-white/40 leading-relaxed">
+                            By submitting, you agree to our
+                            <a href="{{ route('terms') }}" class="text-[#2FA7FF] hover:underline">Terms</a>
+                            and acknowledge our
+                            <a href="{{ route('privacy-policy') }}" class="text-[#2FA7FF] hover:underline">Privacy Policy</a>.
+                        </p>
+
                         <div class="flex flex-col sm:flex-row gap-4 items-start sm:items-center pt-2">
                             <button type="submit"
                                 class="inline-flex items-center justify-center gap-2.5 px-10 py-4 text-xs font-black tracking-widest uppercase bg-[#F97316] text-white hover:bg-[#ea6a0e] transition-colors duration-200">

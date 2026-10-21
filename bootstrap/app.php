@@ -25,6 +25,11 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->validateCsrfTokens(except: [
             'webhooks/*',
         ]);
+
+        // Set by the cookie banner in the browser (plain "all" / "essential"), so it isn't encrypted.
+        $middleware->encryptCookies(except: [
+            'gobike_cookie_consent',
+        ]);
         $middleware->append(\App\Http\Middleware\SecurityHeaders::class);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

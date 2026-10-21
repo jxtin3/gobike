@@ -362,7 +362,7 @@
                         {{-- Consent + submit --}}
                         <label class="vol-check" style="margin-bottom:1.25rem;">
                             <input type="checkbox" x-model="form.agree" required>
-                            <span>I agree to the collection and use of my information for volunteer processing, as described in the <a href="{{ url('/privacy-policy') }}" target="_blank" rel="noopener">Privacy Policy</a>.</span>
+                            <span>I have read and agree to the <a href="{{ route('terms') }}" target="_blank" rel="noopener">Terms &amp; Conditions</a> and consent to the collection and use of my information to process my application, as described in the <a href="{{ route('privacy-policy') }}" target="_blank" rel="noopener">Privacy Policy</a>.</span>
                         </label>
 
                         <div x-show="error" x-cloak class="vol-alert is-error">

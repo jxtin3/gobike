@@ -298,3 +298,82 @@ header a:visited {
     border-color: rgba(255, 255, 255, 0.06);
     box-shadow: 0 4px 32px rgba(0, 0, 0, 0.30);
 }
+/*  Cookie consent banner (resources/views/partials/cookie-consent.blade.php)  */
+.cookie-banner {
+    position: fixed;
+    right: 1rem;
+    bottom: 1rem;
+    left: 1rem;
+    z-index: 60;
+    max-width: 28rem;
+    padding: 1.25rem 1.25rem 1.15rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: #0D1B2A;
+    box-shadow: 0 20px 45px rgba(0, 0, 0, 0.35);
+    color: rgba(255, 255, 255, 0.78);
+}
+
+@media (min-width: 640px) {
+    .cookie-banner {
+        right: auto;
+        bottom: 1.5rem;
+        left: 1.5rem;
+    }
+}
+
+.cookie-banner-title {
+    margin: 0 0 0.4rem;
+    color: #fff;
+    font-size: 0.95rem;
+    font-weight: 700;
+}
+
+.cookie-banner-text {
+    margin: 0 0 1rem;
+    font-size: 0.85rem;
+    line-height: 1.6;
+}
+
+.cookie-banner-text a {
+    color: #2FA7FF;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.cookie-banner-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+}
+
+.cookie-btn {
+    padding: 0.7rem 1.25rem;
+    border: 2px solid transparent;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.cookie-btn--primary {
+    border-color: #F97316;
+    background: #F97316;
+    color: #fff;
+}
+
+.cookie-btn--primary:hover {
+    border-color: #ea580c;
+    background: #ea580c;
+}
+
+.cookie-btn--ghost {
+    border-color: rgba(255, 255, 255, 0.35);
+    background: transparent;
+    color: #fff;
+}
+
+.cookie-btn--ghost:hover {
+    border-color: #fff;
+}

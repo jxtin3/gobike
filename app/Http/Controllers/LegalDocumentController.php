@@ -20,4 +20,11 @@ class LegalDocumentController extends Controller
 
         return view('pages.terms', compact('document'));
     }
+
+    public function cookies(): View
+    {
+        $document = LegalDocument::getByKey('cookies');
+
+        return view('pages.cookies', compact('document'));
+    }
 }

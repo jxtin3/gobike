@@ -6,6 +6,9 @@ use Illuminate\Database\Eloquent\Model;
 
 class LegalDocument extends Model
 {
+    /** The legal pages the site publishes, in the order they appear in tabs. */
+    public const KEYS = ['privacy', 'terms', 'cookies'];
+
     protected $fillable = [
         'key',
         'title',
@@ -22,86 +25,124 @@ class LegalDocument extends Model
 
     public static function getByKey(string $key): self
     {
-        $doc = static::where('key', $key)->first();
-
-        if ($doc) {
-            return $doc;
-        }
-
-        // Fallback default instances if not in database
-        $defaults = [
-            'privacy' => [
-                'title' => 'Privacy Policy',
+        return static::where('key', $key)->first()
+            ?? new static(['key' => $key] + (static::defaults($key) ?? [
+                'title' => ucfirst($key),
                 'last_updated' => date('F d, Y'),
-                'sections' => [
-                    [
-                        'title' => '1. Information We Collect',
-                        'content' => 'We collect information that you provide directly to us when you volunteer, donate, or contact us. This may include your name, email address, phone number, and any other information you choose to provide.',
-                    ],
-                    [
-                        'title' => '2. How We Use Your Information',
-                        'content' => 'We use the information we collect to operate our programs, communicate with you, process donations, and improve our community services across Pangasinan.',
-                    ],
-                    [
-                        'title' => '3. Sharing of Information',
-                        'content' => 'We do not share your personal information with third parties except as necessary to provide our services, coordinate with our government partners (such as DILG or DOH), or comply with the law.',
-                    ],
-                    [
-                        'title' => '4. Security',
-                        'content' => 'We take reasonable measures to help protect your personal information from loss, theft, misuse, and unauthorized access, disclosure, alteration, and destruction.',
-                    ],
-                    [
-                        'title' => '5. Contact Us',
-                        'content' => 'If you have any questions about this Privacy Policy, please contact our community desk through the contact page.',
-                    ],
-                ],
-            ],
-            'terms' => [
-                'title' => 'Terms & Conditions',
-                'last_updated' => date('F d, Y'),
-                'sections' => [
-                    [
-                        'title' => '1. Acceptance of Terms',
-                        'content' => 'By accessing and using the Go Bike website and participating in our programs, you accept and agree to be bound by the terms and provisions of this agreement.',
-                    ],
-                    [
-                        'title' => '2. Volunteer Conduct',
-                        'content' => 'Volunteers and community responders are expected to maintain the highest standards of respect, safety, and community service. Go Bike reserves the right to revoke volunteer status for any behavior that violates our community guidelines.',
-                    ],
-                    [
-                        'title' => '3. Use of Site',
-                        'content' => 'You may use our site for lawful purposes and in accordance with these Terms. You agree not to use the site in any way that violates any applicable national or local law or regulation.',
-                    ],
-                    [
-                        'title' => '4. Intellectual Property',
-                        'content' => 'The content, features, and functionality of this website are owned by Go Bike and are protected by copyright, trademark, and other intellectual property laws.',
-                    ],
-                    [
-                        'title' => '5. Changes to Terms',
-                        'content' => 'We reserve the right to modify these terms at any time. Your continued use of the site or participation in our programs constitutes acceptance of those changes.',
-                    ],
-                ],
-            ],
-        ];
+                'sections' => [],
+            ]));
+    }
 
-        return new static(array_merge(['key' => $key], $defaults[$key] ?? [
-            'title' => ucfirst($key),
-            'last_updated' => date('F d, Y'),
-            'sections' => [],
-        ]));
+    /**
+     * The default text of a legal page, from resources/legal/{key}.php.
+     *
+     * @return array{title: string, last_updated: string, sections: array<int, array{title: string, content: string}>}|null
+     */
+    public static function defaults(string $key): ?array
+    {
+        $path = resource_path("legal/{$key}.php");
+
+        return in_array($key, self::KEYS, true) && is_file($path) ? require $path : null;
     }
 
     public function renderSectionContent(?string $content): string
     {
-        if (empty($content)) {
+        if (blank($content)) {
             return '';
         }
 
-        // If it contains custom HTML tags, allow them
+        // Content that already contains HTML is shown as written (only admins can edit it).
         if (strip_tags($content) !== $content) {
             return $content;
         }
 
-        return nl2br(e($content));
+        return static::formatPlainText($content);
+    }
+
+    /**
+     * Turn the plain text typed in the admin legal editor into safe HTML:
+     * a blank line starts a new paragraph, lines starting with "- " become a bulleted list,
+     * "1. " a numbered list, **text** is bold, [text](/path or https://…) is a link,
+     * and bare URLs and email addresses become links.
+     */
+    public static function formatPlainText(string $text): string
+    {
+        $html = '';
+
+        foreach (preg_split('/\R{2,}/', trim($text)) as $block) {
+            $lines = [];
+            $listType = null;
+            $items = [];
+
+            $flushLines = function () use (&$lines, &$html) {
+                if ($lines) {
+                    $html .= '<p>'.implode('<br>', $lines).'</p>';
+                    $lines = [];
+                }
+            };
+            $flushList = function () use (&$listType, &$items, &$html) {
+                if ($items) {
+                    $html .= "<{$listType}>".implode('', array_map(fn ($item) => "<li>{$item}</li>", $items))."</{$listType}>";
+                    $items = [];
+                }
+                $listType = null;
+            };
+
+            foreach (preg_split('/\R/', trim($block)) as $line) {
+                $line = trim($line);
+
+                if (preg_match('/^[-•]\s+(.+)$/u', $line, $match)) {
+                    $type = 'ul';
+                } elseif (preg_match('/^\d+[.)]\s+(.+)$/', $line, $match)) {
+                    $type = 'ol';
+                } else {
+                    $flushList();
+                    $lines[] = static::formatInline($line);
+
+                    continue;
+                }
+
+                $flushLines();
+                if ($listType !== $type) {
+                    $flushList();
+                    $listType = $type;
+                }
+                $items[] = static::formatInline($match[1]);
+            }
+
+            $flushLines();
+            $flushList();
+        }
+
+        return $html;
+    }
+
+    private static function formatInline(string $text): string
+    {
+        $text = e($text);
+
+        // [link text](https://… | /path | mailto:…)
+        $text = preg_replace_callback(
+            '/\[([^\]]+)\]\(((?:https?:\/\/|\/|mailto:)[^\s)]+)\)/',
+            fn ($m) => '<a href="'.$m[2].'"'.(str_starts_with($m[2], 'http') ? ' target="_blank" rel="noopener"' : '').'>'.$m[1].'</a>',
+            $text,
+        );
+
+        // **bold**
+        $text = preg_replace('/\*\*(.+?)\*\*/', '<strong>$1</strong>', $text);
+
+        // Bare URLs (not ones already inside a link)
+        $text = preg_replace(
+            '/(?<!href=")(?<!">)\bhttps?:\/\/[^\s<]*[^\s<.,;:!?)]/',
+            '<a href="$0" target="_blank" rel="noopener">$0</a>',
+            $text,
+        );
+
+        // Email addresses (not ones already inside a link)
+        return preg_replace(
+            '/(?<![\w.:\/@-])[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}(?![^<]*<\/a>)/',
+            '<a href="mailto:$0">$0</a>',
+            $text,
+        );
     }
 }

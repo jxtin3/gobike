@@ -75,7 +75,7 @@
                 <span class="text-[9px] font-bold tracking-[0.2em] uppercase text-[#F97316] mb-2 block">Email</span>
                 <h3 class="text-base font-heading font-bold text-[#111827] mb-2 uppercase tracking-wide">Write To Us</h3>
                 <p class="text-sm text-[#64748B] leading-relaxed break-all">gobike@pydn.org</p>
-                <a href="mailto:onegobike@gmail.com"
+                <a href="mailto:gobike@pydn.org"
                    class="mt-4 inline-flex items-center gap-1.5 text-xs font-semibold text-[#F97316] opacity-100 hover:gap-2.5 transition-all duration-200">
                     Send Email
                     <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/></svg>
@@ -316,7 +316,9 @@
                             <div class="flex items-center justify-between gap-4 pt-2">
                                 <p class="text-[10px] text-[#94A3B8] leading-relaxed max-w-xs">
                                     By submitting, you agree to our
-                                    <a href="{{ url('/privacy-policy') }}" class="text-[#2FA7FF] hover:underline">Privacy Policy</a>.
+                                    <a href="{{ route('terms') }}" class="text-[#2FA7FF] hover:underline">Terms</a>
+                                    and acknowledge our
+                                    <a href="{{ route('privacy-policy') }}" class="text-[#2FA7FF] hover:underline">Privacy Policy</a>.
                                 </p>
                                 <button
                                     type="submit"
@@ -382,15 +384,42 @@
             </div> -->
         </div>
 
-        <iframe
-            title="Go Bike Location — Pangasinan, Philippines"
-            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d244767.07891946714!2d119.86557870428943!3d15.893520736700673!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x33919fc0c2e9e67b%3A0x13e2c7c7d99e9e5!2sPangasinan%2C%20Philippines!5e0!3m2!1sen!2sus!4v1700000000000!5m2!1sen!2sus"
-            class="w-full h-full grayscale opacity-80 border-0"
-            loading="lazy"
-            referrerpolicy="no-referrer-when-downgrade"
-            allowfullscreen
-        ></iframe>
-        <div class="absolute inset-0 bg-[#132D6B]/20 pointer-events-none mix-blend-multiply"></div>
+        {{-- Google Maps sets its own cookies, so the map loads only after consent (see the Cookie Policy) --}}
+        <div
+            class="absolute inset-0"
+            x-data="{ allowed: window.gobikeConsent ? window.gobikeConsent.allowsThirdParty() : false }"
+            @cookie-consent.window="allowed = $event.detail === 'all'"
+        >
+            <template x-if="allowed">
+                <div class="absolute inset-0">
+                    <iframe
+                        title="Go Bike Location — Pangasinan, Philippines"
+                        src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d244767.07891946714!2d119.86557870428943!3d15.893520736700673!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x33919fc0c2e9e67b%3A0x13e2c7c7d99e9e5!2sPangasinan%2C%20Philippines!5e0!3m2!1sen!2sus!4v1700000000000!5m2!1sen!2sus"
+                        class="w-full h-full grayscale opacity-80 border-0"
+                        loading="lazy"
+                        referrerpolicy="no-referrer-when-downgrade"
+                        allowfullscreen
+                    ></iframe>
+                    <div class="absolute inset-0 bg-[#132D6B]/20 pointer-events-none mix-blend-multiply"></div>
+                </div>
+            </template>
+
+            <div x-show="!allowed" class="absolute inset-0 flex flex-col items-center justify-center px-6 text-center">
+                <svg class="w-10 h-10 mb-4 text-[#2FA7FF]" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
+                </svg>
+                <h3 class="text-base sm:text-lg font-heading font-bold text-white uppercase tracking-wider mb-2">Bugallon, Pangasinan</h3>
+                <p class="text-sm text-white/60 max-w-md leading-relaxed mb-6">
+                    This map is provided by Google Maps, which may set its own cookies.
+                    <a href="{{ route('cookie-policy') }}" class="text-[#2FA7FF] underline underline-offset-2">Learn more</a>
+                </p>
+                <div class="flex flex-wrap items-center justify-center gap-3">
+                    <button type="button" @click="allowed = true" class="cookie-btn cookie-btn--primary">Load map</button>
+                    <a href="https://www.google.com/maps/search/?api=1&amp;query=Bugallon%2C+Pangasinan%2C+Philippines" target="_blank" rel="noopener" class="cookie-btn cookie-btn--ghost">Open in Google Maps</a>
+                </div>
+            </div>
+        </div>
 
         
     </div>

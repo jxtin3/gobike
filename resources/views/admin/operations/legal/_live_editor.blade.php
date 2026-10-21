@@ -387,6 +387,29 @@
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
         }
 
+        /* Formatting help under the title */
+        .legal-format-hint {
+            margin: 0.85rem 0 0;
+            color: #64748b;
+            font-size: 0.8rem;
+            line-height: 1.7;
+        }
+
+        .legal-format-hint code {
+            padding: 1px 6px;
+            border: 1px solid #e2e8f0;
+            border-radius: 4px;
+            background: #f1f5f9;
+            color: #0f172a;
+            font-size: 0.75rem;
+        }
+
+        .legal-format-hint a {
+            color: {{ $accentColor }};
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
         /* Keyboard shortcut badge */
         .kbd-hint {
             font-size: 0.75rem;
@@ -410,6 +433,9 @@
                 </a>
                 <a href="{{ route('admin.operations.legal.privacy') }}" class="legal-tab {{ $activeDoc === 'privacy' ? 'active' : '' }}">
                     <x-admin.icon name="shield" /> Privacy Policy
+                </a>
+                <a href="{{ route('admin.operations.legal.cookies') }}" class="legal-tab {{ $activeDoc === 'cookies' ? 'active' : '' }}">
+                    <x-admin.icon name="eye" /> Cookie Policy
                 </a>
             </div>
 
@@ -441,7 +467,7 @@
                            name="title" 
                            id="doc-title"
                            class="live-title-input" 
-                           value="{{ $document->title ?? ($activeDoc === 'terms' ? 'Terms & Conditions' : 'Privacy Policy') }}" 
+                           value="{{ $document->title ?? ['terms' => 'Terms & Conditions', 'privacy' => 'Privacy Policy', 'cookies' => 'Cookie Policy'][$activeDoc] }}"
                            placeholder="Document Title" 
                            required 
                            autocomplete="off">
@@ -450,6 +476,16 @@
                            name="last_updated" 
                            id="doc-last-updated" 
                            value="{{ $document->last_updated ?? date('F d, Y') }}">
+
+                    <p class="legal-format-hint">
+                        <strong>Formatting:</strong>
+                        leave a blank line between paragraphs ·
+                        start a line with <code>- </code> for a bullet point ·
+                        <code>**bold text**</code> ·
+                        <code>[link text](/contact)</code>.
+                        Website and email addresses become links automatically.
+                        <a href="{{ $liveUrl }}" target="_blank" rel="noopener">View live page ↗</a>
+                    </p>
                 </div>
 
                 <!-- Sections List -->

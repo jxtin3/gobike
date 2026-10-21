@@ -108,6 +108,8 @@ Route::get('/privacy-policy', [LegalDocumentController::class, 'privacy'])->name
 
 Route::get('/terms', [LegalDocumentController::class, 'terms'])->name('terms');
 
+Route::get('/cookie-policy', [LegalDocumentController::class, 'cookies'])->name('cookie-policy');
+
 
 // Auth routes
 Route::middleware('guest')->group(function () {
@@ -211,5 +213,10 @@ Route::delete('/admin/operations/gobiker-messages/{message}', [\App\Http\Control
         ->name('admin.operations.legal.terms');
     Route::put('/admin/operations/legal/terms', [\App\Http\Controllers\Admin\LegalDocumentController::class, 'updateTerms'])
         ->name('admin.operations.legal.terms.update');
+
+    Route::get('/admin/operations/legal/cookies', [\App\Http\Controllers\Admin\LegalDocumentController::class, 'editCookies'])
+        ->name('admin.operations.legal.cookies');
+    Route::put('/admin/operations/legal/cookies', [\App\Http\Controllers\Admin\LegalDocumentController::class, 'updateCookies'])
+        ->name('admin.operations.legal.cookies.update');
 
 });
