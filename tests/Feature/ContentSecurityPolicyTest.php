@@ -63,3 +63,29 @@ it('allows the Vite dev server only locally while it is running', function () {
     expect($local)->toContain('http://[::1]:5173')->toContain('ws://[::1]:5173');
     expect($production)->not->toContain('5173');
 });
+
+it('allows media bucket origin in img-src and media-src when MEDIA_CSP_ORIGIN is set', function () {
+    config([
+        'security.csp_mode' => 'enforce',
+        'security.media_origin' => 'https://bucket.example.com',
+    ]);
+
+    $policy = $this->get('/')->headers->get('Content-Security-Policy');
+
+    expect($policy)
+        ->toContain("img-src 'self' data: blob: https://*.tile.openstreetmap.org https://tile.openstreetmap.org https://bucket.example.com")
+        ->toContain("media-src 'self' https://bucket.example.com blob: data:");
+});
+
+it('omits media bucket origin when MEDIA_CSP_ORIGIN is unset', function () {
+    config([
+        'security.csp_mode' => 'enforce',
+        'security.media_origin' => '',
+    ]);
+
+    $policy = $this->get('/')->headers->get('Content-Security-Policy');
+
+    expect($policy)
+        ->not->toContain('media-src')
+        ->not->toContain('https://bucket.example.com');
+});

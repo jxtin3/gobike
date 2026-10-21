@@ -7,7 +7,7 @@ it('shows the admin login page', function () {
     $response = $this->get('/login');
 
     $response->assertStatus(200)
-        ->assertSee('Welcome back');
+        ->assertSee('Go Bike Admin');
 });
 
 it('allows an admin user to access the dashboard', function () {

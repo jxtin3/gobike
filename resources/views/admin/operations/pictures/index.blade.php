@@ -59,7 +59,7 @@
     <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 1.25rem;">
         @foreach($pictures as $picture)
             @php
-                $mediaSrc = asset('storage/' . $picture->image_path);
+                $mediaSrc = \App\Support\Media::url($picture->image_path);
                 $isVideo = $picture->isVideo();
             @endphp
             <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.04); display: flex; flex-direction: column;">

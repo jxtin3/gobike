@@ -612,17 +612,14 @@
  
         <div class="flex flex-col sm:flex-row gap-4 justify-center mt-6">
             <a
-                href="{{ url('/contact') }}"
+                href="{{ url('/volunteer') }}"
                 id="cta-volunteer"
                 class="group inline-flex items-center justify-center gap-2 px-8 py-4 bg-[#132D6B] text-white text-sm font-bold tracking-[0.1em] uppercase transition-all duration-300 shadow-lg shadow-[#132D6B]/30 hover:bg-[#2FA7FF] rounded-none"
             >
                 <span>Volunteer With Us</span>
                 <svg class="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1.5" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/></svg>
             </a>
-            <!-- <a href="{{ url('/donate') }}" id="cta-donate" class="btn-wbr">
-                <span>Donate Now</span>
-                <svg class="w-4 h-4 arrow" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/></svg>
-            </a> -->
+           
         </div>
  
     </div>

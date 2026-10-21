@@ -38,13 +38,27 @@ class SecurityHeaders
         $dev = implode(' ', $this->devServer());
         $withDev = fn (string $directive) => trim($directive.' '.$dev);
 
-        return implode('; ', [
+        $mediaOrigin = trim((string) config('security.media_origin', ''));
+
+        $imgSrc = "img-src 'self' data: blob: https://*.tile.openstreetmap.org https://tile.openstreetmap.org";
+        if ($mediaOrigin !== '') {
+            $imgSrc .= ' '.$mediaOrigin;
+        }
+
+        $directives = [
             "default-src 'self'",
             // Alpine.js and a few inline admin scripts need these two.
             $withDev("script-src 'self' 'unsafe-inline' 'unsafe-eval'"),
             $withDev("style-src 'self' 'unsafe-inline'"),
             // Map tiles come from OpenStreetMap.
-            $withDev("img-src 'self' data: blob: https://*.tile.openstreetmap.org https://tile.openstreetmap.org"),
+            $withDev($imgSrc),
+        ];
+
+        if ($mediaOrigin !== '') {
+            $directives[] = $withDev("media-src 'self' {$mediaOrigin} blob: data:");
+        }
+
+        $directives = array_merge($directives, [
             $withDev("font-src 'self' data:"),
             // The site only talks to itself (donations, chatbot, admin map).
             $withDev("connect-src 'self'"),
@@ -55,6 +69,8 @@ class SecurityHeaders
             "form-action 'self'",
             "frame-ancestors 'self'",
         ]);
+
+        return implode('; ', $directives);
     }
 
     /**

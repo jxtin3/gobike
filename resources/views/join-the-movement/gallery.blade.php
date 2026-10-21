@@ -22,9 +22,7 @@
                 @if(isset($pictures) && $pictures->count() > 0)
                     @foreach($pictures as $i => $item)
                         @php
-                            $mediaSrc = \Illuminate\Support\Str::startsWith($item->image_path, ['http://', 'https://'])
-                                ? $item->image_path
-                                : asset('storage/' . $item->image_path);
+                            $mediaSrc = \App\Support\Media::url($item->image_path);
                             $isVideo = $item->isVideo();
                         @endphp
                         <div class="relative w-full aspect-[4/3] rounded-lg overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer bg-slate-900 group reveal reveal-delay-{{ ($i % 3) + 1 }}"
