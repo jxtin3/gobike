@@ -84,3 +84,45 @@
     position: relative;
     z-index: 1;
 }
+
+/* Hero Training Plan Button (Solid white, no border, fade on hover) */
+.btn-hero-training {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: calc(1rem + 2px) calc(2.5rem + 2px);
+    border: none;
+    background: #ffffff;
+    font-size: 0.8125rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    text-decoration: none;
+    color: #111827;
+    transition: opacity 0.25s ease;
+}
+
+.btn-hero-training:hover {
+    opacity: 0.85;
+}
+
+.btn-hero-training span {
+    position: relative;
+    z-index: 1;
+    color: #111827;
+}
+
+.btn-hero-training svg {
+    position: relative;
+    z-index: 1;
+    color: #111827;
+    transition: transform 0.25s ease;
+}
+
+.btn-hero-training:hover svg {
+    transform: translateX(4px);
+    color: #111827;
+}
+

@@ -35,7 +35,6 @@
     <div class="relative z-20 w-full px-6 sm:px-10 md:px-12 lg:px-16 xl:px-20 2xl:px-24 pt-16 md:pt-20">
         <div class="max-w-3xl">
 
-            <!-- Main headline -->
             <h1
                 id="hero-headline"
                 class="text-hero-title font-heading font-bold text-white mb-5 reveal"
@@ -44,17 +43,12 @@
                 <span class="text-[#2FA7FF]">Community</span><br/>
                 Responders
 
-                <!-- Saving lives <br/>
-                <span class="text-[#2FA7FF]">One Ride</span><br/>
-                At A Time -->
             </h1>
 
-            <!-- Sub-headline -->
             <p class="text-base md:text-lg font-semibold text-white/75 mb-3 font-heading tracking-widest uppercase reveal">
                 Building Healthier and more Disaster-Resilient Communities <br>One Ride at a Time
             </p>
 
-            <!-- Body text -->
             <p class="text-base md:text-lg text-white/60 leading-relaxed mb-10 max-w-xl reveal">
                 Bridging Partners, mobilizing volunteers to provide responsive services to the adaptive challenges of the community.
             </p>
@@ -67,6 +61,14 @@
                     class="btn-ghost-fill"
                 >
                     <span>Explore Programs</span>
+                    <svg class="w-3.5 h-3.5 relative z-10" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/></svg>
+                </a>
+                <a
+                    href="{{ url('/what-we-do#training-plan') }}"
+                    id="hero-cta-training-plan"
+                    class="btn-hero-training"
+                >
+                    <span>Get Trained</span>
                     <svg class="w-3.5 h-3.5 relative z-10" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/></svg>
                 </a>
             </div>
@@ -610,16 +612,11 @@
         <p class="text-base md:text-lg text-[#64748B] font-medium leading-relaxed mb-10 max-w-2xl mx-auto">
             Every act of service creates lasting impact. Join volunteers, partners, and community leaders working together to build healthier, safer, and more resilient communities.        </p>
  
-        <div class="flex flex-col sm:flex-row gap-4 justify-center mt-6">
-            <a
-                href="{{ url('/volunteer') }}"
-                id="cta-volunteer"
-                class="group inline-flex items-center justify-center gap-2 px-8 py-4 bg-[#132D6B] text-white text-sm font-bold tracking-[0.1em] uppercase transition-all duration-300 shadow-lg shadow-[#132D6B]/30 hover:bg-[#2FA7FF] rounded-none"
-            >
-                <span>Volunteer With Us</span>
-                <svg class="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1.5" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/></svg>
+        <div class="flex flex-wrap items-center justify-center gap-4">
+            <a href="{{ url('/volunteer') }}" class="btn-wbr btn-wbr-dark">
+                <span>Volunteer with us</span>
+                <svg class="w-5 h-5 arrow" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/></svg>
             </a>
-           
         </div>
  
     </div>

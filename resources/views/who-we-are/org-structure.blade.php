@@ -132,15 +132,14 @@
     <div class="relative z-10 max-w-2xl mx-auto reveal">
         <h2 class="text-4xl md:text-4xl font-heading font-bold text-white mb-5 uppercase tracking-tight">Join the Movement</h2>
         <p class="text-white/80 mb-10 leading-relaxed">The next chapter of Go Bike's story is waiting to be written — and it could be yours.</p>
+
         <div class="flex flex-wrap items-center justify-center gap-4">
-            <a href="{{ url('/volunteer') }}" class="btn-wbr btn-wbr-orange">
-                <span>Volunteer Now</span>
+            <a href="{{ url('/volunteer') }}" class="btn-wbr btn-wbr-light">
+                <span>Volunteer with us</span>
                 <svg class="w-5 h-5 arrow" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/></svg>
             </a>
-            <!-- <a href="{{ url('/about') }}" class="btn-wbr btn-wbr-dark">
-                <span>Back to About</span>
-            </a> -->
         </div>
+
     </div>
 </section>
 

@@ -112,7 +112,8 @@
 
 <!-- TRAINING TIERS and REQUEST FORM  -->
 <section
-    class="py-20 md:py-15 bg-[#0D1B2A] relative overflow-hidden"
+    id="training-plan"
+    class="py-20 md:py-15 bg-[#0D1B2A] relative overflow-hidden scroll-mt-16"
     x-data="{
         selected: null,
         formVisible: false,
