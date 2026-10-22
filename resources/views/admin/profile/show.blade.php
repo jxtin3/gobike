@@ -3,7 +3,7 @@
 @section('heading', 'My profile')
 @section('subheading', 'Your admin account details.')
 @section('actions')
-    <a class="btn btn-secondary" href="{{ route('admin.profile.edit') }}"><x-admin.icon name="edit" /> Edit profile</a>
+    <a class="btn btn-primary" href="{{ route('admin.profile.edit') }}"><x-admin.icon name="edit" /> Edit profile</a>
 @endsection
 
 @section('content')
@@ -23,9 +23,6 @@
     </div>
 
     <dl class="user-details">
-        <dt>Full name</dt><dd>{{ $user->name }}</dd>
-        <dt>Email</dt><dd>{{ $user->email }}</dd>
-        <dt>Role</dt><dd>Admin</dd>
         <dt>Joined</dt><dd>{{ $user->created_at->format('F j, Y') }}</dd>
         <dt>Last updated</dt><dd>{{ $user->updated_at->format('F j, Y') }}</dd>
     </dl>

@@ -1,20 +1,13 @@
 @extends('admin.operations.layout')
-@section('title', $application->first_name . ' ' . $application->last_name . ' — Volunteer Application')
-@section('heading', $application->first_name . ' ' . $application->last_name)
-@section('subheading', 'Volunteer application detail')
+@section('title', $application->full_name.' — Volunteer application')
+@section('heading', $application->full_name)
+@section('subheading', 'Volunteer application submitted '.$application->created_at->format('F j, Y'))
 @section('back', route('admin.operations.volunteers.index'))
-@section('back_label', 'Back to Applications')
+@section('back_label', 'Back to volunteers')
+
+@use('App\Models\VolunteerApplication')
 
 @section('content')
-@php
-    $statusColors = [
-        'pending'    => 'warn',
-        'approved'   => 'ok',
-        'rejected'   => 'bad',
-        'waitlisted' => 'neutral',
-    ];
-    $statusColor = $statusColors[$application->application_status] ?? 'neutral';
-@endphp
 
 <div class="detail-grid">
 
@@ -23,13 +16,13 @@
 
         {{-- Personal Info --}}
         <section class="detail-card">
-            <h2 class="detail-card-title">Personal Information</h2>
+            <h2 class="detail-card-title">Personal information</h2>
             <dl class="detail-dl">
-                <div><dt>Full Name</dt><dd>{{ $application->first_name }} {{ $application->last_name }}</dd></div>
-                <div><dt>Email</dt><dd>{{ $application->email }}</dd></div>
-                <div><dt>Phone</dt><dd>{{ $application->phone }}</dd></div>
-                <div><dt>Age</dt><dd>{{ $application->age }} years old</dd></div>
-                <div><dt>Occupation Status</dt><dd>{{ ucfirst(str_replace('-', ' ', $application->occupation_status)) }}</dd></div>
+                <div><dt>Full name</dt><dd>{{ $application->full_name }}</dd></div>
+                <div><dt>Email</dt><dd><a href="mailto:{{ $application->email }}">{{ $application->email }}</a></dd></div>
+                <div><dt>Phone</dt><dd><a href="tel:{{ $application->phone }}">{{ $application->phone }}</a></dd></div>
+                <div><dt>Age</dt><dd>{{ $application->age }} yrs</dd></div>
+                <div><dt>Occupation</dt><dd>{{ ucfirst(str_replace('-', ' ', $application->occupation_status)) }}</dd></div>
                 @if($application->school)
                     <div><dt>School / Institution</dt><dd>{{ $application->school }}</dd></div>
                 @endif
@@ -48,7 +41,7 @@
 
         {{-- Volunteer Details --}}
         <section class="detail-card">
-            <h2 class="detail-card-title">Volunteer Details</h2>
+            <h2 class="detail-card-title">Volunteer details</h2>
             <dl class="detail-dl">
                 <div><dt>Availability</dt><dd>{{ ucfirst($application->availability) }}</dd></div>
                 <div><dt>Has a bike</dt><dd>{{ $application->has_bike ? 'Yes' : 'No' }}</dd></div>
@@ -63,10 +56,10 @@
 
         {{-- Emergency Contact --}}
         <section class="detail-card">
-            <h2 class="detail-card-title">Emergency Contact</h2>
+            <h2 class="detail-card-title">Emergency contact</h2>
             <dl class="detail-dl">
                 <div><dt>Name</dt><dd>{{ $application->emergency_name }}</dd></div>
-                <div><dt>Phone</dt><dd>{{ $application->emergency_phone }}</dd></div>
+                <div><dt>Phone</dt><dd><a href="tel:{{ $application->emergency_phone }}">{{ $application->emergency_phone }}</a></dd></div>
             </dl>
         </section>
 
@@ -76,7 +69,7 @@
             <h2 class="detail-card-title">Guardian / Parent</h2>
             <dl class="detail-dl">
                 <div><dt>Name</dt><dd>{{ $application->guardian_name }}</dd></div>
-                <div><dt>Phone</dt><dd>{{ $application->guardian_phone }}</dd></div>
+                <div><dt>Phone</dt><dd><a href="tel:{{ $application->guardian_phone }}">{{ $application->guardian_phone }}</a></dd></div>
                 <div><dt>Consent given</dt><dd>{{ $application->guardian_consent ? 'Yes' : 'No' }}</dd></div>
             </dl>
         </section>
@@ -84,36 +77,41 @@
 
     </div>
 
-    {{-- Right: status + meta --}}
+    {{-- Right: status + actions --}}
     <div class="detail-aside">
         <section class="detail-card">
-            <h2 class="detail-card-title">Application Status</h2>
-            <div style="margin-bottom:16px">
-                <span class="pill pill-{{ $statusColor }}" style="font-size:13px;padding:6px 14px">{{ ucfirst($application->application_status) }}</span>
-            </div>
-            <form method="POST" action="{{ route('admin.operations.volunteers.status', $application) }}" class="status-form">
+            <h2 class="detail-card-title">Application status</h2>
+            <p class="detail-status"><span class="pill pill-{{ $application->status_pill }}">{{ $application->status_label }}</span></p>
+            <form method="POST" action="{{ route('admin.operations.volunteers.status', $application) }}" class="field">
                 @csrf
                 @method('PATCH')
-                <label class="input-label">Update Status</label>
-                <select name="application_status" class="input" style="width:100%;margin-bottom:10px" onchange="this.form.submit()">
-                    <option value="pending"    @selected($application->application_status === 'pending')>Pending</option>
-                    <option value="approved"   @selected($application->application_status === 'approved')>Approved</option>
-                    <option value="waitlisted" @selected($application->application_status === 'waitlisted')>Waitlisted</option>
-                    <option value="rejected"   @selected($application->application_status === 'rejected')>Rejected</option>
+                <label for="application-status">Change status</label>
+                <select id="application-status" name="application_status" class="input" data-autosubmit>
+                    @foreach (VolunteerApplication::STATUSES as $status)
+                        <option value="{{ $status }}" @selected($application->application_status === $status)
+                            @if ($status === 'rejected')
+                                data-confirm-title="Reject this application?"
+                                data-confirm-text="{{ $application->full_name }}'s application will be marked rejected. You can change it again later."
+                                data-confirm-ok="Reject application"
+                            @endif
+                        >{{ ucfirst($status) }}</option>
+                    @endforeach
                 </select>
             </form>
         </section>
 
-        <section class="detail-card">
-            <h2 class="detail-card-title">Submitted</h2>
-            <p style="font-size:14px;color:var(--ink-2)">{{ $application->created_at->format('F j, Y') }}</p>
-            <p style="font-size:13px;color:var(--ink-3)">{{ $application->created_at->format('g:i A') }}</p>
-        </section>
-
-        <div style="margin-top:4px">
-            <a class="btn btn-secondary" style="width:100%;justify-content:center" href="mailto:{{ $application->email }}">
-                <x-admin.icon name="mail" /> Email Applicant
+        <div class="detail-actions">
+            <a class="btn btn-primary" href="mailto:{{ $application->email }}?subject={{ rawurlencode('Your Go Bike volunteer application') }}">
+                <x-admin.icon name="mail" /> Email applicant
             </a>
+            <form method="POST" action="{{ route('admin.operations.volunteers.destroy', $application) }}"
+                  data-confirm-title="Delete this application?"
+                  data-confirm-text="{{ $application->full_name }}'s application, including emergency and guardian contacts, will be permanently deleted."
+                  data-confirm-ok="Delete application">
+                @csrf
+                @method('DELETE')
+                <button type="submit" class="btn btn-soft-danger"><x-admin.icon name="trash" /> Delete application</button>
+            </form>
         </div>
     </div>
 

@@ -1,363 +1,286 @@
 @extends('admin.operations.layout')
-@section('title','Photos & Videos')
-@section('heading','Photos & Videos')
-@section('subheading', 'Directly upload and manage gallery photos and videos.')
+@section('title', 'Pictures')
+@section('heading', 'Pictures')
+@section('subheading', 'Photos and videos shown in the website gallery.')
 
 @section('content')
+<section class="upload-card" aria-labelledby="upload-title" data-upload-url="{{ route('admin.operations.pictures.store') }}">
+    <h2 id="upload-title" class="sr-only">Upload photos and videos</h2>
 
-<!-- Direct Upload Area -->
-<div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.5rem; margin-bottom: 2rem; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
-    <input type="file" id="media-files" multiple accept="image/*,video/*" style="display: none;">
+    <label class="drop-zone" id="drop-zone">
+        <input type="file" id="media-files" multiple
+               accept=".jpg,.jpeg,.png,.webp,.gif,.mp4,.webm,.mov,.m4v,image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm,video/quicktime">
+        <x-admin.icon name="upload" />
+        <b>Click or drag &amp; drop to upload</b>
+        <span>JPG, PNG, WebP, GIF, MP4, WebM or MOV · up to 50 MB per file</span>
+    </label>
 
-    <!-- Drop zone -->
-    <div id="drop-zone" style="border: 2px dashed #cbd5e1; border-radius: 10px; padding: 2.5rem 1.5rem; text-align: center; background: #f8fafc; cursor: pointer; transition: all 0.2s ease;">
-        <div style="margin-bottom: 0.75rem; color: #2563eb;">
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="margin: 0 auto;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+    <div id="upload-panel" hidden>
+        <ul class="upload-list" id="file-list" aria-label="Files to upload"></ul>
+
+        <div class="alert error" id="upload-errors" role="alert" hidden>
+            <x-admin.icon name="alert-circle" />
+            <div id="upload-errors-text"></div>
         </div>
-        <h3 style="font-size: 1.1rem; font-weight: 700; color: #0f172a; margin: 0 0 0.4rem 0;">Click or drag &amp; drop to upload</h3>
-        <p style="font-size: 0.875rem; color: #64748b; margin: 0;">JPG, PNG, WebP, GIF, MP4, WebM &bull; Up to 100 MB per file</p>
-    </div>
 
-    <!-- Upload panel: shown after files selected -->
-    <div id="upload-panel" style="display: none; margin-top: 1.25rem;">
-
-        <!-- File list -->
-        <div id="file-list" style="display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1rem; max-height: 240px; overflow-y: auto;"></div>
-
-        <!-- Error banner -->
-        <div id="upload-errors" style="display: none; background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 0.75rem 1rem; margin-bottom: 0.75rem; font-size: 0.85rem; color: #dc2626;"></div>
-
-        <!-- Status bar -->
-        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem; padding: 0.85rem 1rem; background: #f1f5f9; border-radius: 8px; border: 1px solid #e2e8f0;">
-            <div>
-                <span id="selected-summary" style="font-weight: 700; color: #0f172a; font-size: 0.95rem;"></span>
-                <span id="upload-progress-text" style="display: block; font-size: 0.82rem; color: #64748b; margin-top: 2px;"></span>
+        <div class="upload-bar">
+            <div role="status">
+                <b id="selected-summary"></b>
+                <small class="sub-line" id="upload-progress-text"></small>
             </div>
-            <div style="display: flex; gap: 0.5rem; align-items: center;">
-                <button type="button" id="btn-clear" style="padding: 0.5rem 1.1rem; background: #fff; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.875rem; cursor: pointer; color: #475569;">
-                    Clear
-                </button>
-                <button type="button" id="btn-start-upload" style="padding: 0.5rem 1.4rem; background: #15803d; border: none; border-radius: 6px; font-size: 0.875rem; font-weight: 600; color: #fff; cursor: pointer;">
-                    Upload All
-                </button>
+            <div class="upload-actions">
+                <button type="button" class="btn btn-secondary" id="btn-clear">Clear</button>
+                <button type="button" class="btn btn-primary" id="btn-start-upload"><x-admin.icon name="upload" /> <span>Upload all</span></button>
             </div>
         </div>
 
-        <!-- Progress Bar -->
-        <div id="progress-container" style="display: none; width: 100%; background: #e2e8f0; height: 8px; border-radius: 4px; overflow: hidden; margin-top: 0.75rem;">
-            <div id="progress-bar" style="width: 0%; height: 100%; background: #16a34a; transition: width 0.25s ease;"></div>
-        </div>
+        <progress class="upload-progress" id="upload-progress" max="100" value="0" hidden></progress>
     </div>
-</div>
+</section>
 
-<!-- Photos / Videos Grid -->
-@if($pictures->isEmpty())
-    <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 3rem 1.5rem; text-align: center; color: #64748b;">
-        <p style="font-size: 1rem; margin: 0;">No photos or videos uploaded yet. Use the upload box above to add your first batch!</p>
+@if ($pictures->isEmpty())
+    <div class="card">
+        <div class="empty">
+            <x-admin.icon name="image" />
+            <b>No pictures yet</b>
+            <p>Use the upload box above to add the first photos and videos to the gallery.</p>
+        </div>
     </div>
 @else
-    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 1.25rem;">
-        @foreach($pictures as $picture)
+    <ul class="picture-grid" aria-label="Gallery pictures">
+        @foreach ($pictures as $picture)
             @php
                 $mediaSrc = \App\Support\Media::url($picture->image_path);
                 $isVideo = $picture->isVideo();
             @endphp
-            <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.04); display: flex; flex-direction: column;">
-                <div style="position: relative; width: 100%; aspect-ratio: 4/3; background: #0f172a; overflow: hidden; cursor: pointer;"
-                     onclick="openViewer('{{ $mediaSrc }}', {{ $isVideo ? 'true' : 'false' }})">
-                    @if($isVideo)
-                        <video src="{{ $mediaSrc }}" style="width: 100%; height: 100%; object-fit: cover;" preload="metadata" muted playsinline></video>
-                        <span style="position: absolute; top: 8px; right: 8px; background: rgba(0,0,0,0.75); color: #fff; font-size: 0.7rem; font-weight: 700; padding: 2px 7px; border-radius: 4px; text-transform: uppercase;">Video</span>
-                        <div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.15);">
-                            <div style="width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,0.9); display: flex; align-items: center; justify-content: center; color: #0f172a;">
-                                <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24" style="transform: translateX(1px);"><path d="M8 5v14l11-7z"/></svg>
-                            </div>
-                        </div>
+            <li class="picture-card">
+                <button type="button" class="picture-card-media" data-lightbox="{{ $mediaSrc }}" data-video="{{ $isVideo ? '1' : '0' }}" data-title="{{ $picture->title }}"
+                        aria-label="Open {{ $isVideo ? 'video' : 'photo' }} {{ $picture->title }}">
+                    @if ($isVideo)
+                        <video src="{{ $mediaSrc }}" preload="metadata" muted playsinline aria-hidden="true"></video>
+                        <span class="picture-card-tag">Video</span>
                     @else
-                        <img src="{{ $mediaSrc }}" alt="Photo" style="width: 100%; height: 100%; object-fit: cover;" loading="lazy">
+                        <img src="{{ $mediaSrc }}" alt="" loading="lazy">
                     @endif
+                </button>
+                <div class="picture-card-body">
+                    <div>
+                        <b title="{{ $picture->title }}">{{ $picture->title }}</b>
+                        <small class="muted">{{ $picture->created_at->format('M j, Y') }}</small>
+                    </div>
+                    <div class="row-actions">
+                        <a class="icon-btn" href="{{ route('admin.operations.pictures.show', $picture) }}" title="Details" aria-label="Details for {{ $picture->title }}"><x-admin.icon name="eye" /></a>
+                        <form method="POST" action="{{ route('admin.operations.pictures.destroy', $picture) }}"
+                              data-confirm-title="Remove this {{ $isVideo ? 'video' : 'photo' }}?"
+                              data-confirm-text="“{{ Str::limit($picture->title, 60) }}” will be removed from the gallery and deleted."
+                              data-confirm-ok="Remove">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="icon-btn danger" title="Remove" aria-label="Remove {{ $picture->title }}"><x-admin.icon name="trash" /></button>
+                        </form>
+                    </div>
                 </div>
-                <div style="padding: 0.75rem; display: flex; justify-content: space-between; align-items: center; background: #ffffff; border-top: 1px solid #f1f5f9;">
-                    <button type="button" class="btn btn-secondary btn-sm" onclick="openViewer('{{ $mediaSrc }}', {{ $isVideo ? 'true' : 'false' }})">View</button>
-                    <form method="POST" action="{{ route('admin.operations.pictures.destroy', $picture) }}" onsubmit="return confirm('Remove this item?');">
-                        @csrf
-                        @method('DELETE')
-                        <button type="submit" class="btn btn-soft-danger btn-sm">Remove</button>
-                    </form>
-                </div>
-            </div>
+            </li>
         @endforeach
-    </div>
+    </ul>
 
-    @if($pictures->hasPages())
-        <div style="margin-top: 2rem; display: flex; align-items: center; justify-content: center; gap: 0.35rem; flex-wrap: wrap;">
-
-            {{-- Previous --}}
-            @if($pictures->onFirstPage())
-                <span style="display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:7px;border:1px solid #e2e8f0;color:#cbd5e1;cursor:default;font-size:1.1rem;background:#fafafa;">&#8249;</span>
-            @else
-                <a href="{{ $pictures->previousPageUrl() }}" style="display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:7px;border:1px solid #e2e8f0;color:#334155;text-decoration:none;font-size:1.1rem;background:#fff;transition:background 0.15s;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='#fff'">&#8249;</a>
-            @endif
-
-            {{-- Page numbers --}}
-            @foreach($pictures->getUrlRange(1, $pictures->lastPage()) as $page => $url)
-                @if($page == $pictures->currentPage())
-                    <span style="display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:7px;background:#0f172a;color:#fff;font-size:0.85rem;font-weight:700;">{{ $page }}</span>
-                @else
-                    <a href="{{ $url }}" style="display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:7px;border:1px solid #e2e8f0;color:#334155;text-decoration:none;font-size:0.85rem;background:#fff;transition:background 0.15s;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='#fff'">{{ $page }}</a>
-                @endif
-            @endforeach
-
-            {{-- Next --}}
-            @if($pictures->hasMorePages())
-                <a href="{{ $pictures->nextPageUrl() }}" style="display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:7px;border:1px solid #e2e8f0;color:#334155;text-decoration:none;font-size:1.1rem;background:#fff;transition:background 0.15s;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='#fff'">&#8250;</a>
-            @else
-                <span style="display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:7px;border:1px solid #e2e8f0;color:#cbd5e1;cursor:default;font-size:1.1rem;background:#fafafa;">&#8250;</span>
-            @endif
-
-        </div>
-        <p style="text-align:center;margin-top:0.6rem;font-size:0.8rem;color:#94a3b8;">
-            Showing {{ $pictures->firstItem() }}–{{ $pictures->lastItem() }} of {{ $pictures->total() }}
-        </p>
-    @endif
+    {{ $pictures->links('admin.partials.pagination') }}
 @endif
 
-<!-- Media Viewer Modal -->
-<div id="admin-media-modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.88); z-index: 9999; align-items: center; justify-content: center; padding: 1.5rem;" onclick="closeViewer()">
-    <button type="button" onclick="closeViewer()" style="position: fixed; top: 1rem; right: 1.25rem; background: rgba(255,255,255,0.15); border: none; color: #fff; width: 38px; height: 38px; border-radius: 50%; font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 10000;" title="Close">✕</button>
-    <div style="position: relative; max-width: 92vw; max-height: 88vh;" onclick="event.stopPropagation()">
-        <div id="modal-content" style="background: #000; border-radius: 8px; overflow: hidden; display: flex; align-items: center; justify-content: center; max-height: 88vh;"></div>
-    </div>
-</div>
+<dialog class="lightbox" id="lightbox" aria-label="Picture viewer">
+    <button type="button" class="icon-btn lightbox-close" data-lightbox-close aria-label="Close viewer"><x-admin.icon name="x" /></button>
+    <div class="lightbox-media" id="lightbox-media"></div>
+</dialog>
 
+@push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    const dropZone          = document.getElementById('drop-zone');
-    const fileInput         = document.getElementById('media-files');
-    const uploadPanel       = document.getElementById('upload-panel');
-    const fileList          = document.getElementById('file-list');
-    const summaryText       = document.getElementById('selected-summary');
-    const progressText      = document.getElementById('upload-progress-text');
-    const progressContainer = document.getElementById('progress-container');
-    const progressBar       = document.getElementById('progress-bar');
-    const btnStartUpload    = document.getElementById('btn-start-upload');
-    const btnClear          = document.getElementById('btn-clear');
-    const uploadErrors      = document.getElementById('upload-errors');
+    const card = document.querySelector('[data-upload-url]');
+    const uploadUrl = card.dataset.uploadUrl;
+    const dropZone = document.getElementById('drop-zone');
+    const fileInput = document.getElementById('media-files');
+    const panel = document.getElementById('upload-panel');
+    const list = document.getElementById('file-list');
+    const summary = document.getElementById('selected-summary');
+    const progressText = document.getElementById('upload-progress-text');
+    const progress = document.getElementById('upload-progress');
+    const startButton = document.getElementById('btn-start-upload');
+    const startLabel = startButton.querySelector('span');
+    const clearButton = document.getElementById('btn-clear');
+    const errors = document.getElementById('upload-errors');
+    const errorsText = document.getElementById('upload-errors-text');
+    const MAX_BYTES = 50 * 1024 * 1024;
 
-    let selectedFilesList = [];
-    let isUploading = false;
+    let files = [];
+    let uploading = false;
 
-    dropZone.addEventListener('click', function () {
-        if (isUploading) return;
-        fileInput.click();
-    });
+    const formatSize = (bytes) => bytes >= 1048576 ? (bytes / 1048576).toFixed(1) + ' MB' : Math.ceil(bytes / 1024) + ' KB';
+    const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
 
-    fileInput.addEventListener('change', function () {
-        if (this.files && this.files.length > 0) {
-            handleSelectedFiles(Array.from(this.files));
-        }
-    });
-
-    dropZone.addEventListener('dragover', function (e) {
-        e.preventDefault();
-        if (isUploading) return;
-        dropZone.style.borderColor = '#2563eb';
-        dropZone.style.background  = '#eff6ff';
-    });
-
-    ['dragleave', 'dragend'].forEach(type => {
-        dropZone.addEventListener(type, function (e) {
-            e.preventDefault();
-            dropZone.style.borderColor = '#cbd5e1';
-            dropZone.style.background  = '#f8fafc';
-        });
-    });
-
-    dropZone.addEventListener('drop', function (e) {
-        e.preventDefault();
-        dropZone.style.borderColor = '#cbd5e1';
-        dropZone.style.background  = '#f8fafc';
-        if (isUploading) return;
-        if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-            handleSelectedFiles(Array.from(e.dataTransfer.files));
-        }
-    });
-
-    function formatSize(bytes) {
-        if (bytes >= 1024 * 1024) return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
-        return (bytes / 1024).toFixed(0) + ' KB';
+    function showErrors(messages) {
+        errorsText.replaceChildren(...messages.map((message) => {
+            const line = document.createElement('div');
+            line.textContent = message;
+            return line;
+        }));
+        errors.hidden = messages.length === 0;
     }
 
-    function handleSelectedFiles(files) {
-        selectedFilesList = files;
-        uploadErrors.style.display = 'none';
-
-        if (selectedFilesList.length === 0) {
-            uploadPanel.style.display = 'none';
-            dropZone.style.display = 'block';
-            return;
-        }
-
-        // Build file rows
-        fileList.innerHTML = '';
-        selectedFilesList.forEach((f, idx) => {
-            const isVid = f.type.startsWith('video');
-            const row = document.createElement('div');
-            row.id = 'file-row-' + idx;
-            row.style.cssText = 'display:flex;align-items:center;gap:0.75rem;padding:0.6rem 0.85rem;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;';
-            row.innerHTML = `
-                <span style="font-size:1.4rem;">${isVid ? '🎬' : '🖼️'}</span>
-                <div style="flex:1;min-width:0;">
-                    <div style="font-size:0.875rem;font-weight:600;color:#0f172a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${f.name}">${f.name}</div>
-                    <div style="font-size:0.78rem;color:#64748b;">${formatSize(f.size)}</div>
-                </div>
-                <span id="status-${idx}" style="font-size:0.8rem;font-weight:600;color:#64748b;white-space:nowrap;">Pending</span>
-            `;
-            fileList.appendChild(row);
-        });
-
-        summaryText.textContent   = `${selectedFilesList.length} file(s) ready to upload`;
-        progressText.textContent  = '';
-        progressContainer.style.display = 'none';
-        progressBar.style.width  = '0%';
-        btnStartUpload.disabled  = false;
-        btnStartUpload.textContent = 'Upload All';
-        btnStartUpload.style.background = '#15803d';
-        uploadPanel.style.display = 'block';
-        dropZone.style.display   = 'none';
+    function setState(index, state, label) {
+        const el = list.querySelector(`[data-index="${index}"] .upload-item-state`);
+        el.dataset.state = state;
+        el.textContent = label;
     }
 
-    btnClear.addEventListener('click', function () {
-        if (isUploading) return;
-        selectedFilesList = [];
-        fileInput.value   = '';
-        fileList.innerHTML = '';
-        uploadErrors.style.display = 'none';
-        uploadPanel.style.display  = 'none';
-        dropZone.style.display     = 'block';
+    function selectFiles(selected) {
+        if (uploading) return;
+        files = selected;
+        showErrors([]);
+        list.replaceChildren();
+
+        const tooBig = files.filter((file) => file.size > MAX_BYTES).map((file) => `${file.name} is larger than 50 MB and will be skipped.`);
+        showErrors(tooBig);
+
+        files.forEach((file, index) => {
+            const item = document.createElement('li');
+            item.className = 'upload-item';
+            item.dataset.index = index;
+            const name = document.createElement('div');
+            name.className = 'upload-item-name';
+            const title = document.createElement('b');
+            title.textContent = file.name;
+            title.title = file.name;
+            const size = document.createElement('small');
+            size.className = 'muted';
+            size.textContent = formatSize(file.size);
+            name.append(title, size);
+            const state = document.createElement('span');
+            state.className = 'upload-item-state';
+            state.textContent = file.size > MAX_BYTES ? 'Too large' : 'Ready';
+            state.dataset.state = file.size > MAX_BYTES ? 'failed' : 'ready';
+            item.append(name, state);
+            list.append(item);
+        });
+
+        summary.textContent = `${plural(files.length, 'file')} selected`;
+        progressText.textContent = '';
+        progress.hidden = true;
+        progress.value = 0;
+        startButton.disabled = false;
+        startLabel.textContent = 'Upload all';
+        panel.hidden = files.length === 0;
+        dropZone.hidden = files.length > 0;
+    }
+
+    fileInput.addEventListener('change', () => selectFiles([...fileInput.files]));
+
+    dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        if (!uploading) dropZone.classList.add('is-dragging');
+    });
+    ['dragleave', 'dragend'].forEach((type) => dropZone.addEventListener(type, () => dropZone.classList.remove('is-dragging')));
+    dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('is-dragging');
+        if (e.dataTransfer?.files?.length) selectFiles([...e.dataTransfer.files]);
     });
 
-    btnStartUpload.addEventListener('click', async function () {
-        if (isUploading || selectedFilesList.length === 0) return;
-        isUploading = true;
+    clearButton.addEventListener('click', () => {
+        if (uploading) return;
+        fileInput.value = '';
+        selectFiles([]);
+    });
 
-        btnStartUpload.disabled  = true;
-        btnClear.disabled        = true;
-        uploadErrors.style.display = 'none';
-        progressContainer.style.display = 'block';
+    startButton.addEventListener('click', async () => {
+        if (uploading || files.length === 0) return;
+        uploading = true;
+        startButton.disabled = true;
+        clearButton.disabled = true;
+        progress.hidden = false;
 
-        const total = selectedFilesList.length;
-        let successCount = 0;
-        const failedItems = [];
+        const failed = [];
+        let uploaded = 0;
 
-        // Always fetch a fresh CSRF token before starting
-        const uploadUrl = '{{ route('admin.operations.pictures.store') }}';
+        for (let i = 0; i < files.length; i++) {
+            const file = files[i];
+            progress.value = Math.round((i / files.length) * 100);
 
-        for (let i = 0; i < total; i++) {
-            const file  = selectedFilesList[i];
-            const statusEl = document.getElementById('status-' + i);
+            if (file.size > MAX_BYTES) {
+                failed.push(`${file.name}: larger than 50 MB.`);
+                continue;
+            }
 
-            statusEl.textContent = 'Uploading…';
-            statusEl.style.color = '#2563eb';
-
-            summaryText.textContent  = `Uploading ${i + 1} of ${total}…`;
+            summary.textContent = `Uploading ${i + 1} of ${files.length}…`;
             progressText.textContent = file.name;
-            progressBar.style.width  = `${Math.round((i / total) * 100)}%`;
+            setState(i, 'uploading', 'Uploading…');
 
-            // Get a fresh CSRF token from the meta tag each iteration
-            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
-
-            const formData = new FormData();
-            formData.append('file', file);
-            formData.append('_token', csrfToken);
+            const body = new FormData();
+            body.append('file', file);
 
             try {
                 const response = await fetch(uploadUrl, {
                     method: 'POST',
                     headers: {
-                        'Accept': 'application/json',
+                        Accept: 'application/json',
                         'X-Requested-With': 'XMLHttpRequest',
-                        'X-CSRF-TOKEN': csrfToken,
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content ?? '',
                     },
-                    body: formData
+                    body,
                 });
-
-                if (response.ok) {
-                    successCount++;
-                    statusEl.textContent = '✓ Done';
-                    statusEl.style.color = '#16a34a';
-
-                    // Update CSRF token if Laravel sends a new one
-                    const newToken = response.headers.get('X-CSRF-TOKEN');
-                    if (newToken) {
-                        const metaTag = document.querySelector('meta[name="csrf-token"]');
-                        if (metaTag) metaTag.setAttribute('content', newToken);
-                    }
-                } else {
-                    let errMsg = `HTTP ${response.status}`;
-                    try {
-                        const data = await response.json();
-                        errMsg = data.message || JSON.stringify(data.errors || data) || errMsg;
-                    } catch (_) {}
-                    failedItems.push(`${file.name}: ${errMsg}`);
-                    statusEl.textContent = '✗ Failed';
-                    statusEl.style.color = '#dc2626';
+                const data = await response.json().catch(() => ({}));
+                if (!response.ok) {
+                    const message = data.errors ? Object.values(data.errors).flat()[0] : data.message;
+                    throw new Error(message || `The server answered ${response.status}.`);
                 }
-            } catch (err) {
-                console.error('Upload error:', err);
-                failedItems.push(`${file.name}: Network error`);
-                statusEl.textContent = '✗ Error';
-                statusEl.style.color = '#dc2626';
+                uploaded++;
+                setState(i, 'done', 'Uploaded');
+            } catch (error) {
+                failed.push(`${file.name}: ${error.message === 'Failed to fetch' ? 'network error.' : error.message}`);
+                setState(i, 'failed', 'Failed');
             }
-
-            progressBar.style.width = `${Math.round(((i + 1) / total) * 100)}%`;
         }
 
-        // Final state
-        if (successCount > 0) {
-            summaryText.textContent  = `✓ ${successCount} of ${total} file(s) uploaded`;
-            progressText.textContent = failedItems.length > 0 ? `${failedItems.length} failed — see details above` : 'Refreshing gallery…';
+        progress.value = 100;
+        summary.textContent = `${uploaded} of ${plural(files.length, 'file')} uploaded`;
+        showErrors(failed);
+
+        if (uploaded > 0) {
+            progressText.textContent = failed.length ? 'Refreshing the gallery shortly…' : 'Refreshing the gallery…';
+            setTimeout(() => window.location.reload(), failed.length ? 4000 : 800);
+            return;
         }
 
-        if (failedItems.length > 0) {
-            uploadErrors.innerHTML = '<strong>Some files failed:</strong><br>' + failedItems.map(e => `• ${e}`).join('<br>');
-            uploadErrors.style.display = 'block';
-            isUploading = false;
-            btnClear.disabled = false;
-        }
-
-        if (successCount > 0) {
-            setTimeout(() => window.location.reload(), failedItems.length > 0 ? 3000 : 800);
-        } else {
-            isUploading = false;
-            btnStartUpload.disabled = false;
-            btnClear.disabled = false;
-            btnStartUpload.textContent = 'Retry';
-            btnStartUpload.style.background = '#dc2626';
-        }
+        uploading = false;
+        startButton.disabled = false;
+        clearButton.disabled = false;
+        startLabel.textContent = 'Try again';
+        progressText.textContent = '';
     });
+
+    // Lightbox
+    const lightbox = document.getElementById('lightbox');
+    const lightboxMedia = document.getElementById('lightbox-media');
+
+    document.querySelectorAll('[data-lightbox]').forEach((button) => {
+        button.addEventListener('click', () => {
+            const media = document.createElement(button.dataset.video === '1' ? 'video' : 'img');
+            media.src = button.dataset.lightbox;
+            if (media instanceof HTMLVideoElement) {
+                media.controls = true;
+                media.autoplay = true;
+            } else {
+                media.alt = button.dataset.title || '';
+            }
+            lightboxMedia.replaceChildren(media);
+            lightbox.showModal();
+        });
+    });
+
+    lightbox.addEventListener('click', (e) => {
+        if (e.target === lightbox || e.target.closest('[data-lightbox-close]')) lightbox.close();
+    });
+    lightbox.addEventListener('close', () => lightboxMedia.replaceChildren());
 });
-
-// Lightbox Viewer
-function openViewer(src, isVideo) {
-    const modal   = document.getElementById('admin-media-modal');
-    const content = document.getElementById('modal-content');
-    if (!modal || !content) return;
-    content.innerHTML = isVideo
-        ? `<video src="${src}" controls autoplay style="max-height:85vh;max-width:90vw;width:auto;height:auto;"></video>`
-        : `<img src="${src}" style="max-height:85vh;max-width:90vw;object-fit:contain;">`;
-    modal.style.display    = 'flex';
-    document.body.style.overflow = 'hidden';
-}
-
-function closeViewer() {
-    const modal   = document.getElementById('admin-media-modal');
-    const content = document.getElementById('modal-content');
-    if (modal)   { modal.style.display = 'none'; }
-    if (content) { content.innerHTML   = ''; }
-    document.body.style.overflow = '';
-}
-
-document.addEventListener('keydown', e => { if (e.key === 'Escape') closeViewer(); });
 </script>
+@endpush
 @endsection

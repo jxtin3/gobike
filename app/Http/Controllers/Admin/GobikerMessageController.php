@@ -29,8 +29,8 @@ class GobikerMessageController extends Controller
 
         return view('admin.operations.gobiker-messages.index', [
             'messages' => $messages,
-            'readMessages' => GobikerMessage::where('is_read', true)->count(),
-            'unreadMessages' => GobikerMessage::where('is_read', false)->count(),
+            'totalCount' => GobikerMessage::count(),
+            'unreadCount' => GobikerMessage::where('is_read', false)->count(),
             'statusFilter' => $statusFilter,
         ]);
     }
@@ -48,7 +48,6 @@ class GobikerMessageController extends Controller
     {
         $message->delete();
 
-        return redirect()->route('admin.operations.gobiker-messages.index')
-            ->with('success', 'Message deleted.');
+        return back()->with('success', 'Message deleted.');
     }
 }

@@ -25,6 +25,29 @@ class ReplicationRequest extends Model
 
     public const PAYMENT_STATUSES = ['unpaid', 'pending', 'paid', 'refunded'];
 
+    /** Pill colour for each status in the admin. */
+    public const STATUS_PILLS = [
+        'pending' => 'warn',
+        'contacted' => 'info',
+        'scheduled' => 'info',
+        'completed' => 'ok',
+        'cancelled' => 'neutral',
+    ];
+
+    public const PAYMENT_LABELS = [
+        'unpaid' => 'Not paid',
+        'pending' => 'Awaiting payment',
+        'paid' => 'Paid',
+        'refunded' => 'Refunded',
+    ];
+
+    public const PAYMENT_PILLS = [
+        'unpaid' => 'neutral',
+        'pending' => 'warn',
+        'paid' => 'ok',
+        'refunded' => 'bad',
+    ];
+
     protected $fillable = [
         'organization',
         'organization_type',
@@ -87,6 +110,26 @@ class ReplicationRequest extends Model
     public function getOrganizationTypeLabelAttribute(): string
     {
         return self::ORGANIZATION_TYPES[$this->organization_type] ?? ucfirst((string) $this->organization_type);
+    }
+
+    public function getStatusLabelAttribute(): string
+    {
+        return ucfirst((string) $this->status);
+    }
+
+    public function getStatusPillAttribute(): string
+    {
+        return self::STATUS_PILLS[$this->status] ?? 'neutral';
+    }
+
+    public function getPaymentLabelAttribute(): string
+    {
+        return self::PAYMENT_LABELS[$this->payment_status] ?? ucfirst((string) $this->payment_status);
+    }
+
+    public function getPaymentPillAttribute(): string
+    {
+        return self::PAYMENT_PILLS[$this->payment_status] ?? 'neutral';
     }
 
     public function isPaid(): bool

@@ -60,9 +60,8 @@
         <tbody>
             @forelse ($users as $user)
                 @php
-                    $role = $user->role ?? ($user->is_admin ? 'Admin' : 'User');
+                    $role = $user->role ?? 'User';
                     $pending = $user->isPendingApproval();
-                    $isSelf = $user->is(auth()->user());
                     $initials = collect(preg_split('/\s+/', trim($user->name)))->filter()->take(2)
                         ->map(fn ($part) => mb_strtoupper(mb_substr($part, 0, 1)))->implode('');
                 @endphp
@@ -71,13 +70,13 @@
                         <div class="cell-user">
                             <span class="avatar" aria-hidden="true">{{ $initials }}</span>
                             <div>
-                                <b>{{ $user->name }}@if ($isSelf) <span class="muted">(you)</span>@endif</b>
+                                <b><a class="cell-link" href="{{ route('admin.operations.users.show', $user) }}">{{ $user->name }}</a></b>
                                 <small>{{ $user->email }}</small>
                             </div>
                         </div>
                     </td>
                     <td>
-                        <span class="pill {{ $role === 'Admin' ? 'pill-brand' : ($role === 'GoBiker' ? 'pill-info' : 'pill-neutral') }}">{{ $role }}</span>
+                        <span class="pill {{ $role === 'GoBiker' ? 'pill-info' : 'pill-neutral' }}">{{ $role }}</span>
                         @if ($pending)
                             <span class="pill pill-warn"><i class="dot"></i> Pending approval</span>
                         @endif
@@ -85,14 +84,14 @@
                     <td>
                         @if ($user->mobile || $user->barangay)
                             {{ $user->mobile ?: '—' }}
-                            <small class="muted" style="display:block">{{ $user->barangay ?: 'No barangay' }}</small>
+                            <small class="sub-line">{{ $user->barangay ?: 'No barangay' }}</small>
                         @else
                             <span class="muted">—</span>
                         @endif
                     </td>
                     <td>
                         {{ $user->created_at->format('M j, Y') }}
-                        <small class="muted" style="display:block">{{ $user->created_at->diffForHumans() }}</small>
+                        <small class="sub-line">{{ $user->created_at->diffForHumans() }}</small>
                     </td>
                     <td>
                         <div class="row-actions">
@@ -114,15 +113,13 @@
                             @endif
                             <a class="icon-btn" href="{{ route('admin.operations.users.show', $user) }}" title="View" aria-label="View {{ $user->name }}"><x-admin.icon name="eye" /></a>
                             <a class="icon-btn" href="{{ route('admin.operations.users.edit', $user) }}" title="Edit" aria-label="Edit {{ $user->name }}"><x-admin.icon name="edit" /></a>
-                            @unless ($isSelf)
-                                <form method="POST" action="{{ route('admin.operations.users.destroy', $user) }}"
-                                      data-confirm-title="Delete {{ $user->name }}?"
-                                      data-confirm-text="This permanently removes the account and cannot be undone."
-                                      data-confirm-ok="Delete user">
-                                    @csrf @method('DELETE')
-                                    <button type="submit" class="icon-btn danger" title="Delete" aria-label="Delete {{ $user->name }}"><x-admin.icon name="trash" /></button>
-                                </form>
-                            @endunless
+                            <form method="POST" action="{{ route('admin.operations.users.destroy', $user) }}"
+                                  data-confirm-title="Delete {{ $user->name }}?"
+                                  data-confirm-text="This permanently removes the account and signs them out of the app. GoBikers who recorded patient check-ups cannot be deleted; change their role instead."
+                                  data-confirm-ok="Delete user">
+                                @csrf @method('DELETE')
+                                <button type="submit" class="icon-btn danger" title="Delete" aria-label="Delete {{ $user->name }}"><x-admin.icon name="trash" /></button>
+                            </form>
                         </div>
                     </td>
                 </tr>

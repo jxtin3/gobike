@@ -20,9 +20,9 @@ class DonationController extends Controller
         if ($search = $request->input('search')) {
             $query->where(function ($q) use ($search) {
                 $q->where('first_name', 'like', "%{$search}%")
-                  ->orWhere('last_name', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%")
-                  ->orWhere('org_name', 'like', "%{$search}%");
+                    ->orWhere('last_name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%")
+                    ->orWhere('org_name', 'like', "%{$search}%");
             });
         }
 
@@ -41,9 +41,9 @@ class DonationController extends Controller
         $donations = $query->paginate(20)->withQueryString();
 
         return view('admin.operations.donations.index', [
-            'donations'    => $donations,
-            'totalPaid'    => Donation::where('status', 'paid')->sum('amount_usd'),
-            'totalCount'   => Donation::where('status', 'paid')->count(),
+            'donations' => $donations,
+            'totalPaid' => $this->totalCollected(),
+            'totalCount' => Donation::where('status', 'paid')->count(),
             'pendingCount' => Donation::where('status', 'pending')->count(),
             'monthlyCount' => Donation::where('frequency', 'monthly')
                 ->where('status', 'paid')
@@ -51,6 +51,22 @@ class DonationController extends Controller
                 ->where(fn ($q) => $q->whereNull('subscription_status')->orWhere('subscription_status', 'active'))
                 ->count(),
         ]);
+    }
+
+    /**
+     * Donations received in USD, without platform fees. Each PayPal charge of a monthly donation
+     * (the first one included) is recorded as a donation payment, so those count once per charge.
+     */
+    private function totalCollected(): float
+    {
+        $oneTime = (float) Donation::where('status', 'paid')->where('frequency', '!=', 'monthly')->sum('amount_usd');
+
+        $monthly = Donation::where('status', 'paid')->where('frequency', 'monthly')
+            ->withCount('payments')
+            ->get(['id', 'amount_usd'])
+            ->sum(fn (Donation $donation) => (float) $donation->amount_usd * max(1, $donation->payments_count));
+
+        return $oneTime + $monthly;
     }
 
     /**

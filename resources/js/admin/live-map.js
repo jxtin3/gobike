@@ -3,6 +3,7 @@
     if (!mapEl || typeof L === 'undefined') return;
 
     const REFRESH_MS = 5000;
+    const LOCATIONS_URL = mapEl.closest('[data-locations-url]')?.dataset.locationsUrl ?? '/admin/locations';
     const COLORS = { active: '#16a34a', responding: '#eab308', emergency: '#dc2626', offline: '#94a3b8' };
     const LABELS = { active: 'Active', responding: 'Responding', emergency: 'Emergency', offline: 'Offline' };
     const RANK = { emergency: 0, responding: 1, active: 2, offline: 3 };
@@ -106,7 +107,8 @@
         const focusedId = document.activeElement?.dataset?.id;
 
         els.riderCount.textContent = visible.length;
-        els.listEmpty.hidden = visible.length > 0 || !loaded;
+        // With no GoBikers at all the map overlay explains it; this message is only for filters.
+        els.listEmpty.hidden = visible.length > 0 || !loaded || riders.length === 0;
         els.list.innerHTML = visible.map((r) => `
             <li><button type="button" class="rider" data-id="${esc(r.id)}">
                 <span class="status-dot s-${esc(r.status)}"></span>
@@ -154,14 +156,14 @@
         });
 
         renderList(visible);
-        if (loaded) setOverlay('none');
+        if (loaded) setOverlay(riders.length ? 'none' : 'empty');
     }
 
     async function load() {
         controller?.abort();
         controller = new AbortController();
         try {
-            const res = await fetch('/admin/locations', {
+            const res = await fetch(LOCATIONS_URL, {
                 headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
                 credentials: 'same-origin',
                 signal: controller.signal,
@@ -222,32 +224,6 @@
     });
     document.addEventListener('visibilitychange', () => { if (!document.hidden) { load(); schedule(); } });
 
-
-    /* Uses the same confirm card as the other admin pages */
-    function askConfirm({ title, text, ok, tone = 'ok' }) {
-        const dlg = document.getElementById('confirmDialog');
-        if (!dlg) return Promise.resolve(window.confirm(`${title}\n${text}`));
-
-        dlg.dataset.tone = tone;
-        dlg.querySelector('[data-cf-title]').textContent = title;
-        dlg.querySelector('[data-cf-text]').textContent = text;
-        const okBtn = dlg.querySelector('[data-cf-ok]');
-        okBtn.textContent = ok;
-        okBtn.className = 'btn ' + (tone === 'ok' ? 'btn-ok' : 'btn-danger');
-
-        return new Promise((resolve) => {
-            let answer = false;
-            const form = dlg.querySelector('form');
-            const onSubmit = (e) => { answer = e.submitter?.value === 'confirm'; };
-            form.addEventListener('submit', onSubmit);
-            dlg.addEventListener('close', () => {
-                form.removeEventListener('submit', onSubmit);
-                resolve(answer);
-            }, { once: true });
-            dlg.showModal();
-        });
-    }
-
     /* Admin actions inside the popup: "I'm responding" / "Resolve" */
     document.addEventListener('click', async (e) => {
         const btn = e.target.closest('.gb-pop [data-action]');
@@ -255,7 +231,7 @@
 
         const action = btn.dataset.action;
         if (action === 'active') {
-            const yes = await askConfirm({
+            const yes = await window.adminConfirm({
                 title: 'Mark this emergency as resolved?',
                 text: 'The alert will be cleared from the map.',
                 ok: 'Resolve',
@@ -266,7 +242,7 @@
 
         btn.disabled = true;
         try {
-            const res = await fetch(`/admin/locations/${btn.dataset.location}/status`, {
+            const res = await fetch(`${LOCATIONS_URL}/${encodeURIComponent(btn.dataset.location)}/status`, {
                 method: 'PATCH',
                 headers: {
                     Accept: 'application/json',

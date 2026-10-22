@@ -215,3 +215,54 @@ it('publishes the training fee and refund rules in the terms', function () {
         ->assertSee('Paying early online')
         ->assertSee('<strong>7 days</strong>', false);
 });
+
+it('clears the paid date when a payment is reset, but keeps it for refunds', function () {
+    $admin = User::factory()->create(['is_admin' => true]);
+    $inquiry = makeReplicationInquiry(['payment_status' => 'paid', 'paid_at' => now()->subDay()]);
+
+    $this->actingAs($admin)
+        ->patch(route('admin.operations.chapter-inquiries.update', $inquiry), ['payment_status' => 'refunded'])
+        ->assertRedirect();
+    expect($inquiry->fresh()->paid_at)->not->toBeNull();
+
+    $this->actingAs($admin)
+        ->patch(route('admin.operations.chapter-inquiries.update', $inquiry), ['payment_status' => 'unpaid'])
+        ->assertRedirect();
+    expect($inquiry->fresh()->paid_at)->toBeNull();
+});
+
+it('rejects an empty chapter inquiry update', function () {
+    $admin = User::factory()->create(['is_admin' => true]);
+    $inquiry = makeReplicationInquiry();
+
+    $this->actingAs($admin)
+        ->patch(route('admin.operations.chapter-inquiries.update', $inquiry), [])
+        ->assertSessionHasErrors(['status', 'payment_status']);
+});
+
+it('asks before marking a chapter training paid or refunded', function () {
+    $admin = User::factory()->create(['is_admin' => true]);
+    $inquiry = makeReplicationInquiry();
+
+    $this->actingAs($admin)
+        ->get(route('admin.operations.chapter-inquiries.show', $inquiry))
+        ->assertSee('data-confirm-title="Mark this training as paid?"', false)
+        ->assertSee('data-confirm-title="Mark this payment as refunded?"', false)
+        ->assertDontSee('Paid on');
+});
+
+it('lets admins delete unpaid chapter inquiries but keeps paid ones', function () {
+    $admin = User::factory()->create(['is_admin' => true]);
+    $unpaid = makeReplicationInquiry();
+    $paid = makeReplicationInquiry(['email' => 'paid@example.com', 'payment_status' => 'paid', 'paid_at' => now()]);
+
+    $this->actingAs($admin)
+        ->delete(route('admin.operations.chapter-inquiries.destroy', $unpaid))
+        ->assertRedirect(route('admin.operations.chapter-inquiries.index'));
+    $this->assertModelMissing($unpaid);
+
+    $this->actingAs($admin)
+        ->delete(route('admin.operations.chapter-inquiries.destroy', $paid))
+        ->assertSessionHas('error');
+    $this->assertModelExists($paid);
+});

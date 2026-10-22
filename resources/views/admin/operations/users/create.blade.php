@@ -3,7 +3,7 @@
 @section('heading', 'Add user')
 @section('subheading', 'Accounts created here are active immediately and need no approval.')
 @section('back', route('admin.operations.users.index'))
-@section('back_label', 'Users')
+@section('back_label', 'Back to users')
 @section('content')
     @include('admin.operations.users.form', ['user' => null, 'action' => route('admin.operations.users.store'), 'method' => 'POST', 'button' => 'Create user'])
 @endsection

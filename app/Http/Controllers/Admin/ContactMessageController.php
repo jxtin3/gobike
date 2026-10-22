@@ -10,19 +10,29 @@ class ContactMessageController extends Controller
 {
     public function index(Request $request)
     {
+        $statusFilter = in_array($request->query('status'), ['read', 'unread'], true)
+            ? $request->query('status')
+            : null;
+
         $messages = ContactMessage::query()
             ->when($request->search, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('name', 'like', "%{$search}%")
-                      ->orWhere('email', 'like', "%{$search}%")
-                      ->orWhere('message', 'like', "%{$search}%");
+                        ->orWhere('email', 'like', "%{$search}%")
+                        ->orWhere('message', 'like', "%{$search}%");
                 });
             })
+            ->when($statusFilter !== null, fn ($query) => $query->where('is_read', $statusFilter === 'read'))
             ->latest()
             ->paginate(10)
             ->withQueryString();
 
-        return view('admin.operations.messages.index', compact('messages'));
+        return view('admin.operations.messages.index', [
+            'messages' => $messages,
+            'statusFilter' => $statusFilter,
+            'totalCount' => ContactMessage::count(),
+            'unreadCount' => ContactMessage::where('is_read', false)->count(),
+        ]);
     }
 
     public function markRead(ContactMessage $message)
@@ -38,7 +48,6 @@ class ContactMessageController extends Controller
     {
         $message->delete();
 
-        return redirect()->route('admin.operations.messages.index')
-            ->with('success', 'Message deleted successfully.');
+        return back()->with('success', 'Message deleted.');
     }
 }

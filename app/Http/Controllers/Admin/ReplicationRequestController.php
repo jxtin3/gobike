@@ -57,16 +57,30 @@ class ReplicationRequestController extends Controller
     public function update(Request $request, ReplicationRequest $replicationRequest): RedirectResponse
     {
         $data = $request->validate([
-            'status' => ['sometimes', 'required', Rule::in(ReplicationRequest::STATUSES)],
-            'payment_status' => ['sometimes', 'required', Rule::in(ReplicationRequest::PAYMENT_STATUSES)],
+            'status' => ['required_without:payment_status', Rule::in(ReplicationRequest::STATUSES)],
+            'payment_status' => ['required_without:status', Rule::in(ReplicationRequest::PAYMENT_STATUSES)],
         ]);
 
-        if (($data['payment_status'] ?? null) === 'paid' && ! $replicationRequest->paid_at) {
-            $data['paid_at'] = now();
-        }
+        // "Paid on" is kept for a refund, but cleared when the payment is reset to unpaid or pending.
+        $data['paid_at'] = match ($data['payment_status'] ?? null) {
+            'paid', 'refunded' => $replicationRequest->paid_at ?? ($data['payment_status'] === 'paid' ? now() : null),
+            'unpaid', 'pending' => null,
+            default => $replicationRequest->paid_at,
+        };
 
         $replicationRequest->update($data);
 
         return back()->with('success', 'Inquiry updated.');
+    }
+
+    public function destroy(ReplicationRequest $replicationRequest): RedirectResponse
+    {
+        if ($replicationRequest->isPaid()) {
+            return back()->with('error', 'Paid inquiries are kept for the payment records. Mark it refunded or cancelled instead.');
+        }
+
+        $replicationRequest->delete();
+
+        return redirect()->route('admin.operations.chapter-inquiries.index')->with('success', 'Inquiry deleted.');
     }
 }

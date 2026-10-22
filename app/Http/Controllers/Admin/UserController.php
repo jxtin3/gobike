@@ -6,8 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\Password;
 
 class UserController extends Controller
 {
@@ -54,21 +54,21 @@ class UserController extends Controller
 
     public function store(Request $request)
     {
+        $request->merge(['email' => strtolower(trim((string) $request->input('email')))]);
+
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'unique:users,email'],
+            'email' => ['required', 'email', 'max:255', 'unique:users,email'],
             'mobile' => ['nullable', 'string', 'regex:/^09[0-9]{9}$/', 'unique:users,mobile'],
             'barangay' => ['nullable', 'string', 'max:255'],
-            'password' => ['required', 'confirmed', 'min:8'],
+            'password' => ['required', 'confirmed', Password::min(12)->letters()->numbers()],
             'role' => ['required', Rule::in($this->roles)],
         ]);
 
-        $data['password'] = Hash::make($data['password']);
-        $data['is_admin'] = false;
         $data['status'] = 'Active'; // accounts created by an admin no need for approval
         User::create($data);
 
-        return redirect()->route('admin.operations.users.index')->with('success', 'User successfully created.');
+        return redirect()->route('admin.operations.users.index')->with('success', 'User created.');
     }
 
     public function show(User $user)
@@ -98,9 +98,11 @@ class UserController extends Controller
                 ->with('error', 'Admin accounts are managed from the sidebar profile.');
         }
 
+        $request->merge(['email' => strtolower(trim((string) $request->input('email')))]);
+
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', Rule::unique('users')->ignore($user)],
+            'email' => ['required', 'email', 'max:255', Rule::unique('users')->ignore($user)],
             'mobile' => [
                 'nullable',
                 'string',
@@ -108,14 +110,14 @@ class UserController extends Controller
                 Rule::unique('users', 'mobile')->ignore($user),
             ],
             'barangay' => ['nullable', 'string', 'max:255'],
-            'password' => ['nullable', 'confirmed', 'min:8'],
+            'password' => ['nullable', 'confirmed', Password::min(12)->letters()->numbers()],
             'role' => ['required', Rule::in($this->roles)],
         ]);
 
-        if (blank($data['password'] ?? null)) {
+        $passwordChanged = filled($data['password'] ?? null);
+
+        if (! $passwordChanged) {
             unset($data['password']);
-        } else {
-            $data['password'] = Hash::make($data['password']);
         }
 
         // A pending GoBiker who is reclassified no longer needs approval.
@@ -123,10 +125,14 @@ class UserController extends Controller
             $data['status'] = 'Active';
         }
 
-        $data['is_admin'] = false;
         $user->update($data);
 
-        return redirect()->route('admin.operations.users.index')->with('success', 'User successfully updated.');
+        // A new password signs the user out of the mobile app everywhere.
+        if ($passwordChanged) {
+            $user->tokens()->delete();
+        }
+
+        return redirect()->route('admin.operations.users.show', $user)->with('success', 'User updated.');
     }
 
     public function destroy(User $user)
@@ -135,12 +141,20 @@ class UserController extends Controller
             return back()->with('error', 'Admin accounts cannot be deleted from user management.');
         }
 
+        // Patient records are health data the GoBiker collected; never remove them as a side effect.
+        $patientCount = $user->patients()->count();
+
+        if ($patientCount > 0) {
+            return back()->with('error', "{$user->name} has recorded ".trans_choice('{1} 1 patient record|[2,*] :count patient records', $patientCount).'. Change the role to User instead of deleting the account.');
+        }
+
+        $user->tokens()->delete();
         $user->delete();
 
-        return back()->with('success', 'User successfully deleted.');
+        return redirect()->route('admin.operations.users.index')->with('success', 'User deleted.');
     }
 
-    // Let a pending GoBiker sign in to the mobile app. 
+    // Let a pending GoBiker sign in to the mobile app.
     public function approve(User $user): RedirectResponse
     {
         if (! $user->isPendingApproval()) {
@@ -152,13 +166,14 @@ class UserController extends Controller
         return back()->with('success', "{$user->name} was approved and can now sign in to the GoBiker app.");
     }
 
-    //  Remove a pending sign-up. They can register again later. 
+    // Remove a pending sign-up. They can register again later.
     public function decline(User $user): RedirectResponse
     {
         if (! $user->isPendingApproval()) {
             return back()->with('error', 'Only pending sign-ups can be declined.');
         }
 
+        $user->tokens()->delete();
         $user->delete();
 
         return redirect()->route('admin.operations.users.index', ['filter' => 'pending'])

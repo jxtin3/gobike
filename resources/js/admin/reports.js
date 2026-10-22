@@ -93,7 +93,7 @@
     }
 
     function renderBars(months) {
-        if (!months.length) return showEmpty(barChart, 'No monthly patient records for this year.');
+        if (!months.some((month) => month.count)) return showEmpty(barChart, 'No patient check-ups recorded this year.');
         const width = Math.max(320, Math.round(barChart.clientWidth));
         const svg = makeSvg('bar', width);
         const left = 42;
@@ -104,6 +104,7 @@
         const maxValue = Math.max(1, ...months.map((month) => month.count));
         const step = chartWidth / months.length;
         const barWidth = Math.min(32, step * 0.58);
+        const peakIndex = months.reduce((best, month, index) => (month.count > months[best].count ? index : best), 0);
 
         for (let guide = 0; guide <= 4; guide += 1) {
             const y = top + (chartHeight / 4) * guide;
@@ -120,9 +121,7 @@
                 width: barWidth,
                 height,
                 rx: Math.min(4, barWidth / 4),
-                class: `analytics-bar${month.count && index === months.reduce((latestIndex, candidate, candidateIndex, series) => (
-                    candidate.count > series[latestIndex].count ? candidateIndex : latestIndex
-                ), 0) ? ' analytics-bar-latest' : ''}`,
+                class: `analytics-bar${month.count && index === peakIndex ? ' analytics-bar-peak' : ''}`,
             });
             if (entrancePending) rect.style.animationDelay = `${0.32 + index * 0.035}s`;
             node(rect, 'title', {}, `${month.label}: ${numberFormat.format(month.count)} check-ups`);
@@ -134,7 +133,7 @@
 
     function renderLine(vital) {
         const months = vital.months;
-        if (!months.length) return showEmpty(lineChart, 'No vital-sign records for this year.');
+        if (!months.some((month) => month.high || month.low)) return showEmpty(lineChart, 'No high or low readings recorded this year.');
         const width = Math.max(320, Math.round(lineChart.clientWidth));
         const svg = makeSvg('line', width);
         const left = 42;
@@ -184,7 +183,7 @@
         pieTotal.textContent = numberFormat.format(totalCount);
         pieLegend.replaceChildren();
         if (!totalCount) {
-            showEmpty(pieChart, 'No high readings to break down for this year.');
+            showEmpty(pieChart, 'No high or low readings to break down for this year.');
             return;
         }
 

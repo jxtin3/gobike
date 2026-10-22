@@ -3,7 +3,7 @@
 @section('heading', $patient->name)
 @section('subheading', 'Recorded ' . $patient->recorded_at->format('F j, Y \a\t g:i A'))
 @section('back', route('admin.operations.patients.index'))
-@section('back_label', 'Patients')
+@section('back_label', 'Back to patients')
 @section('actions')
     <form method="POST" action="{{ route('admin.operations.patients.destroy', $patient) }}"
           data-confirm-title="Delete this patient record?"
@@ -23,19 +23,19 @@
 @endphp
 
 <article class="detail-panel">
-    <h2 style="margin-top:0">Personal details</h2>
+    <h2 class="detail-panel-title">Personal details</h2>
     <dl class="user-details">
         <dt>Full name</dt><dd>{{ $patient->name }}</dd>
-        <dt>Age</dt><dd>{{ $patient->age }}</dd>
+        <dt>Age</dt><dd>{{ $patient->age }} yrs</dd>
         <dt>Address</dt><dd>{{ $patient->address }}</dd>
-        <dt>Contact</dt><dd>{{ $patient->contact }}</dd>
+        <dt>Contact</dt><dd>@if ($patient->contact)<a href="tel:{{ $patient->contact }}">{{ $patient->contact }}</a>@else — @endif</dd>
         <dt>Barangay</dt><dd>{{ $patient->barangay ?: '—' }}</dd>
         <dt>Recorded by</dt><dd>{{ $patient->recorder?->name ?? '—' }}</dd>
     </dl>
 </article>
 
-<article class="detail-panel" style="margin-top:16px">
-    <h2 style="margin-top:0">Vital signs</h2>
+<article class="detail-panel">
+    <h2 class="detail-panel-title">Vital signs</h2>
     <dl class="user-details">
         <dt>Blood pressure</dt><dd>{{ $patient->sys }}/{{ $patient->dia }} mmHg</dd>
         <dt>Pulse</dt><dd>{{ $patient->pulse }} bpm</dd>
@@ -44,7 +44,7 @@
         <dt>Height</dt><dd>{{ $fmt($patient->height) }} cm</dd>
         <dt>Weight</dt><dd>{{ $fmt($patient->weight) }} kg</dd>
     </dl>
-    <p class="muted" style="margin-bottom:0">
+    <p class="muted detail-footnote">
         "Elevated" flags on the list are screening hints only (BP 140/90 or higher, temperature 37.5 °C or higher), not a diagnosis.
     </p>
 </article>

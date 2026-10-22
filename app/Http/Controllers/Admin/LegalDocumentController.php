@@ -60,7 +60,6 @@ class LegalDocumentController extends Controller
     {
         $data = $request->validate([
             'title' => ['required', 'string', 'max:150'],
-            'last_updated' => ['nullable', 'string', 'max:50'],
             'sections' => ['nullable', 'array'],
             'sections.*.title' => ['nullable', 'string', 'max:255'],
             'sections.*.content' => ['nullable', 'string'],
@@ -71,13 +70,11 @@ class LegalDocumentController extends Controller
             return ! empty(trim($section['title'] ?? '')) || ! empty(trim($section['content'] ?? ''));
         }));
 
-        $lastUpdated = ! empty(trim($data['last_updated'] ?? '')) ? $data['last_updated'] : date('F d, Y');
-
         $document = LegalDocument::updateOrCreate(
             ['key' => $key],
             [
                 'title' => $data['title'],
-                'last_updated' => $lastUpdated,
+                'last_updated' => now()->format('F j, Y'), // every save is a new revision
                 'sections' => $sections,
             ]
         );
@@ -87,12 +84,12 @@ class LegalDocumentController extends Controller
         if ($request->expectsJson() || $request->wantsJson() || $request->ajax()) {
             return response()->json([
                 'success' => true,
-                'message' => "{$label} saved successfully.",
+                'message' => "{$label} saved.",
                 'last_updated' => $document->last_updated,
             ]);
         }
 
         return redirect()->route("admin.operations.legal.{$key}")
-            ->with('success', "{$label} updated successfully.");
+            ->with('success', "{$label} saved.");
     }
 }

@@ -6,7 +6,7 @@
 @endphp
 <aside class="adm-side" id="adm-side" data-side aria-label="Admin navigation">
     <a href="{{ route('admin.dashboard') }}" class="side-brand">
-        <img src="{{ asset('images/gobike-logo-transparent.png') }}" alt="OneGoBike">
+        <img src="{{ asset('images/gobike-logo-transparent.png') }}" alt="">
         <span><b>Go Bike</b><small>Admin</small></span>
     </a>
 
@@ -29,52 +29,43 @@
         </a>
         <a class="side-link" href="{{ route('admin.operations.messages.index') }}" aria-current="{{ $current('admin.operations.messages.*') }}">
             <x-admin.icon name="mail" /><span>Messages</span>
-            @if (($navUnread ?? 0) > 0)
-                <span class="badge badge-brand" data-unread-badge>{{ $navUnread }}</span>
-            @endif
+            <x-admin.nav-badge :count="$navUnread ?? 0" tone="brand" label="unread" name="messages" />
         </a>
-
         <a class="side-link" href="{{ route('admin.operations.gobiker-messages.index') }}" aria-current="{{ $current('admin.operations.gobiker-messages.*') }}">
-            <x-admin.icon name="message-square" /><span>GoBiker Messages</span>
-            @if (($navGobikerUnread ?? 0) > 0)
-                <span class="badge badge-blue">{{ $navGobikerUnread }}</span>
-            @endif
+            <x-admin.icon name="message-square" /><span>GoBiker messages</span>
+            <x-admin.nav-badge :count="$navGobikerUnread ?? 0" tone="brand" label="unread" name="gobiker-messages" />
         </a>
 
         <p class="side-group">People</p>
         <a class="side-link" href="{{ route('admin.operations.users.index') }}" aria-current="{{ $current('admin.operations.users.*') }}">
             <x-admin.icon name="users" /><span>Users</span>
-            @if (($navPending ?? 0) > 0)
-                <span class="badge badge-warn" title="GoBiker sign-ups waiting for approval">{{ $navPending }}</span>
-            @endif
+            <x-admin.nav-badge :count="$navPending ?? 0" tone="warn" label="waiting for approval" name="users" />
         </a>
-
         <a class="side-link" href="{{ route('admin.operations.patients.index') }}" aria-current="{{ $current('admin.operations.patients.*') }}">
             <x-admin.icon name="activity" /><span>Patients</span>
         </a>
-
         <a class="side-link" href="{{ route('admin.operations.volunteers.index') }}" aria-current="{{ $current('admin.operations.volunteers.*') }}">
             <x-admin.icon name="user-plus" /><span>Volunteers</span>
+            <x-admin.nav-badge :count="$navVolunteersPending ?? 0" tone="warn" label="pending review" name="volunteers" />
         </a>
 
-        <p class="side-group">Finance</p>
+        <p class="side-group">Requests &amp; donations</p>
         <a class="side-link" href="{{ route('admin.operations.donations.index') }}" aria-current="{{ $current('admin.operations.donations.*') }}">
             <x-admin.icon name="dollar-sign" /><span>Donations</span>
         </a>
-
         <a class="side-link" href="{{ route('admin.operations.training-requests.index') }}" aria-current="{{ $current('admin.operations.training-requests.*') }}">
-            <x-admin.icon name="clipboard" /><span>Training Requests</span>
+            <x-admin.icon name="clipboard" /><span>Training requests</span>
+            <x-admin.nav-badge :count="$navTrainingPending ?? 0" tone="warn" label="pending" name="training" />
         </a>
-
         <a class="side-link" href="{{ route('admin.operations.chapter-inquiries.index') }}" aria-current="{{ $current('admin.operations.chapter-inquiries.*') }}">
-            <x-admin.icon name="navigation" /><span>Chapter Inquiries</span>
+            <x-admin.icon name="navigation" /><span>Chapter inquiries</span>
+            <x-admin.nav-badge :count="$navChaptersPending ?? 0" tone="warn" label="pending" name="chapters" />
         </a>
 
         <p class="side-group">Legal</p>
         <a class="side-link" href="{{ route('admin.operations.legal.terms') }}" aria-current="{{ $current('admin.operations.legal.*') }}">
-            <x-admin.icon name="file-text" /><span>Legal Pages</span>
+            <x-admin.icon name="shield" /><span>Legal pages</span>
         </a>
-
     </nav>
 
     <div class="side-foot">

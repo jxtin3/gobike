@@ -32,8 +32,8 @@ it('allows an admin to update a user mobile number and barangay', function () {
 
     $this->actingAs($admin)
         ->put(route('admin.operations.users.update', $user), userManagementEditPayload())
-        ->assertRedirect(route('admin.operations.users.index'))
-        ->assertSessionHas('success', 'User successfully updated.');
+        ->assertRedirect(route('admin.operations.users.show', $user))
+        ->assertSessionHas('success', 'User updated.');
 
     expect($user->fresh()->mobile)->toBe('09123456789')
         ->and($user->fresh()->barangay)->toBe('Poblacion');
@@ -63,12 +63,12 @@ it('allows an admin to reset a GoBiker password without exposing its existing va
 
     $this->actingAs($admin)
         ->put(route('admin.operations.users.update', $user), userManagementEditPayload([
-            'password' => 'new-password',
-            'password_confirmation' => 'new-password',
+            'password' => 'new-password-2026',
+            'password_confirmation' => 'new-password-2026',
         ]))
-        ->assertRedirect(route('admin.operations.users.index'));
+        ->assertRedirect(route('admin.operations.users.show', $user));
 
-    expect(Hash::check('new-password', $user->fresh()->password))->toBeTrue()
+    expect(Hash::check('new-password-2026', $user->fresh()->password))->toBeTrue()
         ->and(Hash::check('old-password', $user->fresh()->password))->toBeFalse();
 });
 
@@ -81,7 +81,7 @@ it('keeps a GoBiker password unchanged when the admin leaves the password blank'
 
     $this->actingAs($admin)
         ->put(route('admin.operations.users.update', $user), userManagementEditPayload())
-        ->assertRedirect(route('admin.operations.users.index'));
+        ->assertRedirect(route('admin.operations.users.show', $user));
 
     expect(Hash::check('old-password', $user->fresh()->password))->toBeTrue();
 });

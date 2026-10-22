@@ -27,7 +27,6 @@ class PatientController extends Controller
         return view('admin.operations.patients.index', [
             'patients' => $patients,
             'barangays' => $barangays,
-            'total' => Patient::count(),
         ]);
     }
 

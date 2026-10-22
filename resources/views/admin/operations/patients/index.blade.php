@@ -11,7 +11,7 @@
 <div class="toolbar">
     <form class="search-form" role="search" method="GET" action="{{ route('admin.operations.patients.index') }}">
         <input class="input" type="search" name="search" value="{{ request('search') }}" placeholder="Search by patient name" aria-label="Search patients">
-        <select class="input" name="barangay" aria-label="Filter by barangay" onchange="this.form.submit()">
+        <select class="input" name="barangay" aria-label="Filter by barangay" data-autosubmit>
             <option value="">All barangays</option>
             @foreach ($barangays as $b)
                 <option value="{{ $b }}" @selected(request('barangay') === $b)>{{ $b }}</option>
@@ -46,22 +46,22 @@
                         <div class="cell-user">
                             <span class="avatar" aria-hidden="true">{{ $initials }}</span>
                             <div>
-                                <b>{{ $patient->name }}</b>
-                                <small>{{ $patient->age }} yrs old</small>
+                                <b><a class="cell-link" href="{{ route('admin.operations.patients.show', $patient) }}">{{ $patient->name }}</a></b>
+                                <small>{{ $patient->age }} yrs</small>
                             </div>
                         </div>
                     </td>
                     <td>{{ $patient->barangay ?: '—' }}</td>
                     <td>
                         BP {{ $patient->sys }}/{{ $patient->dia }} · Pulse {{ $patient->pulse }}
-                        <small class="muted" style="display:block">Temp {{ rtrim(rtrim(number_format($patient->temp, 1), '0'), '.') }} °C</small>
+                        <small class="sub-line">Temp {{ rtrim(rtrim(number_format($patient->temp, 1), '0'), '.') }} °C</small>
                         @if ($highBp) <span class="pill pill-warn">Elevated BP</span> @endif
                         @if ($highTemp) <span class="pill pill-warn">Elevated temp</span> @endif
                     </td>
                     <td>{{ $patient->recorder?->name ?? '—' }}</td>
                     <td>
                         {{ $patient->recorded_at->format('M j, Y') }}
-                        <small class="muted" style="display:block">{{ $patient->recorded_at->format('g:i A') }}</small>
+                        <small class="sub-line">{{ $patient->recorded_at->format('g:i A') }}</small>
                     </td>
                     <td>
                         <div class="row-actions">

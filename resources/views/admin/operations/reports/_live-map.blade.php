@@ -1,4 +1,4 @@
-<section class="dashboard-map-section" aria-labelledby="dashboard-map-title">
+<section class="dashboard-map-section" aria-labelledby="dashboard-map-title" data-locations-url="{{ route('admin.locations.index') }}">
     <header class="dashboard-map-heading">
         <div>
             <span class="analytics-eyebrow">Live operations</span>
@@ -6,22 +6,23 @@
             <p>Current field activity and location updates.</p>
         </div>
         <div class="dashboard-map-status">
-            <time class="live-clock" id="live-clock" datetime="" aria-live="polite"></time>
+            <time class="live-clock" id="live-clock"></time>
             <span class="live-chip" id="live-chip" data-state="connecting" role="status">
                 <i class="live-dot"></i><span id="last-refresh">Connecting…</span>
             </span>
         </div>
     </header>
 
-    <div class="stat-grid" aria-label="Current GoBiker status">
+    <div class="stat-grid" role="group" aria-label="Current GoBiker status">
         <div class="stat-card"><span class="stat-icon"><x-admin.icon name="users" /></span><div><div class="label">Total GoBikers</div><div class="value" id="total-count">–</div></div></div>
         <div class="stat-card"><span class="stat-icon t-ok"><x-admin.icon name="activity" /></span><div><div class="label">Active</div><div class="value" id="active-count">–</div></div></div>
+        <div class="stat-card"><span class="stat-icon t-warn"><x-admin.icon name="navigation" /></span><div><div class="label">Responding</div><div class="value" id="responding-count">–</div></div></div>
         <div class="stat-card"><span class="stat-icon t-bad"><x-admin.icon name="alert-triangle" /></span><div><div class="label">Emergency</div><div class="value" id="emergency-count">–</div></div></div>
         <div class="stat-card"><span class="stat-icon t-off"><x-admin.icon name="clock" /></span><div><div class="label">Offline</div><div class="value" id="offline-count">–</div></div></div>
     </div>
 
     <div class="map-layout">
-        <section class="card map-card" aria-label="Live GoBiker map">
+        <section class="card map-card" aria-labelledby="dashboard-map-title">
             <div class="map-toolbar">
                 <label class="tool-field grow">
                     <span>Search</span>
@@ -45,7 +46,7 @@
             </div>
 
             <div class="map-stage">
-                <div id="map" role="application" aria-label="Map of GoBiker locations"></div>
+                <div id="map" aria-label="Map of GoBiker locations"></div>
                 <div class="map-overlay" id="map-overlay">
                     <div data-view="loading"><span class="spinner"></span><b>Loading live locations</b></div>
                     <div data-view="empty" hidden>
@@ -64,14 +65,14 @@
             </div>
         </section>
 
-        <aside class="card rider-panel" aria-label="GoBiker list">
-            <div class="legend rider-legend" aria-label="GoBiker statuses">
+        <aside class="card rider-panel" aria-labelledby="rider-panel-title">
+            <div class="legend rider-legend">
                 <span><i class="status-dot s-active"></i>Active on Ronda</span>
                 <span><i class="status-dot s-emergency"></i>Emergency</span>
                 <span><i class="status-dot s-responding"></i>Responding</span>
                 <span><i class="status-dot s-offline"></i>Offline</span>
             </div>
-            <header><h2>GoBikers</h2><span class="count" id="rider-count">0</span></header>
+            <header><h2 id="rider-panel-title">GoBikers</h2><span class="count" id="rider-count">0</span></header>
             <ul id="rider-list"></ul>
             <div class="empty" id="rider-empty" hidden>
                 <x-admin.icon name="search" />

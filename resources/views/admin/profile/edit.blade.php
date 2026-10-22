@@ -3,7 +3,7 @@
 @section('heading', 'Edit profile')
 @section('subheading', 'Update your name, email, or password.')
 @section('back', route('admin.profile.show'))
-@section('back_label', 'My profile')
+@section('back_label', 'Back to profile')
 
 @section('content')
 <form class="form-card" action="{{ route('admin.profile.update') }}" method="POST">
@@ -15,11 +15,13 @@
         <div class="grid-2">
             <div class="field">
                 <label for="name">Full name</label>
-                <input class="input @error('name') is-invalid @enderror" id="name" name="name" required autocomplete="name" value="{{ old('name', $user->name) }}">
+                <input class="input @error('name') is-invalid @enderror" id="name" name="name" required autocomplete="name" value="{{ old('name', $user->name) }}" aria-describedby="name-error">
+                <x-admin.field-error name="name" />
             </div>
             <div class="field">
                 <label for="email">Email</label>
-                <input class="input @error('email') is-invalid @enderror" id="email" type="email" name="email" required autocomplete="email" value="{{ old('email', $user->email) }}">
+                <input class="input @error('email') is-invalid @enderror" id="email" type="email" name="email" required autocomplete="email" value="{{ old('email', $user->email) }}" aria-describedby="email-error">
+                <x-admin.field-error name="email" />
             </div>
         </div>
     </fieldset>
@@ -29,8 +31,9 @@
         <div class="grid-2">
             <div class="field">
                 <label for="password">New password</label>
-                <input class="input @error('password') is-invalid @enderror" id="password" type="password" name="password" autocomplete="new-password">
-                <span class="hint">Leave blank to keep your current password.</span>
+                <input class="input @error('password') is-invalid @enderror" id="password" type="password" name="password" autocomplete="new-password" aria-describedby="password-error">
+                <span class="hint">At least 12 characters with letters and numbers. Leave blank to keep your current password. Other devices are signed out when you change it.</span>
+                <x-admin.field-error name="password" />
             </div>
             <div class="field">
                 <label for="password_confirmation">Confirm password</label>
@@ -43,8 +46,9 @@
         <legend>Confirm it's you</legend>
         <div class="field">
             <label for="current_password">Current password</label>
-            <input class="input @error('current_password') is-invalid @enderror" id="current_password" type="password" name="current_password" autocomplete="current-password">
+            <input class="input @error('current_password') is-invalid @enderror" id="current_password" type="password" name="current_password" autocomplete="current-password" aria-describedby="current_password-error">
             <span class="hint">Required only when changing your email or password.</span>
+            <x-admin.field-error name="current_password" />
         </div>
     </fieldset>
 

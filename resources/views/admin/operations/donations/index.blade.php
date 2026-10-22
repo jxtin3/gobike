@@ -3,22 +3,13 @@
 @section('heading', 'Donations')
 @section('subheading', 'All donation submissions received through the website.')
 
+@use('App\Models\Donation')
+
 @section('content')
 @php
-    $statusColors = [
-        'paid'      => 'ok',
-        'pending'   => 'warn',
-        'failed'    => 'bad',
-        'cancelled' => 'neutral',
-    ];
-    $methodLabels = [
-        'paypal'   => 'PayPal',
-        'gcash'    => 'GCash',
-        'bank'     => 'Online banking',
-    ];
+    $hasQuery = filled(request('search')) || filled(request('status')) || filled(request('method')) || filled(request('frequency'));
 @endphp
 
-{{-- Summary Cards --}}
 <div class="stat-row">
     <div class="stat-card">
         <span class="stat-icon"><x-admin.icon name="dollar-sign" /></span>
@@ -30,44 +21,42 @@
     <div class="stat-card">
         <span class="stat-icon"><x-admin.icon name="check-circle" /></span>
         <div>
-            <div class="stat-num">{{ $totalCount }}</div>
+            <div class="stat-num">{{ number_format($totalCount) }}</div>
             <div class="stat-label">Paid donations</div>
         </div>
     </div>
     <div class="stat-card">
         <span class="stat-icon"><x-admin.icon name="clock" /></span>
         <div>
-            <div class="stat-num">{{ $pendingCount }}</div>
+            <div class="stat-num">{{ number_format($pendingCount) }}</div>
             <div class="stat-label">Pending</div>
         </div>
     </div>
     <div class="stat-card">
         <span class="stat-icon"><x-admin.icon name="heart" /></span>
         <div>
-            <div class="stat-num">{{ $monthlyCount }}</div>
+            <div class="stat-num">{{ number_format($monthlyCount) }}</div>
             <div class="stat-label">Active monthly donors</div>
         </div>
     </div>
 </div>
 
-{{-- Toolbar --}}
 <div class="toolbar">
     <form class="search-form" role="search" method="GET" action="{{ route('admin.operations.donations.index') }}">
-        <input class="input" type="search" name="search" value="{{ request('search') }}" placeholder="Search donor name or email" aria-label="Search donations">
-        <select class="input" name="status" aria-label="Filter by status" onchange="this.form.submit()">
+        <input class="input" type="search" name="search" value="{{ request('search') }}" placeholder="Search donor, organization or email" aria-label="Search donations">
+        <select class="input" name="status" aria-label="Filter by status" data-autosubmit>
             <option value="">All statuses</option>
-            <option value="paid"      @selected(request('status') === 'paid')>Paid</option>
-            <option value="pending"   @selected(request('status') === 'pending')>Pending</option>
-            <option value="failed"    @selected(request('status') === 'failed')>Failed</option>
-            <option value="cancelled" @selected(request('status') === 'cancelled')>Cancelled</option>
+            @foreach (array_keys(Donation::STATUS_PILLS) as $status)
+                <option value="{{ $status }}" @selected(request('status') === $status)>{{ ucfirst($status) }}</option>
+            @endforeach
         </select>
-        <select class="input" name="method" aria-label="Filter by method" onchange="this.form.submit()">
+        <select class="input" name="method" aria-label="Filter by method" data-autosubmit>
             <option value="">All methods</option>
-            @foreach ($methodLabels as $value => $label)
+            @foreach (Donation::METHOD_LABELS as $value => $label)
                 <option value="{{ $value }}" @selected(request('method') === $value)>{{ $label }}</option>
             @endforeach
         </select>
-        <select class="input" name="frequency" aria-label="Filter by frequency" onchange="this.form.submit()">
+        <select class="input" name="frequency" aria-label="Filter by frequency" data-autosubmit>
             <option value="">One-time &amp; monthly</option>
             <option value="monthly" @selected(request('frequency') === 'monthly')>Monthly only</option>
         </select>
@@ -90,82 +79,87 @@
         </thead>
         <tbody>
             @forelse ($donations as $donation)
-            @php
-                $statusColor = $statusColors[$donation->status] ?? 'neutral';
-                $method = $methodLabels[$donation->payment_method] ?? ucfirst($donation->payment_method);
-            @endphp
-            <tr class="donation-row" style="cursor:pointer"
-                data-id="{{ $donation->id }}"
-                data-name="{{ $donation->donor_name }}"
-                data-email="{{ $donation->email }}"
-                data-phone="{{ $donation->phone ?? '—' }}"
-                data-donor-type="{{ ucfirst($donation->donor_type) }}"
-                data-org="{{ $donation->org_name ?? '—' }}"
-                data-amount-usd="{{ number_format($donation->amount_usd, 2) }}"
-                data-amount-php="{{ $donation->amount_php ? number_format($donation->amount_php, 2) : '—' }}"
-                data-fee="{{ number_format($donation->platform_fee_usd, 2) }}"
-                data-method="{{ $method }}"
-                data-frequency="{{ ucfirst($donation->frequency) }}"
-                data-status="{{ ucfirst($donation->status) }}"
-                data-status-class="{{ $statusColor }}"
-                data-address="{{ trim("{$donation->address1}, " . ($donation->address2 ? "{$donation->address2}, " : '') . "{$donation->city}, {$donation->state}, {$donation->country}") }}"
-                data-receipt="{{ $donation->receipt_email ?? '—' }}"
-                data-date="{{ $donation->created_at->format('M d, Y g:i A') }}"
-                data-reference="{{ $donation->reference }}"
-                data-monthly="{{ $donation->isMonthlySubscription() ? '1' : '0' }}"
-                data-subscription="{{ $donation->subscription_label ?? '' }}"
-                data-payments="{{ $donation->payments_count }} ({{ '$'.number_format((float) $donation->payments_sum_amount, 2) }})"
-                data-subscription-class="{{ ['active' => 'ok', 'suspended' => 'warn'][$donation->subscription_status ?? 'active'] ?? 'neutral' }}"
-                data-cancel-url="{{ $donation->canCancelSubscription() ? route('admin.operations.donations.cancel-subscription', $donation) : '' }}"
-                data-delete-url="{{ route('admin.operations.donations.destroy', $donation) }}"
-            >
-                <td>
-                    <div class="cell-user">
-                        @php
-                            $initials = collect(preg_split('/\s+/', trim($donation->donor_name)))->filter()->take(2)
-                                ->map(fn ($p) => mb_strtoupper(mb_substr($p, 0, 1)))->implode('');
-                        @endphp
-                        <span class="avatar" aria-hidden="true">{{ $initials }}</span>
-                        <div>
-                            <b>{{ $donation->donor_name }}</b>
-                            <small>{{ $donation->email }}</small>
+                @php
+                    $initials = collect(preg_split('/\s+/', trim($donation->donor_name)))->filter()->take(2)
+                        ->map(fn ($p) => mb_strtoupper(mb_substr($p, 0, 1)))->implode('');
+                    $monthly = $donation->isMonthlySubscription();
+                    $amount = '$'.number_format($donation->amount_usd, 2);
+                @endphp
+                <tr class="is-clickable"
+                    data-dialog="#donationDialog"
+                    data-name="{{ $donation->donor_name }}"
+                    data-email="{{ $donation->email }}"
+                    data-phone="{{ $donation->phone }}"
+                    data-donor-type="{{ ucfirst($donation->donor_type) }}"
+                    data-org="{{ $donation->org_name }}"
+                    data-amount-usd="{{ $amount }}"
+                    data-amount-php="{{ $donation->amount_php ? '₱'.number_format($donation->amount_php, 2) : '' }}"
+                    data-fee="${{ number_format($donation->platform_fee_usd, 2) }}"
+                    data-method="{{ $donation->method_label }}"
+                    data-frequency="{{ $donation->frequency_label }}"
+                    data-status="{{ ucfirst($donation->status) }}"
+                    data-status-pill="{{ $donation->status_pill }}"
+                    data-address="{{ $donation->full_address }}"
+                    data-receipt="{{ $donation->receipt_email }}"
+                    data-date="{{ $donation->created_at->format('M j, Y g:i A') }}"
+                    data-reference="{{ $donation->reference }}"
+                    data-monthly="{{ $monthly ? '1' : '0' }}"
+                    data-subscription="{{ $donation->subscription_label }}"
+                    data-subscription-pill="{{ $donation->subscription_pill }}"
+                    data-payments="{{ $donation->payments_count }} ({{ '$'.number_format((float) $donation->payments_sum_amount, 2) }} incl. fees)"
+                    data-can-cancel="{{ $donation->canCancelSubscription() ? '1' : '0' }}"
+                    data-cancel-url="{{ $donation->canCancelSubscription() ? route('admin.operations.donations.cancel-subscription', $donation) : '' }}"
+                    data-delete-url="{{ route('admin.operations.donations.destroy', $donation) }}"
+                    data-delete-text="{{ $donation->donor_name }} · {{ $amount }} ({{ $donation->status }}). {{ $donation->canCancelSubscription() ? 'This is a monthly donation: cancel it first so the donor is not charged again. ' : '' }}Paid donations are accounting records, so only delete test entries or mistakes. This cannot be undone.">
+                    <td>
+                        <div class="cell-user">
+                            <span class="avatar" aria-hidden="true">{{ $initials }}</span>
+                            <div>
+                                <b>{{ $donation->donor_name }}</b>
+                                <small>{{ $donation->email }}</small>
+                            </div>
                         </div>
-                    </div>
-                </td>
-                <td>
-                    <b>${{ number_format($donation->amount_usd, 2) }}</b>
-                    @if ($donation->amount_php)
-                        <small class="muted" style="display:block">₱{{ number_format($donation->amount_php, 2) }}</small>
-                    @endif
-                </td>
-                <td>{{ $method }}</td>
-                <td>
-                    {{ ucfirst($donation->frequency) }}
-                    @if ($donation->subscription_label)
-                        <small class="muted" style="display:block">{{ $donation->subscription_label }}</small>
-                    @endif
-                </td>
-                <td><span class="pill pill-{{ $statusColor }}">{{ ucfirst($donation->status) }}</span></td>
-                <td>
-                    {{ $donation->created_at->format('M j, Y') }}
-                    <small class="muted" style="display:block">{{ $donation->created_at->format('g:i A') }}</small>
-                </td>
-                <td>
-                    <div class="row-actions">
-                        <button type="button" class="icon-btn btn-view-donation" title="View" aria-label="View donation from {{ $donation->donor_name }}"><x-admin.icon name="eye" /></button>
-                    </div>
-                </td>
-            </tr>
+                    </td>
+                    <td>
+                        <b>{{ $amount }}</b>
+                        @if ($donation->amount_php)
+                            <small class="sub-line">₱{{ number_format($donation->amount_php, 2) }}</small>
+                        @endif
+                    </td>
+                    <td>{{ $donation->method_label }}</td>
+                    <td>
+                        {{ $donation->frequency_label }}
+                        @if ($donation->subscription_label)
+                            <small class="sub-line">{{ $donation->subscription_label }}</small>
+                        @endif
+                    </td>
+                    <td><span class="pill pill-{{ $donation->status_pill }}">{{ ucfirst($donation->status) }}</span></td>
+                    <td>
+                        {{ $donation->created_at->format('M j, Y') }}
+                        <small class="sub-line">{{ $donation->created_at->format('g:i A') }}</small>
+                    </td>
+                    <td>
+                        <div class="row-actions">
+                            <button type="button" class="icon-btn" data-open title="Open" aria-label="Open donation from {{ $donation->donor_name }}"><x-admin.icon name="eye" /></button>
+                        </div>
+                    </td>
+                </tr>
             @empty
-            <tr class="is-static">
-                <td colspan="7">
-                    <div class="empty">
-                        <x-admin.icon name="dollar-sign" />
-                        <b>No donations found</b>
-                        <p>Donations will appear here once submitted through the website.</p>
-                    </div>
-                </td>
-            </tr>
+                <tr class="is-static">
+                    <td colspan="7">
+                        <div class="empty">
+                            <x-admin.icon name="dollar-sign" />
+                            @if ($hasQuery)
+                                <b>No donations match</b>
+                                <p>Try a different search, or clear the filters.</p>
+                                <a class="btn btn-secondary btn-sm" href="{{ route('admin.operations.donations.index') }}">Clear filters</a>
+                            @else
+                                <b>No donations yet</b>
+                                <p>Donations will appear here once submitted through the website.</p>
+                            @endif
+                        </div>
+                    </td>
+                </tr>
             @endforelse
         </tbody>
     </table>
@@ -173,43 +167,39 @@
 
 {{ $donations->links('admin.partials.pagination') }}
 
-{{-- Detail Modal --}}
-<dialog id="donationModal" class="msg-modal don-modal" aria-labelledby="dm-name">
+<dialog id="donationDialog" class="msg-modal" aria-labelledby="donation-dialog-title">
     <div class="msg-inner">
-        <div class="msg-head">
+        <header class="msg-head">
             <div>
-                <h3 id="dm-name"></h3>
-                <span id="dm-status" class="status-pill"></span>
+                <span class="msg-kicker">Donation <span data-field="reference"></span></span>
+                <h2 id="donation-dialog-title" data-field="name"></h2>
+                <span data-pill-field="status"></span>
             </div>
-            <button type="button" id="dm-close" class="modal-close-btn" aria-label="Close dialog">
-                <x-admin.icon name="x" />
-            </button>
-        </div>
+            <button type="button" class="icon-btn" data-dialog-close aria-label="Close"><x-admin.icon name="x" /></button>
+        </header>
 
-        <div class="msg-meta don-meta">
-            <div><span>Email</span><b id="dm-email"></b></div>
-            <div><span>Phone</span><b id="dm-phone"></b></div>
-            <div><span>Donor type</span><b id="dm-donor-type"></b></div>
-            <div><span>Organisation</span><b id="dm-org"></b></div>
-            <div><span>Amount (USD)</span><b id="dm-amount-usd"></b></div>
-            <div><span>Amount (PHP)</span><b id="dm-amount-php"></b></div>
-            <div><span>Platform fee</span><b id="dm-fee"></b></div>
-            <div><span>Method</span><b id="dm-method"></b></div>
-            <div><span>Frequency</span><b id="dm-frequency"></b></div>
-            <div><span>Receipt email</span><b id="dm-receipt"></b></div>
-            <div class="don-wide"><span>Address</span><b id="dm-address"></b></div>
-            <div><span>Date submitted</span><b id="dm-date"></b></div>
-            <div><span>Reference</span><b id="dm-reference"></b></div>
-        </div>
+        <dl class="msg-meta">
+            <div><dt>Amount (USD)</dt><dd data-field="amountUsd"></dd></div>
+            <div><dt>Amount (PHP)</dt><dd data-field="amountPhp"></dd></div>
+            <div><dt>Platform fee</dt><dd data-field="fee"></dd></div>
+            <div><dt>Method</dt><dd data-field="method"></dd></div>
+            <div><dt>Frequency</dt><dd data-field="frequency"></dd></div>
+            <div><dt>Submitted</dt><dd data-field="date"></dd></div>
+            <div><dt>Email</dt><dd data-field="email"></dd></div>
+            <div><dt>Phone</dt><dd data-field="phone"></dd></div>
+            <div><dt>Receipt email</dt><dd data-field="receipt"></dd></div>
+            <div><dt>Donor type</dt><dd data-field="donorType"></dd></div>
+            <div><dt>Organization</dt><dd data-field="org"></dd></div>
+            <div class="msg-meta-wide"><dt>Address</dt><dd data-field="address"></dd></div>
+        </dl>
 
-        {{-- Monthly (PayPal subscription) details, shown only for monthly donations --}}
-        <section id="dm-monthly" class="don-monthly" hidden>
-            <h4 class="don-monthly-title">Monthly donation</h4>
-            <div class="don-monthly-grid">
-                <div><span class="don-label">Status</span><b><span id="dm-subscription" class="pill"></span></b></div>
-                <div><span class="don-label">Payments received</span><b id="dm-payments"></b></div>
-            </div>
-            <form id="dm-cancel-form" method="POST" action="" hidden
+        <section class="msg-section" data-show-field="monthly">
+            <h3 class="msg-body-label">Monthly donation</h3>
+            <dl class="msg-meta">
+                <div><dt>Status</dt><dd><span data-pill-field="subscription"></span></dd></div>
+                <div><dt>Payments received</dt><dd data-field="payments"></dd></div>
+            </dl>
+            <form method="POST" data-action-field="cancelUrl" data-show-field="canCancel"
                   data-confirm-title="Cancel this monthly donation?"
                   data-confirm-text="PayPal will stop charging the donor right away. Donations already made are not refunded."
                   data-confirm-ok="Cancel monthly donation">
@@ -218,70 +208,15 @@
             </form>
         </section>
 
-        <div class="msg-foot don-foot">
-            <form id="dm-delete-form" method="POST" action="" data-confirm-title="Delete this donation?" data-confirm-ok="Delete donation">
+        <footer class="msg-foot">
+            <form method="POST" data-action-field="deleteUrl" data-confirm-field="deleteText"
+                  data-confirm-title="Delete this donation?" data-confirm-ok="Delete donation">
                 @csrf
                 @method('DELETE')
-                <button type="submit" class="btn btn-soft-danger"><x-admin.icon name="trash" /> Delete donation</button>
+                <button type="submit" class="btn btn-soft-danger"><x-admin.icon name="trash" /> Delete</button>
             </form>
-            <button type="button" class="btn btn-secondary" id="dm-close-2">Close</button>
-        </div>
+            <button type="button" class="btn btn-secondary" data-dialog-close>Close</button>
+        </footer>
     </div>
 </dialog>
-
-<script>
-(function () {
-    const modal = document.getElementById('donationModal');
-    const set = (id, val) => { document.getElementById(id).textContent = val || '—'; };
-
-    document.querySelectorAll('.donation-row').forEach(function (row) {
-        row.addEventListener('click', function () {
-            const d = row.dataset;
-            set('dm-name', d.name);
-            set('dm-email', d.email);
-            set('dm-phone', d.phone);
-            set('dm-donor-type', d.donorType);
-            set('dm-org', d.org);
-            set('dm-amount-usd', '$' + d.amountUsd);
-            set('dm-amount-php', d.amountPhp !== '—' ? '₱' + d.amountPhp : '—');
-            set('dm-fee', '$' + d.fee);
-            set('dm-method', d.method);
-            set('dm-frequency', d.frequency);
-            set('dm-receipt', d.receipt);
-            set('dm-address', d.address);
-            set('dm-date', d.date);
-            set('dm-reference', d.reference);
-
-            const statusEl = document.getElementById('dm-status');
-            statusEl.textContent = d.status;
-            statusEl.className = 'status-pill ' + (d.statusClass === 'ok' ? 'published' : d.statusClass === 'warn' ? 'draft' : 'archived');
-
-            // Monthly (PayPal subscription) section
-            const monthly = d.monthly === '1';
-            document.getElementById('dm-monthly').hidden = !monthly;
-            set('dm-payments', d.payments);
-            const sub = document.getElementById('dm-subscription');
-            sub.textContent = d.subscription || '—';
-            sub.className = 'pill pill-' + (d.subscriptionClass || 'neutral');
-            const cancelForm = document.getElementById('dm-cancel-form');
-            cancelForm.hidden = !monthly || !d.cancelUrl;
-            cancelForm.action = d.cancelUrl || '';
-
-            // Delete (asks for confirmation first, through the shared admin confirm dialog)
-            const deleteForm = document.getElementById('dm-delete-form');
-            deleteForm.action = d.deleteUrl;
-            deleteForm.dataset.confirmText = d.name + ' · $' + d.amountUsd + ' (' + d.status + '). '
-                + (monthly && d.cancelUrl ? 'This is a monthly donation: cancel it first so the donor is not charged again. ' : '')
-                + 'Paid donations are accounting records, so only delete test entries or mistakes. This cannot be undone.';
-
-            modal.showModal();
-        });
-    });
-
-    const close = () => modal.close();
-    document.getElementById('dm-close').addEventListener('click', close);
-    document.getElementById('dm-close-2').addEventListener('click', close);
-    modal.addEventListener('click', e => { if (e.target === modal) close(); });
-})();
-</script>
 @endsection

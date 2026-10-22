@@ -8,7 +8,7 @@
         'document' => $document,
         'activeDoc' => 'terms',
         'updateRoute' => route('admin.operations.legal.terms.update'),
-        'liveUrl' => url('/terms'),
+        'liveUrl' => route('terms'),
         'accentColor' => '#F97316'
     ])
 @endsection

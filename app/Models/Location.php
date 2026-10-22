@@ -7,6 +7,14 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Location extends Model
 {
+    /** Statuses that stay on the map until an admin resolves them. */
+    public const ALERT_STATUSES = ['emergency', 'responding'];
+
+    public static function isAlertStatus(?string $status): bool
+    {
+        return in_array(strtolower((string) $status), self::ALERT_STATUSES, true);
+    }
+
     /**
      * The attributes that are mass assignable.
      */

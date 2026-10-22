@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\SafeHtml;
 use Illuminate\Database\Eloquent\Model;
 
 class LegalDocument extends Model
@@ -51,9 +52,9 @@ class LegalDocument extends Model
             return '';
         }
 
-        // Content that already contains HTML is shown as written (only admins can edit it).
+        // Content typed as HTML keeps only safe formatting tags.
         if (strip_tags($content) !== $content) {
-            return $content;
+            return SafeHtml::clean($content);
         }
 
         return static::formatPlainText($content);

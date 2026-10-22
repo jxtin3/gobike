@@ -38,7 +38,7 @@ class NewsController extends Controller
 
         News::create($data);
 
-        return redirect()->route('admin.operations.news.index')->with('success', 'News successfully added.');
+        return redirect()->route('admin.operations.news.index')->with('success', 'News post added.');
     }
 
     public function show(News $news)
@@ -55,16 +55,21 @@ class NewsController extends Controller
     {
         $data = $this->payload($request);
 
+        $oldImage = null;
+
         if ($request->hasFile('image')) {
-            if ($news->image_path) {
-                Storage::disk(Media::disk())->delete($news->image_path);
-            }
+            $oldImage = $news->image_path;
             $data['image_path'] = $request->file('image')->store('news', Media::disk());
         }
 
         $news->update($data);
 
-        return redirect()->route('admin.operations.news.index')->with('success', 'News successfully updated.');
+        // Only remove the old image once the new one is stored and saved.
+        if ($oldImage) {
+            Storage::disk(Media::disk())->delete($oldImage);
+        }
+
+        return redirect()->route('admin.operations.news.index')->with('success', 'News post updated.');
     }
 
     public function destroy(News $news)
@@ -74,7 +79,7 @@ class NewsController extends Controller
         }
         $news->delete();
 
-        return back()->with('success', 'News successfully deleted.');
+        return redirect()->route('admin.operations.news.index')->with('success', 'News post deleted.');
     }
 
     /**

@@ -34,14 +34,18 @@ class ReportAnalytics
 
     public function forRequest(Request $request): array
     {
+        $currentYear = (int) now()->format('Y');
+        $earliest = Patient::min('recorded_at');
+        $firstYear = $earliest ? min($currentYear, (int) substr((string) $earliest, 0, 4)) : $currentYear;
+
         $filters = $request->validate([
-            'month' => ['nullable', 'date_format:Y-m'],
+            'year' => ['nullable', 'integer', 'min:2000', 'max:'.$currentYear],
         ]);
 
-        $selectedMonth = $filters['month'] ?? now()->format('Y-m');
-        $year = (int) substr($selectedMonth, 0, 4);
-        $from = CarbonImmutable::create($year, 1, 1)->startOfMonth();
-        $to = $from->addYear()->subMonth();
+        // The charts always cover a full calendar year, January to December.
+        $year = (int) ($filters['year'] ?? $currentYear);
+        $from = CarbonImmutable::create($year, 1, 1);
+        $to = $from->endOfYear()->startOfMonth();
         $monthExpression = match (DB::connection()->getDriverName()) {
             'sqlite' => "strftime('%Y-%m', recorded_at)",
             'pgsql' => "TO_CHAR(recorded_at, 'YYYY-MM')",
@@ -49,7 +53,7 @@ class ReportAnalytics
         };
 
         $monthlyRows = Patient::query()
-            ->whereBetween('recorded_at', [$from->startOfMonth(), $to->endOfMonth()])
+            ->whereBetween('recorded_at', [$from, $to->endOfMonth()])
             ->selectRaw("{$monthExpression} as report_month, COUNT(*) as checkups")
             ->selectRaw('SUM(CASE WHEN sys >= 140 OR dia >= 90 THEN 1 ELSE 0 END) as bp_high')
             ->selectRaw('SUM(CASE WHEN sys < 90 OR dia < 60 THEN 1 ELSE 0 END) as bp_low')
@@ -119,7 +123,7 @@ class ReportAnalytics
             'vitals' => $vitals,
             'pie' => $pie,
             'year' => $year,
-            'selectedMonth' => $selectedMonth,
+            'years' => range($currentYear, min($firstYear, $year)),
         ];
     }
 }

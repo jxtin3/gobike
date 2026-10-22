@@ -22,7 +22,7 @@
                 <button type="button" class="icon-btn" data-nav-toggle aria-label="Open menu" aria-expanded="false" aria-controls="adm-side">
                     <x-admin.icon name="menu" />
                 </button>
-                OneGoBike Admin
+                <a class="adm-mobilebar-title" href="{{ route('admin.dashboard') }}">OneGoBike Admin</a>
             </div>
 
             <main id="main" class="adm-main">
@@ -37,13 +37,12 @@
                             <p class="page-sub">@yield('subheading')</p>
                         @endif
                     </div>
-                    @hasSection('heading-actions')
-                        <div class="heading-actions">@yield('heading-actions')</div>
-                    @endif
                     @hasSection('actions')
                         <div class="head-actions">@yield('actions')</div>
                     @endif
                 </header>
+                @else
+                    <h1 class="sr-only">@yield('heading', 'Operations')</h1>
                 @endunless
 
                 @if (session('success'))
@@ -61,7 +60,7 @@
                     </div>
                 @endif
                 @if ($errors->any())
-                    <div class="alert error" role="alert">
+                    <div class="alert error" role="alert" data-dismissible>
                         <x-admin.icon name="alert-circle" />
                         <div>
                             <ul>
@@ -70,6 +69,7 @@
                                 @endforeach
                             </ul>
                         </div>
+                        <button type="button" class="alert-close icon-btn" aria-label="Dismiss"><x-admin.icon name="x" /></button>
                     </div>
                 @endif
 

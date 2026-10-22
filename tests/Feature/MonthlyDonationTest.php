@@ -100,7 +100,7 @@ it('picks up a cancellation made in PayPal when the donor opens the page', funct
 it('lets donors cancel their monthly donation themselves', function () {
     $donation = makeMonthlyDonation();
     $this->partialMock(PayPalDonationService::class, function ($mock) {
-        $mock->shouldReceive('cancelSubscription')->once()->with('I-MONTHLY-1', \Mockery::type('string'));
+        $mock->shouldReceive('cancelSubscription')->once()->with('I-MONTHLY-1', Mockery::type('string'));
     });
 
     $this->post(route('donate.monthly.cancel', $donation))
@@ -246,4 +246,20 @@ it('only lets admins delete donations', function () {
     $this->delete(route('admin.operations.donations.destroy', $donation))->assertRedirect();
 
     expect(Donation::find($donation->id))->not->toBeNull();
+});
+
+it('counts every monthly charge in the total collected', function () {
+    $admin = User::factory()->create(['is_admin' => true]);
+    makeMonthlyDonation(['frequency' => 'once', 'paypal_subscription_id' => null, 'subscription_status' => null, 'amount_usd' => 10]);
+    $monthly = makeMonthlyDonation(['amount_usd' => 25]);
+    foreach (['SALE-1', 'SALE-2', 'SALE-3'] as $sale) {
+        $monthly->payments()->create(['gateway' => 'paypal', 'gateway_payment_id' => $sale, 'amount' => 25, 'currency' => 'USD', 'paid_at' => now()]);
+    }
+    makeMonthlyDonation(['paypal_subscription_id' => 'I-MONTHLY-2', 'amount_usd' => 5]); // active, first charge not reported yet
+
+    $this->actingAs($admin)
+        ->get(route('admin.operations.donations.index'))
+        ->assertOk()
+        ->assertViewHas('totalPaid', 10.0 + 75.0 + 5.0)
+        ->assertSee('$90.00');
 });

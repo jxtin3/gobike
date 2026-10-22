@@ -24,6 +24,19 @@ class EnsureAdmin
             abort(403, 'Access denied.');
         }
 
+        // An admin deactivated after signing in loses access on their next request.
+        if ((Auth::user()->status ?? 'Active') !== 'Active') {
+            Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            if ($request->expectsJson()) {
+                abort(401, 'Unauthenticated.');
+            }
+
+            return redirect()->route('login')->withErrors(['email' => 'Your admin account is not active.']);
+        }
+
         return $next($request);
     }
 }

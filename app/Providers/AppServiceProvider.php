@@ -3,14 +3,17 @@
 namespace App\Providers;
 
 use App\Models\ContactMessage;
-use App\Models\User;
-use Illuminate\Support\Facades\View;
-use Illuminate\Support\ServiceProvider;
 use App\Models\GobikerMessage;
-use Illuminate\Support\Facades\URL;
+use App\Models\ReplicationRequest;
+use App\Models\TrainingRequest;
+use App\Models\User;
+use App\Models\VolunteerApplication;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Facades\View;
+use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -22,9 +25,9 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         if ($this->app->environment('production')) {
-               URL::forceScheme('https');
+            URL::forceScheme('https');
         }
-        
+
         RateLimiter::for('mobile', function (Request $request) {
             return Limit::perMinute(120)->by($request->user()?->id ?: $request->ip());
         });
@@ -35,13 +38,16 @@ class AppServiceProvider extends ServiceProvider
                 Limit::perHour(200)->by('chatbot-hour:'.$request->ip()),
             ];
         });
-        
+
         // Runs only when the admin sidebar renders, so public pages are unaffected.
         View::composer('admin.partials.sidebar', function ($view) {
             $view->with([
-                'navPending'        => User::pendingApproval()->count(),
-                'navUnread'         => ContactMessage::where('is_read', false)->count(),
-                'navGobikerUnread'  => GobikerMessage::where('is_read', false)->count(),
+                'navPending' => User::pendingApproval()->count(),
+                'navUnread' => ContactMessage::where('is_read', false)->count(),
+                'navGobikerUnread' => GobikerMessage::where('is_read', false)->count(),
+                'navVolunteersPending' => VolunteerApplication::where('application_status', 'pending')->count(),
+                'navTrainingPending' => TrainingRequest::where('status', 'pending')->count(),
+                'navChaptersPending' => ReplicationRequest::where('status', 'pending')->count(),
             ]);
         });
     }

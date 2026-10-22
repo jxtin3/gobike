@@ -38,6 +38,20 @@ class Donation extends Model
         'expired' => 'Ended',
     ];
 
+    /** Pill colour for each payment status in the admin. */
+    public const STATUS_PILLS = [
+        'paid' => 'ok',
+        'pending' => 'warn',
+        'failed' => 'bad',
+        'cancelled' => 'neutral',
+    ];
+
+    public const METHOD_LABELS = [
+        'paypal' => 'PayPal',
+        'gcash' => 'GCash',
+        'bank' => 'Online banking',
+    ];
+
     protected function casts(): array
     {
         return [
@@ -100,6 +114,35 @@ class Donation extends Model
     public function getTotalUsdAttribute(): float
     {
         return (float) $this->amount_usd + (float) $this->platform_fee_usd;
+    }
+
+    public function getStatusPillAttribute(): string
+    {
+        return self::STATUS_PILLS[$this->status] ?? 'neutral';
+    }
+
+    public function getSubscriptionPillAttribute(): string
+    {
+        return ['active' => 'ok', 'suspended' => 'warn'][$this->subscription_status ?? 'active'] ?? 'neutral';
+    }
+
+    public function getMethodLabelAttribute(): string
+    {
+        return self::METHOD_LABELS[$this->payment_method] ?? ucfirst((string) $this->payment_method);
+    }
+
+    public function getFrequencyLabelAttribute(): string
+    {
+        return $this->frequency === 'monthly' ? 'Monthly' : 'One-time';
+    }
+
+    public function getFullAddressAttribute(): string
+    {
+        $country = strtolower((string) $this->country) === 'other' && $this->other_country ? $this->other_country : $this->country;
+
+        return collect([$this->address1, $this->address2, $this->city, trim("{$this->state} {$this->postcode}"), $country])
+            ->filter(fn ($part) => filled($part))
+            ->implode(', ');
     }
 
     public function getDonorNameAttribute(): string

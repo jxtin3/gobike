@@ -56,8 +56,8 @@ it('shows monthly aggregated reports without patient identity data', function ()
         'recorded_at' => now()->startOfYear()->addMonths(6),
     ]);
 
-    $response = $this->actingAs($admin)->get(route('admin.operations.reports.index', [
-        'month' => now()->format('Y-m'),
+    $response = $this->actingAs($admin)->get(route('admin.dashboard', [
+        'year' => now()->year,
     ]));
 
     $response->assertOk()
@@ -111,8 +111,9 @@ it('makes analytics the admin dashboard and places live operations after the cha
     $this->get(route('admin.live-map.index'))
         ->assertOk()
         ->assertSee('id="map"', false)
+        ->assertSee('data-locations-url="'.route('admin.locations.index').'"', false)
         ->assertSeeInOrder([
-            'aria-label="GoBiker statuses"',
+            'rider-legend',
             'Emergency',
             'Responding',
             'GoBikers',
@@ -122,7 +123,6 @@ it('makes analytics the admin dashboard and places live operations after the cha
 it('allows admins to edit homepage data and shows the changes publicly', function () {
     $admin = User::factory()->create(['is_admin' => true]);
 
-
     $stat = ImpactStat::where('section', 'impact')->firstOrFail();
     $highlight = ImpactStat::where('section', 'highlight')->firstOrFail();
     $badge = ImpactStat::where('section', 'badge')->firstOrFail();
@@ -131,8 +131,6 @@ it('allows admins to edit homepage data and shows the changes publicly', functio
         ->get(route('admin.operations.homepage-data.index'))
         ->assertOk()
         ->assertSee('Featured impact highlights');
-
-    
 
     $this->put(route('admin.operations.homepage-data.impact-stats.update', $stat), [
         'label' => 'People served',
@@ -159,12 +157,29 @@ it('allows admins to edit homepage data and shows the changes publicly', functio
         ->assertSee('600+');
 });
 
-it('rejects invalid report months', function () {
+it('rejects invalid dashboard years', function () {
     $admin = User::factory()->create(['is_admin' => true]);
 
     $this->actingAs($admin)
-        ->get(route('admin.operations.reports.index', [
-            'month' => 'not-a-month',
-        ]))
-        ->assertSessionHasErrors('month');
+        ->get(route('admin.dashboard', ['year' => 'not-a-year']))
+        ->assertSessionHasErrors('year');
+
+    $this->actingAs($admin)
+        ->get(route('admin.dashboard', ['year' => now()->year + 1]))
+        ->assertSessionHasErrors('year');
+});
+
+it('offers every year with patient records in the dashboard year filter', function () {
+    $admin = User::factory()->create(['is_admin' => true]);
+    $recorder = User::factory()->create(['role' => 'GoBiker']);
+    Patient::create([
+        'user_id' => $recorder->id, 'name' => 'Old record', 'address' => 'Somewhere', 'contact' => '09123456789',
+        'age' => 40, 'sys' => 120, 'dia' => 80, 'pulse' => 70, 'resp' => 16, 'temp' => 36.6,
+        'height' => 160, 'weight' => 60, 'recorded_at' => now()->subYears(2),
+    ]);
+
+    $response = $this->actingAs($admin)->get(route('admin.dashboard'))->assertOk();
+
+    expect($response->viewData('years'))->toBe([now()->year, now()->year - 1, now()->year - 2])
+        ->and($response->viewData('year'))->toBe(now()->year);
 });

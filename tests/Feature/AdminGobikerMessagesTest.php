@@ -22,10 +22,12 @@ it('shows a dedicated reader for GoBiker messages in the admin inbox', function 
         ->assertOk()
         ->assertSee('All messages')
         ->assertSee('Unread')
-        ->assertSee('Read message')
-        ->assertSee('id="gobikerMessageReader"', false)
+        ->assertSee('Open message from Test GoBiker')
+        ->assertSee('id="gobikerMessageDialog"', false)
+        ->assertSee('data-sender="Test GoBiker"', false)
+        ->assertSee('data-field="sender"', false) // the dialog title is filled with the sender's name
         ->assertSee('We need medical supplies for our next community ride.')
-        ->assertSee('1', false);
+        ->assertSee('data-unread-count>1<', false);
 });
 
 it('marks a GoBiker message as read', function () {
@@ -37,7 +39,7 @@ it('marks a GoBiker message as read', function () {
     ]);
 
     $this->actingAs($admin)
-        ->patch(route('admin.operations.gobiker-messages.mark-read', $message))
+        ->patch(route('admin.operations.gobiker-messages.read', $message))
         ->assertOk()
         ->assertJson(['is_read' => true]);
 

@@ -1,64 +1,53 @@
 @extends('admin.operations.layout')
-@section('title', 'Training Requests')
-@section('heading', 'Training Plan Requests')
+@section('title', 'Training requests')
+@section('heading', 'Training plan requests')
 @section('subheading', 'House-to-house training session requests submitted through the website.')
+
+@use('App\Models\TrainingRequest')
 
 @section('content')
 @php
-    $tierColors = [
-        'basic'    => 'ok',
-        'standard' => 'info',
-        'advance'  => 'warn',
-    ];
-    $statusColors = [
-        'pending'   => 'warn',
-        'contacted' => 'info',
-        'completed' => 'ok',
-        'cancelled' => 'neutral',
-    ];
+    $hasQuery = filled(request('search')) || filled(request('tier')) || filled(request('status'));
 @endphp
 
-{{-- Summary Cards --}}
 <div class="stat-row">
     <div class="stat-card">
         <span class="stat-icon"><x-admin.icon name="clipboard" /></span>
         <div>
-            <div class="stat-num">{{ $totalCount }}</div>
+            <div class="stat-num">{{ number_format($totalCount) }}</div>
             <div class="stat-label">Total requests</div>
         </div>
     </div>
     <div class="stat-card">
         <span class="stat-icon"><x-admin.icon name="clock" /></span>
         <div>
-            <div class="stat-num">{{ $pendingCount }}</div>
+            <div class="stat-num">{{ number_format($pendingCount) }}</div>
             <div class="stat-label">Pending</div>
         </div>
     </div>
     <div class="stat-card">
         <span class="stat-icon"><x-admin.icon name="phone-call" /></span>
         <div>
-            <div class="stat-num">{{ $contactedCount }}</div>
+            <div class="stat-num">{{ number_format($contactedCount) }}</div>
             <div class="stat-label">Contacted</div>
         </div>
     </div>
 </div>
 
-{{-- Toolbar --}}
 <div class="toolbar">
     <form class="search-form" role="search" method="GET" action="{{ route('admin.operations.training-requests.index') }}">
         <input class="input" type="search" name="search" value="{{ request('search') }}" placeholder="Search name, email or address" aria-label="Search training requests">
-        <select class="input" name="tier" aria-label="Filter by tier" onchange="this.form.submit()">
+        <select class="input" name="tier" aria-label="Filter by tier" data-autosubmit>
             <option value="">All tiers</option>
-            <option value="basic"    @selected(request('tier') === 'basic')>Basic (Free)</option>
-            <option value="standard" @selected(request('tier') === 'standard')>Standard (₱499)</option>
-            <option value="advance"  @selected(request('tier') === 'advance')>Advance (₱999)</option>
+            @foreach (TrainingRequest::TIERS as $value => $label)
+                <option value="{{ $value }}" @selected(request('tier') === $value)>{{ $label }}</option>
+            @endforeach
         </select>
-        <select class="input" name="status" aria-label="Filter by status" onchange="this.form.submit()">
+        <select class="input" name="status" aria-label="Filter by status" data-autosubmit>
             <option value="">All statuses</option>
-            <option value="pending"   @selected(request('status') === 'pending')>Pending</option>
-            <option value="contacted" @selected(request('status') === 'contacted')>Contacted</option>
-            <option value="completed" @selected(request('status') === 'completed')>Completed</option>
-            <option value="cancelled" @selected(request('status') === 'cancelled')>Cancelled</option>
+            @foreach (TrainingRequest::STATUSES as $status)
+                <option value="{{ $status }}" @selected(request('status') === $status)>{{ ucfirst($status) }}</option>
+            @endforeach
         </select>
         <button type="submit" class="btn btn-secondary"><x-admin.icon name="search" /> Search</button>
     </form>
@@ -78,60 +67,64 @@
         </thead>
         <tbody>
             @forelse ($requests as $req)
-            @php
-                $tierColor   = $tierColors[$req->tier]   ?? 'neutral';
-                $statusColor = $statusColors[$req->status] ?? 'neutral';
-                $tierLabel   = ['basic' => 'Basic (Free)', 'standard' => 'Standard ₱499', 'advance' => 'Advance ₱999'][$req->tier] ?? ucfirst($req->tier);
-            @endphp
-            <tr class="training-row" style="cursor:pointer"
-                data-name="{{ $req->name }}"
-                data-email="{{ $req->email }}"
-                data-phone="{{ $req->phone ?? '—' }}"
-                data-tier="{{ $tierLabel }}"
-                data-tier-class="{{ $tierColor }}"
-                data-address="{{ $req->address }}"
-                data-message="{{ $req->message ?? '—' }}"
-                data-status="{{ ucfirst($req->status) }}"
-                data-status-class="{{ $statusColor }}"
-                data-date="{{ $req->created_at->format('M d, Y g:i A') }}"
-                data-update-url="{{ route('admin.operations.training-requests.status', $req) }}"
-            >
-                <td>
-                    <div class="cell-user">
-                        @php
-                            $initials = collect(preg_split('/\s+/', trim($req->name)))->filter()->take(2)
-                                ->map(fn ($p) => mb_strtoupper(mb_substr($p, 0, 1)))->implode('');
-                        @endphp
-                        <span class="avatar" aria-hidden="true">{{ $initials }}</span>
-                        <div>
-                            <b>{{ $req->name }}</b>
-                            <small>{{ $req->email }}</small>
+                @php
+                    $initials = collect(preg_split('/\s+/', trim($req->name)))->filter()->take(2)
+                        ->map(fn ($p) => mb_strtoupper(mb_substr($p, 0, 1)))->implode('');
+                @endphp
+                <tr class="is-clickable"
+                    data-dialog="#trainingDialog"
+                    data-name="{{ $req->name }}"
+                    data-email="{{ $req->email }}"
+                    data-mailto="mailto:{{ $req->email }}?subject={{ rawurlencode('Your Go Bike training request') }}"
+                    data-phone="{{ $req->phone }}"
+                    data-tier="{{ $req->tier_label }}"
+                    data-address="{{ $req->address }}"
+                    data-message="{{ $req->message }}"
+                    data-status="{{ $req->status_label }}"
+                    data-status-pill="{{ $req->status_pill }}"
+                    data-status-value="{{ $req->status }}"
+                    data-date="{{ $req->created_at->format('M j, Y g:i A') }}"
+                    data-update-url="{{ route('admin.operations.training-requests.status', $req) }}"
+                    data-delete-url="{{ route('admin.operations.training-requests.destroy', $req) }}"
+                    data-delete-text="The request from {{ $req->name }} will be permanently deleted.">
+                    <td>
+                        <div class="cell-user">
+                            <span class="avatar" aria-hidden="true">{{ $initials }}</span>
+                            <div>
+                                <b>{{ $req->name }}</b>
+                                <small>{{ $req->email }}</small>
+                            </div>
                         </div>
-                    </div>
-                </td>
-                <td><span class="pill pill-{{ $tierColor }}">{{ $tierLabel }}</span></td>
-                <td>{{ Str::limit($req->address, 40) }}</td>
-                <td><span class="pill pill-{{ $statusColor }}">{{ ucfirst($req->status) }}</span></td>
-                <td>
-                    {{ $req->created_at->format('M j, Y') }}
-                    <small class="muted" style="display:block">{{ $req->created_at->format('g:i A') }}</small>
-                </td>
-                <td>
-                    <div class="row-actions">
-                        <button type="button" class="icon-btn btn-view-training" title="View" aria-label="View request from {{ $req->name }}"><x-admin.icon name="eye" /></button>
-                    </div>
-                </td>
-            </tr>
+                    </td>
+                    <td><span class="pill pill-{{ $req->tier_pill }}">{{ $req->tier_label }}</span></td>
+                    <td title="{{ $req->address }}">{{ Str::limit($req->address, 40) }}</td>
+                    <td><span class="pill pill-{{ $req->status_pill }}">{{ $req->status_label }}</span></td>
+                    <td>
+                        {{ $req->created_at->format('M j, Y') }}
+                        <small class="sub-line">{{ $req->created_at->format('g:i A') }}</small>
+                    </td>
+                    <td>
+                        <div class="row-actions">
+                            <button type="button" class="icon-btn" data-open title="Open" aria-label="Open request from {{ $req->name }}"><x-admin.icon name="eye" /></button>
+                        </div>
+                    </td>
+                </tr>
             @empty
-            <tr class="is-static">
-                <td colspan="6">
-                    <div class="empty">
-                        <x-admin.icon name="clipboard" />
-                        <b>No training requests yet</b>
-                        <p>Requests submitted through the Programs page will appear here.</p>
-                    </div>
-                </td>
-            </tr>
+                <tr class="is-static">
+                    <td colspan="6">
+                        <div class="empty">
+                            <x-admin.icon name="clipboard" />
+                            @if ($hasQuery)
+                                <b>No requests match</b>
+                                <p>Try a different search, or clear the filters.</p>
+                                <a class="btn btn-secondary btn-sm" href="{{ route('admin.operations.training-requests.index') }}">Clear filters</a>
+                            @else
+                                <b>No training requests yet</b>
+                                <p>Requests submitted through the Programs page will appear here.</p>
+                            @endif
+                        </div>
+                    </td>
+                </tr>
             @endforelse
         </tbody>
     </table>
@@ -139,75 +132,54 @@
 
 {{ $requests->links('admin.partials.pagination') }}
 
-{{-- Detail Modal --}}
-<dialog id="trainingModal" class="msg-modal" style="width:min(580px,94vw);max-width:580px;background:#ffffff;border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow-2);padding:0;overflow:hidden">
-    <div class="msg-inner" style="padding:28px 30px">
-        <div class="msg-head" style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--line);gap:16px">
+<dialog id="trainingDialog" class="msg-modal" aria-labelledby="training-dialog-title">
+    <div class="msg-inner">
+        <header class="msg-head">
             <div>
-                <h3 id="tm-name" style="font-size:22px;font-weight:700;color:var(--ink);margin:0 0 6px"></h3>
-                <span id="tm-status" class="status-pill"></span>
+                <span class="msg-kicker">Training request</span>
+                <h2 id="training-dialog-title" data-field="name"></h2>
+                <span data-pill-field="status"></span>
             </div>
-            <button type="button" id="tm-close" class="modal-close-btn" aria-label="Close dialog">
-                <x-admin.icon name="x" />
-            </button>
-        </div>
+            <button type="button" class="icon-btn" data-dialog-close aria-label="Close"><x-admin.icon name="x" /></button>
+        </header>
 
-        <div class="msg-meta" style="grid-template-columns:1fr 1fr">
-            <div><span>Email</span><b id="tm-email"></b></div>
-            <div><span>Phone</span><b id="tm-phone"></b></div>
-            <div><span>Tier</span><b id="tm-tier"></b></div>
-            <div><span>Submitted</span><b id="tm-date"></b></div>
-            <div style="grid-column:1/-1"><span>Address</span><b id="tm-address"></b></div>
-        </div>
+        <dl class="msg-meta">
+            <div><dt>Email</dt><dd data-field="email"></dd></div>
+            <div><dt>Phone</dt><dd data-field="phone"></dd></div>
+            <div><dt>Tier</dt><dd data-field="tier"></dd></div>
+            <div><dt>Submitted</dt><dd data-field="date"></dd></div>
+            <div class="msg-meta-wide"><dt>Address</dt><dd data-field="address"></dd></div>
+        </dl>
 
-        <div class="msg-body-wrapper">
-            <span class="msg-body-label">Message / Preferred Schedule</span>
-            <p id="tm-message" class="msg-body"></p>
-        </div>
+        <section class="msg-body-wrapper">
+            <h3 class="msg-body-label">Message and preferred schedule</h3>
+            <p class="msg-body" data-field="message"></p>
+        </section>
 
-        <div class="msg-foot" style="justify-content:space-between;align-items:center">
-            <span style="font-size:12px;color:var(--ink-3)">Update status:</span>
-            <form id="tm-status-form" method="POST" action="" style="display:flex;gap:8px;flex-wrap:wrap">
-                @csrf
-                @method('PATCH')
-                <button type="submit" name="status" value="pending"   class="btn btn-sm btn-secondary">Pending</button>
+        <form method="POST" class="msg-status" data-action-field="updateUrl" data-pressed-field="statusValue">
+            @csrf
+            @method('PATCH')
+            <span class="msg-status-label" id="training-status-label">Set status</span>
+            <div class="msg-status-buttons" role="group" aria-labelledby="training-status-label">
+                <button type="submit" name="status" value="pending" class="btn btn-sm btn-secondary">Pending</button>
                 <button type="submit" name="status" value="contacted" class="btn btn-sm btn-secondary">Contacted</button>
-                <button type="submit" name="status" value="completed" class="btn btn-sm" style="background:var(--ok);color:#fff">Completed</button>
-                <button type="submit" name="status" value="cancelled" class="btn btn-sm" style="background:var(--bad);color:#fff">Cancelled</button>
+                <button type="submit" name="status" value="completed" class="btn btn-sm btn-secondary">Completed</button>
+                <button type="submit" name="status" value="cancelled" class="btn btn-sm btn-secondary"
+                        data-confirm-title="Cancel this training request?"
+                        data-confirm-text="The request will be marked cancelled. You can change the status again later."
+                        data-confirm-ok="Mark cancelled">Cancelled</button>
+            </div>
+        </form>
+
+        <footer class="msg-foot">
+            <form method="POST" data-action-field="deleteUrl" data-confirm-field="deleteText"
+                  data-confirm-title="Delete this training request?" data-confirm-ok="Delete request">
+                @csrf
+                @method('DELETE')
+                <button type="submit" class="btn btn-soft-danger"><x-admin.icon name="trash" /> Delete</button>
             </form>
-        </div>
+            <a class="btn btn-primary" data-href-field="mailto"><x-admin.icon name="mail" /> Email requester</a>
+        </footer>
     </div>
 </dialog>
-
-<script>
-(function () {
-    const modal = document.getElementById('trainingModal');
-    const set = (id, val) => { document.getElementById(id).textContent = val || '—'; };
-
-    document.querySelectorAll('.training-row, .btn-view-training').forEach(function (el) {
-        el.addEventListener('click', function () {
-            const row = el.tagName === 'TR' ? el : el.closest('tr');
-            if (!row) return;
-            const d = row.dataset;
-            set('tm-name', d.name);
-            set('tm-email', d.email);
-            set('tm-phone', d.phone);
-            set('tm-tier', d.tier);
-            set('tm-address', d.address);
-            set('tm-message', d.message);
-            set('tm-date', d.date);
-
-            const statusEl = document.getElementById('tm-status');
-            statusEl.textContent = d.status;
-            statusEl.className = 'status-pill ' + (d.statusClass === 'ok' ? 'published' : d.statusClass === 'info' ? 'scheduled' : d.statusClass === 'warn' ? 'draft' : 'archived');
-
-            document.getElementById('tm-status-form').action = d.updateUrl;
-            modal.showModal();
-        });
-    });
-
-    document.getElementById('tm-close').addEventListener('click', () => modal.close());
-    modal.addEventListener('click', e => { if (e.target === modal) modal.close(); });
-})();
-</script>
 @endsection

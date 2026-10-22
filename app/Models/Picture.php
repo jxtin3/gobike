@@ -17,6 +17,7 @@ class Picture extends Model
     public function isVideo(): bool
     {
         $ext = strtolower(pathinfo($this->image_path, PATHINFO_EXTENSION));
-        return in_array($ext, ['mp4', 'webm', 'mov', 'm4v', 'ogg']);
+
+        return in_array($ext, ['mp4', 'webm', 'mov', 'm4v'], true);
     }
 }

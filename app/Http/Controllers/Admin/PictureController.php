@@ -7,6 +7,7 @@ use App\Models\Picture;
 use App\Support\Media;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class PictureController extends Controller
 {
@@ -17,11 +18,6 @@ class PictureController extends Controller
             ->paginate(18);
 
         return view('admin.operations.pictures.index', compact('pictures'));
-    }
-
-    public function create()
-    {
-        return redirect()->route('admin.operations.pictures.index');
     }
 
     public function store(Request $request)
@@ -42,6 +38,7 @@ class PictureController extends Controller
                     'message' => 'No files were received by the server. Please check file sizes.',
                 ], 422);
             }
+
             return back()->with('error', 'Please select at least one photo or video to upload.');
         }
 
@@ -53,10 +50,12 @@ class PictureController extends Controller
 
         $created = [];
         foreach ($files as $file) {
-            if (!$file || !$file->isValid()) continue;
+            if (! $file || ! $file->isValid()) {
+                continue;
+            }
 
             $path = $file->store('pictures', Media::disk());
-            $title = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
+            $title = Str::limit(pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME), 250, '');
 
             $pic = Picture::create([
                 'title' => $title ?: 'Media',
@@ -75,28 +74,18 @@ class PictureController extends Controller
         if ($request->expectsJson() || $request->wantsJson() || $request->ajax()) {
             return response()->json([
                 'success' => true,
-                'message' => count($created) . ' file(s) successfully uploaded.',
+                'message' => trans_choice('{1} 1 file uploaded.|[2,*] :count files uploaded.', count($created)),
                 'items' => $created,
             ]);
         }
 
         return redirect()->route('admin.operations.pictures.index')
-            ->with('success', count($created) . ' file(s) successfully uploaded.');
+            ->with('success', trans_choice('{1} 1 file uploaded.|[2,*] :count files uploaded.', count($created)));
     }
 
     public function show(Picture $picture)
     {
         return view('admin.operations.pictures.show', compact('picture'));
-    }
-
-    public function edit(Picture $picture)
-    {
-        return redirect()->route('admin.operations.pictures.index');
-    }
-
-    public function update(Request $request, Picture $picture)
-    {
-        return redirect()->route('admin.operations.pictures.index');
     }
 
     public function destroy(Picture $picture)
@@ -108,6 +97,6 @@ class PictureController extends Controller
         }
         $picture->delete();
 
-        return back()->with('success', 'Photo/video successfully removed.');
+        return redirect()->route('admin.operations.pictures.index')->with('success', 'Picture removed.');
     }
 }

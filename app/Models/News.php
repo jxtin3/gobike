@@ -13,7 +13,6 @@ class News extends Model
         'excerpt',
         'body',
         'image_path',
-        'category',
         'is_published',
         'published_at',
     ];
@@ -27,6 +26,21 @@ class News extends Model
     public function scopePublished($query)
     {
         return $query->where('is_published', true)->whereNotNull('published_at')->where('published_at', '<=', now());
+    }
+
+    /** Published, Scheduled (published with a future date) or Draft. */
+    public function getStatusLabelAttribute(): string
+    {
+        if (! $this->is_published) {
+            return 'Draft';
+        }
+
+        return $this->published_at?->isFuture() ? 'Scheduled' : 'Published';
+    }
+
+    public function getStatusPillAttribute(): string
+    {
+        return ['Published' => 'ok', 'Scheduled' => 'info', 'Draft' => 'neutral'][$this->status_label];
     }
 
     // get summary of the news when the excerpt is empty

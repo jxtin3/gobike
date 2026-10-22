@@ -1,1 +1,0 @@
-@extends('admin.operations.layout') @section('title','Edit Picture') @section('heading','Edit picture') @section('content')@include('admin.operations.pictures.form',['picture'=>$picture,'action'=>route('admin.operations.pictures.update',$picture),'method'=>'PUT','button'=>'Update picture'])@endsection

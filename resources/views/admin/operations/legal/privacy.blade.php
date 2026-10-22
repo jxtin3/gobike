@@ -8,7 +8,7 @@
         'document' => $document,
         'activeDoc' => 'privacy',
         'updateRoute' => route('admin.operations.legal.privacy.update'),
-        'liveUrl' => url('/privacy-policy'),
+        'liveUrl' => route('privacy-policy'),
         'accentColor' => '#2FA7FF'
     ])
 @endsection

@@ -1,32 +1,36 @@
 <?php
 
+use App\Http\Controllers\Admin\ContactMessageController;
 use App\Http\Controllers\Admin\DashboardController;
-use App\Http\Controllers\Admin\LocationController;
-use App\Http\Controllers\Admin\OperationsController;
+use App\Http\Controllers\Admin\DonationController as AdminDonationController;
+use App\Http\Controllers\Admin\GobikerMessageController;
 use App\Http\Controllers\Admin\HomepageDataController;
-use App\Http\Controllers\Admin\ReportController;
+use App\Http\Controllers\Admin\LegalDocumentController as AdminLegalDocumentController;
+use App\Http\Controllers\Admin\LocationController;
 use App\Http\Controllers\Admin\NewsController as AdminNewsController;
+use App\Http\Controllers\Admin\PatientController as AdminPatientController;
 use App\Http\Controllers\Admin\PictureController;
 use App\Http\Controllers\Admin\ProfileController;
-use App\Http\Controllers\Admin\UserController as AdminUserController;
-use App\Http\Controllers\Admin\DonationController as AdminDonationController;
+use App\Http\Controllers\Admin\ReplicationRequestController as AdminReplicationRequestController;
 use App\Http\Controllers\Admin\TrainingRequestController as AdminTrainingRequestController;
+use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Admin\VolunteerApplicationController as AdminVolunteerController;
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\ChatbotController;
+use App\Http\Controllers\ContactController;
 use App\Http\Controllers\DonationController;
 use App\Http\Controllers\GalleryController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\LegalDocumentController;
 use App\Http\Controllers\NewsController;
-use App\Http\Controllers\ChatbotController;
 use App\Http\Controllers\ReplicationRequestController;
-use App\Http\Controllers\Admin\ReplicationRequestController as AdminReplicationRequestController;
 use App\Http\Controllers\TrainingRequestController;
+use App\Http\Controllers\VolunteerController;
 use App\Http\Controllers\Webhook\PayMongoWebhookController;
 use App\Http\Controllers\Webhook\PayPalWebhookController;
 use App\Http\Middleware\EnsureAdmin;
+use Illuminate\Session\Middleware\AuthenticateSession;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Admin\PatientController as AdminPatientController;
 
 // pages
 Route::get('/', [HomeController::class, 'index']);
@@ -39,10 +43,9 @@ Route::get('/gallery', GalleryController::class);
 
 Route::view('/volunteer', 'join-the-movement.volunteer')->name('volunteer');
 
-Route::post('/volunteer', [\App\Http\Controllers\VolunteerController::class, 'store'])
+Route::post('/volunteer', [VolunteerController::class, 'store'])
     ->middleware('throttle:5,1')
     ->name('volunteer.store');
-    
 
 Route::view('/about', 'who-we-are.about');
 
@@ -89,17 +92,16 @@ Route::redirect('/reach-us', '/contact');
 Route::view('/contact', 'contact');
 
 // limit visitor to send 5 messages/min in contact page
-Route::post('/contact', [\App\Http\Controllers\ContactController::class, 'store'])
+Route::post('/contact', [ContactController::class, 'store'])
     ->middleware('throttle:5,1')
     ->name('contact.store');
 
-//chatbot :20 requests/minute per IP
+// chatbot :20 requests/minute per IP
 Route::post('/chatbot/message', [ChatbotController::class, 'message'])
     ->middleware('throttle:chatbot')
     ->name('chatbot.message');
 
-
-//donation
+// donation
 Route::get('/donate', [DonationController::class, 'show'])->name('donate');
 Route::post('/donate/checkout', [DonationController::class, 'checkout'])->middleware('throttle:10,1')->name('donate.checkout');
 Route::get('/donate/success/{donation}', [DonationController::class, 'success'])->name('donate.success');
@@ -118,14 +120,12 @@ Route::post('/programs/training-request', [TrainingRequestController::class, 'st
     ->middleware('throttle:5,1')
     ->name('training-request.store');
 
-
 // privacy / terms
 Route::get('/privacy-policy', [LegalDocumentController::class, 'privacy'])->name('privacy-policy');
 
 Route::get('/terms', [LegalDocumentController::class, 'terms'])->name('terms');
 
 Route::get('/cookie-policy', [LegalDocumentController::class, 'cookies'])->name('cookie-policy');
-
 
 // Auth routes
 Route::middleware('guest')->group(function () {
@@ -136,115 +136,87 @@ Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
 
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
-Route::middleware([EnsureAdmin::class])->group(function () {
+Route::middleware([EnsureAdmin::class, AuthenticateSession::class])->prefix('admin')->name('admin.')->group(function () {
 
-    Route::get('/admin', [DashboardController::class, 'index'])->name('admin.dashboard');
-    Route::view('/admin/live-map', 'admin.live-map')->name('admin.live-map.index');
+    Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+    Route::view('/live-map', 'admin.live-map')->name('live-map.index');
 
-    Route::get('/admin/locations', [LocationController::class, 'index'])->name('admin.locations.index');
-    Route::patch('/admin/locations/{location}/status', [LocationController::class, 'updateStatus'])->name('admin.locations.status');
+    Route::get('/locations', [LocationController::class, 'index'])->name('locations.index');
+    Route::patch('/locations/{location}/status', [LocationController::class, 'updateStatus'])->name('locations.status');
 
-    Route::get('/admin/profile', [ProfileController::class, 'show'])->name('admin.profile.show');
-    Route::get('/admin/profile/edit', [ProfileController::class, 'edit'])->name('admin.profile.edit');
-    Route::put('/admin/profile', [ProfileController::class, 'update'])->name('admin.profile.update');
+    // profile
+    Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
+    Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
 
-    Route::get('/admin/operations', [OperationsController::class, 'index'])->name('admin.operations');
-    Route::get('/admin/operations/reports', [ReportController::class, 'index'])
-        ->name('admin.operations.reports.index');
-    Route::get('/admin/operations/homepage-data', [HomepageDataController::class, 'index'])
-        ->name('admin.operations.homepage-data.index');
+    Route::prefix('operations')->name('operations.')->group(function () {
 
-    Route::post('/admin/operations/homepage-data/impact-stats', [HomepageDataController::class, 'storeImpactStat'])
-        ->name('admin.operations.homepage-data.impact-stats.store');
-    Route::put('/admin/operations/homepage-data/impact-stats/{impactStat}', [HomepageDataController::class, 'updateImpactStat'])
-        ->name('admin.operations.homepage-data.impact-stats.update');
-    Route::delete('/admin/operations/homepage-data/impact-stats/{impactStat}', [HomepageDataController::class, 'destroyImpactStat'])
-        ->name('admin.operations.homepage-data.impact-stats.destroy');
+        // homepage content
+        Route::get('/homepage-data', [HomepageDataController::class, 'index'])->name('homepage-data.index');
+        Route::post('/homepage-data/impact-stats', [HomepageDataController::class, 'storeImpactStat'])
+            ->name('homepage-data.impact-stats.store');
+        Route::put('/homepage-data/impact-stats/{impactStat}', [HomepageDataController::class, 'updateImpactStat'])
+            ->name('homepage-data.impact-stats.update');
+        Route::delete('/homepage-data/impact-stats/{impactStat}', [HomepageDataController::class, 'destroyImpactStat'])
+            ->name('homepage-data.impact-stats.destroy');
 
-    Route::resource('/admin/operations/news', AdminNewsController::class)->names('admin.operations.news');
-    Route::resource('/admin/operations/pictures', PictureController::class)->names('admin.operations.pictures');
-    Route::resource('/admin/operations/users', AdminUserController::class)->names('admin.operations.users');
+        Route::resource('news', AdminNewsController::class);
+        Route::resource('pictures', PictureController::class)->only(['index', 'store', 'show', 'destroy']);
 
-//operation
-    Route::patch('/admin/operations/users/{user}/approve', [AdminUserController::class, 'approve'])
-        ->name('admin.operations.users.approve');
+        // users
+        Route::resource('users', AdminUserController::class);
+        Route::patch('/users/{user}/approve', [AdminUserController::class, 'approve'])->name('users.approve');
+        Route::delete('/users/{user}/decline', [AdminUserController::class, 'decline'])->name('users.decline');
 
-    Route::delete('/admin/operations/users/{user}/decline', [AdminUserController::class, 'decline'])
-        ->name('admin.operations.users.decline');
+        // contact form messages
+        Route::get('/messages', [ContactMessageController::class, 'index'])->name('messages.index');
+        Route::patch('/messages/{message}/read', [ContactMessageController::class, 'markRead'])->name('messages.read');
+        Route::delete('/messages/{message}', [ContactMessageController::class, 'destroy'])->name('messages.destroy');
 
-//messages in admin
-    Route::get('/admin/operations/messages', [\App\Http\Controllers\Admin\ContactMessageController::class, 'index'])
-        ->name('admin.operations.messages.index');
+        // GoBiker -> admin messages
+        Route::get('/gobiker-messages', [GobikerMessageController::class, 'index'])->name('gobiker-messages.index');
+        Route::patch('/gobiker-messages/{message}/read', [GobikerMessageController::class, 'markRead'])->name('gobiker-messages.read');
+        Route::delete('/gobiker-messages/{message}', [GobikerMessageController::class, 'destroy'])->name('gobiker-messages.destroy');
 
-    Route::patch('/admin/operations/messages/{message}/read', [\App\Http\Controllers\Admin\ContactMessageController::class, 'markRead'])
-        ->name('admin.operations.messages.read');
+        // patients
+        Route::get('/patients', [AdminPatientController::class, 'index'])->name('patients.index');
+        Route::get('/patients/{patient}', [AdminPatientController::class, 'show'])->name('patients.show');
+        Route::delete('/patients/{patient}', [AdminPatientController::class, 'destroy'])->name('patients.destroy');
 
-    Route::delete('/admin/operations/messages/{message}', [\App\Http\Controllers\Admin\ContactMessageController::class, 'destroy'])
-        ->name('admin.operations.messages.destroy');
+        // donations
+        Route::get('/donations', [AdminDonationController::class, 'index'])->name('donations.index');
+        Route::post('/donations/{donation}/cancel-subscription', [AdminDonationController::class, 'cancelSubscription'])
+            ->name('donations.cancel-subscription');
+        Route::delete('/donations/{donation}', [AdminDonationController::class, 'destroy'])->name('donations.destroy');
 
-//patient
-    Route::get('/admin/operations/patients', [AdminPatientController::class, 'index'])
-        ->name('admin.operations.patients.index');
+        // training plan requests
+        Route::get('/training-requests', [AdminTrainingRequestController::class, 'index'])->name('training-requests.index');
+        Route::patch('/training-requests/{trainingRequest}/status', [AdminTrainingRequestController::class, 'updateStatus'])
+            ->name('training-requests.status');
+        Route::delete('/training-requests/{trainingRequest}', [AdminTrainingRequestController::class, 'destroy'])
+            ->name('training-requests.destroy');
 
-    Route::get('/admin/operations/patients/{patient}', [AdminPatientController::class, 'show'])
-        ->name('admin.operations.patients.show');
-    Route::delete('/admin/operations/patients/{patient}', [AdminPatientController::class, 'destroy'])
-        ->name('admin.operations.patients.destroy');
+        // chapter replication inquiries
+        Route::get('/chapter-inquiries', [AdminReplicationRequestController::class, 'index'])->name('chapter-inquiries.index');
+        Route::get('/chapter-inquiries/{replicationRequest}', [AdminReplicationRequestController::class, 'show'])
+            ->name('chapter-inquiries.show');
+        Route::patch('/chapter-inquiries/{replicationRequest}', [AdminReplicationRequestController::class, 'update'])
+            ->name('chapter-inquiries.update');
+        Route::delete('/chapter-inquiries/{replicationRequest}', [AdminReplicationRequestController::class, 'destroy'])
+            ->name('chapter-inquiries.destroy');
 
-// GoBiker → Admin messages
-Route::get('/admin/operations/gobiker-messages', [\App\Http\Controllers\Admin\GobikerMessageController::class, 'index'])
-    ->name('admin.operations.gobiker-messages.index');
+        // volunteer applications
+        Route::get('/volunteers', [AdminVolunteerController::class, 'index'])->name('volunteers.index');
+        Route::get('/volunteers/{volunteerApplication}', [AdminVolunteerController::class, 'show'])->name('volunteers.show');
+        Route::patch('/volunteers/{volunteerApplication}/status', [AdminVolunteerController::class, 'updateStatus'])
+            ->name('volunteers.status');
+        Route::delete('/volunteers/{volunteerApplication}', [AdminVolunteerController::class, 'destroy'])
+            ->name('volunteers.destroy');
 
-Route::patch('/admin/operations/gobiker-messages/{message}/read', [\App\Http\Controllers\Admin\GobikerMessageController::class, 'markRead'])
-    ->name('admin.operations.gobiker-messages.mark-read');
-    
-Route::delete('/admin/operations/gobiker-messages/{message}', [\App\Http\Controllers\Admin\GobikerMessageController::class, 'destroy'])
-    ->name('admin.operations.gobiker-messages.destroy');
-
-// donations
-    Route::get('/admin/operations/donations', [AdminDonationController::class, 'index'])
-        ->name('admin.operations.donations.index');
-    Route::post('/admin/operations/donations/{donation}/cancel-subscription', [AdminDonationController::class, 'cancelSubscription'])
-        ->name('admin.operations.donations.cancel-subscription');
-    Route::delete('/admin/operations/donations/{donation}', [AdminDonationController::class, 'destroy'])
-        ->name('admin.operations.donations.destroy');
-
-// training plan requests
-    Route::get('/admin/operations/training-requests', [AdminTrainingRequestController::class, 'index'])
-        ->name('admin.operations.training-requests.index');
-    Route::patch('/admin/operations/training-requests/{trainingRequest}/status', [AdminTrainingRequestController::class, 'updateStatus'])
-        ->name('admin.operations.training-requests.status');
-
-// chapter replication inquiries
-    Route::get('/admin/operations/chapter-inquiries', [AdminReplicationRequestController::class, 'index'])
-        ->name('admin.operations.chapter-inquiries.index');
-    Route::get('/admin/operations/chapter-inquiries/{replicationRequest}', [AdminReplicationRequestController::class, 'show'])
-        ->name('admin.operations.chapter-inquiries.show');
-    Route::patch('/admin/operations/chapter-inquiries/{replicationRequest}', [AdminReplicationRequestController::class, 'update'])
-        ->name('admin.operations.chapter-inquiries.update');
-
-// volunteer applications
-    Route::get('/admin/operations/volunteers', [AdminVolunteerController::class, 'index'])
-        ->name('admin.operations.volunteers.index');
-    Route::get('/admin/operations/volunteers/{volunteerApplication}', [AdminVolunteerController::class, 'show'])
-        ->name('admin.operations.volunteers.show');
-    Route::patch('/admin/operations/volunteers/{volunteerApplication}/status', [AdminVolunteerController::class, 'updateStatus'])
-        ->name('admin.operations.volunteers.status');
-
-// legal (editable)
-    Route::get('/admin/operations/legal/privacy', [\App\Http\Controllers\Admin\LegalDocumentController::class, 'editPrivacy'])
-        ->name('admin.operations.legal.privacy');
-    Route::put('/admin/operations/legal/privacy', [\App\Http\Controllers\Admin\LegalDocumentController::class, 'updatePrivacy'])
-        ->name('admin.operations.legal.privacy.update');
-
-    Route::get('/admin/operations/legal/terms', [\App\Http\Controllers\Admin\LegalDocumentController::class, 'editTerms'])
-        ->name('admin.operations.legal.terms');
-    Route::put('/admin/operations/legal/terms', [\App\Http\Controllers\Admin\LegalDocumentController::class, 'updateTerms'])
-        ->name('admin.operations.legal.terms.update');
-
-    Route::get('/admin/operations/legal/cookies', [\App\Http\Controllers\Admin\LegalDocumentController::class, 'editCookies'])
-        ->name('admin.operations.legal.cookies');
-    Route::put('/admin/operations/legal/cookies', [\App\Http\Controllers\Admin\LegalDocumentController::class, 'updateCookies'])
-        ->name('admin.operations.legal.cookies.update');
-
+        // legal pages (editable)
+        foreach (['privacy' => 'Privacy', 'terms' => 'Terms', 'cookies' => 'Cookies'] as $key => $method) {
+            Route::get("/legal/{$key}", [AdminLegalDocumentController::class, "edit{$method}"])->name("legal.{$key}");
+            Route::put("/legal/{$key}", [AdminLegalDocumentController::class, "update{$method}"])->name("legal.{$key}.update");
+        }
+    });
 });

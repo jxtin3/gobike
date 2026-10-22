@@ -10,21 +10,26 @@ use Illuminate\View\View;
 
 class HomepageDataController extends Controller
 {
+    private const SECTIONS = ['impact', 'highlight', 'badge'];
+
     public function index(): View
     {
+        $stats = ImpactStat::orderBy('sort_order')->orderBy('id')->get()->groupBy('section');
+
         return view('admin.operations.homepage-data.index', [
-            'impactStats' => ImpactStat::where('section', 'impact')->orderBy('sort_order')->orderBy('id')->get(),
-            'impactHighlights' => ImpactStat::where('section', 'highlight')->orderBy('sort_order')->orderBy('id')->get(),
-            'impactBadge' => ImpactStat::where('section', 'badge')->orderBy('sort_order')->orderBy('id')->get(),
+            'impactStats' => $stats->get('impact', collect()),
+            'impactHighlights' => $stats->get('highlight', collect()),
+            'impactBadge' => $stats->get('badge', collect()),
         ]);
     }
 
-    
-
     public function storeImpactStat(Request $request): RedirectResponse
     {
-        $data = $request->validate([
-            'section' => ['required', 'in:impact,highlight,badge'],
+        $section = in_array($request->input('section'), self::SECTIONS, true) ? $request->input('section') : 'impact';
+
+        // A separate error bag per form, so a mistake shows next to the form it came from.
+        $data = $request->validateWithBag("create_{$section}", [
+            'section' => ['required', 'in:'.implode(',', self::SECTIONS)],
             'label' => ['required', 'string', 'max:100'],
             'value' => ['required', 'string', 'max:40'],
         ]);
@@ -38,7 +43,7 @@ class HomepageDataController extends Controller
 
     public function updateImpactStat(Request $request, ImpactStat $impactStat): RedirectResponse
     {
-        $impactStat->update($request->validate([
+        $impactStat->update($request->validateWithBag("stat_{$impactStat->id}", [
             'label' => ['required', 'string', 'max:100'],
             'value' => ['required', 'string', 'max:40'],
         ]));
