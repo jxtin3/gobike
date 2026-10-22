@@ -65,7 +65,7 @@
             ? `<a href="tel:${esc(r.mobile)}">${esc(r.mobile)}</a>`
             : 'Not provided';
 
-        const respondBtn = `<button type="button" class="btn btn-sm gb-act gb-act-resp" data-action="responding" data-location="${esc(r.location_id)}">I'm responding</button>`;
+        const respondBtn = `<button type="button" class="btn btn-sm gb-act gb-act-resp" data-action="responding" data-location="${esc(r.location_id)}">Responding</button>`;
         const resolveBtn = `<button type="button" class="btn btn-sm gb-act gb-act-resolve" data-action="active" data-location="${esc(r.location_id)}">Resolve</button>`;
         const actions = r.status === 'emergency'
             ? `<div class="gb-actions">${respondBtn}${resolveBtn}</div>`
@@ -224,7 +224,7 @@
     });
     document.addEventListener('visibilitychange', () => { if (!document.hidden) { load(); schedule(); } });
 
-    /* Admin actions inside the popup: "I'm responding" / "Resolve" */
+    /* Admin actions inside the popup: "Responding" / "Resolve" */
     document.addEventListener('click', async (e) => {
         const btn = e.target.closest('.gb-pop [data-action]');
         if (!btn) return;

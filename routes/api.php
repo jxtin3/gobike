@@ -58,6 +58,11 @@ Route::middleware(['auth:sanctum', 'gobiker', 'throttle:mobile'])->prefix('gobik
         'sendEmergency',
     ])->name('api.gobiker.emergency');
 
+    Route::get('/emergency', [
+        GobikerLocationController::class,
+        'emergencyStatus',
+    ])->name('api.gobiker.emergency.status');
+
     Route::get('/active', [
         GobikerLocationController::class,
         'currentSession',

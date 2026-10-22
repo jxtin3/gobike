@@ -88,6 +88,20 @@ class GobikerLocationController extends Controller
         return response()->json(['message' => 'Active mode stopped.']);
     }
 
+    /**
+     * What the admin has done about this GoBiker's emergency, so the app can tell them:
+     * 'emergency' (sent, nobody answered yet), 'responding' (the admin is on it)
+     * or null (no open emergency, e.g. after the admin resolved it).
+     */
+    public function emergencyStatus(Request $request): JsonResponse
+    {
+        $status = Location::where('user_id', $request->user()->id)->value('status');
+
+        return response()->json([
+            'status' => Location::isAlertStatus($status) ? strtolower($status) : null,
+        ]);
+    }
+
     public function currentSession(Request $request): JsonResponse
     {
         $location = Location::where('user_id', $request->user()->id)->first();
