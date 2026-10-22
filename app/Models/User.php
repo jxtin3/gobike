@@ -26,6 +26,12 @@ class User extends Authenticatable
         return $this->hasOne(Location::class);
     }
 
+    // Rondas this GoBiker started in the mobile app.
+    public function rondas(): HasMany
+    {
+        return $this->hasMany(Ronda::class);
+    }
+
     // Patient records this GoBiker entered in the mobile app.
     public function patients(): HasMany
     {

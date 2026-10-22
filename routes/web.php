@@ -4,11 +4,13 @@ use App\Http\Controllers\Admin\ContactMessageController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\DonationController as AdminDonationController;
 use App\Http\Controllers\Admin\GobikerMessageController;
+use App\Http\Controllers\Admin\GobikerReportController;
 use App\Http\Controllers\Admin\HomepageDataController;
 use App\Http\Controllers\Admin\LegalDocumentController as AdminLegalDocumentController;
 use App\Http\Controllers\Admin\LocationController;
 use App\Http\Controllers\Admin\NewsController as AdminNewsController;
 use App\Http\Controllers\Admin\PatientController as AdminPatientController;
+use App\Http\Controllers\Admin\PatientFollowUpController;
 use App\Http\Controllers\Admin\PictureController;
 use App\Http\Controllers\Admin\ProfileController;
 use App\Http\Controllers\Admin\ReplicationRequestController as AdminReplicationRequestController;
@@ -182,6 +184,11 @@ Route::middleware([EnsureAdmin::class, AuthenticateSession::class])->prefix('adm
         Route::get('/patients', [AdminPatientController::class, 'index'])->name('patients.index');
         Route::get('/patients/{patient}', [AdminPatientController::class, 'show'])->name('patients.show');
         Route::delete('/patients/{patient}', [AdminPatientController::class, 'destroy'])->name('patients.destroy');
+        Route::patch('/patients/{patient}/follow-up', [PatientFollowUpController::class, 'update'])->name('patients.follow-up');
+
+        // GoBiker activity reports
+        Route::get('/gobiker-reports', [GobikerReportController::class, 'index'])->name('gobiker-reports.index');
+        Route::get('/gobiker-reports/{gobiker}', [GobikerReportController::class, 'show'])->name('gobiker-reports.show');
 
         // donations
         Route::get('/donations', [AdminDonationController::class, 'index'])->name('donations.index');

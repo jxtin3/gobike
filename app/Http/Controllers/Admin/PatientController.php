@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Patient;
+use App\Models\PatientFollowUp;
+use App\Support\CsvDownload;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -45,7 +47,23 @@ class PatientController extends Controller
             ->paginate(15)
             ->withQueryString();
 
+        // Follow-up status of the people on this page: the admin's decision, or a hint from their latest check-ups.
+        $keys = $patients->getCollection()->map->personKey()->unique()->values();
+        $decisions = PatientFollowUp::whereIn('person_key', $keys)->pluck('decision', 'person_key');
+        $followUps = $patients->getCollection()->mapWithKeys(function (Patient $patient) use ($decisions) {
+            $key = $patient->personKey();
+            if ($decisions->has($key)) {
+                return [$patient->id => $decisions[$key]];
+            }
+
+            $latest = Patient::samePersonAs($patient)->orderByDesc('recorded_at')->orderByDesc('id')
+                ->limit(Patient::NORMAL_CHECKUPS_TO_STOP)->get();
+
+            return [$patient->id => Patient::followUpSuggestion($latest)['state'] === 'can_stop' ? 'can_stop' : null];
+        });
+
         return view('admin.operations.patients.index', [
+            'followUps' => $followUps,
             'patients' => $patients,
             'barangays' => $barangays,
             'reading' => $filters['reading'] ?? null,
@@ -53,11 +71,46 @@ class PatientController extends Controller
         ]);
     }
 
-    public function show(Patient $patient)
+    public function show(Request $request, Patient $patient)
     {
         $patient->load('recorder');
 
-        return view('admin.operations.patients.show', compact('patient'));
+        // Every check-up of this person (same name and contact), newest first.
+        $history = Patient::samePersonAs($patient)
+            ->with('recorder:id,name')
+            ->orderByDesc('recorded_at')
+            ->orderByDesc('id')
+            ->get();
+
+        if ($request->query('format') === 'csv') {
+            return CsvDownload::make(
+                str($patient->name)->slug().'-check-ups.csv',
+                ['Date', 'Name', 'Age', 'Address', 'Contact', 'Barangay', 'Blood pressure', 'Pulse', 'Respiration', 'Temperature', 'Height', 'Weight', 'Readings', 'Recorded by'],
+                $history->map(fn (Patient $checkup) => [
+                    $checkup->recorded_at->format('Y-m-d H:i'),
+                    $checkup->name,
+                    $checkup->age,
+                    $checkup->address,
+                    $checkup->contact,
+                    $checkup->barangay,
+                    "{$checkup->sys}/{$checkup->dia}",
+                    $checkup->pulse,
+                    $checkup->resp,
+                    $checkup->temp,
+                    $checkup->height,
+                    $checkup->weight,
+                    implode(', ', $checkup->abnormalReadings()) ?: 'Normal',
+                    $checkup->recorder?->name,
+                ])
+            );
+        }
+
+        return view('admin.operations.patients.show', [
+            'patient' => $patient,
+            'history' => $history,
+            'suggestion' => Patient::followUpSuggestion($history),
+            'followUp' => PatientFollowUp::with('decider:id,name')->where('person_key', $patient->personKey())->first(),
+        ]);
     }
 
     public function destroy(Patient $patient)

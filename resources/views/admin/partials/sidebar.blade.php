@@ -41,6 +41,9 @@
             <x-admin.icon name="users" /><span>Users</span>
             <x-admin.nav-badge :count="$navPending ?? 0" tone="warn" label="waiting for approval" name="users" />
         </a>
+        <a class="side-link" href="{{ route('admin.operations.gobiker-reports.index') }}" aria-current="{{ $current('admin.operations.gobiker-reports.*') }}">
+            <x-admin.icon name="trending-up" /><span>GoBiker reports</span>
+        </a>
         <a class="side-link" href="{{ route('admin.operations.patients.index') }}" aria-current="{{ $current('admin.operations.patients.*') }}">
             <x-admin.icon name="activity" /><span>Patients</span>
         </a>

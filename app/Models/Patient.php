@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Collection;
 
 class Patient extends Model
 {
@@ -47,7 +48,60 @@ class Patient extends Model
      * Check-ups carry no patient ID, so the same person is recognised by name and contact number
      * (ignoring case and surrounding spaces).
      */
-    private const PERSON_SQL = "LOWER(TRIM(name)), TRIM(COALESCE(contact, ''))";
+    public const PERSON_SQL = "LOWER(TRIM(name)), TRIM(COALESCE(contact, ''))";
+
+    /** How many recent check-ups must all be normal before the admin is told the person could stop. */
+    public const NORMAL_CHECKUPS_TO_STOP = 3;
+
+    /** The same person in PHP as PERSON_SQL in the database, e.g. "juan dela cruz|09123456789". */
+    public static function makePersonKey(?string $name, ?string $contact): string
+    {
+        return strtolower(trim((string) $name)).'|'.trim((string) $contact);
+    }
+
+    public function personKey(): string
+    {
+        return self::makePersonKey($this->name, $this->contact);
+    }
+
+    /** All check-ups of the same person as $patient (same name and contact). */
+    public function scopeSamePersonAs(Builder $query, Patient $patient): Builder
+    {
+        return $query
+            ->whereRaw('LOWER(TRIM(name)) = ?', [strtolower(trim((string) $patient->name))])
+            ->whereRaw("TRIM(COALESCE(contact, '')) = ?", [trim((string) $patient->contact)]);
+    }
+
+    public function isNormal(): bool
+    {
+        return $this->abnormalReadings() === [];
+    }
+
+    /** The admin's decision for this person, if any. */
+    public function followUp(): ?PatientFollowUp
+    {
+        return PatientFollowUp::where('person_key', $this->personKey())->first();
+    }
+
+    /**
+     * Hint for the admin based on the person's latest check-ups (newest first):
+     * ['state' => 'can_stop'|'keep'|'too_few', 'checkups' => the latest ones looked at].
+     *
+     * @param  Collection<int, Patient>  $latest
+     */
+    public static function followUpSuggestion($latest): array
+    {
+        $latest = $latest->take(self::NORMAL_CHECKUPS_TO_STOP)->values();
+
+        if ($latest->count() < self::NORMAL_CHECKUPS_TO_STOP) {
+            return ['state' => 'too_few', 'checkups' => $latest];
+        }
+
+        return [
+            'state' => $latest->every(fn (Patient $checkup) => $checkup->isNormal()) ? 'can_stop' : 'keep',
+            'checkups' => $latest,
+        ];
+    }
 
     /** Keep one check-up per person: their most recently saved one among the rows already filtered. */
     public function scopeOnePerPerson(Builder $query): Builder

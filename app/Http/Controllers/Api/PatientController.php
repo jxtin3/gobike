@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Patient;
+use App\Models\PatientFollowUp;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -18,8 +19,13 @@ class PatientController extends Controller
             ->limit(500)
             ->get();
 
+        // One query for the admin decisions of everyone in the list.
+        $followUps = PatientFollowUp::whereIn('person_key', $patients->map->personKey()->unique()->values())
+            ->get()
+            ->keyBy('person_key');
+
         return response()->json([
-            'patients' => $patients->map(fn (Patient $p) => $this->payload($p))->values(),
+            'patients' => $patients->map(fn (Patient $p) => $this->payload($p, $followUps->get($p->personKey())))->values(),
         ]);
     }
 
@@ -84,8 +90,11 @@ class PatientController extends Controller
         ]);
     }
 
-    private function payload(Patient $p): array
+    private function payload(Patient $p, PatientFollowUp|false|null $followUp = false): array
     {
+        // false = not preloaded, look it up
+        $followUp = $followUp === false ? $p->followUp() : $followUp;
+
         return [
             'id' => $p->id,
             'name' => $p->name,
@@ -101,6 +110,12 @@ class PatientController extends Controller
             'weight' => $p->weight,
             'barangay' => $p->barangay,
             'recorded_at' => $p->recorded_at?->toIso8601String(),
+            // The admin's decision on whether to keep checking this person (for the app to show).
+            'follow_up' => $followUp ? [
+                'decision' => $followUp->decision,
+                'note' => $followUp->note,
+                'decided_at' => $followUp->decided_at->toIso8601String(),
+            ] : null,
         ];
     }
 }

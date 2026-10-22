@@ -22,6 +22,7 @@ dataset('admin pages', [
     'messages' => 'admin.operations.messages.index',
     'gobiker messages' => 'admin.operations.gobiker-messages.index',
     'patients' => 'admin.operations.patients.index',
+    'gobiker reports' => 'admin.operations.gobiker-reports.index',
     'donations' => 'admin.operations.donations.index',
     'training requests' => 'admin.operations.training-requests.index',
     'chapter inquiries' => 'admin.operations.chapter-inquiries.index',
@@ -73,7 +74,7 @@ it('links every section from the sidebar', function () {
     foreach ([
         'admin.live-map.index', 'admin.operations.news.index', 'admin.operations.pictures.index',
         'admin.operations.homepage-data.index', 'admin.operations.messages.index', 'admin.operations.gobiker-messages.index',
-        'admin.operations.users.index', 'admin.operations.patients.index', 'admin.operations.volunteers.index',
+        'admin.operations.users.index', 'admin.operations.gobiker-reports.index', 'admin.operations.patients.index', 'admin.operations.volunteers.index',
         'admin.operations.donations.index', 'admin.operations.training-requests.index', 'admin.operations.chapter-inquiries.index',
         'admin.operations.legal.terms', 'admin.profile.show',
     ] as $route) {

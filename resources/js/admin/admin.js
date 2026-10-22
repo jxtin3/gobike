@@ -246,6 +246,9 @@ function decrementCounter(element) {
     });
 })();
 
+/* Print buttons (reports and patient records are styled for paper / Save as PDF) */
+$$('[data-print]').forEach((button) => button.addEventListener('click', () => window.print()));
+
 /* Back/forward cache: reset any loading buttons */
 window.addEventListener('pageshow', () => {
     $$('.is-loading').forEach((button) => {

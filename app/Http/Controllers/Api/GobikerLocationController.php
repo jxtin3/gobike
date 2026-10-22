@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Location;
+use App\Models\Ronda;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -43,13 +44,19 @@ class GobikerLocationController extends Controller
         ]);
 
         $current = Location::where('user_id', $request->user()->id)->first();
+        $barangay = $data['designated_barangay'] ?? $request->user()->barangay;
+
+        // Keep a history of rondas for the admin reports. A ronda left open (e.g. the app was
+        // closed without stopping) ends when the next one starts.
+        $this->closeOpenRondas($request->user()->id);
+        Ronda::create(['user_id' => $request->user()->id, 'barangay' => $barangay, 'started_at' => now()]);
 
         $location = Location::updateOrCreate(
             ['user_id' => $request->user()->id],
             [
                 'name' => $request->user()->name,
                 'role' => 'GoBiker',
-                'designated_barangay' => $data['designated_barangay'] ?? $request->user()->barangay,
+                'designated_barangay' => $barangay,
                 'status' => Location::isAlertStatus($current?->status) ? strtolower($current->status) : 'active',
                 'active_start_time' => now(),
                 'active_end_time' => null,
@@ -75,6 +82,8 @@ class GobikerLocationController extends Controller
             'status' => Location::isAlertStatus($location->status) ? strtolower($location->status) : 'offline',
             'active_end_time' => now(),
         ]);
+
+        $this->closeOpenRondas($request->user()->id);
 
         return response()->json(['message' => 'Active mode stopped.']);
     }
@@ -115,5 +124,10 @@ class GobikerLocationController extends Controller
         );
 
         return response()->json(['message' => 'Emergency alert sent to the RHU admin.']);
+    }
+
+    private function closeOpenRondas(int $userId): void
+    {
+        Ronda::where('user_id', $userId)->whereNull('ended_at')->update(['ended_at' => now()]);
     }
 }

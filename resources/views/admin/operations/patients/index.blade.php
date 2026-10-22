@@ -52,6 +52,7 @@
                 <th>Patient</th>
                 <th>Barangay</th>
                 <th>Vitals</th>
+                <th>Follow-up</th>
                 <th>Recorded by</th>
                 <th>Date</th>
                 <th><span class="sr-only">Actions</span></th>
@@ -82,6 +83,14 @@
                             <span class="pill {{ str_ends_with($key, '_high') ? 'pill-warn' : 'pill-info' }}">{{ $label }}</span>
                         @endforeach
                     </td>
+                    <td>
+                        @switch($followUps[$patient->id] ?? null)
+                            @case('stop') <span class="pill pill-ok">Stopped</span> @break
+                            @case('continue') <span class="pill pill-info">Keep checking</span> @break
+                            @case('can_stop') <span class="pill pill-neutral" title="Normal on the last {{ \App\Models\Patient::NORMAL_CHECKUPS_TO_STOP }} check-ups">Can stop?</span> @break
+                            @default <span class="muted">—</span>
+                        @endswitch
+                    </td>
                     <td>{{ $patient->recorder?->name ?? '—' }}</td>
                     <td>
                         {{ $patient->recorded_at->format('M j, Y') }}
@@ -95,7 +104,7 @@
                 </tr>
             @empty
                 <tr class="is-static">
-                    <td colspan="6">
+                    <td colspan="7">
                         <div class="empty">
                             <x-admin.icon name="activity" />
                             @if ($hasQuery)

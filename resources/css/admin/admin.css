@@ -3897,3 +3897,330 @@ tbody tr.is-unread td:first-child { box-shadow: inset 3px 0 0 var(--brand); }
     .analytics-legend-item,
     .analytics-legend-meter i { transition: none; }
 }
+
+/* ---------- Reports (GoBiker reports, patient history) ---------- */
+
+.period-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.segmented {
+    display: inline-flex;
+    padding: 3px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: var(--surface-2);
+}
+
+.segmented a {
+    padding: 6px 16px;
+    border-radius: 7px;
+    color: var(--ink-3);
+    font-size: 13px;
+    font-weight: 600;
+    transition: background var(--t), color var(--t);
+}
+
+.segmented a[aria-current="page"] {
+    background: #fff;
+    color: var(--ink);
+    box-shadow: var(--shadow-1);
+}
+
+.period-nav {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.period-label {
+    min-width: 150px;
+    font-size: 15px;
+    text-align: center;
+}
+
+.icon-btn.is-disabled {
+    opacity: .35;
+    pointer-events: none;
+}
+
+.report-note {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 16px;
+    padding: 10px 14px;
+    border: 1px dashed var(--line-2);
+    border-radius: var(--r-sm);
+    color: var(--ink-3);
+    font-size: 13px;
+}
+
+.report-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 18px;
+    margin: 0 0 16px;
+    color: var(--ink-3);
+    font-size: 13px;
+}
+
+.report-meta span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.report-meta .i {
+    width: 15px;
+    height: 15px;
+}
+
+.report-section { margin-top: 24px; }
+
+.report-section > h2 {
+    margin: 0 0 10px;
+    font-size: 16px;
+    font-weight: 700;
+}
+
+.report-table .num {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+
+.report-table tfoot th {
+    border-top: 1px solid var(--line);
+    background: var(--surface-2);
+    color: var(--ink);
+}
+
+.report-table tr.is-idle td { color: var(--ink-3); }
+
+.report-table tr.is-current td { background: var(--brand-soft); }
+
+.meter-cell {
+    display: grid;
+    grid-template-columns: 2.5em minmax(60px, 140px);
+    align-items: center;
+    gap: 10px;
+    font-variant-numeric: tabular-nums;
+}
+
+.meter {
+    display: block;
+    height: 6px;
+    overflow: hidden;
+    border-radius: 999px;
+    background: #e9edf3;
+}
+
+.meter i {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: var(--brand);
+}
+
+.report-footnote {
+    margin: 10px 0 0;
+    color: var(--ink-3);
+    font-size: 12px;
+}
+
+.print-head { display: none; }
+
+/* ---------- Patient follow-up ---------- */
+
+.follow-up {
+    max-width: 860px;
+    margin-bottom: 16px;
+    padding: 18px 20px;
+    border: 1px solid var(--line);
+    border-radius: var(--r-md);
+    background: #fff;
+    box-shadow: var(--shadow-1);
+}
+
+.follow-up-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.follow-up-head h2 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 700;
+}
+
+.follow-up-hint {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin: 0 0 10px;
+    padding: 10px 12px;
+    border-radius: var(--r-sm);
+    background: var(--surface-2);
+    color: var(--ink-2);
+    font-size: 14px;
+}
+
+.follow-up-hint .i {
+    flex: none;
+    margin-top: 2px;
+    color: var(--ink-3);
+}
+
+.follow-up-hint.is-ok { background: var(--ok-bg, #ecfdf3); }
+
+.follow-up-hint.is-ok .i { color: var(--ok); }
+
+.follow-up-hint.is-warn { background: var(--warn-bg); }
+
+.follow-up-hint.is-warn .i { color: var(--warn); }
+
+.follow-up-decided {
+    margin: 0 0 12px;
+    font-size: 13px;
+}
+
+.follow-up-form {
+    display: grid;
+    gap: 6px;
+}
+
+.follow-up-form label {
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.follow-up-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 4px;
+}
+
+.detail-columns {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+    max-width: 1100px;
+}
+
+.detail-columns .detail-panel { max-width: none; }
+
+.detail-columns .detail-panel + .detail-panel { margin-top: 0; }
+
+@media (max-width: 860px) {
+    .detail-columns { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* ---------- Print / Save as PDF: plain, grayscale, just the content ---------- */
+
+@media print {
+    @page { margin: 14mm 12mm; }
+
+    .adm,
+    .adm-main { background: #fff !important; }
+
+    .adm-side,
+    .adm-scrim,
+    .adm-mobilebar,
+    .skip-link,
+    .head-actions,
+    .back-link,
+    .alert,
+    .toolbar,
+    .period-bar,
+    .no-print,
+    .row-actions,
+    dialog,
+    .tabs,
+    .pager {
+        display: none !important;
+    }
+
+    .adm-shell { display: block !important; }
+
+    .adm-main {
+        max-width: none !important;
+        padding: 0 !important;
+    }
+
+    .adm * {
+        color: #000 !important;
+        box-shadow: none !important;
+        text-shadow: none !important;
+    }
+
+    .print-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        gap: 16px;
+        margin-bottom: 14px;
+        padding-bottom: 8px;
+        border-bottom: 2px solid #000;
+        font-size: 12px;
+    }
+
+    .print-head div { display: grid; }
+
+    .print-head b { font-size: 14px; }
+
+    /* The print header already carries the title, period and date. */
+    .page-head { display: none !important; }
+
+    .stat-row {
+        grid-template-columns: repeat(4, 1fr) !important;
+        gap: 8px;
+    }
+
+    .stat-card,
+    .detail-panel,
+    .follow-up,
+    .table-wrap {
+        border: 1px solid #999 !important;
+        background: #fff !important;
+    }
+
+    .stat-icon { display: none !important; }
+
+    .table-wrap { overflow: visible !important; }
+
+    table { min-width: 0 !important; font-size: 11px; }
+
+    thead { display: table-header-group; }
+
+    tr { break-inside: avoid; }
+
+    th { background: #eee !important; }
+
+    td,
+    th { padding: 6px 8px !important; }
+
+    .pill {
+        border: 1px solid #666 !important;
+        background: none !important;
+    }
+
+    .meter { border: 1px solid #999; background: none !important; }
+
+    .meter i { background: #555 !important; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+
+    .report-table tr.is-current td { background: #eee !important; }
+
+    a { text-decoration: none !important; }
+
+    .report-section { break-inside: auto; }
+
+    .report-note,
+    .follow-up-hint { border: 1px solid #999; background: none !important; }
+}
