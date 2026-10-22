@@ -204,7 +204,7 @@
                   data-confirm-text="PayPal will stop charging the donor right away. Donations already made are not refunded."
                   data-confirm-ok="Cancel monthly donation">
                 @csrf
-                <button type="submit" class="btn btn-soft-danger"><x-admin.icon name="x" /> Cancel monthly donation</button>
+                <button type="submit" class="btn btn-danger"><x-admin.icon name="x" /> Cancel monthly donation</button>
             </form>
         </section>
 
@@ -213,7 +213,7 @@
                   data-confirm-title="Delete this donation?" data-confirm-ok="Delete donation">
                 @csrf
                 @method('DELETE')
-                <button type="submit" class="btn btn-soft-danger"><x-admin.icon name="trash" /> Delete</button>
+                <button type="submit" class="btn btn-danger"><x-admin.icon name="trash" /> Delete</button>
             </form>
             <button type="button" class="btn btn-secondary" data-dialog-close>Close</button>
         </footer>

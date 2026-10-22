@@ -110,7 +110,7 @@
                   data-confirm-ok="Delete application">
                 @csrf
                 @method('DELETE')
-                <button type="submit" class="btn btn-soft-danger"><x-admin.icon name="trash" /> Delete application</button>
+                <button type="submit" class="btn btn-danger"><x-admin.icon name="trash" /> Delete application</button>
             </form>
         </div>
     </div>

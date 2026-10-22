@@ -53,7 +53,7 @@
     </fieldset>
 
     <div class="form-actions">
-        <button class="btn btn-primary" type="submit">Save changes</button>
+        <button class="btn btn-ok" type="submit"><x-admin.icon name="check" /> Save changes</button>
         <a class="btn btn-secondary" href="{{ route('admin.profile.show') }}">Cancel</a>
     </div>
 </form>

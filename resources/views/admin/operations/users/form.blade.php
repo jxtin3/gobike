@@ -62,7 +62,7 @@
     </fieldset>
 
     <div class="form-actions">
-        <button class="btn btn-primary" type="submit">{{ $button }}</button>
+        <button class="btn btn-ok" type="submit"><x-admin.icon name="check" /> {{ $button }}</button>
         <a class="btn btn-secondary" href="{{ $user ? route('admin.operations.users.show', $user) : route('admin.operations.users.index') }}">Cancel</a>
     </div>
 </form>

@@ -108,7 +108,7 @@
                                       data-confirm-text="The request from {{ $user->name }} will be removed. They can sign up again later."
                                       data-confirm-ok="Decline sign-up">
                                     @csrf @method('DELETE')
-                                    <button type="submit" class="btn btn-soft-danger btn-sm">Decline</button>
+                                    <button type="submit" class="btn btn-danger btn-sm">Decline</button>
                                 </form>
                             @endif
                             <a class="icon-btn" href="{{ route('admin.operations.users.show', $user) }}" title="View" aria-label="View {{ $user->name }}"><x-admin.icon name="eye" /></a>

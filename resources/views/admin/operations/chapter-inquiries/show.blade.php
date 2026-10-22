@@ -121,7 +121,7 @@
                       data-confirm-ok="Delete inquiry">
                     @csrf
                     @method('DELETE')
-                    <button type="submit" class="btn btn-soft-danger"><x-admin.icon name="trash" /> Delete inquiry</button>
+                    <button type="submit" class="btn btn-danger"><x-admin.icon name="trash" /> Delete inquiry</button>
                 </form>
             @endunless
         </div>

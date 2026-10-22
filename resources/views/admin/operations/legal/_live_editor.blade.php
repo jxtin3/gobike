@@ -19,7 +19,7 @@
                     <span id="status-text">All changes saved</span>
                 </div>
 
-                <button type="button" class="btn-live-save" id="btn-save" title="Save document (Ctrl + S)">
+                <button type="button" class="btn btn-ok btn-live-save" id="btn-save" title="Save document (Ctrl + S)">
                     <x-admin.icon name="check" />
                     <span id="save-btn-label">Save changes</span>
                 </button>

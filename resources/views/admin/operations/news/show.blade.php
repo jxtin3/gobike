@@ -15,7 +15,7 @@
           data-confirm-ok="Delete post">
         @csrf
         @method('DELETE')
-        <button type="submit" class="btn btn-soft-danger"><x-admin.icon name="trash" /> Delete</button>
+        <button type="submit" class="btn btn-danger"><x-admin.icon name="trash" /> Delete</button>
     </form>
 @endsection
 

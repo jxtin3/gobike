@@ -138,7 +138,7 @@
                   data-confirm-title="Delete this message?" data-confirm-ok="Delete message">
                 @csrf
                 @method('DELETE')
-                <button type="submit" class="btn btn-soft-danger"><x-admin.icon name="trash" /> Delete</button>
+                <button type="submit" class="btn btn-danger"><x-admin.icon name="trash" /> Delete</button>
             </form>
             <a class="btn btn-primary" data-href-field="mailto"><x-admin.icon name="mail" /> Reply by email</a>
         </footer>

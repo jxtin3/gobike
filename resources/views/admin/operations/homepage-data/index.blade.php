@@ -38,7 +38,7 @@
                     <input @class(['input', 'is-invalid' => $createErrors->has('value')]) name="value" value="{{ $createOld ? old('value') : '' }}" maxlength="40" placeholder="e.g. 2,500+" required>
                     <x-admin.field-error name="value" :bag="$createKey" />
                 </label>
-                <button class="btn btn-primary" type="submit"><x-admin.icon name="plus" /> Add statistic</button>
+                <button class="btn btn-ok" type="submit"><x-admin.icon name="plus" /> Add statistic</button>
             </form>
 
             <div class="homepage-data-list">
@@ -63,7 +63,7 @@
                             <x-admin.field-error name="value" :bag="$statKey" />
                         </label>
                         <div class="homepage-data-actions">
-                            <button class="btn btn-secondary btn-sm" type="submit">Save</button>
+                            <button class="btn btn-ok btn-sm" type="submit">Save</button>
                             <button class="icon-btn danger" type="submit" form="delete-stat-{{ $stat->id }}" aria-label="Delete {{ $stat->label }}" title="Delete statistic">
                                 <x-admin.icon name="trash" />
                             </button>

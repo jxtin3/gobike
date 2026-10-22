@@ -11,7 +11,7 @@
           data-confirm-text="This permanently removes the account and signs them out of the app. GoBikers who recorded patient check-ups cannot be deleted; change their role instead."
           data-confirm-ok="Delete user">
         @csrf @method('DELETE')
-        <button type="submit" class="btn btn-soft-danger"><x-admin.icon name="trash" /> Delete</button>
+        <button type="submit" class="btn btn-danger"><x-admin.icon name="trash" /> Delete</button>
     </form>
 @endsection
 
@@ -34,7 +34,7 @@
               data-confirm-text="The request from {{ $user->name }} will be removed. They can sign up again later."
               data-confirm-ok="Decline sign-up">
             @csrf @method('DELETE')
-            <button type="submit" class="btn btn-soft-danger btn-sm">Decline</button>
+            <button type="submit" class="btn btn-danger btn-sm">Decline</button>
         </form>
         <form method="POST" action="{{ route('admin.operations.users.approve', $user) }}"
               data-confirm-title="Approve {{ $user->name }}?"

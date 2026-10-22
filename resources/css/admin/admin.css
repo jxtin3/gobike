@@ -685,13 +685,6 @@ danger-button:hover { background: #f1f5f9; border-color: #cbd5e1; color: #0f1a2e
 
 .adm .btn-danger:hover { background: var(--bad-2); }
 
-.adm .btn-soft-danger {
-    background: var(--surface);
-    border-color: var(--bad-line);
-    color: var(--bad);
-}
-
-.adm .btn-soft-danger:hover { background: var(--bad-bg); }
 
 .btn-sm {
     height: 32px;
@@ -738,9 +731,15 @@ danger-button:hover { background: #f1f5f9; border-color: #cbd5e1; color: #0f1a2e
     color: var(--ink);
 }
 
-.icon-btn.danger:hover {
-    background: var(--bad-bg);
-    color: var(--bad);
+.adm .icon-btn.danger {
+    background: var(--bad);
+    border-color: var(--bad);
+    color: #fff;
+}
+
+.adm .icon-btn.danger:hover {
+    background: var(--bad-2);
+    border-color: var(--bad-2);
 }
 
 /* ---------- Cards, tables ---------- */
@@ -2990,45 +2989,13 @@ a.pager-btn:hover {
     50% { opacity: 0.5; transform: scale(1.2); }
 }
 
-.btn-live-save {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    background: #ffffff;
-    color: #0f172a;
-    border: 1px solid #cbd5e1;
-    border-radius: 8px;
-    padding: 0.6rem 1.4rem;
-    font-size: 0.9rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-}
-
-.btn-live-save:hover {
-    background: #f8fafc;
-    border-color: #94a3b8;
-    color: #0f172a;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
-    transform: translateY(-1px);
-}
-
-.btn-live-save:active {
-    transform: translateY(0);
-    background: #f1f5f9;
-}
-
 .btn-live-save.is-saving {
-    opacity: 0.7;
+    opacity: .7;
     cursor: wait;
-    background: #f8fafc;
 }
 
 .btn-live-save.is-saved {
-    background: #f0fdf4 !important;
-    color: #15803d !important;
-    border-color: #86efac !important;
+    background: var(--ok-2) !important;
 }
 
 /* Clean White Document Canvas */
@@ -3168,10 +3135,16 @@ a.pager-btn:hover {
     border-color: #cbd5e1;
 }
 
+.legal-tool-btn.danger {
+    background: var(--bad-bg);
+    color: var(--bad);
+    border-color: var(--bad-line);
+}
+
 .legal-tool-btn.danger:hover {
-    background: #fee2e2;
-    color: #b91c1c;
-    border-color: #fca5a5;
+    background: var(--bad);
+    color: #fff;
+    border-color: var(--bad);
 }
 
 /* Direct Editable Inputs */
