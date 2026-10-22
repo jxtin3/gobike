@@ -218,3 +218,43 @@ it('tells the admin when no check-ups were recorded', function () {
         ->assertSee('No patient check-ups were recorded in '.now()->year.' yet')
         ->assertSee('No check-ups yet');
 });
+
+it('narrows the dashboard to one month and charts it day by day', function () {
+    $admin = User::factory()->create(['is_admin' => true]);
+    $recorder = User::factory()->create(['role' => 'GoBiker']);
+    $reading = fn (string $date, array $overrides = []) => Patient::create(array_merge([
+        'user_id' => $recorder->id, 'name' => 'Patient', 'address' => 'Purok 1', 'contact' => '09123456789',
+        'age' => 50, 'sys' => 118, 'dia' => 76, 'pulse' => 72, 'resp' => 16, 'temp' => 36.6,
+        'height' => 160, 'weight' => 60, 'recorded_at' => $date,
+    ], $overrides));
+
+    $year = now()->year - 1;
+    $reading("{$year}-03-05 09:00:00");
+    $reading("{$year}-03-05 10:00:00", ['sys' => 150, 'dia' => 95]);
+    $reading("{$year}-03-20 10:00:00");
+    $reading("{$year}-04-02 10:00:00"); // another month, must be left out
+
+    $response = $this->actingAs($admin)
+        ->get(route('admin.dashboard', ['year' => $year, 'month' => 3]))
+        ->assertOk()
+        ->assertSee('GoBikers recorded', false)
+        ->assertSee('3 check-ups')
+        ->assertSee('March '.$year)
+        ->assertSee('Daily activity');
+
+    expect($response->viewData('checkups'))->toHaveCount(31)
+        ->and($response->viewData('checkups')[4]['count'])->toBe(2) // March 5
+        ->and($response->viewData('checkupsTotal'))->toBe(3)
+        ->and($response->viewData('vitals')['blood_pressure']['totalHigh'])->toBe(1);
+
+    // "All months" still charts the full year, month by month.
+    $all = $this->actingAs($admin)->get(route('admin.dashboard', ['year' => $year]))->assertOk();
+    expect($all->viewData('checkups'))->toHaveCount(12)
+        ->and($all->viewData('checkupsTotal'))->toBe(4);
+});
+
+it('rejects an invalid dashboard month', function () {
+    $admin = User::factory()->create(['is_admin' => true]);
+
+    $this->actingAs($admin)->get(route('admin.dashboard', ['month' => 13]))->assertSessionHasErrors('month');
+});

@@ -68,20 +68,27 @@ class ReportAnalytics
 
         $filters = $request->validate([
             'year' => ['nullable', 'integer', 'min:2000', 'max:'.$currentYear],
+            'month' => ['nullable', 'integer', 'between:1,12'],
         ]);
 
-        // The charts always cover a full calendar year, January to December.
         $year = (int) ($filters['year'] ?? $currentYear);
-        $from = CarbonImmutable::create($year, 1, 1);
-        $to = $from->endOfYear()->startOfMonth();
+        $month = isset($filters['month']) ? (int) $filters['month'] : null;
+
+        // A whole year is charted month by month; one chosen month is charted day by day.
+        $byDay = $month !== null;
+        $from = CarbonImmutable::create($year, $month ?? 1, 1);
+        $to = $byDay ? $from->endOfMonth()->startOfDay() : $from->endOfYear()->startOfMonth();
+        $periodLabel = $byDay ? $from->format('F Y') : (string) $year;
+        $keyFormat = $byDay ? 'Y-m-d' : 'Y-m';
+
         $monthExpression = match (DB::connection()->getDriverName()) {
-            'sqlite' => "strftime('%Y-%m', recorded_at)",
-            'pgsql' => "TO_CHAR(recorded_at, 'YYYY-MM')",
-            default => "DATE_FORMAT(recorded_at, '%Y-%m')",
+            'sqlite' => $byDay ? "strftime('%Y-%m-%d', recorded_at)" : "strftime('%Y-%m', recorded_at)",
+            'pgsql' => $byDay ? "TO_CHAR(recorded_at, 'YYYY-MM-DD')" : "TO_CHAR(recorded_at, 'YYYY-MM')",
+            default => $byDay ? "DATE_FORMAT(recorded_at, '%Y-%m-%d')" : "DATE_FORMAT(recorded_at, '%Y-%m')",
         };
 
         $monthlyRows = Patient::query()
-            ->whereBetween('recorded_at', [$from, $to->endOfMonth()])
+            ->whereBetween('recorded_at', [$from, $byDay ? $to->endOfDay() : $to->endOfMonth()])
             ->selectRaw("{$monthExpression} as report_month, COUNT(*) as checkups")
             ->selectRaw('SUM(CASE WHEN sys >= 140 OR dia >= 90 THEN 1 ELSE 0 END) as bp_high')
             ->selectRaw('SUM(CASE WHEN sys < 90 OR dia < 60 THEN 1 ELSE 0 END) as bp_low')
@@ -106,11 +113,10 @@ class ReportAnalytics
             ];
         }
 
-        for ($month = $from; $month->lessThanOrEqualTo($to); $month = $month->addMonth()) {
-            $monthKey = $month->format('Y-m');
-            $row = $monthlyRows->get($monthKey);
-            $label = $month->format('M Y');
-            $shortLabel = $month->format('M');
+        for ($period = $from; $period->lessThanOrEqualTo($to); $period = $byDay ? $period->addDay() : $period->addMonth()) {
+            $row = $monthlyRows->get($period->format($keyFormat));
+            $label = $byDay ? $period->format('M j, Y') : $period->format('M Y');
+            $shortLabel = $byDay ? $period->format('j') : $period->format('M');
             $checkups[] = [
                 'label' => $label,
                 'shortLabel' => $shortLabel,
@@ -151,6 +157,9 @@ class ReportAnalytics
             'vitals' => $vitals,
             'pie' => $pie,
             'year' => $year,
+            'month' => $month,
+            'periodLabel' => $periodLabel,
+            'byDay' => $byDay,
             'years' => range($currentYear, min($firstYear, $year)),
         ];
     }

@@ -1,14 +1,14 @@
-<section class="analytics-dashboard" data-analytics-dashboard data-entrance="{{ !empty($dashboardEntrance) ? 'true' : 'false' }}" data-checkups='@json($checkups)' data-pie='@json($pie)' data-vitals='@json($vitals)'>
+<section class="analytics-dashboard" data-analytics-dashboard data-period="{{ $periodLabel }}" data-entrance="{{ !empty($dashboardEntrance) ? 'true' : 'false' }}" data-checkups='@json($checkups)' data-pie='@json($pie)' data-vitals='@json($vitals)'>
     <div class="analytics-intro">
         @if ($checkupsTotal > 0)
             <p>
-                GoBikers recorded <b>{{ number_format($checkupsTotal) }} {{ Str::plural('check-up', $checkupsTotal) }}</b> in {{ $year }}.
+                GoBikers recorded <b>{{ number_format($checkupsTotal) }} {{ Str::plural('check-up', $checkupsTotal) }}</b> in {{ $periodLabel }}.
                 Each card shows how many of them had a reading <b>outside the normal range</b>.
                 A small number is good: it means most check-ups were normal.
                 Click a card to see it month by month.
             </p>
         @else
-            <p>No patient check-ups were recorded in {{ $year }} yet. The cards fill in as GoBikers record check-ups in the mobile app.</p>
+            <p>No patient check-ups were recorded in {{ $periodLabel }} yet. The cards fill in as GoBikers record check-ups in the mobile app.</p>
         @endif
 
         <details class="analytics-help">
@@ -86,7 +86,7 @@
                 <div class="analytics-pie-legend" data-pie-legend></div>
                 <div class="analytics-pie-chart" data-pie-chart role="img" aria-label="Abnormal readings by vital sign"></div>
             </div>
-            <p class="analytics-chart-note">Which vital sign had the most high or low readings in {{ $year }}.</p>
+            <p class="analytics-chart-note">Which vital sign had the most high or low readings in {{ $periodLabel }}.</p>
         </section>
     </div>
 
@@ -94,13 +94,13 @@
         <section class="analytics-chart-card analytics-chart-primary" aria-labelledby="analytics-selected-title">
             <header class="analytics-chart-header">
                 <div>
-                    <span class="analytics-eyebrow">Monthly activity</span>
+                    <span class="analytics-eyebrow">{{ $byDay ? 'Daily' : 'Monthly' }} activity</span>
                     <h2 id="analytics-selected-title">Patient check-ups</h2>
                 </div>
                 <span class="analytics-chart-total">{{ number_format($checkupsTotal) }} {{ Str::plural('check-up', $checkupsTotal) }}</span>
             </header>
             <div class="analytics-chart-canvas" data-bar-chart role="img" aria-label="Monthly patient check-ups bar chart"></div>
-            <p class="analytics-chart-note">Number of check-ups recorded in each month of {{ $year }}.</p>
+            <p class="analytics-chart-note">Number of check-ups recorded {{ $byDay ? 'each day in' : 'in each month of' }} {{ $periodLabel }}.</p>
         </section>
 
         <section class="analytics-chart-card analytics-chart-primary" aria-labelledby="analytics-trend-title">
@@ -115,7 +115,7 @@
                 </span>
             </header>
             <div class="analytics-chart-canvas" data-line-chart role="img" aria-label="Monthly high and low vital sign screening chart"></div>
-            <p class="analytics-chart-note">High and low readings each month for the vital sign selected above. Click another card to switch.</p>
+            <p class="analytics-chart-note">High and low readings each {{ $byDay ? 'day' : 'month' }} for the vital sign selected above. Click another card to switch.</p>
         </section>
 
     </div>

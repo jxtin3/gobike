@@ -2,6 +2,7 @@
     const root = document.querySelector('[data-analytics-dashboard]');
     if (!root) return;
 
+    const period = root.dataset.period || 'this period';
     const vitals = JSON.parse(root.dataset.vitals || '{}');
     const checkups = JSON.parse(root.dataset.checkups || '[]');
     const pieData = JSON.parse(root.dataset.pie || '[]');
@@ -93,7 +94,7 @@
     }
 
     function renderBars(months) {
-        if (!months.some((month) => month.count)) return showEmpty(barChart, 'No patient check-ups recorded this year.');
+        if (!months.some((month) => month.count)) return showEmpty(barChart, `No patient check-ups recorded in ${period}.`);
         const width = Math.max(320, Math.round(barChart.clientWidth));
         const svg = makeSvg('bar', width);
         const left = 42;
@@ -133,7 +134,7 @@
 
     function renderLine(vital) {
         const months = vital.months;
-        if (!months.some((month) => month.high || month.low)) return showEmpty(lineChart, 'No high or low readings recorded this year.');
+        if (!months.some((month) => month.high || month.low)) return showEmpty(lineChart, `No high or low readings recorded in ${period}.`);
         const width = Math.max(320, Math.round(lineChart.clientWidth));
         const svg = makeSvg('line', width);
         const left = 42;
@@ -183,7 +184,7 @@
         pieTotal.textContent = numberFormat.format(totalCount);
         pieLegend.replaceChildren();
         if (!totalCount) {
-            showEmpty(pieChart, 'No high or low readings to break down for this year.');
+            showEmpty(pieChart, `No high or low readings to break down for ${period}.`);
             return;
         }
 
