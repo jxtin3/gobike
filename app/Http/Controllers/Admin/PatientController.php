@@ -85,7 +85,7 @@ class PatientController extends Controller
         if ($request->query('format') === 'csv') {
             return CsvDownload::make(
                 str($patient->name)->slug().'-check-ups.csv',
-                ['Date', 'Name', 'Age', 'Address', 'Contact', 'Barangay', 'Blood pressure', 'Pulse', 'Respiration', 'Temperature', 'Height', 'Weight', 'Readings', 'Recorded by'],
+                ['Date', 'Name', 'Age', 'Address', 'Contact', 'Barangay', 'Blood pressure', 'Pulse', 'Respiration', 'Temperature', 'Blood sugar (mg/dL)', 'Readings', 'Recorded by'],
                 $history->map(fn (Patient $checkup) => [
                     $checkup->recorded_at->format('Y-m-d H:i'),
                     $checkup->name,
@@ -97,8 +97,7 @@ class PatientController extends Controller
                     $checkup->pulse,
                     $checkup->resp,
                     $checkup->temp,
-                    $checkup->height,
-                    $checkup->weight,
+                    $checkup->blood_sugar,
                     implode(', ', $checkup->abnormalReadings()) ?: 'Normal',
                     $checkup->recorder?->name,
                 ])

@@ -13,7 +13,7 @@ function followUpCheckup(User $gobiker, int $daysAgo, array $overrides = []): Pa
     return Patient::create(array_merge([
         'user_id' => $gobiker->id, 'name' => 'Lola Nena', 'address' => 'Purok 2', 'contact' => '09181112222',
         'age' => 72, 'sys' => 120, 'dia' => 78, 'pulse' => 70, 'resp' => 16, 'temp' => 36.5,
-        'height' => 150, 'weight' => 52, 'recorded_at' => now()->subDays($daysAgo),
+        'recorded_at' => now()->subDays($daysAgo),
     ], $overrides));
 }
 

@@ -133,6 +133,7 @@
                     <th class="num">Pulse</th>
                     <th class="num">Resp.</th>
                     <th class="num">Temp</th>
+                    <th class="num">Sugar</th>
                     <th>Readings</th>
                 </tr>
             </thead>
@@ -148,6 +149,7 @@
                         <td class="num">{{ $checkup->pulse }}</td>
                         <td class="num">{{ $checkup->resp }}</td>
                         <td class="num">{{ rtrim(rtrim(number_format($checkup->temp, 1), '0'), '.') }} °C</td>
+                        <td class="num">{{ $checkup->blood_sugar !== null ? $checkup->blood_sugar : '—' }}</td>
                         <td>
                             @forelse ($checkup->abnormalReadings() as $key => $label)
                                 <span class="pill {{ str_ends_with($key, '_high') ? 'pill-warn' : 'pill-info' }}">{{ $label }}</span>
@@ -157,7 +159,7 @@
                         </td>
                     </tr>
                 @empty
-                    <tr class="is-static"><td colspan="7" class="muted">No check-ups recorded in {{ $period->label() }}.</td></tr>
+                    <tr class="is-static"><td colspan="8" class="muted">No check-ups recorded in {{ $period->label() }}.</td></tr>
                 @endforelse
             </tbody>
         </table>

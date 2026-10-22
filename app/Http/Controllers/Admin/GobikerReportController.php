@@ -70,6 +70,7 @@ class GobikerReportController extends Controller
                 $checkup->pulse,
                 $checkup->resp,
                 $checkup->temp,
+                $checkup->blood_sugar,
                 implode(', ', $checkup->abnormalReadings()) ?: 'Normal',
             ])->concat($report['rondaList']->map(fn ($ronda) => [
                 'Ronda',
@@ -77,12 +78,12 @@ class GobikerReportController extends Controller
                 $ronda->ended_at ? 'Ended '.$ronda->ended_at->format('Y-m-d H:i') : 'Not stopped',
                 $ronda->barangay,
                 GobikerActivity::formatMinutes($ronda->durationMinutes() ?? 0),
-                '', '', '', '',
+                '', '', '', '', '',
             ]));
 
             return CsvDownload::make(
                 str($gobiker->name)->slug().'-'.$period->type.'-'.$period->from->toDateString().'.csv',
-                ['Type', 'Date', 'Patient / end', 'Barangay', 'BP / duration', 'Pulse', 'Respiration', 'Temperature', 'Readings'],
+                ['Type', 'Date', 'Patient / end', 'Barangay', 'BP / duration', 'Pulse', 'Respiration', 'Temperature', 'Blood sugar (mg/dL)', 'Readings'],
                 $rows
             );
         }

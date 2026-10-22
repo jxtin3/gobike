@@ -13,7 +13,7 @@ it('will not delete a GoBiker who recorded patient check-ups', function () {
     $patient = Patient::create([
         'user_id' => $gobiker->id, 'name' => 'Pedro', 'address' => 'Purok 1', 'contact' => '09123456789',
         'age' => 60, 'sys' => 120, 'dia' => 80, 'pulse' => 70, 'resp' => 16, 'temp' => 36.6,
-        'height' => 160, 'weight' => 60, 'recorded_at' => now(),
+        'recorded_at' => now(),
     ]);
 
     $this->actingAs($admin)

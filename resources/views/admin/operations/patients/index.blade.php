@@ -78,7 +78,7 @@
                     <td>{{ $patient->barangay ?: '—' }}</td>
                     <td>
                         BP {{ $patient->sys }}/{{ $patient->dia }} · Pulse {{ $patient->pulse }}
-                        <small class="sub-line">Temp {{ rtrim(rtrim(number_format($patient->temp, 1), '0'), '.') }} °C</small>
+                        <small class="sub-line">Temp {{ rtrim(rtrim(number_format($patient->temp, 1), '0'), '.') }} °C{{ $patient->blood_sugar !== null ? ' · Sugar '.$patient->blood_sugar.' mg/dL' : '' }}</small>
                         @foreach ($abnormal as $key => $label)
                             <span class="pill {{ str_ends_with($key, '_high') ? 'pill-warn' : 'pill-info' }}">{{ $label }}</span>
                         @endforeach

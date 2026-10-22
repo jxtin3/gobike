@@ -84,8 +84,8 @@ class PatientController extends Controller
             'pulse' => ['required', 'integer', 'between:20,250'],
             'resp' => ['required', 'integer', 'between:5,60'],
             'temp' => ['required', 'numeric', 'between:30,45'],
-            'height' => ['required', 'numeric', 'between:30,250'],
-            'weight' => ['required', 'numeric', 'between:1,300'],
+            // Optional: not every patient is tested. mg/dL.
+            'blood_sugar' => ['nullable', 'integer', 'between:20,600'],
             'barangay' => ['nullable', 'string', 'max:255'],
         ]);
     }
@@ -106,8 +106,7 @@ class PatientController extends Controller
             'pulse' => $p->pulse,
             'resp' => $p->resp,
             'temp' => $p->temp,
-            'height' => $p->height,
-            'weight' => $p->weight,
+            'blood_sugar' => $p->blood_sugar,
             'barangay' => $p->barangay,
             'recorded_at' => $p->recorded_at?->toIso8601String(),
             // The admin's decision on whether to keep checking this person (for the app to show).

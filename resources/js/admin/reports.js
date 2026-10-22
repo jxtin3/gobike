@@ -23,7 +23,7 @@
     const seriesButtons = [...root.querySelectorAll('[data-series]')];
 
     const COLORS = { high: '#e5484d', low: '#3b82f6', bar: '#3b6fd4', barDark: '#244b91' };
-    const PIE_COLORS = ['#e5484d', '#f59e0b', '#10b981', '#6366f1'];
+    const PIE_COLORS = ['#e5484d', '#f59e0b', '#10b981', '#6366f1', '#0ea5e9'];
     const SERIES_LABEL = { high: 'High', low: 'Low' };
     const EASE = 'cubic-bezier(.2,.7,.3,1)';
     const numberFormat = new Intl.NumberFormat();

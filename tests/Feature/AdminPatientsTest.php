@@ -20,8 +20,6 @@ function makePatient(User $recorder, array $overrides = []): Patient
         'pulse' => 80,
         'resp' => 18,
         'temp' => 36.8,
-        'height' => 165,
-        'weight' => 60,
         'recorded_at' => now(),
     ], $overrides));
 }
@@ -122,8 +120,11 @@ it('rejects an unknown reading filter', function () {
 it('defines every abnormal reading the same way in the database filter and on each record', function () {
     $recorder = User::factory()->create(['role' => 'GoBiker']);
 
-    foreach ([[85, 55, 55, 10, 35.5], [118, 76, 72, 16, 36.6], [140, 80, 101, 21, 37.5], [139, 90, 100, 20, 37.4], [90, 60, 60, 12, 36.0]] as [$sys, $dia, $pulse, $resp, $temp]) {
-        makePatient($recorder, compact('sys', 'dia', 'pulse', 'resp', 'temp'));
+    foreach ([
+        [85, 55, 55, 10, 35.5, 65], [118, 76, 72, 16, 36.6, 100], [140, 80, 101, 21, 37.5, 140],
+        [139, 90, 100, 20, 37.4, 139], [90, 60, 60, 12, 36.0, 70], [118, 76, 72, 16, 36.6, null],
+    ] as [$sys, $dia, $pulse, $resp, $temp, $blood_sugar]) {
+        makePatient($recorder, compact('sys', 'dia', 'pulse', 'resp', 'temp', 'blood_sugar'));
     }
 
     foreach (array_keys(Patient::READINGS) as $reading) {
@@ -166,4 +167,61 @@ it('lists each patient once, with their latest matching check-up, when filtered 
 
     // Without a reading filter every check-up is listed.
     expect($this->actingAs($admin)->get(route('admin.operations.patients.index'))->viewData('patients')->total())->toBe(3);
+});
+
+it('flags blood sugar at 140 mg/dL or above and below 70, and never flags a missing reading', function () {
+    $recorder = User::factory()->create(['role' => 'GoBiker']);
+    $cases = ['high' => 140, 'edge' => 139, 'low' => 69, 'lowEdge' => 70, 'none' => null];
+    $patients = collect($cases)->map(fn ($sugar) => makePatient($recorder, ['blood_sugar' => $sugar, 'sys' => 118, 'dia' => 76]));
+
+    expect(array_keys($patients['high']->abnormalReadings()))->toBe(['sugar_high'])
+        ->and($patients['edge']->abnormalReadings())->toBe([])
+        ->and(array_keys($patients['low']->abnormalReadings()))->toBe(['sugar_low'])
+        ->and($patients['lowEdge']->abnormalReadings())->toBe([])
+        ->and($patients['none']->abnormalReadings())->toBe([])
+        ->and(Patient::withReading('sugar_high')->count())->toBe(1)
+        ->and(Patient::withReading('sugar_low')->count())->toBe(1);
+});
+
+it('shows blood sugar on the patient pages and filters by it', function () {
+    $admin = User::factory()->create(['is_admin' => true]);
+    $recorder = User::factory()->create(['role' => 'GoBiker']);
+    $high = makePatient($recorder, ['name' => 'Sweet Susan', 'blood_sugar' => 182, 'sys' => 118, 'dia' => 76]);
+    makePatient($recorder, ['name' => 'Normal Nena', 'blood_sugar' => 95, 'sys' => 118, 'dia' => 76]);
+    makePatient($recorder, ['name' => 'Untested Ugo', 'sys' => 118, 'dia' => 76]);
+
+    $this->actingAs($admin)
+        ->get(route('admin.operations.patients.index', ['reading' => 'sugar_high']))
+        ->assertOk()
+        ->assertSee('Sweet Susan')
+        ->assertSee('Sugar 182 mg/dL')
+        ->assertSee('Showing patients with high blood sugar')
+        ->assertDontSee('Normal Nena')
+        ->assertDontSee('Untested Ugo');
+
+    $this->actingAs($admin)
+        ->get(route('admin.operations.patients.show', $high))
+        ->assertOk()
+        ->assertSee('182 mg/dL')
+        ->assertSee('High sugar')
+        ->assertDontSee('Height');
+
+    $untested = Patient::where('name', 'Untested Ugo')->sole();
+    $this->actingAs($admin)
+        ->get(route('admin.operations.patients.show', $untested))
+        ->assertSee('Not tested');
+});
+
+it('downloads blood sugar instead of height and weight', function () {
+    $admin = User::factory()->create(['is_admin' => true]);
+    $recorder = User::factory()->create(['role' => 'GoBiker']);
+    $patient = makePatient($recorder, ['blood_sugar' => 150]);
+
+    $csv = $this->actingAs($admin)
+        ->get(route('admin.operations.patients.show', [$patient, 'format' => 'csv']))
+        ->assertOk()
+        ->streamedContent();
+
+    expect($csv)->toContain('Blood sugar (mg/dL)')->toContain('High sugar')
+        ->not->toContain('Height')->not->toContain('Weight');
 });

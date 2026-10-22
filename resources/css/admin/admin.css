@@ -2416,6 +2416,9 @@ a.pager-btn:hover {
     letter-spacing: 0;
 }
 
+/* An odd number of cards: let the last one use the full row. */
+.analytics-kpis .analytics-kpi:last-child:nth-child(odd) { grid-column: 1 / -1; }
+
 .analytics-kpi-share {
     color: var(--ink-2);
     font-size: 13px;

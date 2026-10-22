@@ -43,7 +43,7 @@ TXT,
 **Information collected when GoBikers use the App**
 
 - **Location:** while a GoBiker has an active duty session, or sends an emergency alert, the App shares the device's current location with our response coordinators. We keep only the most recent location, not a history of movements, and sharing stops when the session ends.
-- **Patient records:** when a trained GoBiker provides basic health monitoring (for example, during Ronda Kalusugan visits), the GoBiker records the person's name, address, contact number, age, barangay and health readings such as blood pressure, pulse, respiratory rate, temperature, height and weight.
+- **Patient records:** when a trained GoBiker provides basic health monitoring (for example, during Ronda Kalusugan visits), the GoBiker records the person's name, address, contact number, age, barangay and health readings such as blood pressure, pulse, respiratory rate, temperature and blood sugar.
 
 **Information collected automatically**
 

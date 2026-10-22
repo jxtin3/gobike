@@ -21,8 +21,6 @@ it('shows monthly aggregated reports without patient identity data', function ()
         'pulse' => 72,
         'resp' => 16,
         'temp' => 36.5,
-        'height' => 165,
-        'weight' => 65,
         'recorded_at' => now(),
     ]);
     Patient::create([
@@ -36,8 +34,6 @@ it('shows monthly aggregated reports without patient identity data', function ()
         'pulse' => 110,
         'resp' => 24,
         'temp' => 38,
-        'height' => 170,
-        'weight' => 70,
         'recorded_at' => now(),
     ]);
     Patient::create([
@@ -51,8 +47,6 @@ it('shows monthly aggregated reports without patient identity data', function ()
         'pulse' => 55,
         'resp' => 10,
         'temp' => 35.5,
-        'height' => 170,
-        'weight' => 70,
         'recorded_at' => now()->startOfYear()->addMonths(6),
     ]);
 
@@ -81,7 +75,7 @@ it('shows monthly aggregated reports without patient identity data', function ()
         ->and($vitals['respiration']['totalLow'])->toBe(1)
         ->and($vitals['temperature']['totalHigh'])->toBe(1)
         ->and($vitals['temperature']['totalLow'])->toBe(1)
-        ->and($analytics['pie'])->toHaveCount(4)
+        ->and($analytics['pie'])->toHaveCount(5)
         ->and($analytics['pie'][0]['count'])->toBe(2)
         ->and($analytics['pie'][0]['high'])->toBe(1)
         ->and($analytics['pie'][0]['low'])->toBe(1);
@@ -163,7 +157,7 @@ it('adds older years that have patient records to the year filter', function () 
     Patient::create([
         'user_id' => $recorder->id, 'name' => 'Very old record', 'address' => 'Somewhere', 'contact' => '09123456789',
         'age' => 40, 'sys' => 120, 'dia' => 80, 'pulse' => 70, 'resp' => 16, 'temp' => 36.6,
-        'height' => 160, 'weight' => 60, 'recorded_at' => now()->subYears(7),
+        'recorded_at' => now()->subYears(7),
     ]);
 
     $years = $this->actingAs($admin)->get(route('admin.dashboard'))->viewData('years');
@@ -189,7 +183,7 @@ it('offers the last five years in the dashboard year filter', function () {
     Patient::create([
         'user_id' => $recorder->id, 'name' => 'Old record', 'address' => 'Somewhere', 'contact' => '09123456789',
         'age' => 40, 'sys' => 120, 'dia' => 80, 'pulse' => 70, 'resp' => 16, 'temp' => 36.6,
-        'height' => 160, 'weight' => 60, 'recorded_at' => now()->subYears(2),
+        'recorded_at' => now()->subYears(2),
     ]);
 
     $response = $this->actingAs($admin)->get(route('admin.dashboard'))->assertOk();
@@ -204,7 +198,7 @@ it('explains the dashboard cards in plain language', function () {
     $reading = fn (string $name, array $overrides = []) => Patient::create(array_merge([
         'user_id' => $recorder->id, 'name' => $name, 'address' => 'Purok 1', 'contact' => '09123456789',
         'age' => 50, 'sys' => 118, 'dia' => 76, 'pulse' => 72, 'resp' => 16, 'temp' => 36.6,
-        'height' => 160, 'weight' => 60, 'recorded_at' => now(),
+        'recorded_at' => now(),
     ], $overrides));
 
     foreach (['Ana', 'Ben', 'Carla'] as $name) {
@@ -232,7 +226,7 @@ it('counts a patient once on the dashboard however many times they were checked'
         Patient::create([
             'user_id' => $recorder->id, 'name' => 'Same Person', 'address' => 'Purok 1', 'contact' => '09123456789',
             'age' => 50, 'sys' => 150, 'dia' => 95, 'pulse' => 72, 'resp' => 16, 'temp' => 36.6,
-            'height' => 160, 'weight' => 60, 'recorded_at' => now(),
+            'recorded_at' => now(),
         ]);
     }
 
@@ -258,7 +252,7 @@ it('narrows the dashboard to one month and charts it day by day', function () {
     $reading = fn (string $date, array $overrides = []) => Patient::create(array_merge([
         'user_id' => $recorder->id, 'name' => 'Patient', 'address' => 'Purok 1', 'contact' => '09123456789',
         'age' => 50, 'sys' => 118, 'dia' => 76, 'pulse' => 72, 'resp' => 16, 'temp' => 36.6,
-        'height' => 160, 'weight' => 60, 'recorded_at' => $date,
+        'recorded_at' => $date,
     ], $overrides));
 
     $year = now()->year - 1;
@@ -290,4 +284,30 @@ it('rejects an invalid dashboard month', function () {
     $admin = User::factory()->create(['is_admin' => true]);
 
     $this->actingAs($admin)->get(route('admin.dashboard', ['month' => 13]))->assertSessionHasErrors('month');
+});
+
+it('adds blood sugar to the dashboard, counted among the patients who were tested', function () {
+    $admin = User::factory()->create(['is_admin' => true]);
+    $recorder = User::factory()->create(['role' => 'GoBiker']);
+    $checkup = fn (string $name, ?int $sugar) => Patient::create([
+        'user_id' => $recorder->id, 'name' => $name, 'address' => 'Purok 1', 'contact' => '0918'.strlen($name),
+        'age' => 50, 'sys' => 118, 'dia' => 76, 'pulse' => 72, 'resp' => 16, 'temp' => 36.6,
+        'blood_sugar' => $sugar, 'recorded_at' => now(),
+    ]);
+    $checkup('Aa', 190);   // high
+    $checkup('Bbb', 100);  // normal
+    $checkup('Cccc', null); // not tested
+
+    $response = $this->actingAs($admin)->get(route('admin.dashboard'))->assertOk();
+    $sugar = $response->viewData('vitals')['blood_sugar'];
+
+    expect($response->viewData('peopleTotal'))->toBe(3)
+        ->and($sugar['peopleBase'])->toBe(2)
+        ->and($sugar['peopleHigh'])->toBe(1)
+        ->and($sugar['totalHigh'])->toBe(1)
+        ->and($response->viewData('pie'))->toHaveCount(5);
+
+    $response->assertSee('50% of 2 tested patients had high blood sugar')
+        ->assertSee('Blood sugar')
+        ->assertSee('70 to 139');
 });

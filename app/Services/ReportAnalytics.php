@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\DB;
 class ReportAnalytics
 {
     /**
-     * The four vital signs shown on the dashboard. The thresholds match the SQL in forRequest();
+     * The vital signs shown on the dashboard. The thresholds match the SQL in forRequest();
      * the plain-language texts are what an admin reads on the cards.
      */
     private const VITAL_SIGNS = [
@@ -53,6 +53,18 @@ class ReportAnalytics
             'low_short' => 'below 36.0',
             'high_range' => 'High: ≥ 37.5 °C',
             'low_range' => 'Low: < 36 °C',
+        ],
+        'blood_sugar' => [
+            'code' => 'sugar',
+            'label' => 'Blood sugar',
+            'unit' => 'mg/dL',
+            'normal' => '70 to 139',
+            'high_short' => '140 or above',
+            'low_short' => 'below 70',
+            'high_range' => 'High: ≥ 140 mg/dL',
+            'low_range' => 'Low: < 70 mg/dL',
+            // Optional on a check-up, so percentages are of the patients who were tested.
+            'optional' => true,
         ],
     ];
 
@@ -109,6 +121,10 @@ class ReportAnalytics
                 // Patient list filtered to this reading in the chosen period (the page shows names).
                 'high_url' => route('admin.operations.patients.index', array_filter(['reading' => "{$definition['code']}_high", 'year' => $year, 'month' => $month])),
                 'low_url' => route('admin.operations.patients.index', array_filter(['reading' => "{$definition['code']}_low", 'year' => $year, 'month' => $month])),
+                // Patients this vital sign applies to: everyone, or only those who were tested.
+                'peopleBase' => ! empty($definition['optional'])
+                    ? $inPeriod()->whereNotNull('blood_sugar')->onePerPerson()->count()
+                    : $peopleTotal,
                 'peopleHigh' => $inPeriod()->withReading("{$definition['code']}_high")->onePerPerson()->count(),
                 'peopleLow' => $inPeriod()->withReading("{$definition['code']}_low")->onePerPerson()->count(),
                 'totalHigh' => 0,

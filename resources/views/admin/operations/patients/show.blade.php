@@ -93,7 +93,7 @@
             <dt>Pulse</dt><dd>{{ $patient->pulse }} bpm</dd>
             <dt>Respiration</dt><dd>{{ $patient->resp }} per minute</dd>
             <dt>Temperature</dt><dd>{{ $fmt($patient->temp) }} °C</dd>
-            <dt>Height / weight</dt><dd>{{ $fmt($patient->height) }} cm · {{ $fmt($patient->weight) }} kg</dd>
+            <dt>Blood sugar</dt><dd>{{ $patient->blood_sugar !== null ? $patient->blood_sugar.' mg/dL' : 'Not tested' }}</dd>
             <dt>Recorded by</dt><dd>{{ $patient->recorder?->name ?? '—' }}</dd>
         </dl>
     </article>
@@ -110,6 +110,7 @@
                     <th class="num">Pulse</th>
                     <th class="num">Resp.</th>
                     <th class="num">Temp</th>
+                    <th class="num">Sugar</th>
                     <th>Readings</th>
                     <th>Recorded by</th>
                 </tr>
@@ -128,6 +129,7 @@
                         <td class="num">{{ $checkup->pulse }}</td>
                         <td class="num">{{ $checkup->resp }}</td>
                         <td class="num">{{ $fmt($checkup->temp) }} °C</td>
+                        <td class="num">{{ $checkup->blood_sugar !== null ? $checkup->blood_sugar : '—' }}</td>
                         <td>
                             @forelse ($checkup->abnormalReadings() as $key => $label)
                                 <span class="pill {{ str_ends_with($key, '_high') ? 'pill-warn' : 'pill-info' }}">{{ $label }}</span>

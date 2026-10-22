@@ -22,11 +22,14 @@ class Patient extends Model
         'resp_low' => ['label' => 'Slow breathing', 'phrase' => 'slow breathing', 'sql' => 'resp < 12'],
         'temp_high' => ['label' => 'High temp', 'phrase' => 'a high temperature', 'sql' => 'temp >= 37.5'],
         'temp_low' => ['label' => 'Low temp', 'phrase' => 'a low temperature', 'sql' => 'temp < 36'],
+        // Blood sugar in mg/dL is optional: a check-up without it is never flagged (NULL compares false).
+        'sugar_high' => ['label' => 'High sugar', 'phrase' => 'high blood sugar', 'sql' => 'blood_sugar >= 140'],
+        'sugar_low' => ['label' => 'Low sugar', 'phrase' => 'low blood sugar', 'sql' => 'blood_sugar < 70'],
     ];
 
     protected $fillable = [
         'user_id', 'barangay', 'name', 'address', 'contact', 'age',
-        'sys', 'dia', 'pulse', 'resp', 'temp', 'height', 'weight', 'recorded_at',
+        'sys', 'dia', 'pulse', 'resp', 'temp', 'blood_sugar', 'recorded_at',
     ];
 
     protected function casts(): array
@@ -39,8 +42,7 @@ class Patient extends Model
             'pulse' => 'integer',
             'resp' => 'integer',
             'temp' => 'float',
-            'height' => 'float',
-            'weight' => 'float',
+            'blood_sugar' => 'integer',
         ];
     }
 
@@ -136,6 +138,8 @@ class Patient extends Model
             'resp_low' => $this->resp < 12,
             'temp_high' => $this->temp >= 37.5,
             'temp_low' => $this->temp < 36,
+            'sugar_high' => $this->blood_sugar !== null && $this->blood_sugar >= 140,
+            'sugar_low' => $this->blood_sugar !== null && $this->blood_sugar < 70,
         ];
 
         return collect(self::READINGS)

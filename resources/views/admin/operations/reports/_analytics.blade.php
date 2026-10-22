@@ -50,21 +50,24 @@
                             'blood_pressure' => 'activity',
                             'pulse' => 'heart',
                             'respiration' => 'wind',
+                            'blood_sugar' => 'droplet',
                             default => 'thermometer',
                         }" />
                     </span>
                     @php
-                        $share = $peopleTotal > 0 ? $vital['peopleHigh'] / $peopleTotal * 100 : 0;
+                        $base = $vital['peopleBase'];
+                        $baseWord = ! empty($vital['optional']) ? 'tested '.Str::plural('patient', $base) : Str::plural('patient', $base);
+                        $share = $base > 0 ? $vital['peopleHigh'] / $base * 100 : 0;
                         $shareText = $vital['peopleHigh'] > 0 && $share < 1 ? 'under 1%' : round($share).'%';
                     @endphp
                     <strong><span data-kpi-high="{{ $vital['peopleHigh'] }}">{{ number_format($vital['peopleHigh']) }}</span><small>{{ Str::plural('patient', $vital['peopleHigh']) }} with high readings</small></strong>
                     <span class="analytics-kpi-share">
-                        @if ($peopleTotal === 0)
-                            No patients checked yet
+                        @if ($base === 0)
+                            {{ empty($vital['optional']) ? 'No patients checked yet' : 'No patient was tested yet' }}
                         @elseif ($vital['peopleHigh'] === 0)
-                            None of the {{ number_format($peopleTotal) }} {{ Str::plural('patient', $peopleTotal) }} had {{ $vital['high_phrase'] }}
+                            None of the {{ number_format($base) }} {{ $baseWord }} had {{ $vital['high_phrase'] }}
                         @else
-                            {{ $shareText }} of {{ number_format($peopleTotal) }} {{ Str::plural('patient', $peopleTotal) }} had {{ $vital['high_phrase'] }}
+                            {{ $shareText }} of {{ number_format($base) }} {{ $baseWord }} had {{ $vital['high_phrase'] }}
                         @endif
                     </span>
                     <span class="analytics-kpi-foot">

@@ -20,8 +20,6 @@ it('allows an admin to delete a patient record from its detail page', function (
         'pulse' => 72,
         'resp' => 16,
         'temp' => 36.5,
-        'height' => 165,
-        'weight' => 65,
         'recorded_at' => now(),
     ]);
 

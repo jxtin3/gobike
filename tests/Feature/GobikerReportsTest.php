@@ -13,7 +13,7 @@ function reportCheckup(User $gobiker, string $when, array $overrides = []): Pati
     return Patient::create(array_merge([
         'user_id' => $gobiker->id, 'name' => 'Ana Reyes', 'address' => 'Purok 1', 'contact' => '09170000001',
         'age' => 60, 'sys' => 118, 'dia' => 76, 'pulse' => 72, 'resp' => 16, 'temp' => 36.6,
-        'height' => 160, 'weight' => 60, 'recorded_at' => $when,
+        'recorded_at' => $when,
     ], $overrides));
 }
 
