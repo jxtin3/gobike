@@ -125,6 +125,8 @@ class ReportAnalytics
                 'label' => $label,
                 'shortLabel' => $shortLabel,
                 'count' => (int) ($row->checkups ?? 0),
+                // Clicking a month bar opens that month; days have nothing further to open.
+                'url' => $byDay ? null : route('admin.dashboard', ['year' => $year, 'month' => $period->month]),
             ];
 
             foreach (self::VITAL_SIGNS as $key => $definition) {

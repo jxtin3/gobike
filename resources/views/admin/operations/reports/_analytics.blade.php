@@ -1,4 +1,4 @@
-<section class="analytics-dashboard" data-analytics-dashboard data-period="{{ $periodLabel }}" data-entrance="{{ !empty($dashboardEntrance) ? 'true' : 'false' }}" data-checkups='@json($checkups)' data-pie='@json($pie)' data-vitals='@json($vitals)'>
+<section class="analytics-dashboard" data-analytics-dashboard data-period="{{ $periodLabel }}" data-unit="{{ $byDay ? 'day' : 'month' }}" data-entrance="{{ !empty($dashboardEntrance) ? 'true' : 'false' }}" data-checkups='@json($checkups)' data-pie='@json($pie)' data-vitals='@json($vitals)'>
     <div class="analytics-intro">
         @if ($checkupsTotal > 0)
             <p>
@@ -84,8 +84,8 @@
                 <span class="analytics-chart-total"><span data-pie-total>0</span> abnormal readings</span>
             </header>
             <div class="analytics-pie-content">
+                <div class="analytics-pie-chart" data-pie-chart data-label="Abnormal readings by vital sign"></div>
                 <div class="analytics-pie-legend" data-pie-legend></div>
-                <div class="analytics-pie-chart" data-pie-chart role="img" aria-label="Abnormal readings by vital sign"></div>
             </div>
             <p class="analytics-chart-note">Which vital sign had the most high or low readings in {{ $periodLabel }}.</p>
         </section>
@@ -100,7 +100,7 @@
                 </div>
                 <span class="analytics-chart-total">{{ number_format($checkupsTotal) }} {{ Str::plural('check-up', $checkupsTotal) }}</span>
             </header>
-            <div class="analytics-chart-canvas" data-bar-chart role="img" aria-label="Monthly patient check-ups bar chart"></div>
+            <div class="analytics-chart-canvas" data-bar-chart data-label="Patient check-ups bar chart"></div>
             <p class="analytics-chart-note">Number of check-ups recorded {{ $byDay ? 'each day in' : 'in each month of' }} {{ $periodLabel }}.</p>
         </section>
 
@@ -110,12 +110,12 @@
                     <span class="analytics-eyebrow">Vital-sign screening</span>
                     <h2 id="analytics-trend-title" data-trend-title>Blood pressure</h2>
                 </div>
-                <span class="analytics-trend-key">
-                    <i class="analytics-key-high"></i>High
-                    <i class="analytics-key-low"></i>Low
+                <span class="analytics-trend-key" role="group" aria-label="Show or hide a line">
+                    <button type="button" class="analytics-key-btn" data-series="high" aria-pressed="true"><i class="analytics-key-high"></i>High</button>
+                    <button type="button" class="analytics-key-btn" data-series="low" aria-pressed="true"><i class="analytics-key-low"></i>Low</button>
                 </span>
             </header>
-            <div class="analytics-chart-canvas" data-line-chart role="img" aria-label="Monthly high and low vital sign screening chart"></div>
+            <div class="analytics-chart-canvas" data-line-chart data-label="High and low readings line chart"></div>
             <div class="analytics-people" data-people>
                 <a class="btn btn-secondary btn-sm" data-people-high href="#" hidden><x-admin.icon name="users" /> <span></span></a>
                 <a class="btn btn-secondary btn-sm" data-people-low href="#" hidden><x-admin.icon name="users" /> <span></span></a>
