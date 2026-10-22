@@ -2,10 +2,11 @@
     <div class="analytics-intro">
         @if ($checkupsTotal > 0)
             <p>
-                GoBikers recorded <b>{{ number_format($checkupsTotal) }} {{ Str::plural('check-up', $checkupsTotal) }}</b> in {{ $periodLabel }}.
-                Each card shows how many of them had a reading <b>outside the normal range</b>.
-                A small number is good: it means most check-ups were normal.
-                Click a card to see it month by month.
+                GoBikers recorded <b>{{ number_format($checkupsTotal) }} {{ Str::plural('check-up', $checkupsTotal) }}</b>
+                for <b>{{ number_format($peopleTotal) }} {{ Str::plural('patient', $peopleTotal) }}</b> in {{ $periodLabel }}.
+                Each card shows how many <b>patients</b> had a reading outside the normal range.
+                A patient checked more than once is counted once. A small number is good: it means most patients were normal.
+                Click a card to see it {{ $byDay ? 'day by day' : 'month by month' }}.
             </p>
         @else
             <p>No patient check-ups were recorded in {{ $periodLabel }} yet. The cards fill in as GoBikers record check-ups in the mobile app.</p>
@@ -53,21 +54,21 @@
                         }" />
                     </span>
                     @php
-                        $share = $checkupsTotal > 0 ? $vital['totalHigh'] / $checkupsTotal * 100 : 0;
-                        $shareText = $vital['totalHigh'] > 0 && $share < 1 ? 'under 1%' : round($share).'%';
+                        $share = $peopleTotal > 0 ? $vital['peopleHigh'] / $peopleTotal * 100 : 0;
+                        $shareText = $vital['peopleHigh'] > 0 && $share < 1 ? 'under 1%' : round($share).'%';
                     @endphp
-                    <strong><span data-kpi-high="{{ $vital['totalHigh'] }}">{{ number_format($vital['totalHigh']) }}</span><small>high {{ Str::plural('reading', $vital['totalHigh']) }}</small></strong>
+                    <strong><span data-kpi-high="{{ $vital['peopleHigh'] }}">{{ number_format($vital['peopleHigh']) }}</span><small>{{ Str::plural('patient', $vital['peopleHigh']) }} with high readings</small></strong>
                     <span class="analytics-kpi-share">
-                        @if ($checkupsTotal === 0)
-                            No check-ups yet
-                        @elseif ($vital['totalHigh'] === 0)
-                            None of the {{ number_format($checkupsTotal) }} check-ups had {{ $vital['high_phrase'] }}
+                        @if ($peopleTotal === 0)
+                            No patients checked yet
+                        @elseif ($vital['peopleHigh'] === 0)
+                            None of the {{ number_format($peopleTotal) }} {{ Str::plural('patient', $peopleTotal) }} had {{ $vital['high_phrase'] }}
                         @else
-                            {{ $shareText }} of check-ups had {{ $vital['high_phrase'] }}
+                            {{ $shareText }} of {{ number_format($peopleTotal) }} {{ Str::plural('patient', $peopleTotal) }} had {{ $vital['high_phrase'] }}
                         @endif
                     </span>
                     <span class="analytics-kpi-foot">
-                        <span><span data-kpi-low="{{ $vital['totalLow'] }}">{{ number_format($vital['totalLow']) }}</span> low {{ Str::plural('reading', $vital['totalLow']) }}</span>
+                        <span><span data-kpi-low="{{ $vital['peopleLow'] }}">{{ number_format($vital['peopleLow']) }}</span> {{ Str::plural('patient', $vital['peopleLow']) }} with low readings</span>
                         <span>Normal: {{ $vital['normal'] }}</span>
                     </span>
                 </button>

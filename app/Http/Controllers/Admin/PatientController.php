@@ -38,6 +38,8 @@ class PatientController extends Controller
             ->when($request->barangay, fn ($q, $b) => $q->where('barangay', $b))
             ->when($filters['reading'] ?? null, fn ($q, $reading) => $q->withReading($reading))
             ->when($period, fn ($q, $p) => $q->whereBetween('recorded_at', [$p['from'], $p['to']]))
+            // From the dashboard each patient appears once, with their latest matching check-up.
+            ->when($filters['reading'] ?? null, fn ($q) => $q->onePerPerson())
             ->orderByDesc('recorded_at')
             ->orderByDesc('id')
             ->paginate(15)

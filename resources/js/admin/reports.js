@@ -253,9 +253,9 @@
             el.href = url;
             el.querySelector('span').textContent = `View patients with ${phrase} (${numberFormat.format(count)})`;
         };
-        link('[data-people-high]', vital.totalHigh, vital.high_url, vital.high_phrase);
-        link('[data-people-low]', vital.totalLow, vital.low_url, vital.low_phrase);
-        root.querySelector('[data-people-none]').hidden = vital.totalHigh + vital.totalLow > 0;
+        link('[data-people-high]', vital.peopleHigh, vital.high_url, vital.high_phrase);
+        link('[data-people-low]', vital.peopleLow, vital.low_url, vital.low_phrase);
+        root.querySelector('[data-people-none]').hidden = vital.peopleHigh + vital.peopleLow > 0;
     }
 
     function selectVital(key) {

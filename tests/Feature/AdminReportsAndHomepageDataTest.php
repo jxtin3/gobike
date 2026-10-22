@@ -201,26 +201,45 @@ it('offers the last five years in the dashboard year filter', function () {
 it('explains the dashboard cards in plain language', function () {
     $admin = User::factory()->create(['is_admin' => true]);
     $recorder = User::factory()->create(['role' => 'GoBiker']);
-    $reading = fn (array $overrides) => Patient::create(array_merge([
-        'user_id' => $recorder->id, 'name' => 'Patient', 'address' => 'Purok 1', 'contact' => '09123456789',
+    $reading = fn (string $name, array $overrides = []) => Patient::create(array_merge([
+        'user_id' => $recorder->id, 'name' => $name, 'address' => 'Purok 1', 'contact' => '09123456789',
         'age' => 50, 'sys' => 118, 'dia' => 76, 'pulse' => 72, 'resp' => 16, 'temp' => 36.6,
         'height' => 160, 'weight' => 60, 'recorded_at' => now(),
     ], $overrides));
 
-    foreach (range(1, 3) as $ignored) {
-        $reading([]);
+    foreach (['Ana', 'Ben', 'Carla'] as $name) {
+        $reading($name);
     }
-    $reading(['sys' => 150, 'dia' => 95]); // 1 of 4 check-ups has high blood pressure
+    $reading('Dino', ['sys' => 150, 'dia' => 95]); // 1 of 4 patients has high blood pressure
+    $reading('Dino', ['sys' => 155, 'dia' => 98]); // checked again: still one person
 
     $this->actingAs($admin)
         ->get(route('admin.dashboard'))
         ->assertOk()
         ->assertSee('GoBikers recorded', false)
-        ->assertSee('4 check-ups')
-        ->assertSee('25% of check-ups had high blood pressure')
-        ->assertSee('None of the 4 check-ups had a fast pulse')
+        ->assertSee('5 check-ups')
+        ->assertSee('4 patients')
+        ->assertSee('25% of 4 patients had high blood pressure')
+        ->assertSee('None of the 4 patients had a fast pulse')
         ->assertSee('Normal: 90/60 to 139/89')
         ->assertSee('What counts as normal, high or low?');
+});
+
+it('counts a patient once on the dashboard however many times they were checked', function () {
+    $admin = User::factory()->create(['is_admin' => true]);
+    $recorder = User::factory()->create(['role' => 'GoBiker']);
+    foreach ([1, 2, 3] as $ignored) {
+        Patient::create([
+            'user_id' => $recorder->id, 'name' => 'Same Person', 'address' => 'Purok 1', 'contact' => '09123456789',
+            'age' => 50, 'sys' => 150, 'dia' => 95, 'pulse' => 72, 'resp' => 16, 'temp' => 36.6,
+            'height' => 160, 'weight' => 60, 'recorded_at' => now(),
+        ]);
+    }
+
+    $vitals = $this->actingAs($admin)->get(route('admin.dashboard'))->assertOk()->viewData('vitals');
+
+    expect($vitals['blood_pressure']['peopleHigh'])->toBe(1)
+        ->and($vitals['blood_pressure']['totalHigh'])->toBe(3); // charts still count check-ups
 });
 
 it('tells the admin when no check-ups were recorded', function () {
@@ -230,7 +249,7 @@ it('tells the admin when no check-ups were recorded', function () {
         ->get(route('admin.dashboard'))
         ->assertOk()
         ->assertSee('No patient check-ups were recorded in '.now()->year.' yet')
-        ->assertSee('No check-ups yet');
+        ->assertSee('No patients checked yet');
 });
 
 it('narrows the dashboard to one month and charts it day by day', function () {

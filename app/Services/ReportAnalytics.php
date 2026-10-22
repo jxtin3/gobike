@@ -95,6 +95,10 @@ class ReportAnalytics
             ->get()
             ->keyBy('report_month');
 
+        // People, not check-ups: a patient checked several times in the period counts once.
+        $inPeriod = fn () => Patient::query()->whereBetween('recorded_at', [$from, $byDay ? $to->endOfDay() : $to->endOfMonth()]);
+        $peopleTotal = $inPeriod()->onePerPerson()->count();
+
         $checkups = [];
         $vitals = [];
         foreach (self::VITAL_SIGNS as $key => $definition) {
@@ -105,6 +109,8 @@ class ReportAnalytics
                 // Patient list filtered to this reading in the chosen period (the page shows names).
                 'high_url' => route('admin.operations.patients.index', array_filter(['reading' => "{$definition['code']}_high", 'year' => $year, 'month' => $month])),
                 'low_url' => route('admin.operations.patients.index', array_filter(['reading' => "{$definition['code']}_low", 'year' => $year, 'month' => $month])),
+                'peopleHigh' => $inPeriod()->withReading("{$definition['code']}_high")->onePerPerson()->count(),
+                'peopleLow' => $inPeriod()->withReading("{$definition['code']}_low")->onePerPerson()->count(),
                 'totalHigh' => 0,
                 'totalLow' => 0,
                 'months' => [],
@@ -146,6 +152,7 @@ class ReportAnalytics
         return [
             'checkups' => $checkups,
             'checkupsTotal' => array_sum(array_column($checkups, 'count')),
+            'peopleTotal' => $peopleTotal,
             'vitals' => $vitals,
             'pie' => $pie,
             'year' => $year,

@@ -6,7 +6,7 @@
 @section('content')
 @php
     $hasQuery = filled(request('search')) || filled(request('barangay')) || $reading || $period;
-    $summary = trim('Showing check-ups'
+    $summary = trim('Showing patients'
         .($reading ? ' with '.\App\Models\Patient::READINGS[$reading]['phrase'] : '')
         .($period ? ' in '.$period['label'] : ''));
 @endphp
@@ -16,7 +16,7 @@
         <x-admin.icon name="activity" />
         <div>
             <b>{{ $summary }}</b>
-            <span>{{ number_format($patients->total()) }} {{ Str::plural('check-up', $patients->total()) }} found. This is a screening hint, not a diagnosis.</span>
+            <span>{{ number_format($patients->total()) }} {{ Str::plural('patient', $patients->total()) }} found. {{ $reading ? 'Each patient appears once, with their latest matching check-up. ' : '' }}This is a screening hint, not a diagnosis.</span>
         </div>
         <a class="btn btn-secondary btn-sm" href="{{ route('admin.operations.patients.index', array_filter(['search' => request('search'), 'barangay' => request('barangay')])) }}">Clear</a>
     </div>

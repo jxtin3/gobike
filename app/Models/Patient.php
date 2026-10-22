@@ -43,6 +43,23 @@ class Patient extends Model
         ];
     }
 
+    /**
+     * Check-ups carry no patient ID, so the same person is recognised by name and contact number
+     * (ignoring case and surrounding spaces).
+     */
+    private const PERSON_SQL = "LOWER(TRIM(name)), TRIM(COALESCE(contact, ''))";
+
+    /** Keep one check-up per person: their most recently saved one among the rows already filtered. */
+    public function scopeOnePerPerson(Builder $query): Builder
+    {
+        $latest = (clone $query)->toBase()
+            ->cloneWithout(['columns', 'orders', 'limit', 'offset'])
+            ->selectRaw('MAX(id)')
+            ->groupByRaw(self::PERSON_SQL);
+
+        return $query->whereIn('id', $latest);
+    }
+
     /** Check-ups with one of the abnormal readings in READINGS. */
     public function scopeWithReading(Builder $query, string $reading): Builder
     {

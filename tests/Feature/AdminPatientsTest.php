@@ -81,8 +81,8 @@ it('filters patients by an abnormal reading and shows what was abnormal', functi
         ->assertSee('High Pressure Pedro')
         ->assertDontSee('Normal Nena')
         ->assertDontSee('Fast Pulse Pablo')
-        ->assertSee('Showing check-ups with high blood pressure')
-        ->assertSee('1 check-up found');
+        ->assertSee('Showing patients with high blood pressure')
+        ->assertSee('1 patient found');
 
     $this->actingAs($admin)
         ->get(route('admin.operations.patients.index'))
@@ -147,4 +147,23 @@ it('links the dashboard to the patients behind each reading', function () {
 
     expect($vitals['blood_pressure']['high_url'])->toBe(route('admin.operations.patients.index', ['reading' => 'bp_high', 'year' => now()->year, 'month' => now()->month]))
         ->and($vitals['blood_pressure']['totalHigh'])->toBe(1);
+});
+
+it('lists each patient once, with their latest matching check-up, when filtered by a reading', function () {
+    $admin = User::factory()->create(['is_admin' => true]);
+    $recorder = User::factory()->create(['role' => 'GoBiker']);
+    makePatient($recorder, ['name' => 'Pedro Santos', 'sys' => 150, 'dia' => 95, 'recorded_at' => now()->subDays(10)]);
+    $latest = makePatient($recorder, ['name' => ' pedro santos ', 'sys' => 160, 'dia' => 100, 'recorded_at' => now()->subDay()]);
+    makePatient($recorder, ['name' => 'Pedro Santos', 'contact' => '09999999999', 'sys' => 155, 'dia' => 96]); // a different Pedro
+
+    $response = $this->actingAs($admin)
+        ->get(route('admin.operations.patients.index', ['reading' => 'bp_high']))
+        ->assertOk()
+        ->assertSee('2 patients found');
+
+    expect($response->viewData('patients')->total())->toBe(2)
+        ->and($response->viewData('patients')->pluck('id'))->toContain($latest->id);
+
+    // Without a reading filter every check-up is listed.
+    expect($this->actingAs($admin)->get(route('admin.operations.patients.index'))->viewData('patients')->total())->toBe(3);
 });
