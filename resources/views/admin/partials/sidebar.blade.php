@@ -18,6 +18,9 @@
             <x-admin.icon name="map" /><span>Live map</span>
         </a>
         <p class="side-group">Content</p>
+        <a class="side-link" href="{{ route('admin.operations.announcements.index') }}" aria-current="{{ $current('admin.operations.announcements.*') }}">
+            <x-admin.icon name="megaphone" /><span>Announcements</span>
+        </a>
         <a class="side-link" href="{{ route('admin.operations.news.index') }}" aria-current="{{ $current('admin.operations.news.*') }}">
             <x-admin.icon name="file-text" /><span>News</span>
         </a>

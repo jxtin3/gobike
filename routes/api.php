@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\GobikerAnnouncementController;
 use App\Http\Controllers\Api\GobikerController;
 use App\Http\Controllers\Api\GobikerLocationController;
 use App\Http\Controllers\Api\GobikerProfileController;
@@ -57,6 +58,8 @@ Route::middleware(['auth:sanctum', 'gobiker', 'throttle:mobile'])->prefix('gobik
         GobikerLocationController::class,
         'sendEmergency',
     ])->name('api.gobiker.emergency');
+
+    Route::get('/announcements', [GobikerAnnouncementController::class, 'index'])->name('api.gobiker.announcements');
 
     Route::get('/emergency', [
         GobikerLocationController::class,

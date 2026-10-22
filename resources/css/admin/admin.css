@@ -4200,3 +4200,32 @@ tbody tr.is-unread td:first-child { box-shadow: inset 3px 0 0 var(--brand); }
     .report-note,
     .follow-up-hint { border: 1px solid #999; background: none !important; }
 }
+
+/* ---------- Announcements ---------- */
+
+.toolbar-note {
+    margin: 0 0 0 auto;
+    color: var(--ink-3);
+    font-size: 13px;
+}
+
+.field-title {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.check-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 40px;
+    cursor: pointer;
+}
+
+.check-row input {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--ok);
+}

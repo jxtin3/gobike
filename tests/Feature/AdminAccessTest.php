@@ -16,6 +16,8 @@ dataset('admin pages', [
     'homepage content' => 'admin.operations.homepage-data.index',
     'news' => 'admin.operations.news.index',
     'news create' => 'admin.operations.news.create',
+    'announcements' => 'admin.operations.announcements.index',
+    'announcement create' => 'admin.operations.announcements.create',
     'pictures' => 'admin.operations.pictures.index',
     'users' => 'admin.operations.users.index',
     'users create' => 'admin.operations.users.create',
@@ -72,7 +74,7 @@ it('links every section from the sidebar', function () {
     $response = $this->actingAs($admin)->get(route('admin.dashboard'))->assertOk();
 
     foreach ([
-        'admin.live-map.index', 'admin.operations.news.index', 'admin.operations.pictures.index',
+        'admin.live-map.index', 'admin.operations.news.index', 'admin.operations.announcements.index', 'admin.operations.pictures.index',
         'admin.operations.homepage-data.index', 'admin.operations.messages.index', 'admin.operations.gobiker-messages.index',
         'admin.operations.users.index', 'admin.operations.gobiker-reports.index', 'admin.operations.patients.index', 'admin.operations.volunteers.index',
         'admin.operations.donations.index', 'admin.operations.training-requests.index', 'admin.operations.chapter-inquiries.index',

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\AnnouncementController;
 use App\Http\Controllers\Admin\ContactMessageController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\DonationController as AdminDonationController;
@@ -162,6 +163,7 @@ Route::middleware([EnsureAdmin::class, AuthenticateSession::class])->prefix('adm
         Route::delete('/homepage-data/impact-stats/{impactStat}', [HomepageDataController::class, 'destroyImpactStat'])
             ->name('homepage-data.impact-stats.destroy');
 
+        Route::resource('announcements', AnnouncementController::class)->except('show');
         Route::resource('news', AdminNewsController::class);
         Route::resource('pictures', PictureController::class)->only(['index', 'store', 'show', 'destroy']);
 
