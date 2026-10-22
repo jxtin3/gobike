@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\AnnouncementController;
 use App\Http\Controllers\Admin\ContactMessageController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\DonationController as AdminDonationController;
+use App\Http\Controllers\Admin\EmergencyAlertController;
 use App\Http\Controllers\Admin\GobikerMessageController;
 use App\Http\Controllers\Admin\GobikerReportController;
 use App\Http\Controllers\Admin\HomepageDataController;
@@ -146,6 +147,7 @@ Route::middleware([EnsureAdmin::class, AuthenticateSession::class])->prefix('adm
 
     Route::get('/locations', [LocationController::class, 'index'])->name('locations.index');
     Route::patch('/locations/{location}/status', [LocationController::class, 'updateStatus'])->name('locations.status');
+    Route::get('/emergencies', [EmergencyAlertController::class, 'index'])->name('emergencies.index');
 
     // profile
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');

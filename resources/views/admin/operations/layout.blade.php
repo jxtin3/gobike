@@ -25,6 +25,8 @@
                 <a class="adm-mobilebar-title" href="{{ route('admin.dashboard') }}">OneGoBike Admin</a>
             </div>
 
+            @include('admin.partials.emergency-alert')
+
             <main id="main" class="adm-main">
                 @unless (request()->routeIs('admin.live-map.*'))
                 <header class="page-head">

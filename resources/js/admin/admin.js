@@ -1,5 +1,6 @@
 import './live-map.js';
 import './reports.js';
+import './emergency-alert.js';
 
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];

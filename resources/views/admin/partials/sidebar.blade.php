@@ -16,6 +16,8 @@
         </a>
         <a class="side-link" href="{{ route('admin.live-map.index') }}" aria-current="{{ $current('admin.live-map.*') }}">
             <x-admin.icon name="map" /><span>Live map</span>
+            {{-- Always rendered so resources/js/admin/emergency-alert.js can show it as emergencies come in. --}}
+            <span class="badge badge-bad" data-nav-badge="emergencies"@if (! ($navEmergencies ?? 0)) hidden @endif><span class="count-num">{{ number_format($navEmergencies ?? 0) }}</span><span class="sr-only"> emergencies waiting for a response</span></span>
         </a>
         <p class="side-group">Content</p>
         <a class="side-link" href="{{ route('admin.operations.announcements.index') }}" aria-current="{{ $current('admin.operations.announcements.*') }}">
@@ -82,6 +84,15 @@
                 <span>{{ $me->email }}</span>
             </div>
         </a>
+        {{-- Emergency alarm settings for this browser. Shown by emergency-alert.js (no script, no alarm). --}}
+        <div class="side-alarm" data-alarm-controls hidden>
+            <button type="button" class="side-alarm-toggle" data-alarm-toggle aria-pressed="true">
+                <span data-when-sound="on"><x-admin.icon name="bell" /> Alarm sound on</span>
+                <span data-when-sound="off" hidden><x-admin.icon name="bell-off" /> Alarm sound off</span>
+            </button>
+            <button type="button" class="side-alarm-link" data-alarm-test>Test</button>
+            <button type="button" class="side-alarm-link side-alarm-notify" data-alarm-notify hidden>Turn on desktop alerts</button>
+        </div>
         <form method="POST" action="{{ route('logout') }}">
             @csrf
             <button type="submit" class="side-logout"><x-admin.icon name="log-out" /> Log out</button>

@@ -28,6 +28,7 @@
     let timer = null;
     let controller = null;
     let noteTimer = null;
+    let pendingFocus = new URLSearchParams(window.location.search).get('focus');
 
     const esc = (value) => String(value ?? '').replace(/[&<>'"]/g, (c) => ({
         '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#039;', '"': '&quot;',
@@ -178,6 +179,10 @@
             els.updated.textContent = `Updated ${time(new Date().toISOString(), { hour: '2-digit', minute: '2-digit', second: '2-digit' })}`;
             syncBarangays();
             render();
+            if (pendingFocus !== null) {
+                focusLocation(pendingFocus);
+                pendingFocus = null;
+            }
         } catch (err) {
             if (err.name === 'AbortError') return;
             els.chip.dataset.state = 'error';
@@ -188,6 +193,34 @@
             els.error.hidden = false;
             if (!loaded) setOverlay('none');
         }
+    }
+
+    function flyToMarker(marker) {
+        map.flyTo(marker.getLatLng(), Math.max(map.getZoom(), 12), {
+            duration: 1.6,
+            easeLinearity: 0.15,
+        });
+        marker.openPopup();
+        if (window.innerWidth < 1180) mapEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    /* "Show on map" from the emergency banner (?focus=<location id> or the gobike:show-location event). */
+    function focusLocation(locationId) {
+        const rider = riders.find((r) => Number(r.location_id) === Number(locationId));
+        if (!rider) return false;
+
+        // A filter must never hide the GoBiker the admin asked to see.
+        if (!matches(rider)) {
+            els.search.value = '';
+            els.status.value = 'all';
+            els.barangay.value = 'all';
+            render();
+        }
+
+        const marker = markers.get(String(rider.id));
+        if (marker) flyToMarker(marker);
+        else notice('This GoBiker has not shared a location yet.');
+        return true;
     }
 
     function schedule() {
@@ -215,14 +248,17 @@
         const item = e.target.closest('[data-id]');
         const marker = item && markers.get(item.dataset.id);
         if (!marker) { if (item) notice('This GoBiker has not shared a location yet.'); return; }
-        map.flyTo(marker.getLatLng(), Math.max(map.getZoom(), 12), {
-            duration: 1.6,
-            easeLinearity: 0.15,
-        });
-        marker.openPopup();
-        if (window.innerWidth < 1180) mapEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        flyToMarker(marker);
     });
     document.addEventListener('visibilitychange', () => { if (!document.hidden) { load(); schedule(); } });
+    document.addEventListener('gobike:show-location', (e) => {
+        if (loaded) focusLocation(e.detail.locationId);
+        else pendingFocus = e.detail.locationId;
+    });
+    // The emergency banner marked someone as responding: show it on the map right away.
+    document.addEventListener('gobike:emergencies-changed', (e) => {
+        if (e.detail?.source !== 'map') load();
+    });
 
     /* Admin actions inside the popup: "Responding" / "Resolve" */
     document.addEventListener('click', async (e) => {
@@ -255,6 +291,8 @@
             });
             if (!res.ok) throw new Error(String(res.status));
             notice(action === 'responding' ? 'Marked as responding.' : 'Emergency resolved.');
+            // Lets the emergency banner stop the alarm without waiting for its next check.
+            document.dispatchEvent(new CustomEvent('gobike:emergencies-changed', { detail: { source: 'map' } }));
             await load();
         } catch {
             notice('Could not update the status. Please try again.');

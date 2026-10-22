@@ -4229,3 +4229,224 @@ tbody tr.is-unread td:first-child { box-shadow: inset 3px 0 0 var(--brand); }
     height: 18px;
     accent-color: var(--ok);
 }
+
+/* ---------- Emergency alerts (every admin page) ---------- */
+
+.badge[hidden] { display: none; }
+
+.badge-bad {
+    background: var(--bad);
+    color: #fff;
+}
+
+.emer-wrap {
+    position: sticky;
+    top: 0;
+    z-index: 25;
+}
+
+@media (max-width: 1023px) {
+    /* Below the mobile top bar */
+    .emer-wrap { top: 52px; }
+}
+
+.emer-banner {
+    padding: 12px clamp(16px, 3vw, 40px) 14px;
+    background: var(--bad);
+    color: #fff;
+    box-shadow: 0 8px 24px rgba(145, 32, 24, .28);
+    animation: rise 200ms var(--ease);
+}
+
+.emer-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.emer-icon {
+    display: inline-flex;
+    flex: none;
+    width: 32px;
+    height: 32px;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, .16);
+    animation: emer-pulse 1.4s ease-out infinite;
+}
+
+@keyframes emer-pulse {
+    0% { box-shadow: 0 0 0 0 rgba(255, 255, 255, .55); }
+    100% { box-shadow: 0 0 0 12px rgba(255, 255, 255, 0); }
+}
+
+.emer-title {
+    flex: 1;
+    min-width: 0;
+    margin: 0;
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1.3;
+}
+
+.adm .emer-silence {
+    flex: none;
+    background: rgba(255, 255, 255, .14);
+    border-color: rgba(255, 255, 255, .55);
+    color: #fff;
+}
+
+.adm .emer-silence:hover { background: rgba(255, 255, 255, .24); }
+
+.emer-list {
+    display: grid;
+    gap: 8px;
+    max-height: 40vh;
+    margin: 10px 0 0;
+    padding: 0;
+    overflow-y: auto;
+    list-style: none;
+}
+
+.emer-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px 12px;
+    padding: 10px 12px;
+    background: rgba(255, 255, 255, .1);
+    border-radius: var(--r-sm);
+}
+
+.emer-who { min-width: 0; }
+
+.emer-who b {
+    display: block;
+    font-size: 15px;
+}
+
+.emer-who small {
+    font-size: 13px;
+    opacity: .9;
+}
+
+.emer-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.adm .emer-btn {
+    background: #fff;
+    color: var(--bad-2);
+}
+
+.adm .emer-btn:hover { background: var(--bad-bg); }
+
+/* Same yellow as "Responding" on the live map. Dark text keeps it readable. */
+.adm .emer-respond {
+    background: var(--resp);
+    color: #1f1300;
+}
+
+.adm .emer-respond:hover { background: #facc15; }
+
+.emer-note {
+    margin: 10px 0 0;
+    font-size: 13px;
+}
+
+.emer-note-btn {
+    padding: 0;
+    border: 0;
+    background: none;
+    color: inherit;
+    font: inherit;
+    font-weight: 700;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    cursor: pointer;
+}
+
+.emer-conn {
+    margin: 0;
+    padding: 8px clamp(16px, 3vw, 40px);
+    background: var(--warn-bg);
+    border-bottom: 1px solid var(--warn-line);
+    color: var(--warn);
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.emer-conn a { color: inherit; }
+
+/* Sidebar: alarm settings for this browser */
+.side-alarm {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 2px 4px;
+    margin-bottom: 4px;
+}
+
+.side-alarm[hidden] { display: none; }
+
+.side-alarm-toggle {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    padding: 9px 10px;
+    border: 0;
+    border-radius: var(--r-sm);
+    background: transparent;
+    color: var(--ink-2);
+    font: inherit;
+    font-weight: 500;
+    text-align: left;
+    cursor: pointer;
+    transition: background var(--t), color var(--t);
+}
+
+.side-alarm-toggle > span {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.side-alarm-toggle > span[hidden] { display: none; }
+
+.side-alarm-toggle .i { color: var(--ink-3); }
+
+.side-alarm-toggle:hover { background: var(--surface-2); }
+
+/* Muted: make it obvious, since no alarm will sound in this browser */
+.side-alarm-toggle[aria-pressed="false"] {
+    background: var(--warn-bg);
+    color: var(--warn);
+}
+
+.side-alarm-toggle[aria-pressed="false"] .i { color: var(--warn); }
+
+.side-alarm-link {
+    padding: 6px 8px;
+    border: 0;
+    border-radius: var(--r-sm);
+    background: none;
+    color: var(--brand);
+    font: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.side-alarm-link:hover { background: var(--brand-soft); }
+
+.side-alarm-notify {
+    flex-basis: 100%;
+    padding-left: 10px;
+    text-align: left;
+}
+
+.side-alarm-notify[hidden] { display: none; }

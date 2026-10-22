@@ -63,7 +63,11 @@ class LocationController extends Controller
             return response()->json(['message' => 'This GoBiker has no open emergency.'], 422);
         }
 
-        $location->update(['status' => $data['status']]);
+        $location->update([
+            'status' => $data['status'],
+            // Resolved: the next emergency from this GoBiker starts fresh.
+            'emergency_at' => $data['status'] === 'active' ? null : $location->emergency_at,
+        ]);
 
         return response()->json(['message' => 'Status updated.', 'status' => $data['status']]);
     }

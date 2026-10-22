@@ -125,6 +125,13 @@ class GobikerLocationController extends Controller
             'longitude' => ['required', 'numeric', 'between:-180,180'],
         ]);
 
+        $current = Location::where('user_id', $request->user()->id)->first();
+
+        // Pressing the button again while still waiting keeps the original time; anything else
+        // (first alert, or a new one after the admin was already responding) is a new emergency
+        // and sounds the admin alarm again.
+        $stillWaiting = strtolower((string) $current?->status) === 'emergency' && $current->emergency_at;
+
         Location::updateOrCreate(
             ['user_id' => $request->user()->id],
             [
@@ -133,6 +140,7 @@ class GobikerLocationController extends Controller
                 'latitude' => $data['latitude'],
                 'longitude' => $data['longitude'],
                 'status' => 'emergency',
+                'emergency_at' => $stillWaiting ? $current->emergency_at : now(),
                 'last_seen_at' => now(),
             ],
         );

@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Models\ContactMessage;
 use App\Models\GobikerMessage;
+use App\Models\Location;
 use App\Models\ReplicationRequest;
 use App\Models\TrainingRequest;
 use App\Models\User;
@@ -42,6 +43,7 @@ class AppServiceProvider extends ServiceProvider
         // Runs only when the admin sidebar renders, so public pages are unaffected.
         View::composer('admin.partials.sidebar', function ($view) {
             $view->with([
+                'navEmergencies' => Location::unansweredEmergencies()->count(),
                 'navPending' => User::pendingApproval()->count(),
                 'navUnread' => ContactMessage::where('is_read', false)->count(),
                 'navGobikerUnread' => GobikerMessage::where('is_read', false)->count(),
