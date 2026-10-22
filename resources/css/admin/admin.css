@@ -76,15 +76,15 @@ body.adm.nav-open { overflow: hidden; }
 .adm dl,
 .adm dd { margin: 0; }
 
-.adm a {
+:where(.adm) a {
     color: inherit;
     text-decoration: none;
 }
 
-.adm button,
-.adm input,
-.adm select,
-.adm textarea {
+:where(.adm) button,
+:where(.adm) input,
+:where(.adm) select,
+:where(.adm) textarea {
     font: inherit;
     color: inherit;
 }
@@ -653,50 +653,50 @@ danger-button:hover { background: #f1f5f9; border-color: #cbd5e1; color: #0f1a2e
 
 .btn:active { transform: translateY(1px); }
 
-.btn-primary {
+.adm .btn-primary {
     background: var(--brand);
     border-color: var(--brand);
     color: #fff;
 }
 
-.btn-primary:hover {
+.adm .btn-primary:hover {
     background: var(--brand-2);
     border-color: var(--brand-2);
     color: #fff;
 }
 
-.btn-secondary {
+.adm .btn-secondary {
     background: var(--surface);
     border-color: var(--line-2);
     color: var(--ink);
 }
 
-.btn-secondary:hover {
+.adm .btn-secondary:hover {
     background: var(--surface-2);
     border-color: #c1c9d6;
 }
 
-.btn-ok {
+.adm .btn-ok {
     background: var(--ok);
     color: #fff;
 }
 
-.btn-ok:hover { background: var(--ok-2); }
+.adm .btn-ok:hover { background: var(--ok-2); }
 
-.btn-danger {
+.adm .btn-danger {
     background: var(--bad);
     color: #fff;
 }
 
-.btn-danger:hover { background: var(--bad-2); }
+.adm .btn-danger:hover { background: var(--bad-2); }
 
-.btn-soft-danger {
+.adm .btn-soft-danger {
     background: var(--surface);
     border-color: var(--bad-line);
     color: var(--bad);
 }
 
-.btn-soft-danger:hover { background: var(--bad-bg); }
+.adm .btn-soft-danger:hover { background: var(--bad-bg); }
 
 .btn-sm {
     height: 32px;
@@ -3493,7 +3493,7 @@ tbody tr.is-unread td:first-child { box-shadow: inset 3px 0 0 var(--brand); }
 
 .callout-action { margin-left: auto; }
 
-.btn[aria-pressed="true"] {
+.adm .btn[aria-pressed="true"] {
     background: var(--brand);
     border-color: var(--brand);
     color: #fff;
