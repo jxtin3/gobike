@@ -157,6 +157,20 @@ it('allows admins to edit homepage data and shows the changes publicly', functio
         ->assertSee('600+');
 });
 
+it('adds older years that have patient records to the year filter', function () {
+    $admin = User::factory()->create(['is_admin' => true]);
+    $recorder = User::factory()->create(['role' => 'GoBiker']);
+    Patient::create([
+        'user_id' => $recorder->id, 'name' => 'Very old record', 'address' => 'Somewhere', 'contact' => '09123456789',
+        'age' => 40, 'sys' => 120, 'dia' => 80, 'pulse' => 70, 'resp' => 16, 'temp' => 36.6,
+        'height' => 160, 'weight' => 60, 'recorded_at' => now()->subYears(7),
+    ]);
+
+    $years = $this->actingAs($admin)->get(route('admin.dashboard'))->viewData('years');
+
+    expect($years)->toBe(range(now()->year, now()->year - 7));
+});
+
 it('rejects invalid dashboard years', function () {
     $admin = User::factory()->create(['is_admin' => true]);
 
@@ -169,7 +183,7 @@ it('rejects invalid dashboard years', function () {
         ->assertSessionHasErrors('year');
 });
 
-it('offers every year with patient records in the dashboard year filter', function () {
+it('offers the last five years in the dashboard year filter', function () {
     $admin = User::factory()->create(['is_admin' => true]);
     $recorder = User::factory()->create(['role' => 'GoBiker']);
     Patient::create([
@@ -180,7 +194,7 @@ it('offers every year with patient records in the dashboard year filter', functi
 
     $response = $this->actingAs($admin)->get(route('admin.dashboard'))->assertOk();
 
-    expect($response->viewData('years'))->toBe([now()->year, now()->year - 1, now()->year - 2])
+    expect($response->viewData('years'))->toBe(range(now()->year, now()->year - 4))
         ->and($response->viewData('year'))->toBe(now()->year);
 });
 

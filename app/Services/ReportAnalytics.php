@@ -160,7 +160,8 @@ class ReportAnalytics
             'month' => $month,
             'periodLabel' => $periodLabel,
             'byDay' => $byDay,
-            'years' => range($currentYear, min($firstYear, $year)),
+            // Always offer the last five years, even before there are records for them, and any older year with data.
+            'years' => range($currentYear, min($firstYear, $year, $currentYear - 4)),
         ];
     }
 }
