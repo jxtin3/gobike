@@ -2453,6 +2453,23 @@ a.pager-btn:hover {
     line-height: 1.55;
 }
 
+.analytics-people {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin-top: 10px;
+    font-size: 13px;
+}
+
+.callout-info {
+    border-color: var(--line-2);
+    background: var(--brand-soft);
+    color: var(--ink);
+}
+
+.callout-info > .i { color: var(--brand); }
+
 .analytics-help summary {
     display: inline-block;
     color: var(--brand);

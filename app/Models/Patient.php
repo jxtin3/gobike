@@ -2,11 +2,27 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Patient extends Model
 {
+    /**
+     * The abnormal readings the admin screens for. One definition, used by the dashboard counts,
+     * the patient list filter and the pills on each record. `sql` and abnormalReadings() must agree.
+     */
+    public const READINGS = [
+        'bp_high' => ['label' => 'High BP', 'phrase' => 'high blood pressure', 'sql' => 'sys >= 140 OR dia >= 90'],
+        'bp_low' => ['label' => 'Low BP', 'phrase' => 'low blood pressure', 'sql' => 'sys < 90 OR dia < 60'],
+        'pulse_high' => ['label' => 'Fast pulse', 'phrase' => 'a fast pulse', 'sql' => 'pulse > 100'],
+        'pulse_low' => ['label' => 'Slow pulse', 'phrase' => 'a slow pulse', 'sql' => 'pulse < 60'],
+        'resp_high' => ['label' => 'Fast breathing', 'phrase' => 'fast breathing', 'sql' => 'resp > 20'],
+        'resp_low' => ['label' => 'Slow breathing', 'phrase' => 'slow breathing', 'sql' => 'resp < 12'],
+        'temp_high' => ['label' => 'High temp', 'phrase' => 'a high temperature', 'sql' => 'temp >= 37.5'],
+        'temp_low' => ['label' => 'Low temp', 'phrase' => 'a low temperature', 'sql' => 'temp < 36'],
+    ];
+
     protected $fillable = [
         'user_id', 'barangay', 'name', 'address', 'contact', 'age',
         'sys', 'dia', 'pulse', 'resp', 'temp', 'height', 'weight', 'recorded_at',
@@ -25,6 +41,36 @@ class Patient extends Model
             'height' => 'float',
             'weight' => 'float',
         ];
+    }
+
+    /** Check-ups with one of the abnormal readings in READINGS. */
+    public function scopeWithReading(Builder $query, string $reading): Builder
+    {
+        return $query->whereRaw('('.self::READINGS[$reading]['sql'].')');
+    }
+
+    /**
+     * Which abnormal readings this check-up has, as reading key => short label.
+     *
+     * @return array<string, string>
+     */
+    public function abnormalReadings(): array
+    {
+        $found = [
+            'bp_high' => $this->sys >= 140 || $this->dia >= 90,
+            'bp_low' => $this->sys < 90 || $this->dia < 60,
+            'pulse_high' => $this->pulse > 100,
+            'pulse_low' => $this->pulse < 60,
+            'resp_high' => $this->resp > 20,
+            'resp_low' => $this->resp < 12,
+            'temp_high' => $this->temp >= 37.5,
+            'temp_low' => $this->temp < 36,
+        ];
+
+        return collect(self::READINGS)
+            ->filter(fn ($definition, $key) => $found[$key])
+            ->map(fn ($definition) => $definition['label'])
+            ->all();
     }
 
     /** The GoBiker who recorded this check-up. */

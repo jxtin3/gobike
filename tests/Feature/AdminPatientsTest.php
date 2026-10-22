@@ -67,3 +67,84 @@ it('shows a patient record with who recorded it', function () {
         ->assertSee('150/95 mmHg')
         ->assertSee('Rider One');
 });
+
+it('filters patients by an abnormal reading and shows what was abnormal', function () {
+    $admin = User::factory()->create(['is_admin' => true]);
+    $recorder = User::factory()->create(['role' => 'GoBiker']);
+    makePatient($recorder, ['name' => 'High Pressure Pedro', 'sys' => 150, 'dia' => 95]);
+    makePatient($recorder, ['name' => 'Normal Nena', 'sys' => 118, 'dia' => 76]);
+    makePatient($recorder, ['name' => 'Fast Pulse Pablo', 'sys' => 118, 'dia' => 76, 'pulse' => 110]);
+
+    $this->actingAs($admin)
+        ->get(route('admin.operations.patients.index', ['reading' => 'bp_high']))
+        ->assertOk()
+        ->assertSee('High Pressure Pedro')
+        ->assertDontSee('Normal Nena')
+        ->assertDontSee('Fast Pulse Pablo')
+        ->assertSee('Showing check-ups with high blood pressure')
+        ->assertSee('1 check-up found');
+
+    $this->actingAs($admin)
+        ->get(route('admin.operations.patients.index'))
+        ->assertSee('>High BP<', false)
+        ->assertSee('>Fast pulse<', false);
+});
+
+it('filters patients by the dashboard period', function () {
+    $admin = User::factory()->create(['is_admin' => true]);
+    $recorder = User::factory()->create(['role' => 'GoBiker']);
+    makePatient($recorder, ['name' => 'March Maria', 'recorded_at' => '2025-03-10 09:00:00']);
+    makePatient($recorder, ['name' => 'April Ana', 'recorded_at' => '2025-04-10 09:00:00']);
+    makePatient($recorder, ['name' => 'Last Year Lito', 'recorded_at' => '2024-03-10 09:00:00']);
+
+    $this->actingAs($admin)
+        ->get(route('admin.operations.patients.index', ['reading' => 'bp_high', 'year' => 2025, 'month' => 3]))
+        ->assertSee('March Maria')
+        ->assertSee('in March 2025')
+        ->assertDontSee('April Ana')
+        ->assertDontSee('Last Year Lito');
+
+    $this->actingAs($admin)
+        ->get(route('admin.operations.patients.index', ['year' => 2025]))
+        ->assertSee('March Maria')
+        ->assertSee('April Ana')
+        ->assertDontSee('Last Year Lito');
+});
+
+it('rejects an unknown reading filter', function () {
+    $admin = User::factory()->create(['is_admin' => true]);
+
+    $this->actingAs($admin)
+        ->get(route('admin.operations.patients.index', ['reading' => 'bp_extreme']))
+        ->assertSessionHasErrors('reading');
+});
+
+it('defines every abnormal reading the same way in the database filter and on each record', function () {
+    $recorder = User::factory()->create(['role' => 'GoBiker']);
+
+    foreach ([[85, 55, 55, 10, 35.5], [118, 76, 72, 16, 36.6], [140, 80, 101, 21, 37.5], [139, 90, 100, 20, 37.4], [90, 60, 60, 12, 36.0]] as [$sys, $dia, $pulse, $resp, $temp]) {
+        makePatient($recorder, compact('sys', 'dia', 'pulse', 'resp', 'temp'));
+    }
+
+    foreach (array_keys(Patient::READINGS) as $reading) {
+        $fromDatabase = Patient::withReading($reading)->pluck('id')->sort()->values()->all();
+        $fromRecords = Patient::all()->filter(fn (Patient $patient) => array_key_exists($reading, $patient->abnormalReadings()))->pluck('id')->sort()->values()->all();
+
+        expect($fromDatabase)->toBe($fromRecords, "Mismatch for {$reading}");
+    }
+});
+
+it('links the dashboard to the patients behind each reading', function () {
+    $admin = User::factory()->create(['is_admin' => true]);
+    $recorder = User::factory()->create(['role' => 'GoBiker']);
+    makePatient($recorder);
+
+    $vitals = $this->actingAs($admin)
+        ->get(route('admin.dashboard', ['year' => now()->year, 'month' => now()->month]))
+        ->assertOk()
+        ->assertSee('data-people-high', false)
+        ->viewData('vitals');
+
+    expect($vitals['blood_pressure']['high_url'])->toBe(route('admin.operations.patients.index', ['reading' => 'bp_high', 'year' => now()->year, 'month' => now()->month]))
+        ->and($vitals['blood_pressure']['totalHigh'])->toBe(1);
+});

@@ -15,46 +15,42 @@ class ReportAnalytics
      */
     private const VITAL_SIGNS = [
         'blood_pressure' => [
+            'code' => 'bp',
             'label' => 'Blood pressure',
             'unit' => 'mmHg',
             'normal' => '90/60 to 139/89',
             'high_short' => '140/90 or above',
             'low_short' => 'below 90/60',
-            'high_phrase' => 'high blood pressure',
-            'low_phrase' => 'low blood pressure',
             'high_range' => 'High: systolic ≥ 140 or diastolic ≥ 90 mmHg',
             'low_range' => 'Low: systolic < 90 or diastolic < 60 mmHg',
         ],
         'pulse' => [
+            'code' => 'pulse',
             'label' => 'Pulse',
             'unit' => 'bpm (beats per minute)',
             'normal' => '60 to 100',
             'high_short' => 'above 100',
             'low_short' => 'below 60',
-            'high_phrase' => 'a fast pulse',
-            'low_phrase' => 'a slow pulse',
             'high_range' => 'High: > 100 bpm',
             'low_range' => 'Low: < 60 bpm',
         ],
         'respiration' => [
+            'code' => 'resp',
             'label' => 'Respiration',
             'unit' => 'breaths per minute',
             'normal' => '12 to 20',
             'high_short' => 'above 20',
             'low_short' => 'below 12',
-            'high_phrase' => 'fast breathing',
-            'low_phrase' => 'slow breathing',
             'high_range' => 'High: > 20 per minute',
             'low_range' => 'Low: < 12 per minute',
         ],
         'temperature' => [
+            'code' => 'temp',
             'label' => 'Temperature',
             'unit' => '°C',
             'normal' => '36.0 to 37.4',
             'high_short' => '37.5 or above',
             'low_short' => 'below 36.0',
-            'high_phrase' => 'a high temperature',
-            'low_phrase' => 'a low temperature',
             'high_range' => 'High: ≥ 37.5 °C',
             'low_range' => 'Low: < 36 °C',
         ],
@@ -90,14 +86,11 @@ class ReportAnalytics
         $monthlyRows = Patient::query()
             ->whereBetween('recorded_at', [$from, $byDay ? $to->endOfDay() : $to->endOfMonth()])
             ->selectRaw("{$monthExpression} as report_month, COUNT(*) as checkups")
-            ->selectRaw('SUM(CASE WHEN sys >= 140 OR dia >= 90 THEN 1 ELSE 0 END) as bp_high')
-            ->selectRaw('SUM(CASE WHEN sys < 90 OR dia < 60 THEN 1 ELSE 0 END) as bp_low')
-            ->selectRaw('SUM(CASE WHEN pulse > 100 THEN 1 ELSE 0 END) as pulse_high')
-            ->selectRaw('SUM(CASE WHEN pulse < 60 THEN 1 ELSE 0 END) as pulse_low')
-            ->selectRaw('SUM(CASE WHEN resp > 20 THEN 1 ELSE 0 END) as resp_high')
-            ->selectRaw('SUM(CASE WHEN resp < 12 THEN 1 ELSE 0 END) as resp_low')
-            ->selectRaw('SUM(CASE WHEN temp >= 37.5 THEN 1 ELSE 0 END) as temp_high')
-            ->selectRaw('SUM(CASE WHEN temp < 36 THEN 1 ELSE 0 END) as temp_low')
+            ->tap(function ($query) {
+                foreach (Patient::READINGS as $reading => $definition) {
+                    $query->selectRaw("SUM(CASE WHEN {$definition['sql']} THEN 1 ELSE 0 END) as {$reading}");
+                }
+            })
             ->groupBy('report_month')
             ->get()
             ->keyBy('report_month');
@@ -107,6 +100,11 @@ class ReportAnalytics
         foreach (self::VITAL_SIGNS as $key => $definition) {
             $vitals[$key] = [
                 ...$definition,
+                'high_phrase' => Patient::READINGS["{$definition['code']}_high"]['phrase'],
+                'low_phrase' => Patient::READINGS["{$definition['code']}_low"]['phrase'],
+                // Patient list filtered to this reading in the chosen period (the page shows names).
+                'high_url' => route('admin.operations.patients.index', array_filter(['reading' => "{$definition['code']}_high", 'year' => $year, 'month' => $month])),
+                'low_url' => route('admin.operations.patients.index', array_filter(['reading' => "{$definition['code']}_low", 'year' => $year, 'month' => $month])),
                 'totalHigh' => 0,
                 'totalLow' => 0,
                 'months' => [],
@@ -124,14 +122,8 @@ class ReportAnalytics
             ];
 
             foreach (self::VITAL_SIGNS as $key => $definition) {
-                [$highColumn, $lowColumn] = match ($key) {
-                    'blood_pressure' => ['bp_high', 'bp_low'],
-                    'pulse' => ['pulse_high', 'pulse_low'],
-                    'respiration' => ['resp_high', 'resp_low'],
-                    'temperature' => ['temp_high', 'temp_low'],
-                };
-                $high = (int) ($row->{$highColumn} ?? 0);
-                $low = (int) ($row->{$lowColumn} ?? 0);
+                $high = (int) ($row->{$definition['code'].'_high'} ?? 0);
+                $low = (int) ($row->{$definition['code'].'_low'} ?? 0);
                 $vitals[$key]['totalHigh'] += $high;
                 $vitals[$key]['totalLow'] += $low;
                 $vitals[$key]['months'][] = [

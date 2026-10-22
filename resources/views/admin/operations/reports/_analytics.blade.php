@@ -115,6 +115,11 @@
                 </span>
             </header>
             <div class="analytics-chart-canvas" data-line-chart role="img" aria-label="Monthly high and low vital sign screening chart"></div>
+            <div class="analytics-people" data-people>
+                <a class="btn btn-secondary btn-sm" data-people-high href="#" hidden><x-admin.icon name="users" /> <span></span></a>
+                <a class="btn btn-secondary btn-sm" data-people-low href="#" hidden><x-admin.icon name="users" /> <span></span></a>
+                <span class="muted" data-people-none hidden>No abnormal readings for this vital sign, so there are no patients to show.</span>
+            </div>
             <p class="analytics-chart-note">High and low readings each {{ $byDay ? 'day' : 'month' }} for the vital sign selected above. Click another card to switch.</p>
         </section>
 

@@ -5,12 +5,36 @@
 
 @section('content')
 @php
-    $hasQuery = filled(request('search')) || filled(request('barangay'));
+    $hasQuery = filled(request('search')) || filled(request('barangay')) || $reading || $period;
+    $summary = trim('Showing check-ups'
+        .($reading ? ' with '.\App\Models\Patient::READINGS[$reading]['phrase'] : '')
+        .($period ? ' in '.$period['label'] : ''));
 @endphp
+
+@if ($reading || $period)
+    <div class="callout callout-info">
+        <x-admin.icon name="activity" />
+        <div>
+            <b>{{ $summary }}</b>
+            <span>{{ number_format($patients->total()) }} {{ Str::plural('check-up', $patients->total()) }} found. This is a screening hint, not a diagnosis.</span>
+        </div>
+        <a class="btn btn-secondary btn-sm" href="{{ route('admin.operations.patients.index', array_filter(['search' => request('search'), 'barangay' => request('barangay')])) }}">Clear</a>
+    </div>
+@endif
 
 <div class="toolbar">
     <form class="search-form" role="search" method="GET" action="{{ route('admin.operations.patients.index') }}">
+        @if ($period)
+            <input type="hidden" name="year" value="{{ request('year') }}">
+            @if (request('month')) <input type="hidden" name="month" value="{{ request('month') }}"> @endif
+        @endif
         <input class="input" type="search" name="search" value="{{ request('search') }}" placeholder="Search by patient name" aria-label="Search patients">
+        <select class="input" name="reading" aria-label="Filter by abnormal reading" data-autosubmit>
+            <option value="">All readings</option>
+            @foreach (\App\Models\Patient::READINGS as $key => $definition)
+                <option value="{{ $key }}" @selected($reading === $key)>{{ $definition['label'] }}</option>
+            @endforeach
+        </select>
         <select class="input" name="barangay" aria-label="Filter by barangay" data-autosubmit>
             <option value="">All barangays</option>
             @foreach ($barangays as $b)
@@ -38,8 +62,7 @@
                 @php
                     $initials = collect(preg_split('/\s+/', trim($patient->name)))->filter()->take(2)
                         ->map(fn ($part) => mb_strtoupper(mb_substr($part, 0, 1)))->implode('');
-                    $highBp = $patient->sys >= 140 || $patient->dia >= 90;
-                    $highTemp = $patient->temp >= 37.5;
+                    $abnormal = $patient->abnormalReadings();
                 @endphp
                 <tr>
                     <td>
@@ -55,8 +78,9 @@
                     <td>
                         BP {{ $patient->sys }}/{{ $patient->dia }} · Pulse {{ $patient->pulse }}
                         <small class="sub-line">Temp {{ rtrim(rtrim(number_format($patient->temp, 1), '0'), '.') }} °C</small>
-                        @if ($highBp) <span class="pill pill-warn">Elevated BP</span> @endif
-                        @if ($highTemp) <span class="pill pill-warn">Elevated temp</span> @endif
+                        @foreach ($abnormal as $key => $label)
+                            <span class="pill {{ str_ends_with($key, '_high') ? 'pill-warn' : 'pill-info' }}">{{ $label }}</span>
+                        @endforeach
                     </td>
                     <td>{{ $patient->recorder?->name ?? '—' }}</td>
                     <td>

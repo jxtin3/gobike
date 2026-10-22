@@ -245,6 +245,19 @@
         });
     }
 
+    // Links to the Patients page, filtered to the selected vital sign and the chosen period.
+    function showPeople(vital) {
+        const link = (selector, count, url, phrase) => {
+            const el = root.querySelector(selector);
+            el.hidden = count === 0;
+            el.href = url;
+            el.querySelector('span').textContent = `View patients with ${phrase} (${numberFormat.format(count)})`;
+        };
+        link('[data-people-high]', vital.totalHigh, vital.high_url, vital.high_phrase);
+        link('[data-people-low]', vital.totalLow, vital.low_url, vital.low_phrase);
+        root.querySelector('[data-people-none]').hidden = vital.totalHigh + vital.totalLow > 0;
+    }
+
     function selectVital(key) {
         const vital = vitals[key];
         if (!vital) return;
@@ -254,6 +267,7 @@
             card.setAttribute('aria-pressed', String(selected));
         });
         trendTitle.textContent = vital.label;
+        showPeople(vital);
         renderLine(vital);
         if (entrancePending) {
             entrancePending = false;
