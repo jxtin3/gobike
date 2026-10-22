@@ -1,4 +1,39 @@
 <section class="analytics-dashboard" data-analytics-dashboard data-entrance="{{ !empty($dashboardEntrance) ? 'true' : 'false' }}" data-checkups='@json($checkups)' data-pie='@json($pie)' data-vitals='@json($vitals)'>
+    <div class="analytics-intro">
+        @if ($checkupsTotal > 0)
+            <p>
+                GoBikers recorded <b>{{ number_format($checkupsTotal) }} {{ Str::plural('check-up', $checkupsTotal) }}</b> in {{ $year }}.
+                Each card shows how many of them had a reading <b>outside the normal range</b>.
+                A small number is good: it means most check-ups were normal.
+                Click a card to see it month by month.
+            </p>
+        @else
+            <p>No patient check-ups were recorded in {{ $year }} yet. The cards fill in as GoBikers record check-ups in the mobile app.</p>
+        @endif
+
+        <details class="analytics-help">
+            <summary>What counts as normal, high or low?</summary>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr><th>Reading</th><th>Normal</th><th>High</th><th>Low</th></tr>
+                    </thead>
+                    <tbody>
+                        @foreach ($vitals as $vital)
+                            <tr>
+                                <td><b>{{ $vital['label'] }}</b> <small class="muted">{{ $vital['unit'] }}</small></td>
+                                <td>{{ $vital['normal'] }}</td>
+                                <td>{{ $vital['high_short'] }}</td>
+                                <td>{{ $vital['low_short'] }}</td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+            <p class="analytics-help-note">These are screening hints for the RHU team, not a diagnosis. A check-up can have more than one abnormal reading, for example both a high blood pressure and a fast pulse.</p>
+        </details>
+    </div>
+
     <div class="analytics-overview">
         <div class="analytics-kpis" role="group" aria-label="Choose a vital sign">
             @foreach ($vitals as $key => $vital)
@@ -17,8 +52,24 @@
                             default => 'thermometer',
                         }" />
                     </span>
-                    <strong><span data-kpi-high="{{ $vital['totalHigh'] }}">{{ number_format($vital['totalHigh']) }}</span><small>high</small></strong>
-                    <span class="analytics-kpi-foot"><span><span data-kpi-low="{{ $vital['totalLow'] }}">{{ number_format($vital['totalLow']) }}</span> low</span><span>{{ $year }}</span></span>
+                    @php
+                        $share = $checkupsTotal > 0 ? $vital['totalHigh'] / $checkupsTotal * 100 : 0;
+                        $shareText = $vital['totalHigh'] > 0 && $share < 1 ? 'under 1%' : round($share).'%';
+                    @endphp
+                    <strong><span data-kpi-high="{{ $vital['totalHigh'] }}">{{ number_format($vital['totalHigh']) }}</span><small>high {{ Str::plural('reading', $vital['totalHigh']) }}</small></strong>
+                    <span class="analytics-kpi-share">
+                        @if ($checkupsTotal === 0)
+                            No check-ups yet
+                        @elseif ($vital['totalHigh'] === 0)
+                            None of the {{ number_format($checkupsTotal) }} check-ups had {{ $vital['high_phrase'] }}
+                        @else
+                            {{ $shareText }} of check-ups had {{ $vital['high_phrase'] }}
+                        @endif
+                    </span>
+                    <span class="analytics-kpi-foot">
+                        <span><span data-kpi-low="{{ $vital['totalLow'] }}">{{ number_format($vital['totalLow']) }}</span> low {{ Str::plural('reading', $vital['totalLow']) }}</span>
+                        <span>Normal: {{ $vital['normal'] }}</span>
+                    </span>
                 </button>
             @endforeach
         </div>
@@ -29,12 +80,13 @@
                     <span class="analytics-eyebrow">Vital signs share</span>
                     <h2 id="analytics-pie-title">Abnormal readings by vital sign</h2>
                 </div>
-                <span class="analytics-chart-total"><span data-pie-total>0</span> total</span>
+                <span class="analytics-chart-total"><span data-pie-total>0</span> abnormal readings</span>
             </header>
             <div class="analytics-pie-content">
                 <div class="analytics-pie-legend" data-pie-legend></div>
                 <div class="analytics-pie-chart" data-pie-chart role="img" aria-label="Abnormal readings by vital sign"></div>
             </div>
+            <p class="analytics-chart-note">Which vital sign had the most high or low readings in {{ $year }}.</p>
         </section>
     </div>
 
@@ -45,10 +97,10 @@
                     <span class="analytics-eyebrow">Monthly activity</span>
                     <h2 id="analytics-selected-title">Patient check-ups</h2>
                 </div>
-                <span class="analytics-chart-total">{{ number_format($checkupsTotal) }} total</span>
+                <span class="analytics-chart-total">{{ number_format($checkupsTotal) }} {{ Str::plural('check-up', $checkupsTotal) }}</span>
             </header>
             <div class="analytics-chart-canvas" data-bar-chart role="img" aria-label="Monthly patient check-ups bar chart"></div>
-            <p class="analytics-chart-note">Monthly records in the selected period</p>
+            <p class="analytics-chart-note">Number of check-ups recorded in each month of {{ $year }}.</p>
         </section>
 
         <section class="analytics-chart-card analytics-chart-primary" aria-labelledby="analytics-trend-title">
@@ -63,6 +115,7 @@
                 </span>
             </header>
             <div class="analytics-chart-canvas" data-line-chart role="img" aria-label="Monthly high and low vital sign screening chart"></div>
+            <p class="analytics-chart-note">High and low readings each month for the vital sign selected above. Click another card to switch.</p>
         </section>
 
     </div>

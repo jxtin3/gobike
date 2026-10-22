@@ -2321,7 +2321,8 @@ a.pager-btn:hover {
 .analytics-dashboard {
     display: grid;
     min-height: calc(100vh - 115px);
-    grid-template-rows: minmax(270px, .95fr) minmax(270px, 1.05fr);
+    grid-template-rows: auto auto auto;
+    align-content: start;
     gap: 12px;
 }
 
@@ -2416,22 +2417,58 @@ a.pager-btn:hover {
 
 .analytics-kpi > strong small {
     color: var(--ink-3);
-    font-size: 11px;
+    font-size: 13px;
     font-weight: 600;
     letter-spacing: 0;
 }
 
-.analytics-kpi-foot {
-    display: flex;
-    justify-content: space-between;
-    color: var(--ink-3);
-    font-size: 10px;
+.analytics-kpi-share {
+    color: var(--ink-2);
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 1.35;
 }
 
-.analytics-kpi-foot > span {
-    color: inherit;
-    font-size: inherit;
-    line-height: inherit;
+.analytics-kpi-foot {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 4px 12px;
+    padding-top: 8px;
+    border-top: 1px solid var(--line);
+    color: var(--ink-3);
+    font-size: 12px;
+}
+
+.analytics-intro {
+    display: grid;
+    gap: 8px;
+}
+
+.analytics-intro > p {
+    max-width: 80ch;
+    margin: 0;
+    color: var(--ink-2);
+    font-size: 14px;
+    line-height: 1.55;
+}
+
+.analytics-help summary {
+    display: inline-block;
+    color: var(--brand);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.analytics-help[open] summary { margin-bottom: 10px; }
+
+.analytics-help table { min-width: 520px; }
+
+.analytics-help-note {
+    margin: 8px 0 0;
+    color: var(--ink-3);
+    font-size: 12px;
 }
 
 .analytics-visuals {
@@ -2572,9 +2609,9 @@ a.pager-btn:hover {
 .analytics-point-low { stroke: #2878a8; }
 
 .analytics-chart-note {
-    margin: 3px 0 0;
+    margin: 6px 0 0;
     color: var(--ink-3);
-    font-size: 10px;
+    font-size: 12px;
 }
 
 .analytics-pie-content {
@@ -2687,19 +2724,18 @@ a.pager-btn:hover {
 
 .analytics-kpi {
     gap: 8px;
-    padding: 11px 13px;
+    padding: 14px 16px;
 }
 
-.analytics-kpi-top { font-size: 11px; }
+.analytics-kpi-top { font-size: 13px; }
 
 .analytics-kpi-top .i {
     width: 16px;
     height: 16px;
 }
 
-.analytics-kpi > strong { font-size: 24px; }
+.analytics-kpi > strong { font-size: 30px; }
 
-.analytics-kpi-foot { font-size: 9px; }
 
 .analytics-chart-canvas { overflow: hidden; }
 

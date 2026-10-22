@@ -183,3 +183,38 @@ it('offers every year with patient records in the dashboard year filter', functi
     expect($response->viewData('years'))->toBe([now()->year, now()->year - 1, now()->year - 2])
         ->and($response->viewData('year'))->toBe(now()->year);
 });
+
+it('explains the dashboard cards in plain language', function () {
+    $admin = User::factory()->create(['is_admin' => true]);
+    $recorder = User::factory()->create(['role' => 'GoBiker']);
+    $reading = fn (array $overrides) => Patient::create(array_merge([
+        'user_id' => $recorder->id, 'name' => 'Patient', 'address' => 'Purok 1', 'contact' => '09123456789',
+        'age' => 50, 'sys' => 118, 'dia' => 76, 'pulse' => 72, 'resp' => 16, 'temp' => 36.6,
+        'height' => 160, 'weight' => 60, 'recorded_at' => now(),
+    ], $overrides));
+
+    foreach (range(1, 3) as $ignored) {
+        $reading([]);
+    }
+    $reading(['sys' => 150, 'dia' => 95]); // 1 of 4 check-ups has high blood pressure
+
+    $this->actingAs($admin)
+        ->get(route('admin.dashboard'))
+        ->assertOk()
+        ->assertSee('GoBikers recorded', false)
+        ->assertSee('4 check-ups')
+        ->assertSee('25% of check-ups had high blood pressure')
+        ->assertSee('None of the 4 check-ups had a fast pulse')
+        ->assertSee('Normal: 90/60 to 139/89')
+        ->assertSee('What counts as normal, high or low?');
+});
+
+it('tells the admin when no check-ups were recorded', function () {
+    $admin = User::factory()->create(['is_admin' => true]);
+
+    $this->actingAs($admin)
+        ->get(route('admin.dashboard'))
+        ->assertOk()
+        ->assertSee('No patient check-ups were recorded in '.now()->year.' yet')
+        ->assertSee('No check-ups yet');
+});

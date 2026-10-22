@@ -9,24 +9,52 @@ use Illuminate\Support\Facades\DB;
 
 class ReportAnalytics
 {
+    /**
+     * The four vital signs shown on the dashboard. The thresholds match the SQL in forRequest();
+     * the plain-language texts are what an admin reads on the cards.
+     */
     private const VITAL_SIGNS = [
         'blood_pressure' => [
             'label' => 'Blood pressure',
+            'unit' => 'mmHg',
+            'normal' => '90/60 to 139/89',
+            'high_short' => '140/90 or above',
+            'low_short' => 'below 90/60',
+            'high_phrase' => 'high blood pressure',
+            'low_phrase' => 'low blood pressure',
             'high_range' => 'High: systolic ≥ 140 or diastolic ≥ 90 mmHg',
             'low_range' => 'Low: systolic < 90 or diastolic < 60 mmHg',
         ],
         'pulse' => [
             'label' => 'Pulse',
+            'unit' => 'bpm (beats per minute)',
+            'normal' => '60 to 100',
+            'high_short' => 'above 100',
+            'low_short' => 'below 60',
+            'high_phrase' => 'a fast pulse',
+            'low_phrase' => 'a slow pulse',
             'high_range' => 'High: > 100 bpm',
             'low_range' => 'Low: < 60 bpm',
         ],
         'respiration' => [
             'label' => 'Respiration',
+            'unit' => 'breaths per minute',
+            'normal' => '12 to 20',
+            'high_short' => 'above 20',
+            'low_short' => 'below 12',
+            'high_phrase' => 'fast breathing',
+            'low_phrase' => 'slow breathing',
             'high_range' => 'High: > 20 per minute',
             'low_range' => 'Low: < 12 per minute',
         ],
         'temperature' => [
             'label' => 'Temperature',
+            'unit' => '°C',
+            'normal' => '36.0 to 37.4',
+            'high_short' => '37.5 or above',
+            'low_short' => 'below 36.0',
+            'high_phrase' => 'a high temperature',
+            'low_phrase' => 'a low temperature',
             'high_range' => 'High: ≥ 37.5 °C',
             'low_range' => 'Low: < 36 °C',
         ],
