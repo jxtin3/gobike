@@ -18,7 +18,8 @@ class SetupPayPalDonationPlan extends Command
         $clientSecret = config("paypal.{$mode}.client_secret");
 
         if (! $clientId || ! $clientSecret) {
-            $this->error("PayPal {$mode} credentials are not set. Check PAYPAL_SANDBOX_CLIENT_ID / PAYPAL_SANDBOX_CLIENT_SECRET in .env.");
+            $prefix = 'PAYPAL_'.strtoupper((string) $mode);
+            $this->error("PayPal {$mode} credentials are not set. Check {$prefix}_CLIENT_ID / {$prefix}_CLIENT_SECRET in .env.");
 
             return self::FAILURE;
         }

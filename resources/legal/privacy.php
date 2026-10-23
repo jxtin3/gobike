@@ -104,7 +104,7 @@ We share personal information only when necessary, and never more than is needed
 
 **Service providers** that process data on our behalf, under appropriate safeguards:
 
-- **Laravel Cloud** and its infrastructure partners host the Site, the App's server, our database and file storage.
+- **Railway** and its infrastructure partners host the Site, the App's server, our database and file storage.
 - **Google** provides GoBot replies (Gemini), App sign-in (Google Sign-In) and the map on our Contact page (Google Maps, loaded only if you allow it).
 - **PayPal and PayMongo** process card, PayPal, GCash and online banking payments. We never see or store your full card or e-wallet details; the payment provider handles them under its own privacy policy.
 

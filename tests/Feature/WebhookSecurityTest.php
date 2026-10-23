@@ -80,6 +80,34 @@ it('accepts a correctly signed PayMongo webhook and marks the donation paid', fu
     expect($donation->fresh()->status)->toBe('paid');
 });
 
+it('accepts PayMongo webhooks in the real test-mode and live-mode header formats', function (string $format) {
+    $secret = 'whsk_test_secret';
+    config(['services.paymongo.webhook_secret' => $secret]);
+    $donation = makeWebhookDonation();
+
+    $body = paymongoPaidBody($donation);
+    $timestamp = (string) time();
+    $signature = hash_hmac('sha256', $timestamp.'.'.$body, $secret);
+
+    postPaymongoWebhook($this, $body, sprintf($format, $timestamp, $signature))
+        ->assertOk();
+
+    expect($donation->fresh()->status)->toBe('paid');
+})->with([
+    'test mode' => ['t=%s,te=%s,li='],
+    'live mode' => ['t=%s,te=,li=%s'],
+]);
+
+it('rejects a PayMongo webhook whose signature fields are all empty', function () {
+    config(['services.paymongo.webhook_secret' => 'whsk_test_secret']);
+    $donation = makeWebhookDonation();
+
+    postPaymongoWebhook($this, paymongoPaidBody($donation), 't=1700000000,te=,li=')
+        ->assertStatus(400);
+
+    expect($donation->fresh()->status)->toBe('pending');
+});
+
 it('rejects PayPal webhooks when no webhook id is configured', function () {
     // partialMock avoids the real constructor, which calls PayPal's API.
     $this->partialMock(PayPalDonationService::class);

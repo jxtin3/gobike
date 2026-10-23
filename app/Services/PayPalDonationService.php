@@ -31,11 +31,7 @@ class PayPalDonationService
      */
     public function createOrder(Donation $donation): array
     {
-        $clientId = config('paypal.'.config('paypal.mode').'.client_id');
-
-        if ($clientId === '') {
-            throw new RuntimeException('PayPal is not configured. Add PAYPAL_SANDBOX_CLIENT_ID and PAYPAL_SANDBOX_CLIENT_SECRET to your .env file.');
-        }
+        $this->ensureConfigured();
 
         $response = $this->client()->createOrder([
             'intent' => 'CAPTURE',
@@ -87,11 +83,7 @@ class PayPalDonationService
      */
     public function createSubscription(Donation $donation): array
     {
-        $clientId = config('paypal.'.config('paypal.mode').'.client_id');
-
-        if ($clientId === '') {
-            throw new RuntimeException('PayPal is not configured. Add PAYPAL_SANDBOX_CLIENT_ID and PAYPAL_SANDBOX_CLIENT_SECRET to your .env file.');
-        }
+        $this->ensureConfigured();
 
         $planId = config('donation.paypal.plan_id');
 
@@ -156,6 +148,18 @@ class PayPalDonationService
             'approval_url' => $approvalUrl,
             'subscription_id' => $data['id'],
         ];
+    }
+
+    /** Names the variables for the current mode (sandbox or live) so the error points at the right ones. */
+    private function ensureConfigured(): void
+    {
+        $mode = config('paypal.mode');
+
+        if ((string) config("paypal.{$mode}.client_id") === '') {
+            $prefix = 'PAYPAL_'.strtoupper((string) $mode);
+
+            throw new RuntimeException("PayPal is not configured. Add {$prefix}_CLIENT_ID and {$prefix}_CLIENT_SECRET to your .env file.");
+        }
     }
 
     private function apiBaseUrl(): string

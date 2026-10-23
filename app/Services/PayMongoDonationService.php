@@ -170,8 +170,12 @@ class PayMongoDonationService
             }
         }
 
+        // PayMongo sends "t=…,te=<sig>,li=" in test mode and "t=…,te=,li=<sig>" in live mode,
+        // so take the first field that actually has a value.
         $timestamp = $parts['t'] ?? '';
-        $signature = $parts['v1'] ?? $parts['v0'] ?? $parts['te'] ?? $parts['li'] ?? '';
+        $signature = collect(['li', 'te', 'v1', 'v0'])
+            ->map(fn (string $key) => $parts[$key] ?? '')
+            ->first(fn (string $value) => $value !== '') ?? '';
 
         if ($timestamp === '' || $signature === '') {
             return false;

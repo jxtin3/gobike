@@ -23,7 +23,7 @@ Laravel web platform and mobile API for the **Go Bike Project** of PadyaRescue, 
 
 ## Tech stack
 
-Laravel 13, PHP 8.3+, Blade, Tailwind CSS v4, Alpine.js, Vite, Laravel Sanctum, MySQL (SQLite for quick local use).
+Laravel 13, PHP 8.4+, Blade, Tailwind CSS v4, Alpine.js, Vite, Laravel Sanctum, MySQL (SQLite for quick local use).
 
 ## Local setup
 
@@ -54,6 +54,39 @@ php artisan test
 - Never run `php artisan db:seed` on a live server.
 - The PayPal and PayMongo webhook secrets are required. Webhooks are rejected without them.
 - Never commit the real `.env` file.
+
+## Deploying on Railway
+
+1. Create a project with a **MySQL** database and a service from this GitHub repo. Railpack detects Laravel and builds it (PHP version from `composer.json`, `npm run build` for the assets). On every start it runs the migrations, `storage:link` and `optimize`, so no custom build, start or pre-deploy command is needed.
+2. In the app service settings, set the healthcheck path to `/up` and add your custom domain under Networking (HTTPS is automatic).
+3. Set the variables (see `.env.example`):
+   - `APP_KEY` (from `php artisan key:generate --show`), `APP_URL=https://your-domain`
+   - `DB_CONNECTION=mysql` and `DB_URL=${{MySQL.MYSQL_URL}}`
+   - `GEMINI_API_KEY`, `GOOGLE_WEB_CLIENT_ID`, and the PayPal / PayMongo values (below)
+   - The other defaults in `.env.example` (`APP_ENV=production`, `APP_DEBUG=false`, `LOG_CHANNEL=stderr`, `SESSION_SECURE_COOKIE=true`) are already right for production.
+4. **Uploaded images:** the container disk is wiped on every deploy. Attach a Railway Volume at `/app/storage/app/public` (simplest, one instance only), or use a public R2/S3 bucket with `MEDIA_DISK=s3` and `MEDIA_CSP_ORIGIN`.
+5. After the first deploy, create the admin in the Railway shell: `php artisan admin:create --name="..." --email="..."`.
+6. Point the Flutter app's API base URL at the new domain.
+7. Optional: a second service from the same repo as a Railway cron job (`0 0 * * *`) with start command `php artisan sanctum:prune-expired --hours=24` clears expired mobile logins. Give it the same `APP_KEY` and `DB_*` variables as the app. No queue worker is needed; nothing is queued.
+
+### Going live with payments
+
+**PayPal**
+1. In developer.paypal.com switch to **Live**, create an app (needs a verified Business account) and set `PAYPAL_MODE=live`, `PAYPAL_LIVE_CLIENT_ID`, `PAYPAL_LIVE_CLIENT_SECRET`.
+2. Run `php artisan paypal:setup-donation-plan` in live mode and save the new `PAYPAL_DONATION_PRODUCT_ID` / `PAYPAL_DONATION_PLAN_ID` (sandbox plans don't work in live).
+3. Add a live webhook to `https://your-domain/webhooks/paypal` with these events, and save its ID in `PAYPAL_WEBHOOK_ID`:
+   `PAYMENT.CAPTURE.COMPLETED`, `CHECKOUT.ORDER.APPROVED`, `PAYMENT.SALE.COMPLETED`, `BILLING.SUBSCRIPTION.ACTIVATED`, `BILLING.SUBSCRIPTION.RE-ACTIVATED`, `BILLING.SUBSCRIPTION.SUSPENDED`, `BILLING.SUBSCRIPTION.CANCELLED`, `BILLING.SUBSCRIPTION.EXPIRED`, `BILLING.SUBSCRIPTION.PAYMENT.FAILED`.
+
+**PayMongo**
+1. Activate the account in the PayMongo dashboard and make sure GCash and online banking are enabled for it.
+2. Set the live keys `PAYMONGO_PUBLIC_KEY=pk_live_...` and `PAYMONGO_SECRET_KEY=sk_live_...`.
+3. Create a live webhook (test webhooks don't carry over) and save the returned `secret_key` in `PAYMONGO_WEBHOOK_SECRET`:
+   ```bash
+   curl -X POST https://api.paymongo.com/v1/webhooks -u sk_live_xxx: \
+     -H "Content-Type: application/json" \
+     -d '{"data":{"attributes":{"url":"https://your-domain/webhooks/paymongo","events":["checkout_session.payment.paid"]}}}'
+   ```
+
 
 ## License
 
