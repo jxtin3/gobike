@@ -1,7 +1,28 @@
-/* ABOUT / Section 1 — Hero */
+/* ABOUT / Section 1 — Hero (+ the section heading shared by every About section) */
 
+/* A class, not Tailwind utilities: site-globals.css sets an unlayered `font` on every h1. */
 .about-hero-title {
-    font-size: clamp(2.8rem, 6vw, 4.5rem);
-    line-height: 1.04;
-    letter-spacing: -0.02em;
+    font-family: 'Oswald', sans-serif;
+    font-weight: 700;
+    font-size: clamp(2.5rem, 6vw, 4.25rem);
+    line-height: 1.05;
+    letter-spacing: -0.01em;
+    margin-bottom: 1.25rem;
+    text-wrap: balance;
+}
+
+.about-kicker {
+    font-size: 0.875rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.about-h2 {
+    font-family: 'Oswald', sans-serif;
+    font-weight: 700;
+    font-size: clamp(1.875rem, 3.5vw, 2.5rem);
+    line-height: 1.1;
+    text-transform: uppercase;
+    text-wrap: balance;
 }

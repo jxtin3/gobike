@@ -1,63 +1,335 @@
-/* ABOUT / Section 4 — Theory of Change */
+/* ABOUT / Section 4 — Theory of Change
+ * A flowchart: each pathway runs Activities → Output → Outcome (joined by arrows),
+ * and the three outcomes merge into one goal. Connector lines are decorative CSS;
+ * the content itself is plain headings and lists.
+ */
 
-.toc-pyramid-container {
+.toc-statement {
+    font-size: clamp(1.0625rem, 1.6vw, 1.25rem);
+    line-height: 1.65;
+    color: #334155;
+}
+
+.toc-highlight {
+    font-weight: 600;
+    color: #111827;
+    background-image: linear-gradient(transparent 62%, rgba(249, 115, 22, 0.28) 62%);
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+}
+
+/* ── Pathways ─────────────────────────────────────── */
+
+.toc-flow {
+    --toc-gap: 1.5rem;
+    --toc-step: 2.25rem;   /* vertical space taken by each connector arrow */
+    --toc-line: #94A3B8;
+
+    display: grid;
+    gap: 3rem var(--toc-gap);
+    margin-top: 3rem;
+}
+
+.toc-path {
     position: relative;
-    width: 100%;
+    display: grid;
+    row-gap: var(--toc-step);
 }
 
-.toc-pyramid-svg {
-    display: block;
-    width: 100%;
-    height: auto;
-    filter: drop-shadow(0 10px 25px rgba(15, 23, 42, 0.08));
-    overflow: visible;
-}
-
-.toc-pyramid-tier {
-    cursor: default;
-}
-
-/* The expandable right description bar */
-.toc-desc-bar {
-    height: 100%;
-    width: 475px;
-    clip-path: polygon(0 0, calc(100% - 35px) 0, 100% 100%, 35px 100%);
-    cursor: pointer;
-    transition: width 0.35s cubic-bezier(0.16, 1, 0.3, 1), filter 0.3s ease;
-    filter: drop-shadow(0 2px 6px rgba(13, 27, 42, 0.15));
-    user-select: none;
-}
-
-.toc-desc-bar.is-expanded {
-    width: 625px;
-    filter: drop-shadow(0 8px 24px rgba(13, 27, 42, 0.32));
-}
-
-.toc-desc-bar:focus {
-    outline: none;
-}
-
-/* Mobile Pyramid Cascade */
-.toc-mobile-card {
+/* Phones/tablets: the pathways are stacked, so a rail on the left collects
+   each outcome (short branch) and carries it down to the goal. */
+.toc-flow {
     position: relative;
-    border-radius: 4px;
-    overflow: visible;
-    box-shadow: 0 4px 12px rgba(13, 27, 42, 0.08);
-    cursor: pointer;
-    transition: transform 0.25s ease, box-shadow 0.25s ease;
+    padding-left: 1.5rem;
 }
 
-.toc-mobile-card.is-expanded {
-    box-shadow: 0 10px 24px rgba(13, 27, 42, 0.22);
-}
-
-.toc-mobile-fold {
+.toc-path::after {
+    content: '';
     position: absolute;
-    bottom: -8px;
-    left: 8px;
-    width: 0;
-    height: 0;
-    border-style: solid;
-    border-width: 8px 8px 0 0;
-    filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.25));
+    right: 100%;
+    bottom: 2rem;
+    width: 1rem;
+    border-top: 2px solid var(--toc-line);
+}
+
+.toc-path + .toc-path::before {
+    content: '';
+    position: absolute;
+    left: -1rem;
+    top: -5rem;     /* row gap (3rem) + the previous branch's offset (2rem) */
+    bottom: 2rem;
+    border-left: 2px solid var(--toc-line);
+    transform: translateX(-1px);
+}
+
+@media (min-width: 1024px) {
+    .toc-flow {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        row-gap: var(--toc-step);
+        padding-left: 0;
+    }
+
+    .toc-path::after,
+    .toc-path + .toc-path::before {
+        display: none;
+    }
+
+    /* Share rows across the three pathways so each stage lines up */
+    .toc-path {
+        grid-row: span 4;
+        grid-template-rows: subgrid;
+    }
+}
+
+.toc-path-head {
+    position: relative;
+    margin: 0;
+    padding: 1rem 1.25rem;
+    background: #132D6B;
+    color: #fff;
+    font-family: 'Oswald', sans-serif;
+    font-weight: 600;
+    font-size: 1.25rem;
+    line-height: 1.2;
+    text-transform: uppercase;
+    text-align: center;
+}
+
+.toc-path-num {
+    display: block;
+    margin-bottom: 0.125rem;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    color: #BFDBFE;
+}
+
+.toc-node {
+    position: relative;
+    padding: 1.25rem;
+    background: #fff;
+    border: 1px solid #CBD5E1;
+}
+
+/* Arrow from the box above into this one */
+.toc-node::before {
+    content: '';
+    position: absolute;
+    left: 50%;
+    bottom: 100%;
+    height: calc(var(--toc-step) + 1px);
+    border-left: 2px solid var(--toc-line);
+    transform: translateX(-1px);
+}
+
+.toc-node::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: -1px;
+    border: 6px solid transparent;
+    border-top: 8px solid var(--toc-line);
+    border-bottom: 0;
+    transform: translate(-50%, -100%);
+}
+
+.toc-node-outcome {
+    border: 2px solid #132D6B;
+    background: #F8FAFC;
+}
+
+.toc-node-label {
+    margin: 0 0 0.625rem;
+    font-family: 'Oswald', sans-serif;
+    font-weight: 600;
+    font-size: 0.875rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #C2410C;
+}
+
+.toc-node-text {
+    margin: 0;
+    line-height: 1.6;
+    color: #334155;
+}
+
+.toc-node-outcome .toc-node-text {
+    font-weight: 500;
+    color: #111827;
+}
+
+.toc-list {
+    padding-left: 1.125rem;
+    list-style: disc;
+    font-size: 0.9375rem;
+    line-height: 1.65;
+    color: #334155;
+}
+
+.toc-list li::marker {
+    color: #94A3B8;
+}
+
+.toc-link {
+    color: #0369A1;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    text-decoration-color: rgba(3, 105, 161, 0.35);
+    transition: text-decoration-color 0.2s ease;
+}
+
+.toc-link:hover {
+    text-decoration-color: currentColor;
+}
+
+.toc-link:focus-visible {
+    outline: 2px solid #F97316;
+    outline-offset: 2px;
+}
+
+/* ── Merge into one goal ──────────────────────────── */
+
+/* Phones/tablets: the rail runs down from the last branch, turns to the centre,
+   and drops into the goal. */
+.toc-merge {
+    position: relative;
+    height: 3rem;
+}
+
+.toc-merge span {
+    display: none;
+    position: absolute;
+}
+
+.toc-merge span:nth-child(1) {
+    display: block;
+    left: 0.5rem;
+    top: -2rem;
+    height: 3.5rem;
+    border-left: 2px solid #94A3B8;
+    transform: translateX(-1px);
+}
+
+.toc-merge .toc-merge-bar {
+    display: block;
+    left: 0.5rem;
+    right: 50%;
+    top: 1.5rem;
+    border-top: 2px solid #94A3B8;
+    transform: translateY(-1px);
+}
+
+.toc-merge::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 1.5rem;
+    bottom: 0;
+    border-left: 2px solid #94A3B8;
+    transform: translateX(-1px);
+}
+
+.toc-merge::before {
+    content: '';
+    position: absolute;
+    left: 50%;
+    bottom: 0;
+    z-index: 1;
+    border: 7px solid transparent;
+    border-top: 9px solid #94A3B8;
+    border-bottom: 0;
+    transform: translate(-50%, 100%);
+}
+
+/* Desktop: a drop from each outcome, a bar joining them, and one line down to the goal. */
+@media (min-width: 1024px) {
+    .toc-merge {
+        --col-mid: calc((100% - 2 * 1.5rem) / 6);
+        height: 4.5rem;
+    }
+
+    .toc-merge span {
+        display: block;
+        position: absolute;
+        top: 0;
+        height: 2.25rem;
+        border-left: 2px solid #94A3B8;
+        transform: translateX(-1px);
+    }
+
+    .toc-merge span:nth-child(1) { left: var(--col-mid); top: 0; height: 2.25rem; }
+    .toc-merge span:nth-child(2) { left: 50%; }
+    .toc-merge span:nth-child(3) { left: calc(100% - var(--col-mid)); }
+
+    /* The bar joining the three drops */
+    .toc-merge .toc-merge-bar {
+        top: 2.25rem;
+        left: var(--col-mid);
+        right: var(--col-mid);
+        height: 0;
+        border-left: 0;
+        border-top: 2px solid #94A3B8;
+        transform: translateY(-1px);
+    }
+
+    .toc-merge::after {
+        top: 2.25rem;
+    }
+}
+
+/* ── The goal ─────────────────────────────────────── */
+
+.toc-goal {
+    position: relative;
+    max-width: 48rem;
+    margin: 0.5rem auto 0;
+    padding: 1.75rem 1.5rem;
+    text-align: center;
+    background: #FFF7ED;
+    border: 2px solid #F97316;
+}
+
+@media (min-width: 768px) {
+    .toc-goal {
+        padding: 2rem 3rem;
+    }
+}
+
+.toc-goal-label {
+    margin: 0 0 0.625rem;
+    font-family: 'Oswald', sans-serif;
+    font-weight: 600;
+    font-size: 0.875rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #C2410C;
+}
+
+.toc-goal-text {
+    margin: 0;
+    font-family: 'Oswald', sans-serif;
+    font-weight: 500;
+    font-size: clamp(1.25rem, 2.4vw, 1.625rem);
+    line-height: 1.35;
+    color: #111827;
+}
+
+.toc-abbr {
+    margin-top: 2.5rem;
+    font-size: 0.8125rem;
+    line-height: 1.6;
+    color: #64748B;
+}
+
+.toc-abbr strong {
+    font-weight: 600;
+    color: #475569;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .toc-link {
+        transition: none;
+    }
 }

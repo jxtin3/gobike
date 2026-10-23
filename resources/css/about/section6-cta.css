@@ -1,7 +1,22 @@
 /* ABOUT / Section 6 — Call To Action */
 
-.about-cta-title {
-    font-size: clamp(2rem, 4.5vw, 3.2rem);
-    line-height: 1.1;
-    letter-spacing: -0.01em;
+/* Solid orange button; dark text because white on #F97316 is below 3:1. */
+.btn-wbr.btn-wbr-solid {
+    background-color: #F97316;
+    border-color: #F97316;
+    color: #111827;
+}
+
+.btn-wbr.btn-wbr-solid::before {
+    background-color: #fff;
+}
+
+.btn-wbr.btn-wbr-solid:hover {
+    color: #111827;
+    border-color: #fff;
+}
+
+.about-cta .btn-wbr:focus-visible {
+    outline: 3px solid #2FA7FF;
+    outline-offset: 3px;
 }
