@@ -261,8 +261,13 @@ document.addEventListener('DOMContentLoaded', function () {
     const lightbox = document.getElementById('lightbox');
     const lightboxMedia = document.getElementById('lightbox-media');
 
+    // A double-click on the dark area closes the viewer on the first click; the second click would
+    // land on the card underneath and open it again, so ignore clicks for a moment after closing.
+    let closedAt = 0;
+
     document.querySelectorAll('[data-lightbox]').forEach((button) => {
         button.addEventListener('click', () => {
+            if (Date.now() - closedAt < 400) return;
             const media = document.createElement(button.dataset.video === '1' ? 'video' : 'img');
             media.src = button.dataset.lightbox;
             if (media instanceof HTMLVideoElement) {
@@ -276,10 +281,17 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
+    // Anything that is not the photo or video itself (dark area, close button) closes the viewer
     lightbox.addEventListener('click', (e) => {
-        if (e.target === lightbox || e.target.closest('[data-lightbox-close]')) lightbox.close();
+        if (e.target.closest('[data-lightbox-close]') || !e.target.closest('img, video')) {
+            closedAt = Date.now(); // set now: the "close" event below fires a moment later
+            lightbox.close();
+        }
     });
-    lightbox.addEventListener('close', () => lightboxMedia.replaceChildren());
+    lightbox.addEventListener('close', () => {
+        closedAt = Date.now();
+        lightboxMedia.replaceChildren();
+    });
 });
 </script>
 @endpush

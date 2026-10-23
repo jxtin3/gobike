@@ -2194,14 +2194,26 @@ a.pager-btn:hover {
     white-space: nowrap;
 }
 
+/* Covers the whole screen with the photo centered, so every dark area around the photo is
+   the viewer itself and a click there closes it. Nothing inside can be selected or dragged. */
 .lightbox {
-    width: auto;
-    max-width: 94vw;
-    max-height: 92vh;
-    padding: 0;
-    overflow: visible;
+    width: 100%;
+    height: 100%;
+    max-width: none;
+    max-height: none;
+    margin: 0;
+    padding: 16px;
+    overflow: hidden;
     border: 0;
     background: transparent;
+    -webkit-user-select: none;
+    user-select: none;
+    cursor: zoom-out;
+}
+
+.lightbox[open] {
+    display: grid;
+    place-items: center;
 }
 
 .lightbox::backdrop { background: rgba(0, 0, 0, .88); }
@@ -2210,10 +2222,12 @@ a.pager-btn:hover {
 .lightbox-media video {
     display: block;
     max-width: 92vw;
-    max-height: 86vh;
+    max-height: calc(100dvh - 96px);
     border-radius: var(--r-sm);
     background: #000;
     object-fit: contain;
+    cursor: default;
+    -webkit-user-drag: none;
 }
 
 .lightbox-close {
