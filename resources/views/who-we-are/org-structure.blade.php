@@ -1,5 +1,5 @@
 <x-layout
-    title="Org Structure & History | Go Bike Project"
+    title="Org Structure & History | Go Bike"
     description="Explore the organizational structure, leadership team, and history of Go Bike Project — a youth-led community responder organization."
 >
 

@@ -11,7 +11,7 @@
         default => '',
     };
 @endphp
-<x-layout title="Your Monthly Donation | Go Bike Project" description="Manage your monthly donation to the Go Bike Project." :show-chatbot="false">
+<x-layout title="Your Monthly Donation | Go Bike" description="Manage your monthly donation to the Go Bike Project." :show-chatbot="false">
     <x-slot:head>
         <meta name="robots" content="noindex">
         <style>

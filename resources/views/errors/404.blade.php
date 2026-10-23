@@ -1,4 +1,4 @@
-<x-layout title="Page Not Found | Go Bike Project" description="The page you are looking for could not be found." :show-chatbot="false">
+<x-layout title="Page Not Found | Go Bike" description="The page you are looking for could not be found." :show-chatbot="false">
     <x-slot:head>
         <style>
             #site-header.site-header {

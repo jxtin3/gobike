@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex">
-    <title>Page Expired | Go Bike Project</title>
+    <title>Page Expired | Go Bike</title>
     <style>
         *{box-sizing:border-box}
         body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:1.5rem;background:#0D1B2A;color:#fff;font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;text-align:center}

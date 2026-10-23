@@ -2,7 +2,7 @@
     $imageUrl = $article->image_path ? \App\Support\Media::url($article->image_path) : null;
 @endphp
 <x-layout
-    :title="$article->title.' | Go Bike Project'"
+    :title="$article->title.' | Go Bike'"
     :description="$article->summary"
     :image="$imageUrl"
     :show-chatbot="false"

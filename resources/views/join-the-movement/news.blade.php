@@ -1,4 +1,4 @@
-<x-layout title="News & Updates | Go Bike Project" description="Stay informed on our latest field operations and news.">
+<x-layout title="News & Updates | Go Bike" description="Stay informed on our latest field operations and news.">
     <!-- Hero -->
     <section class="relative min-h-[460px] md:min-h-[500px] flex flex-col justify-center pt-28 pb-16 md:pt-32 md:pb-20 overflow-hidden bg-[#0D1B2A]">
         <div class="absolute inset-0 z-0">

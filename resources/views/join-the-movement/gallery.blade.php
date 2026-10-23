@@ -1,4 +1,4 @@
-<x-layout title="Gallery | Go Bike Project" description="View our gallery showcase of youth responders and community events.">
+<x-layout title="Gallery | Go Bike" description="View our gallery showcase of youth responders and community events.">
 <section class="relative min-h-[460px] md:min-h-[500px] flex flex-col justify-center pt-28 pb-16 md:pt-32 md:pb-20 overflow-hidden bg-[#0D1B2A]">
     <div class="absolute inset-0 z-0">
         <img

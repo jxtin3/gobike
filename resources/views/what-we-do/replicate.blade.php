@@ -1,5 +1,5 @@
 <x-layout
-    title="Go Bike Programming | Go Bike Project"
+    title="Go Bike Programming | Go Bike"
     description="The complete chapter blueprint — from building partnerships and training Go Bikers to daily operations, risk management and government co-creation."
 >
 @php

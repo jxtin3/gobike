@@ -16,7 +16,7 @@
         'cookies' => ['label' => 'Cookie Policy', 'url' => route('cookie-policy')],
     ];
 @endphp
-<x-layout :title="$document->title.' | Go Bike Project'" :description="$description">
+<x-layout :title="$document->title.' | Go Bike'" :description="$description">
     <x-slot:head>
         <style>
             #site-header.site-header {

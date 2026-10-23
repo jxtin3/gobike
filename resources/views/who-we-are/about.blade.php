@@ -1,5 +1,5 @@
 <x-layout
-    title="About Us | Go Bike Project"
+    title="About Us | Go Bike"
     description="Discover the vision, mission, objectives, theory of change, and core values driving Go Bike Pangasinan's youth-led community response."
 >
 

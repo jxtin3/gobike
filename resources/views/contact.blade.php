@@ -1,5 +1,5 @@
 <x-layout
-    title="Reach Us | Go Bike Project"
+    title="Reach Us | Go Bike"
     description="Get in touch with OneGoBike. Whether you want to volunteer, partner, or simply ask a question, we'd love to hear from you."
 >
 

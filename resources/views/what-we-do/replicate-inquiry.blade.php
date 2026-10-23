@@ -12,7 +12,7 @@
     };
 @endphp
 <x-layout
-    :title="'Inquiry '.$inquiry->reference.' | Go Bike Project'"
+    :title="'Inquiry '.$inquiry->reference.' | Go Bike'"
     description="Status of your Go Bike chapter replication inquiry."
     :show-chatbot="false"
 >

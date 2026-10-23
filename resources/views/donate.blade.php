@@ -1,5 +1,5 @@
 <x-layout
-    title="Donate | Go Bike Project"
+    title="Donate | Go Bike"
     description="Support the Go Bike Project with a one-time or monthly donation. Your gift helps youth volunteers bring health, safety and emergency response to communities across Pangasinan."
 >
 

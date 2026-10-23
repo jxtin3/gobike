@@ -1,5 +1,5 @@
 <x-layout 
-    title="Padyarescue Incorporated: Building a Culture of Service, Empowering Communities, and Inspiring Change | Go Bike Project"
+    title="Padyarescue Incorporated: Building a Culture of Service, Empowering Communities, and Inspiring Change | Go Bike"
     description="Transforming volunteerism into meaningful action, one community at a time through Padyarescue Incorporated and its flagship programs."
     :show-chatbot="false"
 >

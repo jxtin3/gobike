@@ -1,7 +1,7 @@
 <!-- WHAT WE DO -->
 
 <x-layout
-    title="Programs | Go Bike Project"
+    title="Programs | Go Bike"
     description="Discover how our programs in health, disaster preparedness, and community outreach make an impact."
 >
 

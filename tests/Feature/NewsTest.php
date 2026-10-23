@@ -23,6 +23,7 @@ it('news page', function () {
 it('shares the Go Bike photo as a large banner when a page is shared', function () {
     $this->get('/')
         ->assertOk()
+        ->assertSee('<meta property="og:title"       content="Go Bike"', false)
         ->assertSee('<meta property="og:image"       content="'.asset('images/og-share.jpg').'"', false)
         ->assertSee('property="og:image:width"  content="1200"', false)
         ->assertSee('property="og:image:height" content="630"', false)
