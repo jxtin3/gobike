@@ -1,32 +1,329 @@
-/* ORG-STRUCTURE / Section 3 — History Timeline */
+/* ORG-STRUCTURE / Section 3 — Our journey (timeline)
+ * Phones: one rail on the left; an orange fill follows your scroll and lights each node it passes.
+ * Desktop: the heading column sticks and shows the year of the milestone you're on.
+ * State (--fill, --p, .is-reached, .is-current) is set by the section's Alpine x-data.
+ */
 
-.timeline-spine {
+.journey {
+    --j-node: 2.25rem;
+}
+
+.journey-layout {
+    display: grid;
+    gap: 2.5rem;
+}
+
+@media (min-width: 1024px) {
+    .journey-layout {
+        grid-template-columns: minmax(0, 4fr) minmax(0, 8fr);
+        gap: 4rem;
+        align-items: start;
+    }
+
+    .journey-aside {
+        position: sticky;
+        top: 7rem;
+    }
+}
+
+.journey-title {
+    margin: 0 0 1rem;
+    font-family: 'Oswald', sans-serif;
+    font-weight: 700;
+    font-size: clamp(1.875rem, 3.5vw, 2.5rem);
+    line-height: 1.1;
+    text-transform: uppercase;
+    color: #111827;
+}
+
+.journey-intro {
+    max-width: 26rem;
+    font-size: 1.0625rem;
+    line-height: 1.65;
+    color: #475569;
+}
+
+/* ── Sticky year (desktop) ────────────────────────── */
+
+.journey-tracker {
+    display: none;
+}
+
+@media (min-width: 1024px) {
+    .journey-tracker {
+        display: block;
+        margin-top: 2.5rem;
+        padding-top: 2rem;
+        border-top: 1px solid #E2E8F0;
+    }
+}
+
+.journey-tracker-years {
+    position: relative;
+    height: 6rem;
+}
+
+.journey-tracker-year {
     position: absolute;
+    left: 0;
     top: 0;
-    bottom: 0;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 2px;
-    background: linear-gradient(to bottom, #F97316, rgba(19, 45, 107, 0.20), transparent);
-}
-
-.timeline-dot {
-    width: 0.875rem;
-    height: 0.875rem;
-    border-radius: 50%;
-    background: #F97316;
-    flex-shrink: 0;
-}
-
-.timeline-year-watermark {
-    font-family: 'Oswald', ui-sans-serif, system-ui, sans-serif;
-    font-size: 3rem;
-    font-weight: 900;
-    color: rgba(19, 45, 107, 0.08);
-    position: absolute;
-    top: 0.75rem;
-    right: 1.25rem;
+    font-family: 'Oswald', sans-serif;
+    font-weight: 700;
+    font-size: 6rem;
     line-height: 1;
-    user-select: none;
-    pointer-events: none;
+    letter-spacing: -0.02em;
+    color: #132D6B;
+    font-variant-numeric: tabular-nums;
+    opacity: 0;
+    transform: translateY(12px);
+    transition: opacity 0.22s ease, transform 0.22s ease;
+}
+
+.journey-tracker-year.is-current {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.journey-tracker-count {
+    margin-top: 1rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    color: #64748B;
+}
+
+.journey-tracker-bar {
+    display: block;
+    margin-top: 0.75rem;
+    height: 4px;
+    background: #E2E8F0;
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.journey-tracker-bar span {
+    display: block;
+    height: 100%;
+    background: #F97316;
+    transform: scaleX(var(--p, 0));
+    transform-origin: left;
+}
+
+/* ── Rail ─────────────────────────────────────────── */
+
+.journey-track {
+    position: relative;
+}
+
+.journey-rail {
+    position: absolute;
+    left: calc(var(--j-node) / 2 - 1px);
+    top: calc(var(--j-node) / 2);
+    width: 2px;
+    height: var(--rail-h, calc(100% - var(--j-node)));
+    background: #E2E8F0;
+}
+
+/* Follows the scroll directly, so no transition */
+.journey-rail-fill {
+    position: absolute;
+    inset: 0;
+    background: #F97316;
+    transform: scaleY(var(--fill, 0));
+    transform-origin: top;
+}
+
+/* ── Milestones ───────────────────────────────────── */
+
+.journey-list {
+    display: grid;
+    gap: 2rem;
+}
+
+.journey-item {
+    position: relative;
+    display: grid;
+    grid-template-columns: var(--j-node) minmax(0, 1fr);
+    column-gap: 1rem;
+}
+
+@media (min-width: 640px) {
+    .journey-item {
+        column-gap: 1.5rem;
+    }
+}
+
+.journey-node {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    place-items: center;
+    width: var(--j-node);
+    height: var(--j-node);
+    border-radius: 9999px;
+    background: #fff;
+    border: 2px solid #CBD5E1;
+    color: #64748B;
+    transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease, transform 0.25s ease;
+}
+
+.journey-node svg {
+    width: 1.125rem;
+    height: 1.125rem;
+}
+
+.journey-item.is-reached .journey-node {
+    background: #F97316;
+    border-color: #F97316;
+    color: #fff;
+    animation: journey-pop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.journey-item-next .journey-node {
+    border-style: dashed;
+}
+
+.journey-item-next.is-reached .journey-node {
+    background: #132D6B;
+    border: 2px solid #132D6B;
+}
+
+@keyframes journey-pop {
+    0%   { transform: scale(1); }
+    45%  { transform: scale(1.18); }
+    100% { transform: scale(1); }
+}
+
+.journey-card {
+    padding: 1.125rem 1.25rem 1.25rem;
+    background: #fff;
+    border: 1px solid #E2E8F0;
+    border-radius: 4px;
+    transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease;
+}
+
+@media (min-width: 640px) {
+    .journey-card {
+        padding: 1.375rem 1.5rem 1.5rem;
+    }
+}
+
+/* The milestone at the reading line */
+.journey-item.is-current .journey-card {
+    border-color: #F97316;
+    box-shadow: 0 8px 24px rgba(13, 27, 42, 0.07);
+}
+
+.journey-item-next .journey-card {
+    border-style: dashed;
+    background: #F8FAFC;
+}
+
+@media (hover: hover) {
+    .journey-item:hover .journey-card {
+        border-color: #FDBA74;
+        box-shadow: 0 8px 24px rgba(13, 27, 42, 0.07);
+        transform: translateX(4px);
+    }
+
+    .journey-item:hover .journey-node {
+        transform: scale(1.12);
+    }
+}
+
+.journey-item:focus-within .journey-card {
+    border-color: #FDBA74;
+}
+
+.journey-date {
+    margin: 0 0 0.375rem;
+    font-family: 'Oswald', sans-serif;
+    font-weight: 600;
+    font-size: 0.9375rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #C2410C;
+    font-variant-numeric: tabular-nums;
+}
+
+.journey-card-title {
+    margin: 0 0 0.5rem;
+    font-family: 'Oswald', sans-serif;
+    font-weight: 700;
+    font-size: 1.25rem;
+    line-height: 1.2;
+    text-transform: uppercase;
+    color: #111827;
+}
+
+@media (min-width: 1024px) {
+    .journey-card-title {
+        font-size: 1.5rem;
+    }
+}
+
+.journey-text {
+    margin: 0;
+    font-size: 1rem;
+    line-height: 1.65;
+    color: #475569;
+}
+
+.journey-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 1.25rem;
+    margin-top: 0.75rem;
+}
+
+.journey-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    min-height: 44px;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: #132D6B;
+    text-decoration: underline;
+    text-decoration-color: rgba(19, 45, 107, 0.3);
+    text-underline-offset: 4px;
+    transition: text-decoration-color 0.2s ease;
+}
+
+.journey-link svg {
+    width: 1rem;
+    height: 1rem;
+    flex-shrink: 0;
+    transition: transform 0.2s ease;
+}
+
+.journey-link:hover {
+    text-decoration-color: currentColor;
+}
+
+.journey-link:hover svg {
+    transform: translateX(3px);
+}
+
+.journey-link:focus-visible {
+    outline: 2px solid #F97316;
+    outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .journey-node,
+    .journey-card,
+    .journey-tracker-year,
+    .journey-link,
+    .journey-link svg {
+        transition: none;
+    }
+
+    .journey-item.is-reached .journey-node {
+        animation: none;
+    }
+
+    .journey-item:hover .journey-card {
+        transform: none;
+    }
 }
