@@ -232,8 +232,6 @@
         role="region"
         aria-roledescription="carousel"
         aria-label="Our programs"
-        @mouseenter="pause()"
-        @mouseleave="resume()"
         @touchstart.passive="touchStart($event)"
         @touchend.passive="touchEnd($event)"
         @pointerdown="pointerStart($event)"

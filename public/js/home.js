@@ -10,7 +10,7 @@ function programSlider() {
         dragStartX: null,
         dragStartY: null,
         interval: null,
-        intervalMs: 4000,
+        intervalMs: 3000,
         progress: 0,
         progressInterval: null,
         programs: [
@@ -79,15 +79,6 @@ function programSlider() {
             this.interval = setInterval(() => {
                 this.next(false);
             }, this.intervalMs);
-        },
-        pause() {
-            if (this.interval) clearInterval(this.interval);
-            if (this.progressInterval) clearInterval(this.progressInterval);
-            this.interval = null;
-            this.progressInterval = null;
-        },
-        resume() {
-            if (!this.interval) this.start();
         },
         touchStart(event) {
             const touch = event.changedTouches[0];
