@@ -43,10 +43,15 @@
             </p>
         </div>
 
+        {{-- Each card is one link, so tapping anywhere on it opens the map, email, page or phone.
+             The "Open Map"-style text is a <span>: the global `a { color: inherit }` rule in
+             site-globals.css overrode the colour when it was its own link, which made it invisible. --}}
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
 
             <!-- Location -->
-            <div class="group relative p-8 bg-[#F8FAFC] border border-[#E2E8F0] rounded-sm overflow-hidden reveal card-lift hover:border-[#2FA7FF]/40 transition-all duration-300">
+            <a href="https://maps.google.com/?q=15.954506,120.217065" target="_blank" rel="noopener"
+               aria-label="Visit us: Bugallon, Pangasinan, Philippines. Open in Google Maps (opens in a new tab)"
+               class="group relative block p-8 bg-[#F8FAFC] border border-[#E2E8F0] rounded-sm overflow-hidden reveal card-lift hover:border-[#2FA7FF]/40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2FA7FF] transition-all duration-300">
                 <div class="absolute top-0 right-0 w-32 h-32 bg-[#2FA7FF]/5 rounded-full blur-2xl pointer-events-none group-hover:bg-[#2FA7FF]/10 transition-colors duration-500"></div>
                 <div class="w-12 h-12 rounded-sm bg-[#2FA7FF]/10 flex items-center justify-center mb-5 group-hover:bg-[#2FA7FF]/20 transition-colors duration-300">
                     <svg class="w-5 h-5 text-[#2FA7FF]" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
@@ -57,15 +62,16 @@
                 <span class="text-[9px] font-bold tracking-[0.2em] uppercase text-[#2FA7FF] mb-2 block">Location</span>
                 <h3 class="text-base font-heading font-bold text-[#111827] mb-2 uppercase tracking-wide">Visit Us</h3>
                 <p class="text-sm text-[#64748B] leading-relaxed">Bugallon, Pangasinan, Philippines</p>
-                <a href="https://maps.google.com/?q=15.954506,120.217065" target="_blank" rel="noopener"
-                   class="mt-4 inline-flex items-center gap-1.5 text-xs font-semibold text-[#2FA7FF] opacity-100 hover:gap-2.5 transition-all duration-200">
+                <span class="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-[#0369A1] group-hover:gap-2.5 transition-all duration-200">
                     Open Map
-                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/></svg>
-                </a>
-            </div>
+                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/></svg>
+                </span>
+            </a>
 
             <!-- Email -->
-            <div class="group relative p-8 bg-[#F8FAFC] border border-[#E2E8F0] rounded-sm overflow-hidden reveal reveal-delay-1 card-lift hover:border-[#F97316]/40 transition-all duration-300">
+            <a href="mailto:gobike@pydn.org"
+               aria-label="Write to us at gobike@pydn.org"
+               class="group relative block p-8 bg-[#F8FAFC] border border-[#E2E8F0] rounded-sm overflow-hidden reveal reveal-delay-1 card-lift hover:border-[#F97316]/40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#F97316] transition-all duration-300">
                 <div class="absolute top-0 right-0 w-32 h-32 bg-[#F97316]/5 rounded-full blur-2xl pointer-events-none group-hover:bg-[#F97316]/10 transition-colors duration-500"></div>
                 <div class="w-12 h-12 rounded-sm bg-[#F97316]/10 flex items-center justify-center mb-5 group-hover:bg-[#F97316]/20 transition-colors duration-300">
                     <svg class="w-5 h-5 text-[#F97316]" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
@@ -75,15 +81,16 @@
                 <span class="text-[9px] font-bold tracking-[0.2em] uppercase text-[#F97316] mb-2 block">Email</span>
                 <h3 class="text-base font-heading font-bold text-[#111827] mb-2 uppercase tracking-wide">Write To Us</h3>
                 <p class="text-sm text-[#64748B] leading-relaxed break-all">gobike@pydn.org</p>
-                <a href="mailto:gobike@pydn.org"
-                   class="mt-4 inline-flex items-center gap-1.5 text-xs font-semibold text-[#F97316] opacity-100 hover:gap-2.5 transition-all duration-200">
+                <span class="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-[#C2410C] group-hover:gap-2.5 transition-all duration-200">
                     Send Email
-                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/></svg>
-                </a>
-            </div>
+                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/></svg>
+                </span>
+            </a>
 
             <!-- Facebook -->
-            <div class="group relative p-8 bg-[#F8FAFC] border border-[#E2E8F0] rounded-sm overflow-hidden reveal reveal-delay-2 card-lift hover:border-[#2FA7FF]/40 transition-all duration-300">
+            <a href="https://www.facebook.com/share/19bhjcFGCL/" target="_blank" rel="noopener"
+               aria-label="Follow us on Facebook: @gobikeprojectofficial (opens in a new tab)"
+               class="group relative block p-8 bg-[#F8FAFC] border border-[#E2E8F0] rounded-sm overflow-hidden reveal reveal-delay-2 card-lift hover:border-[#2FA7FF]/40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2FA7FF] transition-all duration-300">
                 <div class="absolute top-0 right-0 w-32 h-32 bg-[#2FA7FF]/5 rounded-full blur-2xl pointer-events-none group-hover:bg-[#2FA7FF]/10 transition-colors duration-500"></div>
                 <div class="w-12 h-12 rounded-sm bg-[#2FA7FF]/10 flex items-center justify-center mb-5 group-hover:bg-[#2FA7FF]/20 transition-colors duration-300">
                     <svg class="w-5 h-5 text-[#2FA7FF]" fill="currentColor" viewBox="0 0 24 24">
@@ -93,15 +100,16 @@
                 <span class="text-[9px] font-bold tracking-[0.2em] uppercase text-[#2FA7FF] mb-2 block">Facebook</span>
                 <h3 class="text-base font-heading font-bold text-[#111827] mb-2 uppercase tracking-wide">Follow Us</h3>
                 <p class="text-sm text-[#64748B] leading-relaxed">@gobikeprojectofficial</p>
-                <a href="https://www.facebook.com/share/19bhjcFGCL/" target="_blank" rel="noopener"
-                   class="mt-4 inline-flex items-center gap-1.5 text-xs font-semibold text-[#2FA7FF] opacity-100 hover:gap-2.5 transition-all duration-200">
+                <span class="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-[#0369A1] group-hover:gap-2.5 transition-all duration-200">
                     View Page
-                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/></svg>
-                </a>
-            </div>
+                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/></svg>
+                </span>
+            </a>
 
             <!-- Hotline -->
-            <div class="group relative p-8 bg-[#132D6B] text-white rounded-sm overflow-hidden reveal reveal-delay-3 card-lift">
+            <a href="tel:+639764290145"
+               aria-label="Call our emergency hotline, +63 976 429 0145"
+               class="group relative block p-8 bg-[#132D6B] text-white rounded-sm overflow-hidden reveal reveal-delay-3 card-lift focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2FA7FF]">
                 <div class="absolute top-0 right-0 w-40 h-40 bg-[#2FA7FF]/10 rounded-full blur-3xl pointer-events-none"></div>
                 <div class="w-12 h-12 rounded-sm bg-white/10 flex items-center justify-center mb-5 group-hover:bg-white/20 transition-colors duration-300">
                     <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
@@ -111,18 +119,18 @@
                 <span class="text-[9px] font-bold tracking-[0.2em] uppercase text-[#2FA7FF] mb-2 block relative z-10">Emergency / Hotline</span>
                 <h3 class="text-base font-heading font-bold text-white mb-2 uppercase tracking-wide relative z-10">Call Us</h3>
                 <p class="text-sm text-white/70 leading-relaxed relative z-10">Available for urgent community needs</p>
-                <a href="tel:+639764290145" class="mt-4 inline-flex items-center gap-1.5 text-xs font-semibold text-[#2FA7FF] hover:gap-2.5 transition-all duration-200 relative z-10">
+                <span class="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-[#2FA7FF] group-hover:gap-2.5 transition-all duration-200 relative z-10">
                     View Number
-                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/></svg>
-                </a>
-            </div>
+                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/></svg>
+                </span>
+            </a>
 
         </div>
     </div>
 </section>
 
 <!-- MESSAGE FORM + SIDEBAR -->
-<section class="py-10 md:py-15 bg-[#F8FAFC] relative">
+<section class="py-10 md:py-15 bg-[#F8FAFC] relative overflow-x-clip">
     <div class="absolute top-0 left-0 w-96 h-96 bg-[#132D6B]/5 rounded-full blur-3xl pointer-events-none"></div>
     <div class="absolute bottom-0 right-0 w-72 h-72 bg-[#F97316]/5 rounded-full blur-3xl pointer-events-none"></div>
 
@@ -440,13 +448,15 @@
         <p class="text-white/70 text-base max-w-xl mx-auto leading-relaxed mb-10">
             Join hundreds of volunteers and community members who are already making an impact across Pangasinan.
         </p>
-        <div class="flex flex-wrap items-center justify-center gap-4">
+        {{-- Stacked on phones: both buttons share one width. Side by side from sm up. --}}
+        <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-4 w-full max-w-xs sm:max-w-none mx-auto">
             <a href="{{ url('/what-we-do') }}" class="contact-cta-primary">
                 <span>See Our Programs</span>
-                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/></svg>
+                <svg class="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/></svg>
             </a>
             <a href="{{ url('/about') }}" class="btn-wbr btn-wbr-light">
                 <span>Learn About Us</span>
+                <svg class="w-5 h-5 shrink-0 arrow" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/></svg>
             </a>
         </div>
     </div>

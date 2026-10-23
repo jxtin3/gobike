@@ -176,7 +176,7 @@
                         <a href="{{ url('/gallery') }}" @click="mobileOpen = false" class="block px-4 py-2.5 text-sm text-white/70 hover:text-white hover:bg-white/10 rounded-none transition-colors">Gallery Showcase</a>
                     </div>
                 </div>
-                <x-nav-link :mobile="true" href="{{ url('/contact') }}"    @click="mobileOpen = false">Contact</x-nav-link>
+                <x-nav-link :mobile="true" href="{{ url('/contact') }}"    @click="mobileOpen = false">Reach Us</x-nav-link>
 
                 <div class="mt-3 pt-3 border-t border-white/10">
                     <a

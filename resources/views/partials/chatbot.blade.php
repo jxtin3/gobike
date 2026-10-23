@@ -107,18 +107,29 @@
         </form>
     </div>
 
-    {{-- Launcher + always-visible notice (clicking the notice also opens the chat) --}}
-    <div class="relative">
+    {{-- Launcher + a short prompt that only shows once the visitor scrolls down (clicking it also opens the chat) --}}
+    <div
+        class="relative"
+        x-data="{ scrolled: false }"
+        x-init="scrolled = window.scrollY > 300"
+        @scroll.window.passive="scrolled = window.scrollY > 300"
+    >
         <button
             type="button"
             @click="toggle()"
-            x-show="!open"
+            x-show="!open && scrolled"
             x-cloak
+            x-transition:enter="transition ease-out duration-300"
+            x-transition:enter-start="opacity-0 translate-y-2"
+            x-transition:enter-end="opacity-100 translate-y-0"
+            x-transition:leave="transition ease-in duration-150"
+            x-transition:leave-start="opacity-100"
+            x-transition:leave-end="opacity-0"
             tabindex="-1"
             aria-hidden="true"
             class="absolute bottom-full right-0 mb-4 cursor-pointer whitespace-nowrap rounded-lg bg-[#0D1B2A] px-3.5 py-2 text-sm font-semibold text-white shadow-lg"
         >
-            Chat with GoBot
+            Need help? Ask GoBot
             <span class="absolute -bottom-1 right-[1.5rem] h-2 w-2 rotate-45 bg-[#0D1B2A]"></span>
         </button>
 

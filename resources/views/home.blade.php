@@ -121,7 +121,8 @@
 
         <!-- Story 2 -->
         <div class="relative flex flex-col md:flex-row-reverse items-stretch" x-data="{ playing: false }">
-            <div class="w-full md:w-[72%] relative h-[440px] md:h-[640px] overflow-hidden flex-shrink-0 group cursor-pointer"
+            {{-- aspect-video matches the 16:9 video, so the whole picture shows at every screen size --}}
+            <div class="w-full md:w-[72%] relative aspect-video md:self-center overflow-hidden flex-shrink-0 group cursor-pointer bg-black"
                  @click="playing ? $refs.video.pause() : $refs.video.play(); playing = !playing">
                 <video
                     x-ref="video"
@@ -162,7 +163,8 @@
 
     <!-- Story 3 -->
     <div class="relative flex flex-col md:flex-row items-stretch" x-data="{ playing: false }">
-        <div class="w-full md:w-[72%] relative h-[440px] md:h-[640px] overflow-hidden flex-shrink-0 group cursor-pointer"
+        {{-- aspect-video matches the 16:9 video, so the whole picture shows at every screen size --}}
+        <div class="w-full md:w-[72%] relative aspect-video md:self-center overflow-hidden flex-shrink-0 group cursor-pointer bg-black"
              @click="playing ? $refs.video.pause() : $refs.video.play(); playing = !playing">
             <video
                 x-ref="video"
