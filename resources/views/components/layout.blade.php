@@ -42,7 +42,7 @@
                 scrolled = window.scrollY > 60;
             }, { passive: true });
         "
-        :class="scrolled
+        :class="scrolled || mobileOpen
             ? 'is-scrolled'
             : ''"
     >
@@ -129,12 +129,9 @@
                 >
                     <span class="sr-only">Toggle menu</span>
                     <!-- Hamburger icon morphs to X  -->
-                    <svg x-show="!mobileOpen" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
-                    </svg>
-                    <svg x-show="mobileOpen" x-cloak class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
-                    </svg>
+                    <span class="mm-burger" :class="mobileOpen ? 'is-open' : ''" aria-hidden="true">
+                        <span></span><span></span><span></span>
+                    </span>
                 </button>
 
             </div>
@@ -145,14 +142,14 @@
             id="mobile-menu"
             x-show="mobileOpen"
             x-cloak
-            x-transition:enter="transition ease-out duration-200"
-            x-transition:enter-start="opacity-0 -translate-y-2"
-            x-transition:enter-end="opacity-100 translate-y-0"
-            x-transition:leave="transition ease-in duration-150"
-            x-transition:leave-start="opacity-100 translate-y-0"
-            x-transition:leave-end="opacity-0 -translate-y-2"
-            class="md:hidden bg-[#0D1B2A]/97 backdrop-blur-lg border-t border-white/10"
-            @click.outside="mobileOpen = false"
+            x-transition:enter="mm-enter"
+            x-transition:enter-start="mm-hidden"
+            x-transition:enter-end="mm-shown"
+            x-transition:leave="mm-leave"
+            x-transition:leave-start="mm-shown"
+            x-transition:leave-end="mm-hidden"
+            class="md:hidden max-h-[calc(100dvh-4rem)] overflow-y-auto overscroll-contain bg-[#0D1B2A]/97 backdrop-blur-lg border-t border-white/10"
+            @click.outside="if (! $event.target.closest('#mobile-menu-toggle')) mobileOpen = false"
         >
             <nav class="w-full px-6 py-4 flex flex-col gap-1" aria-label="Mobile navigation">
                 <div x-data="{ open: false }" class="flex flex-col">

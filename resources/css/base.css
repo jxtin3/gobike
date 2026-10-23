@@ -298,6 +298,88 @@ header a:visited {
     border-color: rgba(255, 255, 255, 0.06);
     box-shadow: 0 4px 32px rgba(0, 0, 0, 0.30);
 }
+
+
+/*  Mobile menu: the panel unrolls from the header, then the links fade up one by one  */
+.mm-enter {
+    transition: opacity 0.3s ease-out, clip-path 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.mm-leave {
+    transition: opacity 0.2s ease-in, clip-path 0.28s cubic-bezier(0.4, 0, 1, 1);
+}
+
+.mm-hidden {
+    opacity: 0;
+    clip-path: inset(0 0 100% 0);
+}
+
+.mm-shown {
+    opacity: 1;
+    clip-path: inset(0 0 0 0);
+}
+
+@keyframes mm-item-in {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+/* Restarts every time the menu is shown (display none -> block) */
+#mobile-menu nav>* {
+    animation: mm-item-in 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+#mobile-menu nav> :nth-child(1) { animation-delay: 70ms; }
+#mobile-menu nav> :nth-child(2) { animation-delay: 115ms; }
+#mobile-menu nav> :nth-child(3) { animation-delay: 160ms; }
+#mobile-menu nav> :nth-child(4) { animation-delay: 205ms; }
+#mobile-menu nav> :nth-child(5) { animation-delay: 250ms; }
+
+/* Hamburger: three bars that turn into an X */
+.mm-burger {
+    position: relative;
+    display: block;
+    width: 24px;
+    height: 24px;
+}
+
+.mm-burger span {
+    position: absolute;
+    left: 3px;
+    right: 3px;
+    height: 2px;
+    border-radius: 2px;
+    background: currentColor;
+    transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease;
+}
+
+.mm-burger span:nth-child(1) { top: 6px; }
+.mm-burger span:nth-child(2) { top: 11px; }
+.mm-burger span:nth-child(3) { top: 16px; }
+
+.mm-burger.is-open span:nth-child(1) { transform: translateY(5px) rotate(45deg); }
+.mm-burger.is-open span:nth-child(2) { opacity: 0; transform: scaleX(0.2); }
+.mm-burger.is-open span:nth-child(3) { transform: translateY(-5px) rotate(-45deg); }
+
+@media (prefers-reduced-motion: reduce) {
+
+    .mm-enter,
+    .mm-leave,
+    .mm-burger span {
+        transition: none;
+    }
+
+    #mobile-menu nav>* {
+        animation: none;
+    }
+}
 /*  Cookie consent banner (resources/views/partials/cookie-consent.blade.php)  */
 .cookie-banner {
     position: fixed;
