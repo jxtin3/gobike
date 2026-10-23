@@ -13,7 +13,7 @@
     <div class="login-split" id="loginSplit">
 
        <!-- LEFT PANEL -->
-        <div class="login-split-left">
+        <div class="login-split-left" style="--login-bg: url('{{ asset('images/login-bg.jpg') }}')">
 
             <div class="login-brand-copy">
                 <h1>Go Bike<br>Project</h1>

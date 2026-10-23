@@ -9,7 +9,10 @@
 .login-body {
     margin: 0;
     min-height: 100vh;
-    overflow: hidden;
+    min-height: 100dvh;
+    /* Only hide sideways overflow (the exit animation slides the panels off-screen).
+       Hiding vertical overflow too is what stopped phones from scrolling to the form. */
+    overflow-x: hidden;
     background: #fff;
     -webkit-font-smoothing: antialiased;
 }
@@ -19,12 +22,14 @@
     display: grid;
     grid-template-columns: 1fr 1fr;
     min-height: 100vh;
+    min-height: 100dvh;
     overflow: hidden;
 }
 
 .login-split-left,
 .login-split-right {
     min-height: 100vh;
+    min-height: 100dvh;
     transition: transform 0.75s cubic-bezier(0.65, 0, 0.35, 1);
     will-change: transform;
 }
@@ -41,30 +46,22 @@
     padding: clamp(2rem, 5vw, 3.5rem);
     color: #fff;
 
-    /* Web blue — solid + very subtle inner radial for depth */
-    background: #2563EB;
-    background: radial-gradient(
-        130% 160% at 0% 0%,
-        #3b82f6 0%,
-        #2563EB 40%,
-        #1d4ed8 100%
-    );
-
-    /* Faint diagonal grid lines (decorative) */
+    /* Go Bike photo under a web-blue tint, so the white text stays easy to read.
+       --login-bg is set in login.blade.php (asset() gives the right URL on any host);
+       if the photo is missing the panel is simply the blue gradient. */
+    background-color: #1d4ed8;
     background-image:
-        radial-gradient(
-            130% 160% at 0% 0%,
-            #3b82f6 0%,
-            #2563EB 40%,
-            #1d4ed8 100%
+        linear-gradient(
+            180deg,
+            rgba(29, 78, 216, 0.80) 0%,
+            rgba(29, 78, 216, 0.55) 24%,
+            rgba(29, 78, 216, 0.10) 52%,
+            rgba(23, 52, 160, 0.10) 72%,
+            rgba(23, 52, 160, 0.60) 100%
         ),
-        repeating-linear-gradient(
-            -45deg,
-            transparent,
-            transparent 48px,
-            rgba(255,255,255,0.04) 48px,
-            rgba(255,255,255,0.04) 49px
-        );
+        var(--login-bg, none);
+    background-size: cover;
+    background-position: center 65%;
 }
 
 .login-left-top {
@@ -91,6 +88,8 @@
 
 .login-brand-copy {
     margin-top: 0.5rem;
+    /* Keeps the white text readable over the lighter parts of the photo */
+    text-shadow: 0 1px 14px rgba(10, 25, 90, 0.55);
 }
 
 .login-brand-copy h1 {
@@ -113,7 +112,8 @@
 .login-brand-foot {
     margin: auto 0 0;
     font-size: 0.78rem;
-    color: rgba(255, 255, 255, 0.50);
+    color: rgba(255, 255, 255, 0.85);
+    text-shadow: 0 1px 10px rgba(10, 25, 90, 0.6);
 }
 
 /* ────────────────────────────────────────────────
@@ -173,6 +173,7 @@
     max-width: 460px;
     margin: 0 auto;
     padding: clamp(1.5rem, 4vw, 2.5rem) clamp(1.25rem, 4vw, 2.25rem);
+    padding-bottom: calc(clamp(1.5rem, 4vw, 2.5rem) + env(safe-area-inset-bottom));
 }
 
 /* ── Floating card ── */
@@ -387,11 +388,17 @@
 
     .login-split-left {
         min-height: auto;
-        padding: 2rem 1.5rem;
+        padding: 1.75rem 1.5rem;
         gap: 1.5rem;
+        background-position: center 70%;
+        /* The text covers the whole banner on phones, so the tint is even instead of fading out */
+        background-image:
+            linear-gradient(180deg, rgba(29, 78, 216, 0.50) 0%, rgba(23, 52, 160, 0.70) 100%),
+            var(--login-bg, none);
     }
 
-    .login-brand-copy h1 { font-size: 1.75rem; }
+    .login-brand-copy h1 { font-size: 1.6rem; }
+    .login-brand-copy p { font-size: 0.8125rem; line-height: 1.55; }
     .login-brand-foot { display: none; }
 
     .login-split-right {
