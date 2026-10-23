@@ -16,7 +16,20 @@
     <meta property="og:url"         content="{{ url()->current() }}" />
     <meta property="og:title"       content="{{ $title ?? 'Go Bike — Youth-Led Community Health Responders' }}" />
     <meta property="og:description" content="{{ $description ?? 'Promotes community engagement and educational initiatives, empowering communities to build a healthier, greener, and sustainable future' }}" />
-    <meta property="og:image"       content="{{ $image ?? asset('images/gobike-logo.png') }}" />
+    <meta property="og:site_name"   content="OneGoBike" />
+    <meta property="og:image"       content="{{ $image ?? asset('images/og-share.jpg') }}" />
+    @unless (isset($image))
+        {{-- Size and description of the default photo (og-share.jpg is 1200x630) --}}
+        <meta property="og:image:width"  content="1200" />
+        <meta property="og:image:height" content="630" />
+        <meta property="og:image:alt"    content="Go Bike youth volunteers with their cargo bikes" />
+    @endunless
+
+    <!-- Twitter / X, WhatsApp and others: large banner preview -->
+    <meta name="twitter:card"        content="summary_large_image" />
+    <meta name="twitter:title"       content="{{ $title ?? 'Go Bike — Youth-Led Community Health Responders' }}" />
+    <meta name="twitter:description" content="{{ $description ?? 'Promotes community engagement and educational initiatives, empowering communities to build a healthier, greener, and sustainable future' }}" />
+    <meta name="twitter:image"       content="{{ $image ?? asset('images/og-share.jpg') }}" />
 
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="{{ asset('images/gobike-logo.png') }}" />

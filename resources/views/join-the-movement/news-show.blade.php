@@ -4,7 +4,7 @@
 <x-layout
     :title="$article->title.' | Go Bike Project'"
     :description="$article->summary"
-    :image="$imageUrl ?? asset('images/gobike-logo.png')"
+    :image="$imageUrl"
     :show-chatbot="false"
 >
     <x-slot:head>

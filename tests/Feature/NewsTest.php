@@ -19,6 +19,34 @@ it('news page', function () {
     $this->get('/news')->assertStatus(200);
 });
 
+// link previews (Facebook, WhatsApp, X)
+it('shares the Go Bike photo as a large banner when a page is shared', function () {
+    $this->get('/')
+        ->assertOk()
+        ->assertSee('<meta property="og:image"       content="'.asset('images/og-share.jpg').'"', false)
+        ->assertSee('property="og:image:width"  content="1200"', false)
+        ->assertSee('property="og:image:height" content="630"', false)
+        ->assertSee('name="twitter:card"        content="summary_large_image"', false)
+        ->assertDontSee('property="og:image"       content="'.asset('images/gobike-logo.png').'"', false);
+
+    expect(public_path('images/og-share.jpg'))->toBeFile();
+    expect(getimagesize(public_path('images/og-share.jpg'))[0])->toBe(1200);
+});
+
+it('shares a news photo when the article has one and the Go Bike photo when it has none', function () {
+    makeNews(['slug' => 'no-photo', 'image_path' => null]);
+    makeNews(['title' => 'With Photo', 'slug' => 'with-photo', 'image_path' => 'https://example.test/own-photo.jpg']);
+
+    $this->get('/news/no-photo')
+        ->assertOk()
+        ->assertSee('property="og:image"       content="'.asset('images/og-share.jpg').'"', false);
+
+    $this->get('/news/with-photo')
+        ->assertOk()
+        ->assertSee('property="og:image"       content="https://example.test/own-photo.jpg"', false)
+        ->assertDontSee('og-share.jpg', false);
+});
+
 it('allows admins to edit the publication date of news', function () {
     $admin = User::factory()->create(['is_admin' => true]);
     $news = makeNews([
