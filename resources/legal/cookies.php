@@ -12,7 +12,7 @@
 
 return [
     'title' => 'Cookie Policy',
-    'last_updated' => 'October 21, 2026',
+    'last_updated' => 'October 24, 2026',
     'sections' => [
         [
             'title' => '1. What Are Cookies?',
@@ -42,6 +42,7 @@ These cookies are needed for the Site to work and cannot be switched off. They a
 - **XSRF-TOKEN**: a security token that protects our forms against cross-site request forgery attacks. It expires after 2 hours.
 - **remember_web_…**: set only when an administrator ticks "Remember me" when signing in, to keep them signed in on that device. It expires after about 400 days, or when they sign out.
 - **gobike_cookie_consent**: remembers whether you chose "Accept all" or "Essential only", so we don't ask on every visit. It expires after 6 months.
+- **gobike_admin_rail** and **gobike_admin_closed**: set only in the administrators' area, to remember whether the sidebar is collapsed and which menu groups are closed. They contain no personal information and expire after 6 months.
 
 The exact name of the session cookie may differ slightly depending on our server configuration.
 TXT,

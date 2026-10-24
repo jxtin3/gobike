@@ -87,7 +87,7 @@
                 <span class="analytics-chart-total"><span data-pie-total>0</span> abnormal readings</span>
             </header>
             <div class="analytics-pie-content">
-                <div class="analytics-pie-chart" data-pie-chart data-label="Abnormal readings by vital sign"></div>
+                <div class="analytics-pie-chart" data-pie-chart data-label="Abnormal readings by vital sign"><span class="sk sk-disc" aria-hidden="true"></span></div>
                 <div class="analytics-pie-legend" data-pie-legend></div>
             </div>
             <p class="analytics-chart-note">Which vital sign had the most high or low readings in {{ $periodLabel }}.</p>
@@ -103,7 +103,7 @@
                 </div>
                 <span class="analytics-chart-total">{{ number_format($checkupsTotal) }} {{ Str::plural('check-up', $checkupsTotal) }}</span>
             </header>
-            <div class="analytics-chart-canvas" data-bar-chart data-label="Patient check-ups bar chart"></div>
+            <div class="analytics-chart-canvas" data-bar-chart data-label="Patient check-ups bar chart"><span class="sk sk-block" style="--h: 250px" aria-hidden="true"></span></div>
             <p class="analytics-chart-note">Number of check-ups recorded {{ $byDay ? 'each day in' : 'in each month of' }} {{ $periodLabel }}.</p>
         </section>
 
@@ -118,7 +118,7 @@
                     <button type="button" class="analytics-key-btn" data-series="low" aria-pressed="true"><i class="analytics-key-low"></i>Low</button>
                 </span>
             </header>
-            <div class="analytics-chart-canvas" data-line-chart data-label="High and low readings line chart"></div>
+            <div class="analytics-chart-canvas" data-line-chart data-label="High and low readings line chart"><span class="sk sk-block" style="--h: 250px" aria-hidden="true"></span></div>
             <div class="analytics-people" data-people>
                 <a class="btn btn-secondary btn-sm" data-people-high href="#" hidden><x-admin.icon name="users" /> <span></span></a>
                 <a class="btn btn-secondary btn-sm" data-people-low href="#" hidden><x-admin.icon name="users" /> <span></span></a>

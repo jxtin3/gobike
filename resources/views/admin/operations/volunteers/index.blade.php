@@ -1,5 +1,5 @@
 @extends('admin.operations.layout')
-@section('title', 'Volunteers')
+@section('title', 'Volunteer applications')
 @section('heading', 'Volunteer applications')
 @section('subheading', 'All volunteer sign-up submissions from the Join the Movement page.')
 
@@ -35,20 +35,16 @@
     </div>
 </div>
 
-{{-- Toolbar --}}
-<div class="toolbar">
-    <form class="search-form" role="search" method="GET" action="{{ route('admin.operations.volunteers.index') }}">
-        <input class="input" type="search" name="search" value="{{ request('search') }}" placeholder="Search name, email, barangay or town" aria-label="Search volunteer applications">
-        <select class="input" name="status" aria-label="Filter by status" data-autosubmit>
-            <option value="">All statuses</option>
-            @foreach (VolunteerApplication::STATUSES as $status)
-                <option value="{{ $status }}" @selected(request('status') === $status)>{{ ucfirst($status) }}</option>
-            @endforeach
-        </select>
-        <button type="submit" class="btn btn-secondary"><x-admin.icon name="search" /> Search</button>
-    </form>
-</div>
+<x-admin.filters :action="route('admin.operations.volunteers.index')" placeholder="Search name, email, barangay or town" label="Search volunteer applications" :filtered="$hasQuery">
+    <select class="input" name="status" aria-label="Filter by status" data-autosubmit>
+        <option value="">All statuses</option>
+        @foreach (VolunteerApplication::STATUSES as $status)
+            <option value="{{ $status }}" @selected(request('status') === $status)>{{ ucfirst($status) }}</option>
+        @endforeach
+    </select>
+</x-admin.filters>
 
+<div data-list>
 <div class="table-wrap">
     <table>
         <thead>
@@ -64,16 +60,12 @@
         </thead>
         <tbody>
             @forelse ($applications as $app)
-            @php
-                $initials = collect(preg_split('/\s+/', $app->full_name))->filter()->take(2)
-                    ->map(fn ($p) => mb_strtoupper(mb_substr($p, 0, 1)))->implode('');
-            @endphp
             <tr>
                 <td>
                     <div class="cell-user">
-                        <span class="avatar" aria-hidden="true">{{ $initials }}</span>
+                        <x-admin.avatar :name="$app->full_name" />
                         <div>
-                            <b><a class="cell-link" href="{{ route('admin.operations.volunteers.show', $app) }}">{{ $app->full_name }}</a></b>
+                            <b><a class="cell-link" href="{{ route('admin.operations.volunteers.show', $app) }}" data-skeleton="detail">{{ $app->full_name }}</a></b>
                             <small>{{ $app->email }}</small>
                         </div>
                     </div>
@@ -91,7 +83,7 @@
                 </td>
                 <td>
                     <div class="row-actions">
-                        <a class="icon-btn" href="{{ route('admin.operations.volunteers.show', $app) }}" title="View" aria-label="View {{ $app->full_name }}'s application"><x-admin.icon name="eye" /></a>
+                        <a class="icon-btn" href="{{ route('admin.operations.volunteers.show', $app) }}" title="View" aria-label="View {{ $app->full_name }}'s application" data-skeleton="detail"><x-admin.icon name="eye" /></a>
                         <form method="POST" action="{{ route('admin.operations.volunteers.destroy', $app) }}"
                               data-confirm-title="Delete this application?"
                               data-confirm-text="{{ $app->full_name }}'s application, including emergency and guardian contacts, will be permanently deleted."
@@ -104,25 +96,20 @@
                 </td>
             </tr>
             @empty
-            <tr class="is-static">
-                <td colspan="7">
-                    <div class="empty">
-                        <x-admin.icon name="users" />
-                        @if ($hasQuery)
-                            <b>No applications match</b>
-                            <p>Try a different search, or clear the filters.</p>
-                            <a class="btn btn-secondary btn-sm" href="{{ route('admin.operations.volunteers.index') }}">Clear filters</a>
-                        @else
-                            <b>No volunteer applications yet</b>
-                            <p>Applications submitted through the volunteer sign-up form will appear here.</p>
-                        @endif
-                    </div>
-                </td>
-            </tr>
+                @if ($hasQuery)
+                    <x-admin.empty :row="7" icon="users" title="No applications match" :clear="route('admin.operations.volunteers.index')">
+                        Try a different search, or clear the filters.
+                    </x-admin.empty>
+                @else
+                    <x-admin.empty :row="7" icon="users" title="No volunteer applications yet">
+                        Applications submitted through the volunteer sign-up form will appear here.
+                    </x-admin.empty>
+                @endif
             @endforelse
         </tbody>
     </table>
 </div>
 
-{{ $applications->links('admin.partials.pagination') }}
+    <x-admin.pager :paginator="$applications" noun="application" />
+</div>
 @endsection

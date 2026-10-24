@@ -7,10 +7,10 @@
     <meta name="color-scheme" content="light">
     <title>@yield('title', 'Operations') | OneGoBike Admin</title>
     <link rel="icon" type="image/png" href="{{ asset('images/gobike-logo.png') }}">
-    @vite(['resources/css/admin/admin.css', 'resources/js/admin/admin.js'])
     @stack('head')
+    @vite(['resources/css/admin/admin.css', 'resources/js/admin/admin.js'])
 </head>
-<body class="adm{{ request()->routeIs('admin.dashboard') ? ' adm-dashboard'.(!empty($dashboardEntrance) ? ' adm-dashboard-entrance' : '') : (request()->routeIs('admin.live-map.*') ? ' adm-live-map' : '') }}">
+<body class="adm{{ request()->routeIs('admin.dashboard') ? ' adm-dashboard'.(!empty($dashboardEntrance) ? ' adm-dashboard-entrance' : '') : (request()->routeIs('admin.live-map.*') ? ' adm-live-map' : '') }}{{ ($sideRail ?? false) ? ' side-rail' : '' }}">
     <a class="skip-link" href="#main">Skip to content</a>
 
     <div class="adm-shell">
@@ -48,11 +48,11 @@
                 @endunless
 
                 @if (session('success'))
-                    <div class="alert success" role="status" data-dismissible data-autodismiss="6000">
-                        <x-admin.icon name="check-circle" />
-                        <div>{{ session('success') }}</div>
-                        <button type="button" class="alert-close icon-btn" aria-label="Dismiss"><x-admin.icon name="x" /></button>
-                    </div>
+                    {{-- resources/js/admin/toast.js turns this into a toast; without scripts it stays a plain message. --}}
+                    <template data-flash="success">{{ session('success') }}</template>
+                    <noscript>
+                        <div class="alert success" role="status"><x-admin.icon name="check-circle" /><div>{{ session('success') }}</div></div>
+                    </noscript>
                 @endif
                 @if (session('error'))
                     <div class="alert error" role="alert" data-dismissible>
@@ -62,12 +62,16 @@
                     </div>
                 @endif
                 @if ($errors->any())
-                    <div class="alert error" role="alert" data-dismissible>
+                    {{-- Each message links to its field; admin.js moves focus here after a failed submit. --}}
+                    <div class="alert error" role="alert" data-dismissible data-error-summary tabindex="-1">
                         <x-admin.icon name="alert-circle" />
                         <div>
+                            <b class="alert-title">{{ $errors->count() === 1 ? 'Please fix this problem' : 'Please fix these '.$errors->count().' problems' }}</b>
                             <ul>
-                                @foreach ($errors->all() as $error)
-                                    <li>{{ $error }}</li>
+                                @foreach ($errors->messages() as $field => $messages)
+                                    @foreach ($messages as $message)
+                                        <li><a href="#{{ trim(str_replace(['.', '[', ']'], '-', $field), '-') }}">{{ $message }}</a></li>
+                                    @endforeach
                                 @endforeach
                             </ul>
                         </div>
@@ -81,6 +85,8 @@
     </div>
 
     @include('admin.partials.confirm')
+    @include('admin.partials.toasts')
+    @include('admin.partials.skeletons')
     @stack('scripts')
 </body>
 </html>

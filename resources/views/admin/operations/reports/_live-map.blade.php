@@ -14,11 +14,11 @@
     </header>
 
     <div class="stat-grid" role="group" aria-label="Current GoBiker status">
-        <div class="stat-card"><span class="stat-icon"><x-admin.icon name="users" /></span><div><div class="label">Total GoBikers</div><div class="value" id="total-count">–</div></div></div>
-        <div class="stat-card"><span class="stat-icon t-ok"><x-admin.icon name="activity" /></span><div><div class="label">Active</div><div class="value" id="active-count">–</div></div></div>
-        <div class="stat-card"><span class="stat-icon t-warn"><x-admin.icon name="navigation" /></span><div><div class="label">Responding</div><div class="value" id="responding-count">–</div></div></div>
-        <div class="stat-card"><span class="stat-icon t-bad"><x-admin.icon name="alert-triangle" /></span><div><div class="label">Emergency</div><div class="value" id="emergency-count">–</div></div></div>
-        <div class="stat-card"><span class="stat-icon t-off"><x-admin.icon name="clock" /></span><div><div class="label">Offline</div><div class="value" id="offline-count">–</div></div></div>
+        <div class="stat-card"><span class="stat-icon"><x-admin.icon name="users" /></span><div><div class="label">Total GoBikers</div><div class="value" id="total-count"><span class="sk sk-line" style="--w: 36px; --h: 20px"></span></div></div></div>
+        <div class="stat-card"><span class="stat-icon t-ok"><x-admin.icon name="activity" /></span><div><div class="label">Active</div><div class="value" id="active-count"><span class="sk sk-line" style="--w: 36px; --h: 20px"></span></div></div></div>
+        <div class="stat-card"><span class="stat-icon t-warn"><x-admin.icon name="navigation" /></span><div><div class="label">Responding</div><div class="value" id="responding-count"><span class="sk sk-line" style="--w: 36px; --h: 20px"></span></div></div></div>
+        <div class="stat-card"><span class="stat-icon t-bad"><x-admin.icon name="alert-triangle" /></span><div><div class="label">Emergency</div><div class="value" id="emergency-count"><span class="sk sk-line" style="--w: 36px; --h: 20px"></span></div></div></div>
+        <div class="stat-card"><span class="stat-icon t-off"><x-admin.icon name="clock" /></span><div><div class="label">Offline</div><div class="value" id="offline-count"><span class="sk sk-line" style="--w: 36px; --h: 20px"></span></div></div></div>
     </div>
 
     <div class="map-layout">
@@ -48,7 +48,7 @@
             <div class="map-stage">
                 <div id="map" aria-label="Map of GoBiker locations"></div>
                 <div class="map-overlay" id="map-overlay">
-                    <div data-view="loading"><span class="spinner"></span><b>Loading live locations</b></div>
+                    <div data-view="loading" role="status"><span class="sk map-sk" aria-hidden="true"></span><b>Loading live locations</b></div>
                     <div data-view="empty" hidden>
                         <x-admin.icon name="map" />
                         <b>No GoBikers on the map yet</b>
@@ -72,8 +72,15 @@
                 <span><i class="status-dot s-responding"></i>Responding</span>
                 <span><i class="status-dot s-offline"></i>Offline</span>
             </div>
-            <header><h2 id="rider-panel-title">GoBikers</h2><span class="count" id="rider-count">0</span></header>
-            <ul id="rider-list"></ul>
+            <header><h2 id="rider-panel-title">GoBikers</h2><span class="count" id="rider-count">–</span></header>
+            <ul id="rider-list" aria-busy="true">
+                @for ($i = 0; $i < 6; $i++)
+                    <li class="rider-sk" aria-hidden="true">
+                        <span class="sk sk-avatar" style="width: 10px; height: 10px"></span>
+                        <span class="sk-stack"><span class="sk sk-line" style="--w: {{ 120 + $i * 12 }}px"></span><span class="sk sk-line" style="--w: 80px"></span></span>
+                    </li>
+                @endfor
+            </ul>
             <div class="empty" id="rider-empty" hidden>
                 <x-admin.icon name="search" />
                 <b>No GoBikers match</b>
@@ -86,5 +93,5 @@
 
 @push('head')
     <link rel="stylesheet" href="{{ asset('vendor/leaflet/leaflet.css') }}">
-    <script src="{{ asset('vendor/leaflet/leaflet.js') }}"></script>
+    <script defer src="{{ asset('vendor/leaflet/leaflet.js') }}"></script>
 @endpush

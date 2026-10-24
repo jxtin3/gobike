@@ -4,6 +4,9 @@
 @section('subheading', 'Chapter inquiry '.$inquiry->reference.' · submitted '.$inquiry->created_at->format('F j, Y'))
 @section('back', route('admin.operations.chapter-inquiries.index'))
 @section('back_label', 'Back to chapter inquiries')
+@section('actions')
+    <a class="btn btn-primary" href="mailto:{{ $inquiry->email }}?subject={{ rawurlencode('Go Bike chapter inquiry '.$inquiry->reference) }}"><x-admin.icon name="mail" /> Email contact person</a>
+@endsection
 
 @use('App\Models\ReplicationRequest')
 
@@ -87,11 +90,12 @@
 
         <section class="detail-card">
             <h2 class="detail-card-title">Payment status</h2>
+            <p class="detail-status"><span class="pill pill-{{ $inquiry->payment_pill }}">{{ $inquiry->payment_label }}</span></p>
             <form method="POST" action="{{ route('admin.operations.chapter-inquiries.update', $inquiry) }}" class="field">
                 @csrf
                 @method('PATCH')
                 <label for="inquiry-payment">Record a check payment or refund</label>
-                <select id="inquiry-payment" name="payment_status" class="input" data-autosubmit>
+                <select id="inquiry-payment" name="payment_status" class="input" data-autosubmit aria-describedby="payment-hint">
                     @foreach (ReplicationRequest::PAYMENT_LABELS as $value => $label)
                         <option value="{{ $value }}" @selected($inquiry->payment_status === $value)
                             @if ($value === 'paid')
@@ -106,15 +110,12 @@
                         >{{ $label }}</option>
                     @endforeach
                 </select>
-                <p class="hint">Online payments are marked paid automatically. Process refunds in the PayMongo dashboard, then set this to Refunded.</p>
+                <p class="hint" id="payment-hint">Online payments are marked paid automatically. Process refunds in the PayMongo dashboard, then set this to Refunded.</p>
             </form>
         </section>
 
-        <div class="detail-actions">
-            <a class="btn btn-primary" href="mailto:{{ $inquiry->email }}?subject={{ $emailSubject }}">
-                <x-admin.icon name="mail" /> Email contact person
-            </a>
-            @unless ($inquiry->isPaid())
+        @unless ($inquiry->isPaid())
+            <div class="detail-danger">
                 <form method="POST" action="{{ route('admin.operations.chapter-inquiries.destroy', $inquiry) }}"
                       data-confirm-title="Delete this inquiry?"
                       data-confirm-text="The inquiry from {{ $inquiry->organization }} will be permanently deleted."
@@ -123,8 +124,8 @@
                     @method('DELETE')
                     <button type="submit" class="btn btn-danger"><x-admin.icon name="trash" /> Delete inquiry</button>
                 </form>
-            @endunless
-        </div>
+            </div>
+        @endunless
     </div>
 
 </div>

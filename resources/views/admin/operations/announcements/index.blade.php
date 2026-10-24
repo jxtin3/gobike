@@ -3,18 +3,17 @@
 @section('heading', 'Announcements')
 @section('subheading', 'Messages for all GoBikers. They appear on the dashboard of the GoBiker app.')
 @section('actions')
-    <a class="btn btn-primary" href="{{ route('admin.operations.announcements.create') }}"><x-admin.icon name="plus" /> New announcement</a>
+    <a class="btn btn-primary" href="{{ route('admin.operations.announcements.create') }}"><x-admin.icon name="plus" /> Add announcement</a>
 @endsection
 
 @section('content')
+@php($searching = filled(request('search')))
 <div class="toolbar">
-    <form class="search" role="search" method="GET" action="{{ route('admin.operations.announcements.index') }}">
-        <x-admin.icon name="search" />
-        <input class="input" type="search" name="search" value="{{ request('search') }}" placeholder="Search announcements" aria-label="Search announcements">
-    </form>
+    <x-admin.filters :action="route('admin.operations.announcements.index')" placeholder="Search announcements" label="Search announcements" :filtered="$searching" />
     <p class="toolbar-note"><b>{{ number_format($liveCount) }}</b> live now</p>
 </div>
 
+<div data-list>
 <div class="table-wrap">
     <table>
         <thead>
@@ -54,26 +53,21 @@
                     </td>
                 </tr>
             @empty
-                <tr class="is-static">
-                    <td colspan="5">
-                        <div class="empty">
-                            <x-admin.icon name="megaphone" />
-                            @if (filled(request('search')))
-                                <b>No announcements match</b>
-                                <p>Try a different word.</p>
-                                <a class="btn btn-secondary btn-sm" href="{{ route('admin.operations.announcements.index') }}">Clear search</a>
-                            @else
-                                <b>No announcements yet</b>
-                                <p>Write one and every GoBiker will see it in the app, for example a schedule change.</p>
-                                <a class="btn btn-primary btn-sm" href="{{ route('admin.operations.announcements.create') }}"><x-admin.icon name="plus" /> New announcement</a>
-                            @endif
-                        </div>
-                    </td>
-                </tr>
+                @if ($searching)
+                    <x-admin.empty :row="5" icon="megaphone" title="No announcements match" :clear="route('admin.operations.announcements.index')">
+                        Try a different word.
+                    </x-admin.empty>
+                @else
+                    <x-admin.empty :row="5" icon="megaphone" title="No announcements yet">
+                        Write one and every GoBiker will see it in the app, for example a schedule change.
+                        <x-slot:action><a class="btn btn-secondary btn-sm" href="{{ route('admin.operations.announcements.create') }}"><x-admin.icon name="plus" /> Add announcement</a></x-slot:action>
+                    </x-admin.empty>
+                @endif
             @endforelse
         </tbody>
     </table>
 </div>
 
-{{ $announcements->links('admin.partials.pagination') }}
+    <x-admin.pager :paginator="$announcements" noun="announcement" />
+</div>
 @endsection

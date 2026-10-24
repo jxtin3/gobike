@@ -7,13 +7,10 @@
 @endsection
 
 @section('content')
-<div class="toolbar">
-    <form class="search" role="search" method="GET" action="{{ route('admin.operations.news.index') }}">
-        <x-admin.icon name="search" />
-        <input class="input" type="search" name="search" value="{{ request('search') }}" placeholder="Search by title" aria-label="Search news">
-    </form>
-</div>
+@php($searching = filled(request('search')))
+<x-admin.filters :action="route('admin.operations.news.index')" placeholder="Search by title" label="Search news" :filtered="$searching" />
 
+<div data-list>
 <div class="table-wrap">
     <table>
         <thead>
@@ -29,7 +26,7 @@
             @forelse ($news as $item)
                 <tr>
                     <td>
-                        <b><a class="cell-link" href="{{ route('admin.operations.news.show', $item) }}" title="{{ $item->title }}">{{ Str::limit($item->title, 70) }}</a></b>
+                        <b><a class="cell-link" href="{{ route('admin.operations.news.show', $item) }}" title="{{ $item->title }}" data-skeleton="detail">{{ Str::limit($item->title, 70) }}</a></b>
                         <small class="sub-line">{{ Str::limit($item->summary, 90) }}</small>
                     </td>
                     <td><span class="pill pill-{{ $item->status_pill }}">{{ $item->status_label }}</span></td>
@@ -37,8 +34,8 @@
                     <td>{{ $item->updated_at->format('M j, Y') }}</td>
                     <td>
                         <div class="row-actions">
-                            <a class="icon-btn" href="{{ route('admin.operations.news.show', $item) }}" title="View" aria-label="View {{ $item->title }}"><x-admin.icon name="eye" /></a>
-                            <a class="icon-btn" href="{{ route('admin.operations.news.edit', $item) }}" title="Edit" aria-label="Edit {{ $item->title }}"><x-admin.icon name="edit" /></a>
+                            <a class="icon-btn" href="{{ route('admin.operations.news.show', $item) }}" title="View" aria-label="View {{ $item->title }}" data-skeleton="detail"><x-admin.icon name="eye" /></a>
+                            <a class="icon-btn" href="{{ route('admin.operations.news.edit', $item) }}" title="Edit" aria-label="Edit {{ $item->title }}" data-skeleton="form"><x-admin.icon name="edit" /></a>
                             <form method="POST" action="{{ route('admin.operations.news.destroy', $item) }}"
                                   data-confirm-title="Delete this post?"
                                   data-confirm-text="“{{ Str::limit($item->title, 80) }}” and its image will be permanently deleted."
@@ -51,26 +48,21 @@
                     </td>
                 </tr>
             @empty
-                <tr class="is-static">
-                    <td colspan="5">
-                        <div class="empty">
-                            <x-admin.icon name="file-text" />
-                            @if (filled(request('search')))
-                                <b>No posts match your search</b>
-                                <p>Try a different title.</p>
-                                <a class="btn btn-secondary btn-sm" href="{{ route('admin.operations.news.index') }}">Clear search</a>
-                            @else
-                                <b>No news yet</b>
-                                <p>Write the first post for the News page.</p>
-                                <a class="btn btn-primary btn-sm" href="{{ route('admin.operations.news.create') }}"><x-admin.icon name="plus" /> Add news</a>
-                            @endif
-                        </div>
-                    </td>
-                </tr>
+                @if ($searching)
+                    <x-admin.empty :row="5" icon="file-text" title="No posts match your search" :clear="route('admin.operations.news.index')">
+                        Try a different title.
+                    </x-admin.empty>
+                @else
+                    <x-admin.empty :row="5" icon="file-text" title="No news yet">
+                        Write the first post for the News page.
+                        <x-slot:action><a class="btn btn-secondary btn-sm" href="{{ route('admin.operations.news.create') }}"><x-admin.icon name="plus" /> Add news</a></x-slot:action>
+                    </x-admin.empty>
+                @endif
             @endforelse
         </tbody>
     </table>
 </div>
 
-{{ $news->links('admin.partials.pagination') }}
+    <x-admin.pager :paginator="$news" noun="post" />
+</div>
 @endsection

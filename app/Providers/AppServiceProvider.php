@@ -40,6 +40,18 @@ class AppServiceProvider extends ServiceProvider
             ];
         });
 
+        // Admin sidebar state, remembered in two plain cookies, so the first byte is already right (no flash).
+        // This sits on the layout because <body> is written before the sidebar is included.
+        View::composer('admin.operations.layout', function ($view) {
+            $groups = ['people', 'requests', 'content'];
+            $closed = explode('.', (string) request()->cookie('gobike_admin_closed', ''));
+
+            $view->with([
+                'sideRail' => request()->cookie('gobike_admin_rail') === '1',
+                'sideClosed' => array_values(array_intersect($groups, $closed)),
+            ]);
+        });
+
         // Runs only when the admin sidebar renders, so public pages are unaffected.
         View::composer('admin.partials.sidebar', function ($view) {
             $view->with([

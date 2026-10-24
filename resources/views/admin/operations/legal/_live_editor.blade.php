@@ -73,7 +73,7 @@
                 </div>
 
                 <div class="legal-add-row">
-                    <button type="button" class="btn-add-section" id="btn-add-section">
+                    <button type="button" class="btn btn-secondary btn-add-section" id="btn-add-section">
                         <x-admin.icon name="plus" /> Add another section
                     </button>
                 </div>
@@ -226,6 +226,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }
 
             markClean();
+            window.adminToast?.({ text: 'Changes saved.' });
             btnSave.classList.remove('is-saving');
             btnSave.classList.add('is-saved');
             saveBtnLabel.textContent = 'Saved';

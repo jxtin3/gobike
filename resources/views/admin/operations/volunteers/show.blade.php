@@ -4,6 +4,9 @@
 @section('subheading', 'Volunteer application submitted '.$application->created_at->format('F j, Y'))
 @section('back', route('admin.operations.volunteers.index'))
 @section('back_label', 'Back to volunteers')
+@section('actions')
+    <a class="btn btn-primary" href="mailto:{{ $application->email }}?subject={{ rawurlencode('Your Go Bike volunteer application') }}"><x-admin.icon name="mail" /> Email applicant</a>
+@endsection
 
 @use('App\Models\VolunteerApplication')
 
@@ -100,10 +103,7 @@
             </form>
         </section>
 
-        <div class="detail-actions">
-            <a class="btn btn-primary" href="mailto:{{ $application->email }}?subject={{ rawurlencode('Your Go Bike volunteer application') }}">
-                <x-admin.icon name="mail" /> Email applicant
-            </a>
+        <div class="detail-danger">
             <form method="POST" action="{{ route('admin.operations.volunteers.destroy', $application) }}"
                   data-confirm-title="Delete this application?"
                   data-confirm-text="{{ $application->full_name }}'s application, including emergency and guardian contacts, will be permanently deleted."

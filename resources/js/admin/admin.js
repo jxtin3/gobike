@@ -1,6 +1,9 @@
 import './live-map.js';
 import './reports.js';
 import './emergency-alert.js';
+import './sidebar.js';
+import './toast.js';
+import './skeleton.js';
 
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
@@ -15,7 +18,15 @@ const csrf = () => $('meta[name="csrf-token"]')?.content ?? '';
 
     const desktop = window.matchMedia('(min-width: 1024px)');
 
+    // Popover API: absent in older browsers, where :popover-open is not a valid selector.
+    const popoverOpen = () => {
+        try { return Boolean($(':popover-open', side)); } catch { return false; }
+    };
+
     const set = (open, { restoreFocus = false } = {}) => {
+        if (!open) {
+            try { $('[popover]', side)?.hidePopover?.(); } catch { /* already closed */ }
+        }
         side.classList.toggle('is-open', open);
         scrim.classList.toggle('is-open', open);
         toggle.setAttribute('aria-expanded', String(open));
@@ -29,11 +40,36 @@ const csrf = () => $('meta[name="csrf-token"]')?.content ?? '';
 
     toggle.addEventListener('click', () => set(!side.classList.contains('is-open')));
     scrim.addEventListener('click', () => set(false, { restoreFocus: true }));
+    $('[data-side-close]', side)?.addEventListener('click', () => set(false, { restoreFocus: true }));
     document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && side.classList.contains('is-open')) set(false, { restoreFocus: true });
+        // One Esc closes one thing: the alert settings first, the drawer on the next press.
+        if (e.key === 'Escape' && side.classList.contains('is-open') && !popoverOpen()) set(false, { restoreFocus: true });
     });
     desktop.addEventListener('change', () => set(false));
     set(false);
+})();
+
+/* A form whose Save button stays quiet until something changed (data-dirty-save, button[data-save]) */
+$$('form[data-dirty-save]').forEach((form) => {
+    const save = $('[data-save]', form);
+    form.addEventListener('input', () => {
+        save?.classList.replace('btn-secondary', 'btn-ok');
+    }, { once: true });
+});
+
+/* Failed submit: focus the error summary, and make each message jump to its field */
+(() => {
+    const summary = $('[data-error-summary]');
+    if (!summary) return;
+    summary.focus();
+    summary.addEventListener('click', (e) => {
+        const link = e.target.closest('a[href^="#"]');
+        const field = link && document.getElementById(decodeURIComponent(link.hash.slice(1)));
+        if (!field) return;
+        e.preventDefault();
+        field.scrollIntoView({ block: 'center' });
+        field.focus({ preventScroll: true });
+    });
 })();
 
 /* Flash messages: close button + auto-dismiss */
@@ -61,8 +97,16 @@ function showConfirm({ title, text = '', ok = 'Confirm', tone = 'danger' }, done
     dialog.showModal();
 }
 
+/** True for a click on the dark backdrop that also began there (not a text selection dragged out of the dialog). */
+function backdropClick(dlg) {
+    let pressedOnBackdrop = false;
+    dlg.addEventListener('pointerdown', (e) => { pressedOnBackdrop = e.target === dlg; });
+    return (e) => e.target === dlg && pressedOnBackdrop;
+}
+
 if (dialog) {
-    dialog.addEventListener('click', (e) => { if (e.target === dialog) dialog.close('cancel'); });
+    const onBackdrop = backdropClick(dialog);
+    dialog.addEventListener('click', (e) => { if (onBackdrop(e)) dialog.close('cancel'); });
     dialog.addEventListener('close', () => {
         const done = onConfirmClose;
         const confirmed = dialog.returnValue === 'confirm';
@@ -199,7 +243,7 @@ function decrementCounter(element) {
         } catch {
             const error = $('[data-dialog-error]', dlg);
             if (error) {
-                error.textContent = 'The message is open, but it could not be marked as read. Please try again.';
+                ($('[data-dialog-error-text]', error) ?? error).textContent = 'The message is open, but it could not be marked as read. Please try again.';
                 error.hidden = false;
             }
             return;
@@ -241,8 +285,9 @@ function decrementCounter(element) {
     });
 
     $$('dialog.msg-modal').forEach((dlg) => {
+        const onBackdrop = backdropClick(dlg);
         dlg.addEventListener('click', (e) => {
-            if (e.target === dlg || e.target.closest('[data-dialog-close]')) dlg.close();
+            if (onBackdrop(e) || e.target.closest('[data-dialog-close]')) dlg.close();
         });
     });
 })();

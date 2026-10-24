@@ -7,14 +7,15 @@
 @php
     $tabs = ['all' => 'All messages', 'unread' => 'Unread', 'read' => 'Read'];
     $currentTab = $statusFilter ?? 'all';
-    $hasQuery = filled(request('search')) || $statusFilter;
+    $searching = filled(request('search'));
+    $hasQuery = $searching || $statusFilter;
 @endphp
 
 <nav class="tabs" aria-label="Filter messages">
     @foreach ($tabs as $key => $label)
         <a href="{{ route('admin.operations.gobiker-messages.index', array_filter(['status' => $key === 'all' ? null : $key, 'search' => request('search')])) }}"
            class="tab"
-           aria-current="{{ $currentTab === $key ? 'page' : 'false' }}">
+           aria-current="{{ $currentTab === $key ? 'page' : 'false' }}" data-skeleton="rows">
             {{ $label }}
             @if ($key === 'all')
                 <span class="count">{{ number_format($totalCount) }}</span>
@@ -25,14 +26,10 @@
     @endforeach
 </nav>
 
-<div class="toolbar">
-    <form class="search" role="search" method="GET" action="{{ route('admin.operations.gobiker-messages.index') }}">
-        @if ($statusFilter) <input type="hidden" name="status" value="{{ $statusFilter }}"> @endif
-        <x-admin.icon name="search" />
-        <input class="input" type="search" name="search" value="{{ request('search') }}" placeholder="Search by GoBiker name or message" aria-label="Search GoBiker messages">
-    </form>
-</div>
+<x-admin.filters :action="route('admin.operations.gobiker-messages.index')" placeholder="Search by GoBiker name or message" label="Search GoBiker messages"
+                 :hidden="['status' => $statusFilter]" :filtered="$searching" />
 
+<div data-list>
 <div class="table-wrap">
     <table>
         <thead>
@@ -84,61 +81,49 @@
                     </td>
                 </tr>
             @empty
-                <tr class="is-static">
-                    <td colspan="5">
-                        <div class="empty">
-                            <x-admin.icon name="message-square" />
-                            @if (filled(request('search')))
-                                <b>No messages match</b>
-                                <p>Try a different name or word, or clear the filters.</p>
-                                <a class="btn btn-secondary btn-sm" href="{{ route('admin.operations.gobiker-messages.index') }}">Clear filters</a>
-                            @elseif ($statusFilter === 'unread')
-                                <b>You're all caught up</b>
-                                <p>There are no unread GoBiker messages.</p>
-                            @elseif ($hasQuery)
-                                <b>No read messages</b>
-                                <p>Messages you open will appear here.</p>
-                            @else
-                                <b>No messages yet</b>
-                                <p>Messages GoBikers send from the mobile app will appear here.</p>
-                            @endif
-                        </div>
-                    </td>
-                </tr>
+                @if ($searching)
+                    <x-admin.empty :row="5" icon="message-square" title="No messages match these filters" :clear="route('admin.operations.gobiker-messages.index')">
+                        Try a different name or word, or clear the filters.
+                    </x-admin.empty>
+                @elseif ($statusFilter === 'unread')
+                    <x-admin.empty :row="5" icon="check-circle" title="You're all caught up">
+                        There are no unread GoBiker messages.
+                    </x-admin.empty>
+                @elseif ($statusFilter === 'read')
+                    <x-admin.empty :row="5" icon="message-square" title="No read messages">
+                        Messages you open will appear here.
+                    </x-admin.empty>
+                @else
+                    <x-admin.empty :row="5" icon="message-square" title="No messages yet">
+                        Messages GoBikers send from the mobile app will appear here.
+                    </x-admin.empty>
+                @endif
             @endforelse
         </tbody>
     </table>
 </div>
 
-{{ $messages->links('admin.partials.pagination') }}
+    <x-admin.pager :paginator="$messages" noun="message" />
+</div>
 
-<dialog id="gobikerMessageDialog" class="msg-modal" aria-labelledby="gobiker-dialog-title">
-    <div class="msg-inner">
-        <header class="msg-head">
-            <div>
-                <span class="msg-kicker">GoBiker message</span>
-                <h2 id="gobiker-dialog-title" data-field="sender"></h2>
-                <span data-pill-field="status"></span>
-            </div>
-            <button type="button" class="icon-btn" data-dialog-close aria-label="Close"><x-admin.icon name="x" /></button>
-        </header>
+<x-admin.dialog id="gobikerMessageDialog" kicker="GoBiker message" field="sender">
+    <x-slot:sub><span data-pill-field="status"></span></x-slot:sub>
 
-        <dl class="msg-meta">
-            <div><dt>Barangay</dt><dd data-field="barangay"></dd></div>
-            <div><dt>Mobile</dt><dd data-field="mobile"></dd></div>
-            <div><dt>Received</dt><dd data-field="received"></dd></div>
-        </dl>
+    <dl class="dlg-meta">
+        <div><dt>Barangay</dt><dd data-field="barangay"></dd></div>
+        <div><dt>Mobile</dt><dd data-field="mobile"></dd></div>
+        <div><dt>Received</dt><dd data-field="received"></dd></div>
+    </dl>
 
-        <section class="msg-body-wrapper">
-            <h3 class="msg-body-label">Message</h3>
-            <p class="msg-body" data-field="message"></p>
-        </section>
-        <p class="alert error" data-dialog-error role="alert" hidden></p>
+    <section>
+        <h3 class="dlg-label">Message</h3>
+        <p class="dlg-text" data-field="message"></p>
+    </section>
 
-        <footer class="msg-foot">
-            <span></span>
+    <x-slot:foot>
+        <div class="dlg-foot-main">
             <button type="button" class="btn btn-secondary" data-dialog-close>Close</button>
-        </footer>
-    </div>
-</dialog>
+        </div>
+    </x-slot:foot>
+</x-admin.dialog>
 @endsection

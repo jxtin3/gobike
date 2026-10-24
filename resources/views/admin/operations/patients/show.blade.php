@@ -1,5 +1,5 @@
 @extends('admin.operations.layout')
-@section('title', 'Patient record')
+@section('title', $patient->name)
 @section('heading', $patient->name)
 @section('subheading', 'Check-up recorded '.$patient->recorded_at->format('F j, Y \a\t g:i A').' · '.$history->count().' '.Str::plural('check-up', $history->count()).' in total')
 @section('back', route('admin.operations.patients.index'))
@@ -7,14 +7,6 @@
 @section('actions')
     <button type="button" class="btn btn-secondary" data-print><x-admin.icon name="printer" /> Print</button>
     <a class="btn btn-secondary" href="{{ route('admin.operations.patients.show', [$patient, 'format' => 'csv']) }}"><x-admin.icon name="download" /> Download CSV</a>
-    <form method="POST" action="{{ route('admin.operations.patients.destroy', $patient) }}" class="no-print"
-          data-confirm-title="Delete this check-up?"
-          data-confirm-text="This permanently deletes the check-up from {{ $patient->recorded_at->format('M j, Y') }}. Other check-ups of {{ $patient->name }} are kept."
-          data-confirm-ok="Delete check-up">
-        @csrf
-        @method('DELETE')
-        <button type="submit" class="btn btn-danger"><x-admin.icon name="trash" /> Delete</button>
-    </form>
 @endsection
 
 @section('content')
@@ -57,8 +49,9 @@
         @csrf
         @method('PATCH')
         <label for="follow-up-note">Note for the GoBiker <span class="muted">(optional)</span></label>
-        <textarea class="input" id="follow-up-note" name="note" rows="2" maxlength="500" placeholder="e.g. Blood pressure normal since July. Check again only if they feel unwell.">{{ old('note', $followUp?->note) }}</textarea>
+        <textarea @class(['input', 'is-invalid' => $errors->has('note')]) id="follow-up-note" name="note" rows="2" maxlength="500" aria-describedby="follow-up-hint note-error" placeholder="e.g. Blood pressure normal since July. Check again only if they feel unwell.">{{ old('note', $followUp?->note) }}</textarea>
         <x-admin.field-error name="note" />
+        <p class="hint" id="follow-up-hint">The GoBiker app will show this decision for every check-up of {{ $patient->name }}.</p>
         <div class="follow-up-actions">
             <button type="submit" name="decision" value="continue" class="btn btn-secondary" aria-pressed="{{ $followUp?->decision === 'continue' ? 'true' : 'false' }}">
                 <x-admin.icon name="activity" /> Keep checking
@@ -70,31 +63,30 @@
                 <x-admin.icon name="check" /> Stop checking
             </button>
         </div>
-        <p class="hint">The GoBiker app will show this decision for every check-up of {{ $patient->name }}.</p>
     </form>
 </section>
 
 <div class="detail-columns">
-    <article class="detail-panel">
-        <h2 class="detail-panel-title">Personal details</h2>
-        <dl class="user-details">
-            <dt>Full name</dt><dd>{{ $patient->name }}</dd>
-            <dt>Age</dt><dd>{{ $patient->age }} yrs</dd>
-            <dt>Address</dt><dd>{{ $patient->address }}</dd>
-            <dt>Contact</dt><dd>@if ($patient->contact)<a href="tel:{{ $patient->contact }}">{{ $patient->contact }}</a>@else — @endif</dd>
-            <dt>Barangay</dt><dd>{{ $patient->barangay ?: '—' }}</dd>
+    <article class="detail-card">
+        <h2 class="detail-card-title">Personal details</h2>
+        <dl class="detail-dl">
+            <div><dt>Full name</dt><dd>{{ $patient->name }}</dd></div>
+            <div><dt>Age</dt><dd>{{ $patient->age }} yrs</dd></div>
+            <div><dt>Address</dt><dd>{{ $patient->address }}</dd></div>
+            <div><dt>Contact</dt><dd>@if ($patient->contact)<a href="tel:{{ $patient->contact }}">{{ $patient->contact }}</a>@else — @endif</dd></div>
+            <div><dt>Barangay</dt><dd>{{ $patient->barangay ?: '—' }}</dd></div>
         </dl>
     </article>
 
-    <article class="detail-panel">
-        <h2 class="detail-panel-title">This check-up · {{ $patient->recorded_at->format('M j, Y') }}</h2>
-        <dl class="user-details">
-            <dt>Blood pressure</dt><dd>{{ $patient->sys }}/{{ $patient->dia }} mmHg</dd>
-            <dt>Pulse</dt><dd>{{ $patient->pulse }} bpm</dd>
-            <dt>Respiration</dt><dd>{{ $patient->resp }} per minute</dd>
-            <dt>Temperature</dt><dd>{{ $fmt($patient->temp) }} °C</dd>
-            <dt>Blood sugar</dt><dd>{{ $patient->blood_sugar !== null ? $patient->blood_sugar.' mg/dL' : 'Not tested' }}</dd>
-            <dt>Recorded by</dt><dd>{{ $patient->recorder?->name ?? '—' }}</dd>
+    <article class="detail-card">
+        <h2 class="detail-card-title">This check-up · {{ $patient->recorded_at->format('M j, Y') }}</h2>
+        <dl class="detail-dl">
+            <div><dt>Blood pressure</dt><dd>{{ $patient->sys }}/{{ $patient->dia }} mmHg</dd></div>
+            <div><dt>Pulse</dt><dd>{{ $patient->pulse }} bpm</dd></div>
+            <div><dt>Respiration</dt><dd>{{ $patient->resp }} per minute</dd></div>
+            <div><dt>Temperature</dt><dd>{{ $fmt($patient->temp) }} °C</dd></div>
+            <div><dt>Blood sugar</dt><dd>{{ $patient->blood_sugar !== null ? $patient->blood_sugar.' mg/dL' : 'Not tested' }}</dd></div>
+            <div><dt>Recorded by</dt><dd>{{ $patient->recorder?->name ?? '—' }}</dd></div>
         </dl>
     </article>
 </div>
@@ -122,7 +114,7 @@
                             @if ($checkup->is($patient))
                                 <b>{{ $checkup->recorded_at->format('M j, Y · g:i A') }}</b> <span class="muted">(this one)</span>
                             @else
-                                <a class="cell-link" href="{{ route('admin.operations.patients.show', $checkup) }}">{{ $checkup->recorded_at->format('M j, Y · g:i A') }}</a>
+                                <a class="cell-link" href="{{ route('admin.operations.patients.show', $checkup) }}" data-skeleton="detail">{{ $checkup->recorded_at->format('M j, Y · g:i A') }}</a>
                             @endif
                         </td>
                         <td>{{ $checkup->sys }}/{{ $checkup->dia }}</td>
@@ -145,4 +137,16 @@
     </div>
     <p class="report-footnote">Check-ups are matched to this person by name and contact number. High and low flags are screening hints, not a diagnosis.</p>
 </section>
+
+<div class="detail-danger no-print">
+    <p>Deleting removes only this check-up. The patient's other check-ups are kept.</p>
+    <form method="POST" action="{{ route('admin.operations.patients.destroy', $patient) }}"
+          data-confirm-title="Delete this check-up?"
+          data-confirm-text="This permanently deletes the check-up from {{ $patient->recorded_at->format('M j, Y') }}. Other check-ups of {{ $patient->name }} are kept."
+          data-confirm-ok="Delete check-up">
+        @csrf
+        @method('DELETE')
+        <button type="submit" class="btn btn-danger"><x-admin.icon name="trash" /> Delete check-up</button>
+    </form>
+</div>
 @endsection

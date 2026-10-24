@@ -45,14 +45,8 @@
     </div>
 </div>
 
-<div class="toolbar no-print">
-    <form class="search" role="search" method="GET" action="{{ route('admin.operations.gobiker-reports.index') }}">
-        <input type="hidden" name="period" value="{{ $period->type }}">
-        <input type="hidden" name="date" value="{{ $period->from->toDateString() }}">
-        <x-admin.icon name="search" />
-        <input class="input" type="search" name="search" value="{{ $search }}" placeholder="Search GoBiker by name" aria-label="Search GoBikers">
-    </form>
-</div>
+<x-admin.filters :action="route('admin.operations.gobiker-reports.index')" placeholder="Search GoBiker by name" label="Search GoBikers"
+                 :hidden="['period' => $period->type, 'date' => $period->from->toDateString()]" :filtered="filled($search)" />
 
 @php $maxCheckups = max(1, (int) $rows->max('checkups')); @endphp
 <div class="table-wrap">
@@ -111,21 +105,15 @@
                     </td>
                 </tr>
             @empty
-                <tr class="is-static">
-                    <td colspan="8">
-                        <div class="empty">
-                            <x-admin.icon name="users" />
-                            @if ($search)
-                                <b>No GoBikers match</b>
-                                <p>Try a different name.</p>
-                                <a class="btn btn-secondary btn-sm" href="{{ route('admin.operations.gobiker-reports.index', $period->query()) }}">Clear search</a>
-                            @else
-                                <b>No GoBikers yet</b>
-                                <p>Approved GoBiker accounts appear here.</p>
-                            @endif
-                        </div>
-                    </td>
-                </tr>
+                @if ($search)
+                    <x-admin.empty :row="8" icon="users" title="No GoBikers match" :clear="route('admin.operations.gobiker-reports.index', $period->query())">
+                        Try a different name.
+                    </x-admin.empty>
+                @else
+                    <x-admin.empty :row="8" icon="users" title="No GoBikers yet">
+                        Approved GoBiker accounts appear here.
+                    </x-admin.empty>
+                @endif
             @endforelse
         </tbody>
         @if ($rows->isNotEmpty())

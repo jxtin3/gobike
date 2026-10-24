@@ -41,35 +41,32 @@
     </div>
 </div>
 
-<div class="toolbar">
-    <form class="search-form" role="search" method="GET" action="{{ route('admin.operations.donations.index') }}">
-        <input class="input" type="search" name="search" value="{{ request('search') }}" placeholder="Search donor, organization or email" aria-label="Search donations">
-        <select class="input" name="status" aria-label="Filter by status" data-autosubmit>
-            <option value="">All statuses</option>
-            @foreach (array_keys(Donation::STATUS_PILLS) as $status)
-                <option value="{{ $status }}" @selected(request('status') === $status)>{{ ucfirst($status) }}</option>
-            @endforeach
-        </select>
-        <select class="input" name="method" aria-label="Filter by method" data-autosubmit>
-            <option value="">All methods</option>
-            @foreach (Donation::METHOD_LABELS as $value => $label)
-                <option value="{{ $value }}" @selected(request('method') === $value)>{{ $label }}</option>
-            @endforeach
-        </select>
-        <select class="input" name="frequency" aria-label="Filter by frequency" data-autosubmit>
-            <option value="">One-time &amp; monthly</option>
-            <option value="monthly" @selected(request('frequency') === 'monthly')>Monthly only</option>
-        </select>
-        <button type="submit" class="btn btn-secondary"><x-admin.icon name="search" /> Search</button>
-    </form>
-</div>
+<x-admin.filters :action="route('admin.operations.donations.index')" placeholder="Search donor, organization or email" label="Search donations" :filtered="$hasQuery">
+    <select class="input" name="status" aria-label="Filter by status" data-autosubmit>
+        <option value="">All statuses</option>
+        @foreach (array_keys(Donation::STATUS_PILLS) as $status)
+            <option value="{{ $status }}" @selected(request('status') === $status)>{{ ucfirst($status) }}</option>
+        @endforeach
+    </select>
+    <select class="input" name="method" aria-label="Filter by method" data-autosubmit>
+        <option value="">All methods</option>
+        @foreach (Donation::METHOD_LABELS as $value => $label)
+            <option value="{{ $value }}" @selected(request('method') === $value)>{{ $label }}</option>
+        @endforeach
+    </select>
+    <select class="input" name="frequency" aria-label="Filter by frequency" data-autosubmit>
+        <option value="">One-time &amp; monthly</option>
+        <option value="monthly" @selected(request('frequency') === 'monthly')>Monthly only</option>
+    </select>
+</x-admin.filters>
 
+<div data-list>
 <div class="table-wrap">
     <table>
         <thead>
             <tr>
                 <th>Donor</th>
-                <th>Amount</th>
+                <th class="num">Amount</th>
                 <th>Method</th>
                 <th>Frequency</th>
                 <th>Status</th>
@@ -80,8 +77,6 @@
         <tbody>
             @forelse ($donations as $donation)
                 @php
-                    $initials = collect(preg_split('/\s+/', trim($donation->donor_name)))->filter()->take(2)
-                        ->map(fn ($p) => mb_strtoupper(mb_substr($p, 0, 1)))->implode('');
                     $monthly = $donation->isMonthlySubscription();
                     $amount = '$'.number_format($donation->amount_usd, 2);
                 @endphp
@@ -113,14 +108,14 @@
                     data-delete-text="{{ $donation->donor_name }} · {{ $amount }} ({{ $donation->status }}). {{ $donation->canCancelSubscription() ? 'This is a monthly donation: cancel it first so the donor is not charged again. ' : '' }}Paid donations are accounting records, so only delete test entries or mistakes. This cannot be undone.">
                     <td>
                         <div class="cell-user">
-                            <span class="avatar" aria-hidden="true">{{ $initials }}</span>
+                            <x-admin.avatar :name="$donation->donor_name" />
                             <div>
                                 <b>{{ $donation->donor_name }}</b>
                                 <small>{{ $donation->email }}</small>
                             </div>
                         </div>
                     </td>
-                    <td>
+                    <td class="num">
                         <b>{{ $amount }}</b>
                         @if ($donation->amount_php)
                             <small class="sub-line">₱{{ number_format($donation->amount_php, 2) }}</small>
@@ -145,78 +140,66 @@
                     </td>
                 </tr>
             @empty
-                <tr class="is-static">
-                    <td colspan="7">
-                        <div class="empty">
-                            <x-admin.icon name="dollar-sign" />
-                            @if ($hasQuery)
-                                <b>No donations match</b>
-                                <p>Try a different search, or clear the filters.</p>
-                                <a class="btn btn-secondary btn-sm" href="{{ route('admin.operations.donations.index') }}">Clear filters</a>
-                            @else
-                                <b>No donations yet</b>
-                                <p>Donations will appear here once submitted through the website.</p>
-                            @endif
-                        </div>
-                    </td>
-                </tr>
+                @if ($hasQuery)
+                    <x-admin.empty :row="7" icon="dollar-sign" title="No donations match" :clear="route('admin.operations.donations.index')">
+                        Try a different search, or clear the filters.
+                    </x-admin.empty>
+                @else
+                    <x-admin.empty :row="7" icon="dollar-sign" title="No donations yet">
+                        Donations will appear here once submitted through the website.
+                    </x-admin.empty>
+                @endif
             @endforelse
         </tbody>
     </table>
 </div>
 
-{{ $donations->links('admin.partials.pagination') }}
+    <x-admin.pager :paginator="$donations" noun="donation" />
+</div>
 
-<dialog id="donationDialog" class="msg-modal" aria-labelledby="donation-dialog-title">
-    <div class="msg-inner">
-        <header class="msg-head">
-            <div>
-                <span class="msg-kicker">Donation <span data-field="reference"></span></span>
-                <h2 id="donation-dialog-title" data-field="name"></h2>
-                <span data-pill-field="status"></span>
-            </div>
-            <button type="button" class="icon-btn" data-dialog-close aria-label="Close"><x-admin.icon name="x" /></button>
-        </header>
+<x-admin.dialog id="donationDialog" kicker="Donation" field="name">
+    <x-slot:sub><span data-pill-field="status"></span> <span data-field="reference"></span></x-slot:sub>
 
-        <dl class="msg-meta">
-            <div><dt>Amount (USD)</dt><dd data-field="amountUsd"></dd></div>
-            <div><dt>Amount (PHP)</dt><dd data-field="amountPhp"></dd></div>
-            <div><dt>Platform fee</dt><dd data-field="fee"></dd></div>
-            <div><dt>Method</dt><dd data-field="method"></dd></div>
-            <div><dt>Frequency</dt><dd data-field="frequency"></dd></div>
-            <div><dt>Submitted</dt><dd data-field="date"></dd></div>
-            <div><dt>Email</dt><dd data-field="email"></dd></div>
-            <div><dt>Phone</dt><dd data-field="phone"></dd></div>
-            <div><dt>Receipt email</dt><dd data-field="receipt"></dd></div>
-            <div><dt>Donor type</dt><dd data-field="donorType"></dd></div>
-            <div><dt>Organization</dt><dd data-field="org"></dd></div>
-            <div class="msg-meta-wide"><dt>Address</dt><dd data-field="address"></dd></div>
+    <dl class="dlg-meta">
+        <div><dt>Amount (USD)</dt><dd data-field="amountUsd"></dd></div>
+        <div><dt>Amount (PHP)</dt><dd data-field="amountPhp"></dd></div>
+        <div><dt>Platform fee</dt><dd data-field="fee"></dd></div>
+        <div><dt>Method</dt><dd data-field="method"></dd></div>
+        <div><dt>Frequency</dt><dd data-field="frequency"></dd></div>
+        <div><dt>Submitted</dt><dd data-field="date"></dd></div>
+        <div><dt>Email</dt><dd data-field="email"></dd></div>
+        <div><dt>Phone</dt><dd data-field="phone"></dd></div>
+        <div><dt>Receipt email</dt><dd data-field="receipt"></dd></div>
+        <div><dt>Donor type</dt><dd data-field="donorType"></dd></div>
+        <div><dt>Organization</dt><dd data-field="org"></dd></div>
+        <div class="dlg-meta-wide"><dt>Address</dt><dd data-field="address"></dd></div>
+    </dl>
+
+    <section data-show-field="monthly">
+        <h3 class="dlg-label">Monthly donation</h3>
+        <dl class="dlg-meta">
+            <div><dt>Status</dt><dd><span data-pill-field="subscription"></span></dd></div>
+            <div><dt>Payments received</dt><dd data-field="payments"></dd></div>
         </dl>
+        <form method="POST" data-action-field="cancelUrl" data-show-field="canCancel"
+              data-confirm-title="Cancel this monthly donation?"
+              data-confirm-text="PayPal will stop charging the donor right away. Donations already made are not refunded."
+              data-confirm-ok="Cancel monthly donation">
+            @csrf
+            <button type="submit" class="btn btn-danger"><x-admin.icon name="x" /> Cancel monthly donation</button>
+        </form>
+    </section>
 
-        <section class="msg-section" data-show-field="monthly">
-            <h3 class="msg-body-label">Monthly donation</h3>
-            <dl class="msg-meta">
-                <div><dt>Status</dt><dd><span data-pill-field="subscription"></span></dd></div>
-                <div><dt>Payments received</dt><dd data-field="payments"></dd></div>
-            </dl>
-            <form method="POST" data-action-field="cancelUrl" data-show-field="canCancel"
-                  data-confirm-title="Cancel this monthly donation?"
-                  data-confirm-text="PayPal will stop charging the donor right away. Donations already made are not refunded."
-                  data-confirm-ok="Cancel monthly donation">
-                @csrf
-                <button type="submit" class="btn btn-danger"><x-admin.icon name="x" /> Cancel monthly donation</button>
-            </form>
-        </section>
-
-        <footer class="msg-foot">
-            <form method="POST" data-action-field="deleteUrl" data-confirm-field="deleteText"
-                  data-confirm-title="Delete this donation?" data-confirm-ok="Delete donation">
-                @csrf
-                @method('DELETE')
-                <button type="submit" class="btn btn-danger"><x-admin.icon name="trash" /> Delete</button>
-            </form>
+    <x-slot:foot>
+        <form method="POST" class="dlg-foot-danger" data-action-field="deleteUrl" data-confirm-field="deleteText"
+              data-confirm-title="Delete this donation?" data-confirm-ok="Delete donation">
+            @csrf
+            @method('DELETE')
+            <button type="submit" class="btn btn-danger"><x-admin.icon name="trash" /> Delete</button>
+        </form>
+        <div class="dlg-foot-main">
             <button type="button" class="btn btn-secondary" data-dialog-close>Close</button>
-        </footer>
-    </div>
-</dialog>
+        </div>
+    </x-slot:foot>
+</x-admin.dialog>
 @endsection

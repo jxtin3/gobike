@@ -48,7 +48,7 @@
                         $statOld = old('form_key') === $statKey;
                         $statErrors = $errors->getBag($statKey);
                     @endphp
-                    <form class="homepage-data-item" method="POST" action="{{ route('admin.operations.homepage-data.impact-stats.update', $stat) }}">
+                    <form class="homepage-data-item" method="POST" data-dirty-save action="{{ route('admin.operations.homepage-data.impact-stats.update', $stat) }}">
                         @csrf
                         @method('PUT')
                         <input type="hidden" name="form_key" value="{{ $statKey }}">
@@ -63,8 +63,9 @@
                             <x-admin.field-error name="value" :bag="$statKey" />
                         </label>
                         <div class="homepage-data-actions">
-                            <button class="btn btn-ok btn-sm" type="submit">Save</button>
-                            <button class="icon-btn danger" type="submit" form="delete-stat-{{ $stat->id }}" aria-label="Delete {{ $stat->label }}" title="Delete statistic">
+                            {{-- Quiet until this row is edited, so a list of rows does not become a list of green buttons. --}}
+                            <button class="btn btn-secondary btn-sm" type="submit" data-save>Save</button>
+                            <button class="icon-btn danger" type="submit" form="delete-stat-{{ $stat->id }}" aria-label="Remove {{ $stat->label }}" title="Remove statistic">
                                 <x-admin.icon name="trash" />
                             </button>
                         </div>
@@ -77,7 +78,9 @@
                         @method('DELETE')
                     </form>
                 @empty
-                    <p class="homepage-data-empty">No statistics in this section yet.</p>
+                    <x-admin.empty icon="bar-chart" title="No statistics yet" class="empty-card">
+                        Add one above and it will appear on the homepage.
+                    </x-admin.empty>
                 @endforelse
             </div>
         </section>

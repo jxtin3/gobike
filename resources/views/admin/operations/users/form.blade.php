@@ -19,13 +19,13 @@
                 <x-admin.field-error name="email" />
             </div>
             <div class="field">
-                <label for="mobile">Mobile number</label>
-                <input class="input @error('mobile') is-invalid @enderror" id="mobile" type="tel" name="mobile" inputmode="numeric" pattern="09[0-9]{9}" maxlength="11" autocomplete="tel" value="{{ old('mobile', $user?->mobile) }}" aria-describedby="mobile-error">
-                <span class="hint">Use a Philippine mobile number, e.g. 09123456789.</span>
+                <label for="mobile">Mobile number <span class="muted">(optional)</span></label>
+                <input class="input @error('mobile') is-invalid @enderror" id="mobile" type="tel" name="mobile" inputmode="numeric" pattern="09[0-9]{9}" maxlength="11" autocomplete="tel" value="{{ old('mobile', $user?->mobile) }}" aria-describedby="mobile-hint mobile-error">
+                <span class="hint" id="mobile-hint">Use a Philippine mobile number, e.g. 09123456789.</span>
                 <x-admin.field-error name="mobile" />
             </div>
             <div class="field">
-                <label for="barangay">Barangay</label>
+                <label for="barangay">Barangay <span class="muted">(optional)</span></label>
                 <input class="input @error('barangay') is-invalid @enderror" id="barangay" name="barangay" autocomplete="address-level3" value="{{ old('barangay', $user?->barangay) }}" aria-describedby="barangay-error">
                 <x-admin.field-error name="barangay" />
             </div>
@@ -37,13 +37,14 @@
         <div class="grid-2">
             <div class="field">
                 <label for="password">{{ $user ? 'Set a new password' : 'Password' }}</label>
-                <input class="input @error('password') is-invalid @enderror" id="password" type="password" name="password" autocomplete="new-password" {{ $user ? '' : 'required' }} aria-describedby="password-error">
-                <span class="hint">At least 12 characters with letters and numbers.{{ $user ? ' Leave blank to keep the current password; a new one signs them out of the app.' : '' }}</span>
+                <input class="input @error('password') is-invalid @enderror" id="password" type="password" name="password" autocomplete="new-password" {{ $user ? '' : 'required' }} aria-describedby="password-hint password-error">
+                <span class="hint" id="password-hint">At least 12 characters with letters and numbers.{{ $user ? ' Leave blank to keep the current password; a new one signs them out of the app.' : '' }}</span>
                 <x-admin.field-error name="password" />
             </div>
             <div class="field">
                 <label for="password_confirmation">Confirm password</label>
-                <input class="input" id="password_confirmation" type="password" name="password_confirmation" autocomplete="new-password" {{ $user ? '' : 'required' }}>
+                <input class="input @error('password_confirmation') is-invalid @enderror" id="password_confirmation" type="password" name="password_confirmation" autocomplete="new-password" {{ $user ? '' : 'required' }} aria-describedby="password_confirmation-error">
+                <x-admin.field-error name="password_confirmation" />
             </div>
         </div>
     </fieldset>

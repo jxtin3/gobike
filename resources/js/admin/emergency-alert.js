@@ -66,6 +66,8 @@
     let fallbackTimer = null;
     let noteMessage = null;
     let noteTimer = null;
+    let lastOk = null; // when the server last answered, for the sidebar status
+    let connState = null; // the warning currently shown in the connection bar, if any
 
     const audio = new Audio(root.dataset.sound);
     audio.loop = true;
@@ -90,8 +92,8 @@
         if (soundOn && ringing().length) {
             if (audio.paused) {
                 audio.play()
-                    .then(() => { blocked = false; renderNote(); })
-                    .catch((err) => { blocked = err?.name === 'NotAllowedError'; renderNote(); });
+                    .then(() => { blocked = false; renderNote(); publish(); })
+                    .catch((err) => { blocked = err?.name === 'NotAllowedError'; renderNote(); publish(); });
             }
         } else if (!audio.paused) {
             audio.pause();
@@ -129,6 +131,7 @@
         renderControls();
         renderNote();
         syncSound();
+        publish();
     }
 
     function silenceAll() {
@@ -308,17 +311,43 @@
     }
 
     function setConn(state) {
+        const changed = state !== connState;
+        const previous = connState;
+        connState = state;
         els.conn.hidden = !state;
-        if (!state) return;
+        if (!state) {
+            // A live region that appears and fills in the same moment is often not read, so say it on the always-present one.
+            if (changed && previous) els.announce.textContent = 'Emergency alerts are working again.';
+            return;
+        }
         els.conn.dataset.state = state;
         if (state === 'offline') {
             els.conn.textContent = 'Cannot reach the server, so emergency alerts may be late. Retrying…';
-            return;
+        } else {
+            const link = document.createElement('a');
+            link.href = root.dataset.loginUrl;
+            link.textContent = 'Sign in again';
+            els.conn.replaceChildren('You are signed out, so emergency alerts are off. ', link);
         }
-        const link = document.createElement('a');
-        link.href = root.dataset.loginUrl;
-        link.textContent = 'Sign in again';
-        els.conn.replaceChildren('You are signed out, so emergency alerts are off. ', link);
+        if (changed) els.announce.textContent = els.conn.textContent;
+    }
+
+    /* ---------- Status for the sidebar ---------- */
+
+    // connecting -> live; one failed check -> reconnecting; three, or no network -> offline; session over -> signed-out
+    function connectionState() {
+        if (stopped) return 'signed-out';
+        if (failures >= FAILURES_BEFORE_WARNING || navigator.onLine === false) return 'offline';
+        if (failures > 0) return 'reconnecting';
+        return lastOk ? 'live' : 'connecting';
+    }
+
+    // The state also lives on the element, because this file runs before sidebar.js has started listening.
+    function publish() {
+        const state = connectionState();
+        root.dataset.state = state;
+        root.dataset.lastOk = lastOk ?? '';
+        document.dispatchEvent(new CustomEvent('gobike:alert-status', { detail: { state, lastOk, soundOn, blocked } }));
     }
 
     function renderControls() {
@@ -370,6 +399,8 @@
                 headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
                 credentials: 'same-origin',
                 cache: 'no-store',
+                // A stalled request would otherwise leave the sidebar saying "live" with an old time.
+                signal: typeof AbortSignal.timeout === 'function' ? AbortSignal.timeout(8000) : undefined,
             });
             if ([401, 403, 419].includes(res.status)) {
                 signedOut();
@@ -379,6 +410,7 @@
 
             const data = await res.json();
             failures = 0;
+            lastOk = Date.now();
             setConn(null);
             update(Array.isArray(data.emergencies) ? data.emergencies : []);
         } catch {
@@ -386,6 +418,7 @@
             if (failures >= FAILURES_BEFORE_WARNING) setConn('offline');
         } finally {
             inFlight = false;
+            publish();
             if (pollQueued) {
                 pollQueued = false;
                 poll();
@@ -399,6 +432,7 @@
         clearInterval(fallbackTimer);
         setConn('signed-out');
         syncSound();
+        publish();
     }
 
     function startTimer() {
@@ -498,8 +532,17 @@
         if (e.detail?.source !== 'banner') poll();
     });
     document.addEventListener('visibilitychange', () => { if (!document.hidden) poll(); });
+    window.addEventListener('offline', () => {
+        if (!stopped) setConn('offline');
+        publish();
+    });
+    window.addEventListener('online', () => {
+        publish();
+        poll();
+    });
 
     renderControls();
+    publish();
     poll();
     startTimer();
 })();

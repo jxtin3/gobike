@@ -14,7 +14,7 @@
 @section('content')
 @include('admin.partials.print-head', ['title' => 'GoBiker report: '.$gobiker->name, 'subtitle' => $period->label()])
 
-@include('admin.operations.gobiker-reports._period', ['route' => 'admin.operations.gobiker-reports.show', 'params' => [$gobiker]])
+@include('admin.operations.gobiker-reports._period', ['route' => 'admin.operations.gobiker-reports.show', 'params' => [$gobiker], 'skeleton' => 'detail'])
 
 <p class="report-meta">
     <span><x-admin.icon name="map" /> {{ $gobiker->barangay ?: 'No barangay' }}</span>

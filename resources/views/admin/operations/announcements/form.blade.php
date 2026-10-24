@@ -36,10 +36,10 @@
             <div class="field">
                 <span class="field-title">Show in the GoBiker app</span>
                 <label class="check-row" for="is_active">
-                    <input type="checkbox" id="is_active" name="is_active" value="1" @checked($isActive)>
+                    <input type="checkbox" id="is_active" name="is_active" value="1" @checked($isActive) aria-describedby="is_active-hint">
                     <span>Visible to GoBikers</span>
                 </label>
-                <span class="hint">Untick to save it as a draft or to hide it again.</span>
+                <span class="hint" id="is_active-hint">Untick to save it as a draft or to hide it again.</span>
             </div>
         </div>
     </fieldset>

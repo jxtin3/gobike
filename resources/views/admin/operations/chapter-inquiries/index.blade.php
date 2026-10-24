@@ -35,34 +35,30 @@
     </div>
 </div>
 
-{{-- Toolbar --}}
-<div class="toolbar">
-    <form class="search-form" role="search" method="GET" action="{{ route('admin.operations.chapter-inquiries.index') }}">
-        <input class="input" type="search" name="search" value="{{ request('search') }}" placeholder="Search organization, contact, email or town" aria-label="Search chapter inquiries">
-        <select class="input" name="status" aria-label="Filter by status" data-autosubmit>
-            <option value="">All statuses</option>
-            @foreach (ReplicationRequest::STATUSES as $status)
-                <option value="{{ $status }}" @selected(request('status') === $status)>{{ ucfirst($status) }}</option>
-            @endforeach
-        </select>
-        <select class="input" name="payment" aria-label="Filter by payment" data-autosubmit>
-            <option value="">All payments</option>
-            @foreach (ReplicationRequest::PAYMENT_LABELS as $value => $label)
-                <option value="{{ $value }}" @selected(request('payment') === $value)>{{ $label }}</option>
-            @endforeach
-        </select>
-        <button type="submit" class="btn btn-secondary"><x-admin.icon name="search" /> Search</button>
-    </form>
-</div>
+<x-admin.filters :action="route('admin.operations.chapter-inquiries.index')" placeholder="Search organization, contact, email or town" label="Search chapter inquiries" :filtered="$hasQuery">
+    <select class="input" name="status" aria-label="Filter by status" data-autosubmit>
+        <option value="">All statuses</option>
+        @foreach (ReplicationRequest::STATUSES as $status)
+            <option value="{{ $status }}" @selected(request('status') === $status)>{{ ucfirst($status) }}</option>
+        @endforeach
+    </select>
+    <select class="input" name="payment" aria-label="Filter by payment" data-autosubmit>
+        <option value="">All payments</option>
+        @foreach (ReplicationRequest::PAYMENT_LABELS as $value => $label)
+            <option value="{{ $value }}" @selected(request('payment') === $value)>{{ $label }}</option>
+        @endforeach
+    </select>
+</x-admin.filters>
 
+<div data-list>
 <div class="table-wrap">
     <table>
         <thead>
             <tr>
                 <th>Organization</th>
                 <th>Location</th>
-                <th>Trainees</th>
-                <th>Fee</th>
+                <th class="num">Trainees</th>
+                <th class="num">Fee</th>
                 <th>Payment</th>
                 <th>Status</th>
                 <th>Submitted</th>
@@ -71,16 +67,12 @@
         </thead>
         <tbody>
             @forelse ($inquiries as $inquiry)
-            @php
-                $initials = collect(preg_split('/\s+/', trim($inquiry->organization)))->filter()->take(2)
-                    ->map(fn ($p) => mb_strtoupper(mb_substr($p, 0, 1)))->implode('');
-            @endphp
             <tr>
                 <td>
                     <div class="cell-user">
-                        <span class="avatar" aria-hidden="true">{{ $initials }}</span>
+                        <x-admin.avatar :name="$inquiry->organization" />
                         <div>
-                            <b><a class="cell-link" href="{{ route('admin.operations.chapter-inquiries.show', $inquiry) }}" title="{{ $inquiry->organization }}">{{ Str::limit($inquiry->organization, 48) }}</a></b>
+                            <b><a class="cell-link" href="{{ route('admin.operations.chapter-inquiries.show', $inquiry) }}" title="{{ $inquiry->organization }}" data-skeleton="detail">{{ Str::limit($inquiry->organization, 48) }}</a></b>
                             <small>{{ Str::limit($inquiry->contact_name, 32) }} &middot; {{ $inquiry->reference }}</small>
                         </div>
                     </div>
@@ -89,8 +81,8 @@
                     {{ $inquiry->municipality }}
                     <small class="sub-line">{{ $inquiry->province }}</small>
                 </td>
-                <td>{{ $inquiry->trainees }}</td>
-                <td>₱{{ number_format((float) $inquiry->amount_php, 2) }}</td>
+                <td class="num">{{ $inquiry->trainees }}</td>
+                <td class="num">₱{{ number_format((float) $inquiry->amount_php, 2) }}</td>
                 <td><span class="pill pill-{{ $inquiry->payment_pill }}">{{ $inquiry->payment_label }}</span></td>
                 <td><span class="pill pill-{{ $inquiry->status_pill }}">{{ $inquiry->status_label }}</span></td>
                 <td>
@@ -99,7 +91,7 @@
                 </td>
                 <td>
                     <div class="row-actions">
-                        <a class="icon-btn" href="{{ route('admin.operations.chapter-inquiries.show', $inquiry) }}" title="View" aria-label="View inquiry from {{ $inquiry->organization }}"><x-admin.icon name="eye" /></a>
+                        <a class="icon-btn" href="{{ route('admin.operations.chapter-inquiries.show', $inquiry) }}" title="View" aria-label="View inquiry from {{ $inquiry->organization }}" data-skeleton="detail"><x-admin.icon name="eye" /></a>
                         @unless ($inquiry->isPaid())
                             <form method="POST" action="{{ route('admin.operations.chapter-inquiries.destroy', $inquiry) }}"
                                   data-confirm-title="Delete this inquiry?"
@@ -114,25 +106,20 @@
                 </td>
             </tr>
             @empty
-            <tr class="is-static">
-                <td colspan="8">
-                    <div class="empty">
-                        <x-admin.icon name="navigation" />
-                        @if ($hasQuery)
-                            <b>No inquiries match</b>
-                            <p>Try a different search, or clear the filters.</p>
-                            <a class="btn btn-secondary btn-sm" href="{{ route('admin.operations.chapter-inquiries.index') }}">Clear filters</a>
-                        @else
-                            <b>No chapter inquiries yet</b>
-                            <p>Inquiries sent from the Replicate Go Bike page will appear here.</p>
-                        @endif
-                    </div>
-                </td>
-            </tr>
+                @if ($hasQuery)
+                    <x-admin.empty :row="8" icon="navigation" title="No inquiries match" :clear="route('admin.operations.chapter-inquiries.index')">
+                        Try a different search, or clear the filters.
+                    </x-admin.empty>
+                @else
+                    <x-admin.empty :row="8" icon="navigation" title="No chapter inquiries yet">
+                        Inquiries sent from the Replicate Go Bike page will appear here.
+                    </x-admin.empty>
+                @endif
             @endforelse
         </tbody>
     </table>
 </div>
 
-{{ $inquiries->links('admin.partials.pagination') }}
+    <x-admin.pager :paginator="$inquiries" noun="inquiry" />
+</div>
 @endsection

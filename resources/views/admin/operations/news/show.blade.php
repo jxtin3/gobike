@@ -9,25 +9,28 @@
         <a class="btn btn-secondary" href="{{ route('news.show', $news->slug) }}" target="_blank" rel="noopener"><x-admin.icon name="external-link" /> View on site</a>
     @endif
     <a class="btn btn-primary" href="{{ route('admin.operations.news.edit', $news) }}"><x-admin.icon name="edit" /> Edit</a>
-    <form method="POST" action="{{ route('admin.operations.news.destroy', $news) }}"
-          data-confirm-title="Delete this post?"
-          data-confirm-text="“{{ Str::limit($news->title, 80) }}” and its image will be permanently deleted."
-          data-confirm-ok="Delete post">
-        @csrf
-        @method('DELETE')
-        <button type="submit" class="btn btn-danger"><x-admin.icon name="trash" /> Delete</button>
-    </form>
 @endsection
 
 @section('content')
-<article class="detail-panel">
+<article class="detail-card detail-narrow">
     @if ($news->image_path)
-        <img class="detail-image" src="{{ \App\Support\Media::url($news->image_path) }}" alt="Image for {{ $news->title }}">
+        <img class="detail-image" decoding="async" src="{{ \App\Support\Media::url($news->image_path) }}" alt="Image for {{ $news->title }}">
     @endif
     <p class="detail-status"><span class="pill pill-{{ $news->status_pill }}">{{ $news->status_label }}</span></p>
     @if ($news->excerpt)
         <p class="detail-lead">{{ $news->excerpt }}</p>
     @endif
     <div class="detail-copy">{!! nl2br(e($news->body)) !!}</div>
+
+    <div class="detail-danger">
+        <form method="POST" action="{{ route('admin.operations.news.destroy', $news) }}"
+              data-confirm-title="Delete this post?"
+              data-confirm-text="“{{ Str::limit($news->title, 80) }}” and its image will be permanently deleted."
+              data-confirm-ok="Delete post">
+            @csrf
+            @method('DELETE')
+            <button type="submit" class="btn btn-danger"><x-admin.icon name="trash" /> Delete post</button>
+        </form>
+    </div>
 </article>
 @endsection

@@ -108,6 +108,7 @@
         const focusedId = document.activeElement?.dataset?.id;
 
         els.riderCount.textContent = visible.length;
+        els.list.removeAttribute('aria-busy'); // the placeholder rows are replaced just below
         // With no GoBikers at all the map overlay explains it; this message is only for filters.
         els.listEmpty.hidden = visible.length > 0 || !loaded || riders.length === 0;
         els.list.innerHTML = visible.map((r) => `
@@ -191,7 +192,13 @@
                 ? 'Live updates are paused. Retrying every 5 seconds.'
                 : 'Unable to load GoBiker locations.';
             els.error.hidden = false;
-            if (!loaded) setOverlay('none');
+            if (!loaded) {
+                setOverlay('none');
+                // Nothing will arrive: don't leave placeholders shimmering next to the error.
+                ['total', 'active', 'responding', 'emergency', 'offline'].forEach((key) => { $(`${key}-count`).textContent = '–'; });
+                els.list.replaceChildren();
+                els.list.removeAttribute('aria-busy');
+            }
         }
     }
 
@@ -290,7 +297,7 @@
                 body: JSON.stringify({ status: action }),
             });
             if (!res.ok) throw new Error(String(res.status));
-            notice(action === 'responding' ? 'Marked as responding.' : 'Emergency resolved.');
+            window.adminToast?.({ text: action === 'responding' ? 'Marked as responding.' : 'Emergency resolved.' });
             // Lets the emergency banner stop the alarm without waiting for its next check.
             document.dispatchEvent(new CustomEvent('gobike:emergencies-changed', { detail: { source: 'map' } }));
             await load();

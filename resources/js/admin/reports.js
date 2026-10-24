@@ -620,17 +620,20 @@
 
     let resizeTimer;
     const widths = { bar: barChart.clientWidth, line: lineChart.clientWidth };
+    const redraw = () => {
+        if (barChart.clientWidth !== widths.bar) {
+            widths.bar = barChart.clientWidth;
+            renderBars(checkups, false);
+        }
+        if (lineChart.clientWidth !== widths.line) {
+            widths.line = lineChart.clientWidth;
+            if (selectedKey) renderLine(vitals[selectedKey], false);
+        }
+    };
     window.addEventListener('resize', () => {
         clearTimeout(resizeTimer);
-        resizeTimer = setTimeout(() => {
-            if (barChart.clientWidth !== widths.bar) {
-                widths.bar = barChart.clientWidth;
-                renderBars(checkups, false);
-            }
-            if (lineChart.clientWidth !== widths.line) {
-                widths.line = lineChart.clientWidth;
-                if (selectedKey) renderLine(vitals[selectedKey], false);
-            }
-        }, 150);
+        resizeTimer = setTimeout(redraw, 150);
     });
+    // The sidebar just collapsed or opened, so the content changed width: draw at the new width straight away.
+    document.addEventListener('gobike:layout', redraw);
 })();

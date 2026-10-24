@@ -1,5 +1,5 @@
 @extends('admin.operations.layout')
-@section('title', 'Messages')
+@section('title', 'Contact messages')
 @section('heading', 'Contact messages')
 @section('subheading', 'Messages sent through the contact form on the website.')
 
@@ -7,14 +7,15 @@
 @php
     $tabs = ['all' => 'All messages', 'unread' => 'Unread', 'read' => 'Read'];
     $currentTab = $statusFilter ?? 'all';
-    $hasQuery = filled(request('search')) || $statusFilter;
+    $searching = filled(request('search'));
+    $hasQuery = $searching || $statusFilter;
 @endphp
 
 <nav class="tabs" aria-label="Filter messages">
     @foreach ($tabs as $key => $label)
         <a href="{{ route('admin.operations.messages.index', array_filter(['status' => $key === 'all' ? null : $key, 'search' => request('search')])) }}"
            class="tab"
-           aria-current="{{ $currentTab === $key ? 'page' : 'false' }}">
+           aria-current="{{ $currentTab === $key ? 'page' : 'false' }}" data-skeleton="rows">
             {{ $label }}
             @if ($key === 'all')
                 <span class="count">{{ number_format($totalCount) }}</span>
@@ -25,14 +26,10 @@
     @endforeach
 </nav>
 
-<div class="toolbar">
-    <form class="search" role="search" method="GET" action="{{ route('admin.operations.messages.index') }}">
-        @if ($statusFilter) <input type="hidden" name="status" value="{{ $statusFilter }}"> @endif
-        <x-admin.icon name="search" />
-        <input class="input" type="search" name="search" value="{{ request('search') }}" placeholder="Search name, email or message" aria-label="Search messages">
-    </form>
-</div>
+<x-admin.filters :action="route('admin.operations.messages.index')" placeholder="Search name, email or message" label="Search messages"
+                 :hidden="['status' => $statusFilter]" :filtered="$searching" />
 
+<div data-list>
 <div class="table-wrap">
     <table>
         <thead>
@@ -86,62 +83,50 @@
                     </td>
                 </tr>
             @empty
-                <tr class="is-static">
-                    <td colspan="6">
-                        <div class="empty">
-                            <x-admin.icon name="inbox" />
-                            @if ($hasQuery)
-                                <b>No messages match</b>
-                                <p>Try a different search, or clear the filters.</p>
-                                <a class="btn btn-secondary btn-sm" href="{{ route('admin.operations.messages.index') }}">Clear filters</a>
-                            @else
-                                <b>No messages yet</b>
-                                <p>Messages sent through the website contact form will appear here.</p>
-                            @endif
-                        </div>
-                    </td>
-                </tr>
+                @if ($hasQuery)
+                    <x-admin.empty :row="6" icon="inbox" title="No messages match these filters" :clear="route('admin.operations.messages.index')">
+                        Try a different search, or clear the filters.
+                    </x-admin.empty>
+                @else
+                    <x-admin.empty :row="6" icon="inbox" title="No messages yet">
+                        Messages sent through the website contact form will appear here.
+                    </x-admin.empty>
+                @endif
             @endforelse
         </tbody>
     </table>
 </div>
 
-{{ $messages->links('admin.partials.pagination') }}
+    <x-admin.pager :paginator="$messages" noun="message" />
+</div>
 
-<dialog id="messageDialog" class="msg-modal" aria-labelledby="message-dialog-title">
-    <div class="msg-inner">
-        <header class="msg-head">
-            <div>
-                <span class="msg-kicker">Contact message</span>
-                <h2 id="message-dialog-title" data-field="name"></h2>
-                <span data-pill-field="status"></span>
-            </div>
-            <button type="button" class="icon-btn" data-dialog-close aria-label="Close"><x-admin.icon name="x" /></button>
-        </header>
+<x-admin.dialog id="messageDialog" kicker="Contact message" field="name">
+    <x-slot:sub><span data-pill-field="status"></span></x-slot:sub>
 
-        <dl class="msg-meta">
-            <div><dt>Email</dt><dd data-field="email"></dd></div>
-            <div><dt>Phone</dt><dd data-field="phone"></dd></div>
-            <div><dt>Topic</dt><dd data-field="topic"></dd></div>
-            <div><dt>Received</dt><dd data-field="received"></dd></div>
-            <div class="msg-meta-wide" data-show-field="otherConcern"><dt>Their concern</dt><dd data-field="otherConcern"></dd></div>
-        </dl>
+    <dl class="dlg-meta">
+        <div><dt>Email</dt><dd data-field="email"></dd></div>
+        <div><dt>Phone</dt><dd data-field="phone"></dd></div>
+        <div><dt>Topic</dt><dd data-field="topic"></dd></div>
+        <div><dt>Received</dt><dd data-field="received"></dd></div>
+        <div class="dlg-meta-wide" data-show-field="otherConcern"><dt>Their concern</dt><dd data-field="otherConcern"></dd></div>
+    </dl>
 
-        <section class="msg-body-wrapper">
-            <h3 class="msg-body-label">Message</h3>
-            <p class="msg-body" data-field="message"></p>
-        </section>
-        <p class="alert error" data-dialog-error role="alert" hidden></p>
+    <section>
+        <h3 class="dlg-label">Message</h3>
+        <p class="dlg-text" data-field="message"></p>
+    </section>
 
-        <footer class="msg-foot">
-            <form method="POST" data-action-field="deleteUrl" data-confirm-field="deleteText"
-                  data-confirm-title="Delete this message?" data-confirm-ok="Delete message">
-                @csrf
-                @method('DELETE')
-                <button type="submit" class="btn btn-danger"><x-admin.icon name="trash" /> Delete</button>
-            </form>
+    <x-slot:foot>
+        <form method="POST" class="dlg-foot-danger" data-action-field="deleteUrl" data-confirm-field="deleteText"
+              data-confirm-title="Delete this message?" data-confirm-ok="Delete message">
+            @csrf
+            @method('DELETE')
+            <button type="submit" class="btn btn-danger"><x-admin.icon name="trash" /> Delete</button>
+        </form>
+        <div class="dlg-foot-main">
+            <button type="button" class="btn btn-secondary" data-dialog-close>Close</button>
             <a class="btn btn-primary" data-href-field="mailto"><x-admin.icon name="mail" /> Reply by email</a>
-        </footer>
-    </div>
-</dialog>
+        </div>
+    </x-slot:foot>
+</x-admin.dialog>
 @endsection

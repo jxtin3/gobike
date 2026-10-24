@@ -30,7 +30,7 @@
             </div>
             <div class="upload-actions">
                 <button type="button" class="btn btn-secondary" id="btn-clear">Clear</button>
-                <button type="button" class="btn btn-primary" id="btn-start-upload"><x-admin.icon name="upload" /> <span>Upload all</span></button>
+                <button type="button" class="btn btn-ok" id="btn-start-upload"><x-admin.icon name="upload" /> <span>Upload all</span></button>
             </div>
         </div>
 
@@ -38,54 +38,52 @@
     </div>
 </section>
 
-@if ($pictures->isEmpty())
-    <div class="card">
-        <div class="empty">
-            <x-admin.icon name="image" />
-            <b>No pictures yet</b>
-            <p>Use the upload box above to add the first photos and videos to the gallery.</p>
-        </div>
-    </div>
-@else
-    <ul class="picture-grid" aria-label="Gallery pictures">
-        @foreach ($pictures as $picture)
-            @php
-                $mediaSrc = \App\Support\Media::url($picture->image_path);
-                $isVideo = $picture->isVideo();
-            @endphp
-            <li class="picture-card">
-                <button type="button" class="picture-card-media" data-lightbox="{{ $mediaSrc }}" data-video="{{ $isVideo ? '1' : '0' }}" data-title="{{ $picture->title }}"
-                        aria-label="Open {{ $isVideo ? 'video' : 'photo' }} {{ $picture->title }}">
-                    @if ($isVideo)
-                        <video src="{{ $mediaSrc }}" preload="metadata" muted playsinline aria-hidden="true"></video>
-                        <span class="picture-card-tag">Video</span>
-                    @else
-                        <img src="{{ $mediaSrc }}" alt="" loading="lazy">
-                    @endif
-                </button>
-                <div class="picture-card-body">
-                    <div>
-                        <b title="{{ $picture->title }}">{{ $picture->title }}</b>
-                        <small class="muted">{{ $picture->created_at->format('M j, Y') }}</small>
+<div data-list>
+    @if ($pictures->isEmpty())
+        <x-admin.empty icon="image" title="No pictures yet" class="empty-card">
+            Use the upload box above to add the first photos and videos to the gallery.
+        </x-admin.empty>
+    @else
+        <ul class="picture-grid" aria-label="Gallery pictures">
+            @foreach ($pictures as $picture)
+                @php
+                    $mediaSrc = \App\Support\Media::url($picture->image_path);
+                    $isVideo = $picture->isVideo();
+                @endphp
+                <li class="picture-card">
+                    <button type="button" class="picture-card-media" data-lightbox="{{ $mediaSrc }}" data-video="{{ $isVideo ? '1' : '0' }}" data-title="{{ $picture->title }}"
+                            aria-label="Open {{ $isVideo ? 'video' : 'photo' }} {{ $picture->title }}">
+                        @if ($isVideo)
+                            <video src="{{ $mediaSrc }}" preload="metadata" muted playsinline aria-hidden="true"></video>
+                            <span class="picture-card-tag">Video</span>
+                        @else
+                            <img src="{{ $mediaSrc }}" alt="" loading="lazy" decoding="async">
+                        @endif
+                    </button>
+                    <div class="picture-card-body">
+                        <div>
+                            <b title="{{ $picture->title }}">{{ $picture->title }}</b>
+                            <small class="muted">{{ $picture->created_at->format('M j, Y') }}</small>
+                        </div>
+                        <div class="row-actions">
+                            <a class="icon-btn" href="{{ route('admin.operations.pictures.show', $picture) }}" title="Details" aria-label="Details for {{ $picture->title }}"><x-admin.icon name="eye" /></a>
+                            <form method="POST" action="{{ route('admin.operations.pictures.destroy', $picture) }}"
+                                  data-confirm-title="Remove this {{ $isVideo ? 'video' : 'photo' }}?"
+                                  data-confirm-text="“{{ Str::limit($picture->title, 60) }}” will be removed from the gallery and deleted."
+                                  data-confirm-ok="Remove">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="icon-btn danger" title="Remove" aria-label="Remove {{ $picture->title }}"><x-admin.icon name="trash" /></button>
+                            </form>
+                        </div>
                     </div>
-                    <div class="row-actions">
-                        <a class="icon-btn" href="{{ route('admin.operations.pictures.show', $picture) }}" title="Details" aria-label="Details for {{ $picture->title }}"><x-admin.icon name="eye" /></a>
-                        <form method="POST" action="{{ route('admin.operations.pictures.destroy', $picture) }}"
-                              data-confirm-title="Remove this {{ $isVideo ? 'video' : 'photo' }}?"
-                              data-confirm-text="“{{ Str::limit($picture->title, 60) }}” will be removed from the gallery and deleted."
-                              data-confirm-ok="Remove">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="icon-btn danger" title="Remove" aria-label="Remove {{ $picture->title }}"><x-admin.icon name="trash" /></button>
-                        </form>
-                    </div>
-                </div>
-            </li>
-        @endforeach
-    </ul>
+                </li>
+            @endforeach
+        </ul>
 
-    {{ $pictures->links('admin.partials.pagination') }}
-@endif
+        <x-admin.pager :paginator="$pictures" noun="picture" />
+    @endif
+</div>
 
 <dialog class="lightbox" id="lightbox" aria-label="Picture viewer">
     <button type="button" class="icon-btn lightbox-close" data-lightbox-close aria-label="Close viewer"><x-admin.icon name="x" /></button>

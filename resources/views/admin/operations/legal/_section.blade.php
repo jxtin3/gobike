@@ -4,7 +4,7 @@
             Section <span class="sec-num">{{ is_int($index) ? $index + 1 : '' }}</span>
         </div>
         <div class="section-tools">
-            <button type="button" class="legal-tool-btn danger btn-delete-section">
+            <button type="button" class="btn btn-danger btn-sm btn-delete-section">
                 <x-admin.icon name="trash" /> Remove
             </button>
         </div>

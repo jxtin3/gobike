@@ -3,7 +3,7 @@
 @section('heading', 'Analytics dashboard')
 @section('subheading', 'Patient check-ups and vital sign readings recorded by GoBikers.')
 @section('actions')
-    <form class="analytics-title-filter" method="GET" action="{{ route('admin.dashboard') }}">
+    <form class="analytics-title-filter" method="GET" action="{{ route('admin.dashboard') }}" data-skeleton="dashboard">
         <label for="dashboard-month">Month</label>
         <select id="dashboard-month" class="input" name="month" data-autosubmit>
             <option value="">All months</option>
