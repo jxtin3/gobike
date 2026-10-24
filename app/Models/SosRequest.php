@@ -1,0 +1,92 @@
+<?php
+
+namespace App\Models;
+
+use App\Support\Media;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+
+/** An emergency request a resident sent with the SOS button. */
+class SosRequest extends Model
+{
+    public const STATUSES = [
+        'sent' => 'Waiting for response',
+        'responding' => 'Responding',
+        'resolved' => 'Resolved',
+    ];
+
+    /** Which statuses an admin may move a request to from each status. */
+    public const NEXT = [
+        'sent' => ['responding', 'resolved'],
+        'responding' => ['resolved'],
+        'resolved' => [],
+    ];
+
+    protected $fillable = [
+        'user_id', 'municipality', 'barangay', 'landmark', 'description',
+        'latitude', 'longitude', 'image_path', 'video_path',
+        'status', 'handled_by', 'responded_at', 'resolved_at',
+    ];
+
+    protected function casts(): array
+    {
+        return [
+            'latitude' => 'float',
+            'longitude' => 'float',
+            'responded_at' => 'datetime',
+            'resolved_at' => 'datetime',
+        ];
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function handler(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'handled_by');
+    }
+
+    /** Requests no admin has answered yet: these ring the alarm. */
+    public function scopeUnanswered(Builder $query): Builder
+    {
+        return $query->where('status', 'sent');
+    }
+
+    /** Requests still being handled (not resolved). */
+    public function scopeOpen(Builder $query): Builder
+    {
+        return $query->whereIn('status', ['sent', 'responding']);
+    }
+
+    public function canMoveTo(string $status): bool
+    {
+        return in_array($status, self::NEXT[$this->status] ?? [], true);
+    }
+
+    public function getStatusLabelAttribute(): string
+    {
+        return self::STATUSES[$this->status] ?? ucfirst($this->status);
+    }
+
+    public function getImageUrlAttribute(): ?string
+    {
+        return Media::url($this->image_path);
+    }
+
+    public function getVideoUrlAttribute(): ?string
+    {
+        return Media::url($this->video_path);
+    }
+
+    public function getMapUrlAttribute(): ?string
+    {
+        if ($this->latitude === null || $this->longitude === null) {
+            return null;
+        }
+
+        return 'https://www.google.com/maps/search/?api=1&query='.$this->latitude.','.$this->longitude;
+    }
+}

@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\GobikerProfileController;
 use App\Http\Controllers\Api\MobileAuthController;
 use App\Http\Controllers\Api\PatientController;
 use App\Http\Controllers\Api\ResidentController;
+use App\Http\Controllers\Api\ResidentSosController;
 use Illuminate\Support\Facades\Route;
 
 // Go Biker mobile authentication
@@ -90,4 +91,9 @@ Route::middleware(['auth:sanctum', 'gobiker', 'throttle:mobile'])->prefix('gobik
 Route::middleware(['auth:sanctum', 'resident', 'throttle:mobile'])->prefix('resident')->group(function () {
     Route::put('/profile', [ResidentController::class, 'updateProfile'])->name('api.resident.profile.update');
     Route::get('/visits', [ResidentController::class, 'visits'])->name('api.resident.visits');
+
+    Route::get('/sos', [ResidentSosController::class, 'index'])->name('api.resident.sos.index');
+    // Few per minute, so a stuck button or a prank can't flood the admin alarm.
+    Route::post('/sos', [ResidentSosController::class, 'store'])->middleware('throttle:3,1')->name('api.resident.sos.store');
+    Route::post('/sos/{sos}/media', [ResidentSosController::class, 'media'])->middleware('throttle:10,1')->name('api.resident.sos.media');
 });

@@ -70,6 +70,12 @@
                 </x-admin.side-link>
             </li>
             <li>
+                <x-admin.side-link :href="route('admin.operations.sos.index')" icon="alert-triangle" label="Resident SOS" :match="['admin.operations.sos.*']" skeleton="rows">
+                    {{-- Always rendered: resources/js/admin/emergency-alert.js updates it as requests come in. --}}
+                    <span class="badge badge-bad" data-nav-badge="sos"@if (! ($navSos ?? 0)) hidden @endif><span class="count-num">{{ number_format($navSos ?? 0) }}</span><span class="sr-only"> SOS requests waiting for a response</span></span>
+                </x-admin.side-link>
+            </li>
+            <li>
                 <x-admin.side-link :href="route('admin.operations.messages.index')" icon="mail" label="Messages" :match="['admin.operations.messages.*']">
                     <x-admin.nav-badge :count="$navUnread ?? 0" tone="brand" label="unread" name="messages" />
                 </x-admin.side-link>

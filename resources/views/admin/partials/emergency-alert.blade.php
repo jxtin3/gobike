@@ -1,7 +1,7 @@
 {{--
     Emergency alerts on every admin page. resources/js/admin/emergency-alert.js polls
-    admin.emergencies.index, fills this in, loops the alarm and flashes the tab title until
-    each emergency is marked "Responding" or resolved.
+    admin.emergencies.index (GoBiker emergencies and residents' SOS requests), fills this in, loops
+    the alarm and flashes the tab title until each one is marked "Responding" or resolved.
 --}}
 <div class="emer-wrap" id="emergency-alert"
      data-url="{{ route('admin.emergencies.index') }}"
@@ -38,7 +38,7 @@
             </div>
             <div class="emer-actions">
                 <a class="btn btn-sm emer-btn" data-field-href="call"><x-admin.icon name="phone-call" /> <span data-field="mobile"></span></a>
-                <a class="btn btn-sm emer-btn" data-field-href="map" data-emer-map><x-admin.icon name="map" /> Show on map</a>
+                <a class="btn btn-sm emer-btn" data-field-href="map" data-emer-map><x-admin.icon name="map" /> <span data-field="open-label">Show on map</span></a>
                 <button type="button" class="btn btn-sm emer-respond" data-emer-respond>Responding</button>
             </div>
         </li>

@@ -1,6 +1,7 @@
 /*
  * Emergency alerts on every admin page (markup: admin/partials/emergency-alert.blade.php).
- * Polls for GoBiker emergencies nobody has answered yet, then shows a banner, loops the alarm,
+ * Polls for GoBiker emergencies and residents' SOS requests nobody has answered yet
+ * (kind "gobiker" / "resident"), then shows a banner, loops the alarm,
  * flashes the tab title, sends a desktop notification and updates the sidebar badge.
  * The alarm stops once each emergency is marked "Responding" or resolved, or is silenced here.
  */
@@ -26,6 +27,7 @@
         announce: $('[data-emer-announce]'),
         row: $('[data-emer-row]'),
         badge: document.querySelector('[data-nav-badge="emergencies"]'),
+        sosBadge: document.querySelector('[data-nav-badge="sos"]'),
         controls: document.querySelector('[data-alarm-controls]'),
     };
     const controls = {
@@ -75,6 +77,12 @@
 
     const ringing = () => (stopped ? [] : emergencies.filter((e) => !silenced.has(e.key)));
     const mapHref = (id) => `${root.dataset.mapUrl}?focus=${encodeURIComponent(id)}`;
+    const isResident = (e) => e.kind === 'resident';
+    // A resident's SOS opens its request page; a GoBiker's emergency opens the live map.
+    const openEmergency = (e) => {
+        if (isResident(e)) window.location.href = e.view_url;
+        else showOnMap(e.location_id);
+    };
 
     const ago = (iso) => {
         if (!iso) return 'recently';
@@ -180,10 +188,15 @@
     }
 
     function syncBadge() {
-        if (!els.badge) return;
-        els.badge.hidden = emergencies.length === 0;
-        const count = $('.count-num', els.badge);
-        if (count) count.textContent = new Intl.NumberFormat().format(emergencies.length);
+        const setBadge = (badge, n) => {
+            if (!badge) return;
+            badge.hidden = n === 0;
+            const count = $('.count-num', badge);
+            if (count) count.textContent = new Intl.NumberFormat().format(n);
+        };
+        const residents = emergencies.filter(isResident).length;
+        setBadge(els.badge, emergencies.length - residents);
+        setBadge(els.sosBadge, residents);
     }
 
     function notify() {
@@ -199,14 +212,16 @@
 
         fresh.forEach((e) => {
             try {
-                const n = new Notification(`Emergency: ${e.name}`, {
-                    body: `${e.barangay || 'No barangay assigned'}. Open the live map to respond.`,
+                const n = new Notification(isResident(e) ? `SOS: ${e.name}` : `Emergency: ${e.name}`, {
+                    body: isResident(e)
+                        ? `${e.barangay || 'No location given'}. Open the request to respond.`
+                        : `${e.barangay || 'No barangay assigned'}. Open the live map to respond.`,
                     tag: `gobike-emergency-${e.key}`,
                     requireInteraction: true,
                 });
                 n.onclick = () => {
                     window.focus();
-                    showOnMap(e.location_id);
+                    openEmergency(e);
                     n.close();
                 };
             } catch {
@@ -220,8 +235,8 @@
     function buildRow(e) {
         const li = els.row.content.firstElementChild.cloneNode(true);
         li.dataset.key = e.key;
-        $('[data-field="name"]', li).textContent = e.name;
-        $('[data-field="barangay"]', li).textContent = e.barangay || 'No barangay assigned';
+        $('[data-field="name"]', li).textContent = isResident(e) ? `SOS from ${e.name} (resident)` : e.name;
+        $('[data-field="barangay"]', li).textContent = e.barangay || (isResident(e) ? 'No location given' : 'No barangay assigned');
         $('[data-field="ago"]', li).dateTime = e.since ?? '';
 
         const call = $('[data-field-href="call"]', li);
@@ -234,11 +249,17 @@
         }
 
         const map = $('[data-field-href="map"]', li);
-        map.href = mapHref(e.location_id);
-        map.dataset.locationId = e.location_id;
-
         const respond = $('[data-emer-respond]', li);
-        respond.dataset.locationId = e.location_id;
+        if (isResident(e)) {
+            map.href = e.view_url;
+            delete map.dataset.emerMap;
+            $('[data-field="open-label"]', map).textContent = 'Open request';
+            respond.dataset.respondUrl = e.respond_url;
+        } else {
+            map.href = mapHref(e.location_id);
+            map.dataset.locationId = e.location_id;
+            respond.dataset.respondUrl = `${root.dataset.locationsUrl}/${encodeURIComponent(e.location_id)}/status`;
+        }
         respond.setAttribute('aria-label', `Mark ${e.name} as responding`);
 
         return li;
@@ -456,7 +477,7 @@
     async function respond(button) {
         button.disabled = true;
         try {
-            const res = await fetch(`${root.dataset.locationsUrl}/${encodeURIComponent(button.dataset.locationId)}/status`, {
+            const res = await fetch(button.dataset.respondUrl, {
                 method: 'PATCH',
                 headers: {
                     Accept: 'application/json',

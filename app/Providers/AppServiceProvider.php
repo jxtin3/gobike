@@ -6,6 +6,7 @@ use App\Models\ContactMessage;
 use App\Models\GobikerMessage;
 use App\Models\Location;
 use App\Models\ReplicationRequest;
+use App\Models\SosRequest;
 use App\Models\TrainingRequest;
 use App\Models\User;
 use App\Models\VolunteerApplication;
@@ -56,6 +57,7 @@ class AppServiceProvider extends ServiceProvider
         View::composer('admin.partials.sidebar', function ($view) {
             $view->with([
                 'navEmergencies' => Location::unansweredEmergencies()->count(),
+                'navSos' => SosRequest::unanswered()->count(),
                 'navPending' => User::pendingApproval()->count(),
                 'navUnread' => ContactMessage::where('is_read', false)->count(),
                 'navGobikerUnread' => GobikerMessage::where('is_read', false)->count(),

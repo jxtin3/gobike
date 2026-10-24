@@ -16,6 +16,7 @@ use App\Http\Controllers\Admin\PatientFollowUpController;
 use App\Http\Controllers\Admin\PictureController;
 use App\Http\Controllers\Admin\ProfileController;
 use App\Http\Controllers\Admin\ReplicationRequestController as AdminReplicationRequestController;
+use App\Http\Controllers\Admin\SosRequestController;
 use App\Http\Controllers\Admin\TrainingRequestController as AdminTrainingRequestController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Admin\VolunteerApplicationController as AdminVolunteerController;
@@ -183,6 +184,11 @@ Route::middleware([EnsureAdmin::class, AuthenticateSession::class])->prefix('adm
         Route::get('/gobiker-messages', [GobikerMessageController::class, 'index'])->name('gobiker-messages.index');
         Route::patch('/gobiker-messages/{message}/read', [GobikerMessageController::class, 'markRead'])->name('gobiker-messages.read');
         Route::delete('/gobiker-messages/{message}', [GobikerMessageController::class, 'destroy'])->name('gobiker-messages.destroy');
+
+        // residents' SOS requests
+        Route::get('/sos', [SosRequestController::class, 'index'])->name('sos.index');
+        Route::get('/sos/{sos}', [SosRequestController::class, 'show'])->name('sos.show');
+        Route::patch('/sos/{sos}/status', [SosRequestController::class, 'updateStatus'])->name('sos.status');
 
         // patients
         Route::get('/patients', [AdminPatientController::class, 'index'])->name('patients.index');
