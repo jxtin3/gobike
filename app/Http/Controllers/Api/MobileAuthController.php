@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\DeviceToken;
 use App\Models\User;
+use App\Services\Push\PushNotifier;
 use Google\Client as GoogleClient;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -114,6 +116,7 @@ class MobileAuthController extends Controller
             // Google has now proven who owns it, so cut off whoever set that password.
             if (! $user->google_id && ! $user->email_verified_at && ! $user->is_admin) {
                 $user->password = Str::random(40);
+                $user->has_password = false;
                 $user->tokens()->delete();
             }
 
@@ -126,6 +129,7 @@ class MobileAuthController extends Controller
                 'email' => $email,
                 'google_id' => $googleId,
                 'password' => Str::random(40), // nobody knows it; Google users sign in with Google
+                'has_password' => false,
                 'role' => 'User',
                 'status' => 'Active',
                 'is_admin' => false,
@@ -148,21 +152,69 @@ class MobileAuthController extends Controller
         ]);
     }
 
-    /** Any signed-in mobile user. Other phones are signed out; this one stays signed in. */
+    /**
+     * Any signed-in mobile user. Other phones are signed out; this one stays signed in.
+     * A Google sign-in account has no password of its own yet, so it sets one without a current one.
+     */
     public function updatePassword(Request $request): JsonResponse
     {
-        $data = $request->validate([
-            'current_password' => ['required', 'string', 'current_password'],
-            'password' => ['required', 'string', 'min:8', 'max:100', 'confirmed', 'different:current_password'],
-        ]);
-
         /** @var User $user */
         $user = $request->user();
+
+        // Unknown (not loaded) counts as having one: only Google accounts are marked false.
+        $data = $request->validate(($user->has_password ?? true) ? [
+            'current_password' => ['required', 'string', 'current_password'],
+            'password' => ['required', 'string', 'min:8', 'max:100', 'confirmed', 'different:current_password'],
+        ] : [
+            'password' => ['required', 'string', 'min:8', 'max:100', 'confirmed'],
+        ]);
+
         $user->password = $data['password']; // hashed automatically by the model
+        $user->has_password = true;
         $user->save();
         $user->logoutOtherDevices();
 
-        return response()->json(['message' => 'Password changed successfully.']);
+        return response()->json([
+            'message' => 'Password changed successfully.',
+            'user' => self::userPayload($user),
+        ]);
+    }
+
+    /** The phone's Firebase token, so this user gets push notifications on it. */
+    public function storeDeviceToken(Request $request): JsonResponse
+    {
+        $data = $request->validate(['token' => ['required', 'string', 'max:512']]);
+
+        // A phone can change hands (logout, another account logs in): the token moves with it.
+        DeviceToken::updateOrCreate(['token' => $data['token']], ['user_id' => $request->user()->id]);
+
+        return response()->json(['message' => 'Device registered.']);
+    }
+
+    /** Called on logout so the phone stops getting this user's notifications. */
+    public function destroyDeviceToken(Request $request): JsonResponse
+    {
+        $data = $request->validate(['token' => ['required', 'string', 'max:512']]);
+        DeviceToken::where('user_id', $request->user()->id)->where('token', $data['token'])->delete();
+
+        return response()->json(['message' => 'Device removed.']);
+    }
+
+    /** The resident's notification switches from the app. */
+    public function updateNotificationPrefs(Request $request): JsonResponse
+    {
+        $rules = [];
+        foreach (array_keys(PushNotifier::PREFS) as $key) {
+            $rules[$key] = ['sometimes', 'boolean'];
+        }
+        $data = $request->validate($rules);
+
+        /** @var User $user */
+        $user = $request->user();
+        $user->notification_prefs = array_merge($user->notificationPrefs(), array_map('boolval', $data));
+        $user->save();
+
+        return response()->json(['notification_prefs' => $user->notificationPrefs()]);
     }
 
     public function logout(Request $request): JsonResponse
@@ -209,6 +261,9 @@ class MobileAuthController extends Controller
             'role' => $user->role,
             // Ronda days and hours set by the admin (GoBikers only; null when not set).
             'schedule' => $user->role === 'GoBiker' ? $user->schedule() : null,
+            // False for Google sign-in accounts: the app offers "Set a password" instead of "Change".
+            'has_password' => (bool) ($user->has_password ?? true),
+            'notification_prefs' => $user->notificationPrefs(),
         ];
     }
 }

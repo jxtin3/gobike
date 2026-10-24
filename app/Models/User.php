@@ -3,6 +3,7 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Services\Push\PushNotifier;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
@@ -15,7 +16,7 @@ use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Laravel\Sanctum\PersonalAccessToken;
 
-#[Fillable(['name', 'email', 'password', 'role', 'status', 'mobile', 'barangay', 'google_id', 'schedule_days', 'schedule_start', 'schedule_end'])]
+#[Fillable(['name', 'email', 'password', 'role', 'status', 'mobile', 'barangay', 'google_id', 'schedule_days', 'schedule_start', 'schedule_end', 'has_password', 'notification_prefs'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -58,6 +59,14 @@ class User extends Authenticatable
             'start' => substr($this->schedule_start, 0, 5),
             'end' => substr($this->schedule_end, 0, 5),
         ];
+    }
+
+    /** Which push notifications this user wants: the app's switches over the defaults. */
+    public function notificationPrefs(): array
+    {
+        $saved = array_intersect_key($this->notification_prefs ?? [], PushNotifier::PREFS);
+
+        return array_map('boolval', $saved + PushNotifier::PREFS);
     }
 
     // A GoBiker who signed up in the mobile app and is waiting for admin approval.
@@ -107,6 +116,8 @@ class User extends Authenticatable
             'password' => 'hashed',
             'is_admin' => 'boolean',
             'schedule_days' => 'array',
+            'has_password' => 'boolean',
+            'notification_prefs' => 'array',
         ];
     }
 }

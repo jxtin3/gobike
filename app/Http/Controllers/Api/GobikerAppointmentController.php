@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Appointment;
 use App\Models\Patient;
 use App\Models\User;
+use App\Services\Push\PushNotifier;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -67,9 +68,12 @@ class GobikerAppointmentController extends Controller
             return response()->json(['message' => 'Another GoBiker already accepted this request, or it was cancelled.'], 409);
         }
 
+        $appointment = $appointment->fresh(['resident', 'gobiker']);
+        app(PushNotifier::class)->appointmentChanged($appointment);
+
         return response()->json([
             'message' => 'Visit accepted.',
-            'appointment' => $appointment->fresh(['resident:id,name,mobile', 'gobiker:id,name'])->toApi(true),
+            'appointment' => $appointment->toApi(true),
         ]);
     }
 
@@ -96,9 +100,12 @@ class GobikerAppointmentController extends Controller
             'patient_id' => $data['patient_id'] ?? null,
         ]);
 
+        $appointment = $appointment->fresh(['resident', 'gobiker']);
+        app(PushNotifier::class)->appointmentChanged($appointment);
+
         return response()->json([
             'message' => 'Visit marked as done.',
-            'appointment' => $appointment->fresh(['resident:id,name,mobile', 'gobiker:id,name'])->toApi(true),
+            'appointment' => $appointment->toApi(true),
         ]);
     }
 }

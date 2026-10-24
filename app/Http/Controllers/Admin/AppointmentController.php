@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Appointment;
 use App\Models\User;
+use App\Services\Push\PushNotifier;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -75,6 +76,9 @@ class AppointmentController extends Controller
             'gobiker_id' => $data['gobiker_id'],
             'accepted_at' => $appointment->accepted_at ?? now(),
         ]);
+        $appointment = $appointment->fresh(['resident', 'gobiker']);
+        app(PushNotifier::class)->appointmentChanged($appointment);
+        app(PushNotifier::class)->appointmentAssigned($appointment);
 
         return back()->with('success', 'GoBiker assigned. They will see the visit in the app.');
     }
@@ -90,6 +94,7 @@ class AppointmentController extends Controller
         }
 
         $appointment->update(['status' => 'declined', 'decline_note' => $data['decline_note']]);
+        app(PushNotifier::class)->appointmentChanged($appointment->fresh(['resident', 'gobiker']));
 
         return back()->with('success', 'Request declined. The resident will see your note in the app.');
     }

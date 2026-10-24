@@ -34,6 +34,12 @@ Route::get('/mobile/me', [
     'me',
 ])->middleware(['auth:sanctum', 'throttle:mobile']);
 
+Route::middleware(['auth:sanctum', 'throttle:mobile'])->group(function () {
+    Route::post('/mobile/device-token', [MobileAuthController::class, 'storeDeviceToken'])->name('api.mobile.device-token.store');
+    Route::delete('/mobile/device-token', [MobileAuthController::class, 'destroyDeviceToken'])->name('api.mobile.device-token.destroy');
+    Route::put('/mobile/notification-preferences', [MobileAuthController::class, 'updateNotificationPrefs'])->name('api.mobile.notification-prefs');
+});
+
 Route::put('/mobile/password', [
     MobileAuthController::class,
     'updatePassword',

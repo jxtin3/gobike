@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Location;
+use App\Services\Push\PushNotifier;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -68,6 +69,9 @@ class LocationController extends Controller
             // Resolved: the next emergency from this GoBiker starts fresh.
             'emergency_at' => $data['status'] === 'active' ? null : $location->emergency_at,
         ]);
+        if ($location->user) {
+            app(PushNotifier::class)->emergencyAnswered($location->user, $data['status']);
+        }
 
         return response()->json(['message' => 'Status updated.', 'status' => $data['status']]);
     }

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\SosRequest;
+use App\Services\Push\PushNotifier;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -84,6 +85,7 @@ class SosRequestController extends Controller
             $sos->resolved_at = now();
         }
         $sos->save();
+        app(PushNotifier::class)->sosStatusChanged($sos->load('user'));
 
         return $request->expectsJson()
             ? response()->json(['status' => $sos->status])

@@ -45,4 +45,11 @@ return [
        'client_id' => env('GOOGLE_WEB_CLIENT_ID'),
    ],
 
+    // Push notifications to the RondaGo app (Firebase Cloud Messaging, HTTP v1).
+    'fcm' => [
+        'project_id' => env('FIREBASE_PROJECT_ID'),
+        // The service-account JSON from Firebase > Project settings > Service accounts (plain or base64).
+        'credentials' => env('FIREBASE_CREDENTIALS'),
+    ],
+
 ];

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Appointment;
+use App\Services\Push\PushNotifier;
 use App\Support\Barangays;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -48,6 +49,7 @@ class ResidentAppointmentController extends Controller
             'resident_id' => $resident->id,
             'status' => 'pending',
         ]);
+        app(PushNotifier::class)->newAppointmentRequest($appointment);
 
         return response()->json([
             'message' => 'Visit requested. A GoBiker in your barangay will accept it soon.',

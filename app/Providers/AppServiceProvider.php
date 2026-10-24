@@ -22,7 +22,7 @@ class AppServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        //
+        $this->app->bind(\App\Services\Push\FcmSender::class, \App\Services\Push\GoogleFcmSender::class);
     }
 
     public function boot(): void

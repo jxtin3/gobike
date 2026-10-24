@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Patient;
 use App\Models\PatientFollowUp;
+use App\Services\Push\PushNotifier;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -35,6 +36,7 @@ class PatientController extends Controller
             'user_id' => $request->user()->id,
             'recorded_at' => now(),
         ]);
+        app(PushNotifier::class)->checkupSaved($patient, updated: false);
 
         return response()->json([
             'message' => 'Patient record saved.',
@@ -46,6 +48,7 @@ class PatientController extends Controller
     {
         $this->authorizeOwner($request, $patient);
         $patient->update($this->validated($request));
+        app(PushNotifier::class)->checkupSaved($patient, updated: true);
 
         return response()->json([
             'message' => 'Patient record updated.',
