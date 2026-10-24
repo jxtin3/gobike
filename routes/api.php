@@ -1,11 +1,13 @@
 <?php
 
 use App\Http\Controllers\Api\GobikerAnnouncementController;
+use App\Http\Controllers\Api\GobikerAppointmentController;
 use App\Http\Controllers\Api\GobikerController;
 use App\Http\Controllers\Api\GobikerLocationController;
 use App\Http\Controllers\Api\GobikerProfileController;
 use App\Http\Controllers\Api\MobileAuthController;
 use App\Http\Controllers\Api\PatientController;
+use App\Http\Controllers\Api\ResidentAppointmentController;
 use App\Http\Controllers\Api\ResidentController;
 use App\Http\Controllers\Api\ResidentSosController;
 use Illuminate\Support\Facades\Route;
@@ -85,6 +87,10 @@ Route::middleware(['auth:sanctum', 'gobiker', 'throttle:mobile'])->prefix('gobik
     Route::put('/patients/{patient}', [PatientController::class, 'update'])->name('api.gobiker.patients.update');
     Route::delete('/patients/{patient}', [PatientController::class, 'destroy'])->name('api.gobiker.patients.destroy');
 
+    Route::get('/appointments', [GobikerAppointmentController::class, 'index'])->name('api.gobiker.appointments.index');
+    Route::post('/appointments/{appointment}/accept', [GobikerAppointmentController::class, 'accept'])->name('api.gobiker.appointments.accept');
+    Route::post('/appointments/{appointment}/complete', [GobikerAppointmentController::class, 'complete'])->name('api.gobiker.appointments.complete');
+
 });
 
 // Residents (role "User")
@@ -96,4 +102,8 @@ Route::middleware(['auth:sanctum', 'resident', 'throttle:mobile'])->prefix('resi
     // Few per minute, so a stuck button or a prank can't flood the admin alarm.
     Route::post('/sos', [ResidentSosController::class, 'store'])->middleware('throttle:3,1')->name('api.resident.sos.store');
     Route::post('/sos/{sos}/media', [ResidentSosController::class, 'media'])->middleware('throttle:10,1')->name('api.resident.sos.media');
+
+    Route::get('/appointments', [ResidentAppointmentController::class, 'index'])->name('api.resident.appointments.index');
+    Route::post('/appointments', [ResidentAppointmentController::class, 'store'])->middleware('throttle:5,1')->name('api.resident.appointments.store');
+    Route::post('/appointments/{appointment}/cancel', [ResidentAppointmentController::class, 'cancel'])->name('api.resident.appointments.cancel');
 });

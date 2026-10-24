@@ -207,6 +207,8 @@ class MobileAuthController extends Controller
             'mobile' => $user->mobile,
             'barangay' => $user->barangay,
             'role' => $user->role,
+            // Ronda days and hours set by the admin (GoBikers only; null when not set).
+            'schedule' => $user->role === 'GoBiker' ? $user->schedule() : null,
         ];
     }
 }

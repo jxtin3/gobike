@@ -39,6 +39,7 @@ it('updates the authenticated GoBiker profile', function () {
                 'mobile' => '09123456789',
                 'barangay' => 'Poblacion',
                 'role' => 'GoBiker',
+                'schedule' => null,
             ],
         ]);
 

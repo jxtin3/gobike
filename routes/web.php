@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\AnnouncementController;
+use App\Http\Controllers\Admin\AppointmentController;
 use App\Http\Controllers\Admin\ContactMessageController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\DonationController as AdminDonationController;
@@ -184,6 +185,12 @@ Route::middleware([EnsureAdmin::class, AuthenticateSession::class])->prefix('adm
         Route::get('/gobiker-messages', [GobikerMessageController::class, 'index'])->name('gobiker-messages.index');
         Route::patch('/gobiker-messages/{message}/read', [GobikerMessageController::class, 'markRead'])->name('gobiker-messages.read');
         Route::delete('/gobiker-messages/{message}', [GobikerMessageController::class, 'destroy'])->name('gobiker-messages.destroy');
+
+        // residents' home-visit requests
+        Route::get('/appointments', [AppointmentController::class, 'index'])->name('appointments.index');
+        Route::get('/appointments/{appointment}', [AppointmentController::class, 'show'])->name('appointments.show');
+        Route::patch('/appointments/{appointment}/assign', [AppointmentController::class, 'assign'])->name('appointments.assign');
+        Route::patch('/appointments/{appointment}/decline', [AppointmentController::class, 'decline'])->name('appointments.decline');
 
         // residents' SOS requests
         Route::get('/sos', [SosRequestController::class, 'index'])->name('sos.index');

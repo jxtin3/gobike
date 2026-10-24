@@ -43,14 +43,7 @@ class GobikerProfileController extends Controller
 
         return response()->json([
             'message' => 'Profile updated successfully.',
-            'user' => [
-                'id' => $user->id,
-                'name' => $user->name,
-                'email' => $user->email,
-                'mobile' => $user->mobile,
-                'barangay' => $user->barangay,
-                'role' => $user->role,
-            ],
+            'user' => MobileAuthController::userPayload($user),
         ]);
     }
 }

@@ -62,6 +62,41 @@
         </div>
     </fieldset>
 
+    @if ($user)
+        @php
+            $days = old('schedule_days', $user->schedule_days ?? []);
+            $time = fn ($v) => $v ? substr($v, 0, 5) : '';
+        @endphp
+        <fieldset class="form-section" aria-describedby="schedule-hint">
+            <legend>Ronda schedule <span class="muted">(GoBikers only)</span></legend>
+            <p class="hint" id="schedule-hint">Shown on the GoBiker's dashboard in the app. Leave every day unticked for no schedule.</p>
+            <div class="field">
+                <span class="field-title" id="schedule-days-label">Days</span>
+                <div class="day-picks" role="group" aria-labelledby="schedule-days-label">
+                    @foreach (\App\Models\User::SCHEDULE_DAYS as $day)
+                        <label class="check-row">
+                            <input type="checkbox" name="schedule_days[]" value="{{ $day }}" @checked(in_array($day, $days, true))>
+                            <span>{{ $day }}</span>
+                        </label>
+                    @endforeach
+                </div>
+                <x-admin.field-error name="schedule_days" />
+            </div>
+            <div class="grid-2">
+                <div class="field">
+                    <label for="schedule_start">Starts</label>
+                    <input class="input @error('schedule_start') is-invalid @enderror" id="schedule_start" type="time" name="schedule_start" value="{{ old('schedule_start', $time($user->schedule_start)) }}" aria-describedby="schedule_start-error">
+                    <x-admin.field-error name="schedule_start" />
+                </div>
+                <div class="field">
+                    <label for="schedule_end">Ends</label>
+                    <input class="input @error('schedule_end') is-invalid @enderror" id="schedule_end" type="time" name="schedule_end" value="{{ old('schedule_end', $time($user->schedule_end)) }}" aria-describedby="schedule_end-error">
+                    <x-admin.field-error name="schedule_end" />
+                </div>
+            </div>
+        </fieldset>
+    @endif
+
     <div class="form-actions">
         <button class="btn btn-ok" type="submit"><x-admin.icon name="check" /> {{ $button }}</button>
         <a class="btn btn-secondary" href="{{ $user ? route('admin.operations.users.show', $user) : route('admin.operations.users.index') }}">Cancel</a>

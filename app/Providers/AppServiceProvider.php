@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Models\Appointment;
 use App\Models\ContactMessage;
 use App\Models\GobikerMessage;
 use App\Models\Location;
@@ -58,6 +59,7 @@ class AppServiceProvider extends ServiceProvider
             $view->with([
                 'navEmergencies' => Location::unansweredEmergencies()->count(),
                 'navSos' => SosRequest::unanswered()->count(),
+                'navAppointmentsPending' => Appointment::where('status', 'pending')->count(),
                 'navPending' => User::pendingApproval()->count(),
                 'navUnread' => ContactMessage::where('is_read', false)->count(),
                 'navGobikerUnread' => GobikerMessage::where('is_read', false)->count(),

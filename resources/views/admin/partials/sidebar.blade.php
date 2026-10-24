@@ -18,6 +18,8 @@
                 ['route' => 'admin.operations.volunteers.index', 'match' => ['admin.operations.volunteers.*'], 'icon' => 'user-plus', 'label' => 'Volunteers', 'skeleton' => 'table',
                     'badge' => ['count' => $navVolunteersPending ?? 0, 'tone' => 'warn', 'label' => 'pending review', 'name' => 'volunteers']],
                 ['route' => 'admin.operations.patients.index', 'match' => ['admin.operations.patients.*'], 'icon' => 'activity', 'label' => 'Patients', 'skeleton' => 'table'],
+                ['route' => 'admin.operations.appointments.index', 'match' => ['admin.operations.appointments.*'], 'icon' => 'clock', 'label' => 'Appointments', 'skeleton' => 'table',
+                    'badge' => ['count' => $navAppointmentsPending ?? 0, 'tone' => 'warn', 'label' => 'waiting for a GoBiker', 'name' => 'appointments']],
                 ['route' => 'admin.operations.gobiker-reports.index', 'match' => ['admin.operations.gobiker-reports.*'], 'icon' => 'trending-up', 'label' => 'GoBiker reports', 'skeleton' => 'table'],
             ],
         ],

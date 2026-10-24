@@ -112,7 +112,9 @@ class UserController extends Controller
             'barangay' => ['nullable', 'string', 'max:255'],
             'password' => ['nullable', 'confirmed', Password::min(12)->letters()->numbers()],
             'role' => ['required', Rule::in($this->roles)],
+            ...$this->scheduleRules(),
         ]);
+        $data = $this->withSchedule($data);
 
         $passwordChanged = filled($data['password'] ?? null);
 
@@ -133,6 +135,30 @@ class UserController extends Controller
         }
 
         return redirect()->route('admin.operations.users.show', $user)->with('success', 'User updated.');
+    }
+
+    /** The GoBiker's ronda schedule: some days plus a start and end time, or nothing at all. */
+    private function scheduleRules(): array
+    {
+        return [
+            'schedule_days' => ['nullable', 'array'],
+            'schedule_days.*' => [Rule::in(User::SCHEDULE_DAYS)],
+            'schedule_start' => ['nullable', 'required_with:schedule_days,schedule_end', 'date_format:H:i'],
+            'schedule_end' => ['nullable', 'required_with:schedule_days,schedule_start', 'date_format:H:i', 'after:schedule_start'],
+        ];
+    }
+
+    /** Clears the schedule when no day is ticked, and keeps it only for GoBikers. */
+    private function withSchedule(array $data): array
+    {
+        $days = array_values($data['schedule_days'] ?? []);
+        $keep = $days !== [] && ($data['role'] ?? null) === 'GoBiker';
+
+        $data['schedule_days'] = $keep ? $days : null;
+        $data['schedule_start'] = $keep ? $data['schedule_start'] : null;
+        $data['schedule_end'] = $keep ? $data['schedule_end'] : null;
+
+        return $data;
     }
 
     public function destroy(User $user)
