@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\GobikerLocationController;
 use App\Http\Controllers\Api\GobikerProfileController;
 use App\Http\Controllers\Api\MobileAuthController;
 use App\Http\Controllers\Api\PatientController;
+use App\Http\Controllers\Api\ResidentController;
 use Illuminate\Support\Facades\Route;
 
 // Go Biker mobile authentication
@@ -29,6 +30,11 @@ Route::get('/mobile/me', [
     MobileAuthController::class,
     'me',
 ])->middleware(['auth:sanctum', 'throttle:mobile']);
+
+Route::put('/mobile/password', [
+    MobileAuthController::class,
+    'updatePassword',
+])->middleware(['auth:sanctum', 'throttle:5,1'])->name('api.mobile.password');
 
 //
 Route::post('/mobile/logout', [
@@ -78,4 +84,10 @@ Route::middleware(['auth:sanctum', 'gobiker', 'throttle:mobile'])->prefix('gobik
     Route::put('/patients/{patient}', [PatientController::class, 'update'])->name('api.gobiker.patients.update');
     Route::delete('/patients/{patient}', [PatientController::class, 'destroy'])->name('api.gobiker.patients.destroy');
 
+});
+
+// Residents (role "User")
+Route::middleware(['auth:sanctum', 'resident', 'throttle:mobile'])->prefix('resident')->group(function () {
+    Route::put('/profile', [ResidentController::class, 'updateProfile'])->name('api.resident.profile.update');
+    Route::get('/visits', [ResidentController::class, 'visits'])->name('api.resident.visits');
 });

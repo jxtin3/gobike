@@ -87,6 +87,8 @@ class PatientController extends Controller
             // Optional: not every patient is tested. mg/dL.
             'blood_sugar' => ['nullable', 'integer', 'between:20,600'],
             'barangay' => ['nullable', 'string', 'max:255'],
+            // Advice for the resident, who can read it in the app. Older app versions don't send it.
+            'remarks' => ['nullable', 'string', 'max:1000'],
         ]);
     }
 
@@ -107,6 +109,7 @@ class PatientController extends Controller
             'resp' => $p->resp,
             'temp' => $p->temp,
             'blood_sugar' => $p->blood_sugar,
+            'remarks' => $p->remarks,
             'barangay' => $p->barangay,
             'recorded_at' => $p->recorded_at?->toIso8601String(),
             // The admin's decision on whether to keep checking this person (for the app to show).

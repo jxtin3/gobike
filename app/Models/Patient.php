@@ -29,7 +29,7 @@ class Patient extends Model
 
     protected $fillable = [
         'user_id', 'barangay', 'name', 'address', 'contact', 'age',
-        'sys', 'dia', 'pulse', 'resp', 'temp', 'blood_sugar', 'recorded_at',
+        'sys', 'dia', 'pulse', 'resp', 'temp', 'blood_sugar', 'remarks', 'recorded_at',
     ];
 
     protected function casts(): array
@@ -69,9 +69,15 @@ class Patient extends Model
     /** All check-ups of the same person as $patient (same name and contact). */
     public function scopeSamePersonAs(Builder $query, Patient $patient): Builder
     {
+        return $query->forPerson($patient->name, $patient->contact);
+    }
+
+    /** All check-ups of the person with this name and contact number. */
+    public function scopeForPerson(Builder $query, ?string $name, ?string $contact): Builder
+    {
         return $query
-            ->whereRaw('LOWER(TRIM(name)) = ?', [strtolower(trim((string) $patient->name))])
-            ->whereRaw("TRIM(COALESCE(contact, '')) = ?", [trim((string) $patient->contact)]);
+            ->whereRaw('LOWER(TRIM(name)) = ?', [strtolower(trim((string) $name))])
+            ->whereRaw("TRIM(COALESCE(contact, '')) = ?", [trim((string) $contact)]);
     }
 
     public function isNormal(): bool

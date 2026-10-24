@@ -148,6 +148,23 @@ class MobileAuthController extends Controller
         ]);
     }
 
+    /** Any signed-in mobile user. Other phones are signed out; this one stays signed in. */
+    public function updatePassword(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'current_password' => ['required', 'string', 'current_password'],
+            'password' => ['required', 'string', 'min:8', 'max:100', 'confirmed', 'different:current_password'],
+        ]);
+
+        /** @var User $user */
+        $user = $request->user();
+        $user->password = $data['password']; // hashed automatically by the model
+        $user->save();
+        $user->logoutOtherDevices();
+
+        return response()->json(['message' => 'Password changed successfully.']);
+    }
+
     public function logout(Request $request): JsonResponse
     {
         $request->user()->currentAccessToken()?->delete();
@@ -180,7 +197,8 @@ class MobileAuthController extends Controller
         ]);
     }
 
-    private function userPayload(User $user): array
+    /** The user as the mobile app knows it (login, /mobile/me, profile updates). */
+    public static function userPayload(User $user): array
     {
         return [
             'id' => $user->id,

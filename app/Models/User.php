@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use Laravel\Sanctum\PersonalAccessToken;
 
 #[Fillable(['name', 'email', 'password', 'role', 'status', 'mobile', 'barangay', 'google_id'])]
 #[Hidden(['password', 'remember_token'])]
@@ -47,6 +48,30 @@ class User extends Authenticatable
     public function isPendingApproval(): bool
     {
         return $this->role === 'GoBiker' && $this->status === 'Inactive';
+    }
+
+    // After a password change: sign out every other phone, but keep the one making the request.
+    public function logoutOtherDevices(): void
+    {
+        $current = $this->currentAccessToken();
+
+        $this->tokens()
+            ->when($current instanceof PersonalAccessToken, fn ($query) => $query->where('id', '!=', $current->id))
+            ->delete();
+    }
+
+    /**
+     * The check-ups GoBikers recorded for this person. Check-ups carry no user ID, so the person
+     * is recognised the same way the admin does it: same name (ignoring case and spaces) and the
+     * same contact number. Without a mobile number nothing can be matched safely.
+     */
+    public function checkups(): Builder
+    {
+        if (blank($this->mobile) || blank($this->name)) {
+            return Patient::query()->whereRaw('1 = 0');
+        }
+
+        return Patient::query()->forPerson($this->name, $this->mobile);
     }
 
     /**

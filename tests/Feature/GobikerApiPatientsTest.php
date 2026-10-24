@@ -60,3 +60,18 @@ it('updates the blood sugar of a check-up and lists it', function () {
         ->assertOk()
         ->assertJsonPath('patients.0.blood_sugar', 88);
 });
+
+it('saves and lists the GoBiker remarks for the resident', function () {
+    $this->postJson(route('api.gobiker.patients.store'), checkupPayload(['remarks' => 'Drink more water.']))
+        ->assertCreated()
+        ->assertJsonPath('patient.remarks', 'Drink more water.');
+
+    $this->getJson(route('api.gobiker.patients.index'))
+        ->assertJsonPath('patients.0.remarks', 'Drink more water.');
+});
+
+it('rejects remarks that are too long', function () {
+    $this->postJson(route('api.gobiker.patients.store'), checkupPayload(['remarks' => str_repeat('a', 1001)]))
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors('remarks');
+});

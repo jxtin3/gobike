@@ -87,6 +87,7 @@
             <div><dt>Temperature</dt><dd>{{ $fmt($patient->temp) }} °C</dd></div>
             <div><dt>Blood sugar</dt><dd>{{ $patient->blood_sugar !== null ? $patient->blood_sugar.' mg/dL' : 'Not tested' }}</dd></div>
             <div><dt>Recorded by</dt><dd>{{ $patient->recorder?->name ?? '—' }}</dd></div>
+            <div><dt>Remarks</dt><dd>{!! $patient->remarks ? nl2br(e($patient->remarks)) : '—' !!}</dd></div>
         </dl>
     </article>
 </div>

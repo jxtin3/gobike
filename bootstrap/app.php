@@ -20,6 +20,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'admin' => \App\Http\Middleware\EnsureAdmin::class,
             'gobiker' => \App\Http\Middleware\EnsureGoBiker::class,
+            'resident' => \App\Http\Middleware\EnsureResident::class,
         ]);
 
         $middleware->validateCsrfTokens(except: [
