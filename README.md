@@ -66,7 +66,7 @@ php artisan test
    - The other defaults in `.env.example` (`APP_ENV=production`, `APP_DEBUG=false`, `LOG_CHANNEL=stderr`, `SESSION_SECURE_COOKIE=true`) are already right for production.
 4. **Uploaded images:** the container disk is wiped on every deploy. Attach a Railway Volume at `/app/storage/app/public` (simplest, one instance only), or use a public R2/S3 bucket with `MEDIA_DISK=s3` and `MEDIA_CSP_ORIGIN`.
 5. After the first deploy, create the admin in the Railway shell: `php artisan admin:create --name="..." --email="..."`.
-6. Point the Flutter app's API base URL at the new domain.
+6. Point the RondaGo mobile app at the new domain: set `kProductionApiBaseUrl` in `gobikemob/lib/core/api_config.dart` to `https://your-domain/api` (or pass `--dart-define=API_BASE_URL=https://your-domain/api` when building). Check it with `curl https://your-domain/up`.
 7. Optional: a second service from the same repo as a Railway cron job (`0 0 * * *`) with start command `php artisan sanctum:prune-expired --hours=24` clears expired mobile logins. Give it the same `APP_KEY` and `DB_*` variables as the app. No queue worker is needed; nothing is queued.
 
 ### Going live with payments
