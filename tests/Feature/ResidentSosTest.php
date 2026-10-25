@@ -215,3 +215,29 @@ it('does not let anyone resolve another resident\'s SOS', function () {
     $this->postJson(route('api.resident.sos.resolve', $sos))->assertForbidden();
     expect($sos->fresh()->status)->toBe('sent');
 });
+
+// ---------------------------------------------------------------- clear history
+
+it('clears finished SOS requests and visits from the resident history, keeping open ones and the admin records', function () {
+    $done = sendSos($this->resident);
+    $done->update(['status' => 'resolved', 'resolved_at' => now()]);
+    $open = sendSos($this->resident, ['landmark' => 'Still waiting']);
+    $closedVisit = \App\Models\Appointment::create([
+        'resident_id' => $this->resident->id, 'barangay' => 'Poblacion', 'address' => 'Purok 3',
+        'preferred_date' => now()->addDay(), 'preferred_window' => 'morning', 'reason' => 'BP', 'status' => 'cancelled',
+    ]);
+
+    $this->postJson(route('api.resident.history.clear'))
+        ->assertOk()
+        ->assertJsonPath('cleared', ['sos' => 1, 'appointments' => 1]);
+
+    $this->getJson(route('api.resident.sos.index'))
+        ->assertJsonCount(1, 'sos')
+        ->assertJsonPath('sos.0.id', $open->id);
+    $this->getJson(route('api.resident.appointments.index'))->assertJsonCount(0, 'appointments');
+
+    // The admin still has everything.
+    expect(SosRequest::count())->toBe(2)
+        ->and(\App\Models\Appointment::find($closedVisit->id))->not->toBeNull();
+    $this->actingAs($this->admin, 'web')->get(route('admin.operations.sos.show', $done))->assertOk();
+});

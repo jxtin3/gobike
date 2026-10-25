@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Appointment;
 use App\Models\Patient;
+use App\Models\SosRequest;
 use App\Models\User;
 use App\Support\Barangays;
 use Illuminate\Http\JsonResponse;
@@ -34,6 +36,31 @@ class ResidentController extends Controller
         return response()->json([
             'message' => 'Profile updated successfully.',
             'user' => MobileAuthController::userPayload($user->fresh()),
+        ]);
+    }
+
+    /**
+     * "Clear history": hides the resident's finished SOS requests and closed home visits from
+     * their own history. Open ones stay (they still matter), check-ups stay (medical record),
+     * and the admin keeps every record.
+     */
+    public function clearHistory(Request $request): JsonResponse
+    {
+        $userId = $request->user()->id;
+
+        $sos = SosRequest::where('user_id', $userId)
+            ->where('status', 'resolved')
+            ->whereNull('resident_hidden_at')
+            ->update(['resident_hidden_at' => now()]);
+
+        $visits = Appointment::where('resident_id', $userId)
+            ->whereNotIn('status', Appointment::OPEN)
+            ->whereNull('resident_hidden_at')
+            ->update(['resident_hidden_at' => now()]);
+
+        return response()->json([
+            'message' => 'History cleared.',
+            'cleared' => ['sos' => $sos, 'appointments' => $visits],
         ]);
     }
 

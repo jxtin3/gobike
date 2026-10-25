@@ -17,6 +17,7 @@ class ResidentAppointmentController extends Controller
     {
         $appointments = Appointment::with('gobiker:id,name')
             ->where('resident_id', $request->user()->id)
+            ->whereNull('resident_hidden_at') // cleared from the resident's history
             ->latest()
             ->latest('id')
             ->limit(50)

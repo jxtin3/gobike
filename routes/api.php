@@ -103,6 +103,7 @@ Route::middleware(['auth:sanctum', 'gobiker', 'throttle:mobile'])->prefix('gobik
 Route::middleware(['auth:sanctum', 'resident', 'throttle:mobile'])->prefix('resident')->group(function () {
     Route::put('/profile', [ResidentController::class, 'updateProfile'])->name('api.resident.profile.update');
     Route::get('/visits', [ResidentController::class, 'visits'])->name('api.resident.visits');
+    Route::post('/history/clear', [ResidentController::class, 'clearHistory'])->name('api.resident.history.clear');
 
     Route::get('/sos', [ResidentSosController::class, 'index'])->name('api.resident.sos.index');
     // Few per minute, so a stuck button or a prank can't flood the admin alarm.
