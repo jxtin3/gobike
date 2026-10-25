@@ -31,7 +31,7 @@ class PushNotifier
     public function sosStatusChanged(SosRequest $sos): void
     {
         [$title, $body] = match ($sos->status) {
-            'responding' => ['Help is responding', 'The Go Bike admin is handling your SOS request.'],
+            'responding' => ['Someone is Responding', 'The Go Bike admin is handling your SOS request.'],
             'resolved' => ['SOS resolved', 'The admin marked your SOS request as resolved.'],
             default => [null, null],
         };

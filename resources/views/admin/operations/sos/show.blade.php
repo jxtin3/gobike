@@ -34,7 +34,9 @@
 @section('content')
 <p class="detail-status">
     <span class="pill pill-{{ $pills[$sos->status] ?? 'neutral' }}">{{ $sos->status_label }}</span>
-    @if ($sos->handler)
+    @if ($sos->resolved_by_resident)
+        <span class="muted">· the resident marked it resolved {{ $sos->resolved_at?->diffForHumans() }}</span>
+    @elseif ($sos->handler)
         <span class="muted">
             · {{ $sos->status === 'resolved' ? 'resolved' : 'answered' }} by {{ $sos->handler->name }}
             {{ ($sos->resolved_at ?? $sos->responded_at)?->diffForHumans() }}

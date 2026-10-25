@@ -181,3 +181,37 @@ it('counts waiting requests in the sidebar', function () {
         ->assertSee('data-nav-badge="sos"', false)
         ->assertSee('SOS requests waiting for a response');
 });
+
+// ---------------------------------------------------------------- resident resolves
+
+it('lets the resident mark their own SOS as resolved, which stops the alarm', function () {
+    $sos = sendSos($this->resident);
+
+    $this->postJson(route('api.resident.sos.resolve', $sos))
+        ->assertOk()
+        ->assertJsonPath('sos.status', 'resolved')
+        ->assertJsonPath('sos.resolved_by_resident', true);
+
+    expect($sos->fresh()->resolved_at)->not->toBeNull();
+
+    $this->actingAs($this->admin, 'web')
+        ->getJson(route('admin.emergencies.index'))
+        ->assertJsonPath('emergencies', []);
+    $this->get(route('admin.operations.sos.show', $sos))->assertSee('the resident marked it resolved');
+});
+
+it('lets the resident resolve while the admin is responding, but not twice', function () {
+    $sos = sendSos($this->resident);
+    $sos->update(['status' => 'responding']);
+
+    $this->postJson(route('api.resident.sos.resolve', $sos))->assertOk();
+    $this->postJson(route('api.resident.sos.resolve', $sos))->assertUnprocessable();
+});
+
+it('does not let anyone resolve another resident\'s SOS', function () {
+    $sos = sendSos($this->resident);
+    Sanctum::actingAs(User::factory()->create(['role' => 'User', 'status' => 'Active']));
+
+    $this->postJson(route('api.resident.sos.resolve', $sos))->assertForbidden();
+    expect($sos->fresh()->status)->toBe('sent');
+});

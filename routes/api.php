@@ -108,6 +108,7 @@ Route::middleware(['auth:sanctum', 'resident', 'throttle:mobile'])->prefix('resi
     // Few per minute, so a stuck button or a prank can't flood the admin alarm.
     Route::post('/sos', [ResidentSosController::class, 'store'])->middleware('throttle:3,1')->name('api.resident.sos.store');
     Route::post('/sos/{sos}/media', [ResidentSosController::class, 'media'])->middleware('throttle:10,1')->name('api.resident.sos.media');
+    Route::post('/sos/{sos}/resolve', [ResidentSosController::class, 'resolve'])->name('api.resident.sos.resolve');
 
     Route::get('/appointments', [ResidentAppointmentController::class, 'index'])->name('api.resident.appointments.index');
     Route::post('/appointments', [ResidentAppointmentController::class, 'store'])->middleware('throttle:5,1')->name('api.resident.appointments.store');

@@ -26,7 +26,7 @@ class SosRequest extends Model
     protected $fillable = [
         'user_id', 'municipality', 'barangay', 'landmark', 'description',
         'latitude', 'longitude', 'image_path', 'video_path',
-        'status', 'handled_by', 'responded_at', 'resolved_at',
+        'status', 'handled_by', 'responded_at', 'resolved_at', 'resolved_by_resident',
     ];
 
     protected function casts(): array
@@ -36,6 +36,7 @@ class SosRequest extends Model
             'longitude' => 'float',
             'responded_at' => 'datetime',
             'resolved_at' => 'datetime',
+            'resolved_by_resident' => 'boolean',
         ];
     }
 

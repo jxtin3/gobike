@@ -87,7 +87,7 @@ it('tells the resident when the admin answers their SOS', function () {
     $this->patchJson(route('admin.operations.sos.status', $sos), ['status' => 'responding'])->assertOk();
     $this->patchJson(route('admin.operations.sos.status', $sos), ['status' => 'resolved'])->assertOk();
 
-    expect(titlesFor($this->push, 'resident-phone'))->toBe(['Help is responding', 'SOS resolved'])
+    expect(titlesFor($this->push, 'resident-phone'))->toBe(['Someone is Responding', 'SOS resolved'])
         ->and($this->push->sent[0]['data'])->toBe(['type' => 'sos', 'id' => (string) $sos->id])
         ->and($this->push->sent[0]['channel'])->toBe('rondago_alerts');
 });

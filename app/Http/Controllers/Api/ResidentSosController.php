@@ -81,6 +81,27 @@ class ResidentSosController extends Controller
         ]);
     }
 
+    /** The resident no longer needs help and closes their own request. */
+    public function resolve(Request $request, SosRequest $sos): JsonResponse
+    {
+        abort_unless($sos->user_id === $request->user()->id, 403, 'You can only resolve your own request.');
+
+        if (! $sos->canMoveTo('resolved')) {
+            return response()->json(['message' => 'This request is already resolved.'], 422);
+        }
+
+        $sos->update([
+            'status' => 'resolved',
+            'resolved_at' => now(),
+            'resolved_by_resident' => true,
+        ]);
+
+        return response()->json([
+            'message' => 'SOS request resolved. Glad you are okay.',
+            'sos' => $this->payload($sos),
+        ]);
+    }
+
     private function payload(SosRequest $sos): array
     {
         return [
@@ -97,6 +118,7 @@ class ResidentSosController extends Controller
             'created_at' => $sos->created_at?->toIso8601String(),
             'responded_at' => $sos->responded_at?->toIso8601String(),
             'resolved_at' => $sos->resolved_at?->toIso8601String(),
+            'resolved_by_resident' => (bool) $sos->resolved_by_resident,
         ];
     }
 }
