@@ -17,21 +17,21 @@ function programSlider() {
             {
                 img: '/images/homepage/go_bike.jpg',
                 accent: '#F97316',
-                title: 'Go Bike',
+                title: 'Go Bike Project',
                 desc: 'Transforming young volunteers into active community responders by equipping them with the skills, awareness, and spirit of volunteerism to respond to community needs, promote safety and lend a helping a hand when it matters most',
                 href: '/what-we-do'
             },
             {
                 img: '/images/homepage/alwar.jpg',
                 accent: '#2FA7FF',
-                title: 'Alwar',
+                title: 'ALWAR - ASSOCIATION OF LEARNERS WORKING FOR ALTRUISM AND RESILIENCE',
                 desc: 'Continuing to empower students within school communities to become proactive young responders, equiped with knowledge, skills, and compassion to promote safety, preparedness, and services to others.',
                 href: '/what-we-do'
             },
             {
                 img: '/images/homepage/ronda_kalusugan.jpg',
                 accent: '#F97316',
-                title: 'Ronda Kalusugan',
+                title: 'Ronda Kalusugan Program',
                 desc: 'Mobilizing volunteers to reach communites with basic healthcare services, including blood pressure monitoring and blood sugar checking, promoting early awareness and making essential health checks more accessible to everyone.',
                 href: '/what-we-do'
             },
@@ -52,7 +52,7 @@ function programSlider() {
             {
                 img: '/images/homepage/hatake.jpeg',
                 accent: '#F97316',
-                title: 'Hatake Farm',
+                title: 'HATAKE - HELPING AGRICULTURE THRIVE THROUGH AGRIBUSINESS, KNOWLEDGE-SHARING, AND ENTREPRENEURSHIP',
                 desc: 'Bridging communities together through sustainable farming, food security, and shared harvests that nurture both the land and the people.',
                 href: '/what-we-do'
             }

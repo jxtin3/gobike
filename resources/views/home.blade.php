@@ -50,7 +50,7 @@
             </p>
 
             <p class="text-base md:text-lg text-white/60 leading-relaxed mb-10 max-w-xl reveal">
-                Bridging Partners, mobilizing volunteers to provide responsive services to the adaptive challenges of the community.
+                Bridging partners and mobilizing volunteers to provide responsive services to the adaptive challenges of the community.
             </p>
 
             <!-- CTA(call to action) -->
@@ -107,7 +107,7 @@
                 <div class="story-card bg-[#1a1a1a] p-10 md:p-12 lg:p-16 flex flex-col justify-center text-white h-full">
                     <div class="story-rule"></div>
                     <h3 class="text-3xl md:text-4xl font-heading font-bold uppercase mb-5 leading-tight tracking-tight">
-                        In Pangasinan, youth volunteers bike to answer the community's healthier needs.
+                        In Pangasinan, youth volunteers bike to answer community's healthcare needs.
                     </h3>
             <p class="text-white/65 text-sm md:text-base leading-relaxed mb-8 font-light">
                 Using cargo bikes to be on the move, youth volunteers in Pangasinan make it their mission to help provide basic medical services to residents of Barangay Umanday.            </p>
@@ -150,7 +150,7 @@
                      :class="playing ? 'md:w-[calc(100%_+_4rem)]' : 'md:w-[calc(100%_+_12rem)]'">
                     <div class="story-rule"></div>
                     <h3 class="text-3xl md:text-4xl font-heading font-bold uppercase mb-5 leading-tight tracking-tight">
-                        Pedaling Toward A Better Tomorrow
+                        Pedalling Towards A Better Tomorrow
                     </h3>
                     <p class="text-white/65 text-sm md:text-base leading-relaxed mb-8 font-light">
                         For seven years, the Go Bike Project has turned every ride into an opportunity to serve, bridging communities together through youth volunteerism,
