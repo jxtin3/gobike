@@ -24,7 +24,7 @@ class SosRequest extends Model
     ];
 
     protected $fillable = [
-        'user_id', 'municipality', 'barangay', 'landmark', 'description',
+        'user_id', 'municipality', 'barangay', 'address', 'landmark', 'description',
         'latitude', 'longitude', 'image_path', 'video_path',
         'status', 'handled_by', 'responded_at', 'resolved_at', 'resolved_by_resident',
     ];

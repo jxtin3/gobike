@@ -48,6 +48,9 @@
     <article class="detail-card">
         <h2 class="detail-card-title">Where</h2>
         <dl class="detail-dl">
+            @if ($sos->address)
+                <div><dt>Address</dt><dd>{{ $sos->address }}</dd></div>
+            @endif
             <div><dt>Barangay</dt><dd>{{ $sos->barangay }}, {{ $sos->municipality }}</dd></div>
             <div><dt>Landmark</dt><dd>{{ $sos->landmark }}</dd></div>
             <div>

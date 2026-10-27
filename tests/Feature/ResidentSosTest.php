@@ -13,6 +13,7 @@ beforeEach(function () {
     Storage::fake('public');
     $this->resident = User::factory()->create([
         'name' => 'Ana Reyes', 'role' => 'User', 'status' => 'Active', 'mobile' => '09170001111',
+        'barangay' => 'Poblacion',
     ]);
     $this->admin = User::factory()->create(['is_admin' => true]);
 });
@@ -20,8 +21,7 @@ beforeEach(function () {
 function sosPayload(array $overrides = []): array
 {
     return array_merge([
-        'municipality' => 'Bugallon',
-        'barangay' => 'Poblacion',
+        'address' => '12 Rizal St., Purok 2',
         'landmark' => 'Beside the chapel',
         'description' => 'My father fell and cannot stand.',
         'latitude' => 15.9566,
@@ -53,13 +53,36 @@ it('sends an SOS without a GPS position', function () {
     expect($sos->map_url)->toBeNull();
 });
 
-it('needs the place of the emergency', function (string $field) {
+it('needs the address and landmark of the emergency', function (string $field) {
     Sanctum::actingAs($this->resident);
 
     $this->postJson(route('api.resident.sos.store'), sosPayload([$field => '']))
         ->assertUnprocessable()
         ->assertJsonValidationErrors($field);
-})->with(['municipality', 'barangay', 'landmark']);
+})->with(['address', 'landmark']);
+
+it('files the SOS under the resident\'s own barangay', function () {
+    $sos = sendSos($this->resident);
+
+    expect($sos->barangay)->toBe('Poblacion')
+        ->and($sos->municipality)->toBe('Bugallon')
+        ->and($sos->address)->toBe('12 Rizal St., Purok 2');
+});
+
+it('still accepts an SOS from older app versions that pick a barangay', function () {
+    $sos = sendSos($this->resident, ['address' => null, 'municipality' => 'Bugallon', 'barangay' => 'Hacienda']);
+
+    expect($sos->barangay)->toBe('Hacienda')->and($sos->address)->toBeNull();
+});
+
+it('asks a resident without a barangay to set one first', function () {
+    $this->resident->update(['barangay' => null]);
+    Sanctum::actingAs($this->resident);
+
+    $this->postJson(route('api.resident.sos.store'), sosPayload())
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors('address');
+});
 
 it('limits how many SOS requests a resident can send per minute', function () {
     Sanctum::actingAs($this->resident);
@@ -105,7 +128,7 @@ it('does not let anyone add media to another resident\'s request', function () {
 
 it('lists only the resident\'s own requests with their status', function () {
     sendSos($this->resident);
-    sendSos(User::factory()->create(['role' => 'User', 'status' => 'Active']));
+    sendSos(User::factory()->create(['role' => 'User', 'status' => 'Active', 'barangay' => 'Hacienda']));
 
     Sanctum::actingAs($this->resident);
     $this->getJson(route('api.resident.sos.index'))

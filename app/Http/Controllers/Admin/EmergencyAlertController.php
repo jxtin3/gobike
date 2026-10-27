@@ -44,7 +44,7 @@ class EmergencyAlertController extends Controller
                 'sos_id' => $sos->id,
                 'name' => $sos->user?->name ?? 'Resident',
                 'mobile' => $sos->user?->mobile,
-                'barangay' => trim($sos->barangay.' · '.$sos->landmark, ' ·'),
+                'barangay' => collect([$sos->barangay, $sos->address, $sos->landmark])->filter()->join(' · '),
                 'since' => $sos->created_at?->toIso8601String(),
                 'view_url' => route('admin.operations.sos.show', $sos),
                 'respond_url' => route('admin.operations.sos.status', $sos),

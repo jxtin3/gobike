@@ -10,6 +10,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 /**
  * The resident's SOS button. The request is saved first (so the admin is alerted even on a weak
@@ -34,13 +35,24 @@ class ResidentSosController extends Controller
     public function store(Request $request): JsonResponse
     {
         $data = $request->validate([
-            'municipality' => ['required', 'string', 'max:100'],
-            'barangay' => ['required', 'string', Rule::in(Barangays::ALL)],
+            // The app sends a typed address and uses the resident's own barangay.
+            // App versions up to 1.0.9 still pick a municipality and barangay instead.
+            'municipality' => ['nullable', 'string', 'max:100'],
+            'barangay' => ['nullable', 'string', Rule::in(Barangays::ALL)],
+            'address' => ['required_without:barangay', 'nullable', 'string', 'max:255'],
             'landmark' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string', 'max:1000'],
             'latitude' => ['nullable', 'numeric', 'between:-90,90', 'required_with:longitude'],
             'longitude' => ['nullable', 'numeric', 'between:-180,180', 'required_with:latitude'],
         ]);
+
+        $data['barangay'] ??= $request->user()->barangay;
+        if ($data['barangay'] === null) {
+            throw ValidationException::withMessages([
+                'address' => 'Please set your barangay in your profile, then send the SOS again.',
+            ]);
+        }
+        $data['municipality'] ??= Barangays::MUNICIPALITY;
 
         $sos = SosRequest::create($data + [
             'user_id' => $request->user()->id,
@@ -113,6 +125,7 @@ class ResidentSosController extends Controller
             'status_label' => $sos->status_label,
             'municipality' => $sos->municipality,
             'barangay' => $sos->barangay,
+            'address' => $sos->address,
             'landmark' => $sos->landmark,
             'description' => $sos->description,
             'has_location' => $sos->latitude !== null,

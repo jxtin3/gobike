@@ -19,7 +19,7 @@
     @endforeach
 </nav>
 
-<x-admin.filters :action="route('admin.operations.sos.index')" placeholder="Search by resident, barangay or landmark" label="Search SOS requests"
+<x-admin.filters :action="route('admin.operations.sos.index')" placeholder="Search by resident, barangay, address or landmark" label="Search SOS requests"
                  :hidden="['status' => $tab === 'open' ? null : $tab]" :filtered="$searching" />
 
 <div data-list>
@@ -44,7 +44,7 @@
                     </td>
                     <td>
                         {{ $sos->barangay }}, {{ $sos->municipality }}
-                        <small class="sub-line">{{ Str::limit($sos->landmark, 60) }}</small>
+                        <small class="sub-line">{{ Str::limit(collect([$sos->address, $sos->landmark])->filter()->join(' · '), 60) }}</small>
                     </td>
                     <td>
                         {{ $sos->created_at->format('M j, Y') }}

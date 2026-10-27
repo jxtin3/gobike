@@ -25,6 +25,7 @@ class SosRequestController extends Controller
                 $q->where(function ($query) use ($search) {
                     $query->whereHas('user', fn ($user) => $user->where('name', 'like', "%{$search}%"))
                         ->orWhere('barangay', 'like', "%{$search}%")
+                        ->orWhere('address', 'like', "%{$search}%")
                         ->orWhere('landmark', 'like', "%{$search}%");
                 });
             })

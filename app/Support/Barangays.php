@@ -5,6 +5,8 @@ namespace App\Support;
 /** The barangays of Bugallon that a mobile user (GoBiker or resident) can belong to. */
 class Barangays
 {
+    public const MUNICIPALITY = 'Bugallon';
+
     public const ALL = [
         'Angarian',
         'Asinan',
