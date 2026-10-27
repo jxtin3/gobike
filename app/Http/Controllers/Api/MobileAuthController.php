@@ -261,7 +261,6 @@ class MobileAuthController extends Controller
             'barangay' => $user->barangay,
             'role' => $user->role,
             // Ronda days and hours set by the admin (GoBikers only; null when not set).
-            'schedule' => $user->role === 'GoBiker' ? $user->schedule() : null,
             // False for Google sign-in accounts: the app offers "Set a password" instead of "Change".
             'has_password' => (bool) ($user->has_password ?? true),
             'notification_prefs' => $user->notificationPrefs(),

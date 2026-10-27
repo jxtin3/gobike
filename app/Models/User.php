@@ -17,7 +17,7 @@ use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Laravel\Sanctum\PersonalAccessToken;
 
-#[Fillable(['name', 'email', 'password', 'role', 'status', 'mobile', 'barangay', 'google_id', 'schedule_days', 'schedule_start', 'schedule_end', 'has_password', 'notification_prefs'])]
+#[Fillable(['name', 'email', 'password', 'role', 'status', 'mobile', 'barangay', 'google_id', 'has_password', 'notification_prefs'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -73,27 +73,6 @@ class User extends Authenticatable
     public function gobikerMessages(): HasMany
     {
         return $this->hasMany(GobikerMessage::class);
-    }
-
-    /** Days a GoBiker can be scheduled on, in week order. */
-    public const SCHEDULE_DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-
-    /**
-     * The GoBiker's ronda schedule for the app, e.g. ['days' => ['Mon', 'Wed'], 'start' => '08:00',
-     * 'end' => '12:00'], or null when the admin has not set one.
-     */
-    public function schedule(): ?array
-    {
-        if (empty($this->schedule_days) || ! $this->schedule_start || ! $this->schedule_end) {
-            return null;
-        }
-
-        return [
-            // Week order, whatever order they were saved in.
-            'days' => array_values(array_intersect(self::SCHEDULE_DAYS, $this->schedule_days)),
-            'start' => substr($this->schedule_start, 0, 5),
-            'end' => substr($this->schedule_end, 0, 5),
-        ];
     }
 
     /** Which push notifications this user wants: the app's switches over the defaults. */
@@ -167,7 +146,6 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'is_admin' => 'boolean',
-            'schedule_days' => 'array',
             'has_password' => 'boolean',
             'notification_prefs' => 'array',
         ];

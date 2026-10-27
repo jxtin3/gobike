@@ -37,56 +37,6 @@ function requestVisit(User $resident, array $overrides = []): Appointment
     return Appointment::findOrFail($id);
 }
 
-// ---------------------------------------------------------------- schedule
-
-it('sends the GoBiker schedule set by the admin to the app', function () {
-    $this->actingAs($this->admin, 'web')
-        ->put(route('admin.operations.users.update', $this->gobiker), [
-            'name' => 'Maria Santos', 'email' => $this->gobiker->email, 'role' => 'GoBiker',
-            'schedule_days' => ['Fri', 'Mon', 'Wed'], 'schedule_start' => '08:00', 'schedule_end' => '12:00',
-        ])
-        ->assertRedirect()
-        ->assertSessionHasNoErrors();
-
-    Sanctum::actingAs($this->gobiker->fresh());
-    $this->getJson('/api/mobile/me')
-        ->assertOk()
-        ->assertJsonPath('user.schedule', ['days' => ['Mon', 'Wed', 'Fri'], 'start' => '08:00', 'end' => '12:00']);
-});
-
-it('sends no schedule when none is set, or to residents', function () {
-    Sanctum::actingAs($this->gobiker);
-    $this->getJson('/api/mobile/me')->assertJsonPath('user.schedule', null);
-
-    Sanctum::actingAs($this->resident);
-    $this->getJson('/api/mobile/me')->assertJsonPath('user.schedule', null);
-});
-
-it('rejects a schedule that ends before it starts or has no times', function (array $schedule, string $field) {
-    $this->actingAs($this->admin, 'web')
-        ->put(route('admin.operations.users.update', $this->gobiker), [
-            'name' => 'Maria Santos', 'email' => $this->gobiker->email, 'role' => 'GoBiker', ...$schedule,
-        ])
-        ->assertSessionHasErrors($field);
-})->with([
-    'ends first' => [['schedule_days' => ['Mon'], 'schedule_start' => '13:00', 'schedule_end' => '09:00'], 'schedule_end'],
-    'no times' => [['schedule_days' => ['Mon']], 'schedule_start'],
-    'bad day' => [['schedule_days' => ['Funday'], 'schedule_start' => '08:00', 'schedule_end' => '12:00'], 'schedule_days.0'],
-]);
-
-it('clears the schedule when no day is ticked', function () {
-    $this->gobiker->update(['schedule_days' => ['Mon'], 'schedule_start' => '08:00', 'schedule_end' => '12:00']);
-
-    $this->actingAs($this->admin, 'web')
-        ->put(route('admin.operations.users.update', $this->gobiker), [
-            'name' => 'Maria Santos', 'email' => $this->gobiker->email, 'role' => 'GoBiker',
-            'schedule_start' => '', 'schedule_end' => '',
-        ])
-        ->assertSessionHasNoErrors();
-
-    expect($this->gobiker->fresh()->schedule())->toBeNull();
-});
-
 // ---------------------------------------------------------------- resident
 
 it('lets a resident request one visit at a time', function () {

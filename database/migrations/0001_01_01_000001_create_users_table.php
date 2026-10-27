@@ -17,10 +17,6 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->string('mobile')->nullable()->index();
             $table->string('barangay', 100)->nullable();
-            // A GoBiker's ronda schedule, set by an admin.
-            $table->json('schedule_days')->nullable(); // e.g. ["Mon","Wed","Fri"]
-            $table->time('schedule_start')->nullable();
-            $table->time('schedule_end')->nullable();
             // Which push notifications a resident wants (from the app's switches).
             $table->json('notification_prefs')->nullable();
             $table->timestamp('email_verified_at')->nullable();

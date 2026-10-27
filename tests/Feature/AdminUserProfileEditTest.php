@@ -39,6 +39,34 @@ it('allows an admin to update a user mobile number and barangay', function () {
         ->and($user->fresh()->barangay)->toBe('Poblacion');
 });
 
+it('offers the barangay list in the user form with the current one selected', function () {
+    $admin = userManagementAdmin();
+    $user = User::factory()->create(['role' => 'GoBiker', 'barangay' => 'Angarian']);
+
+    $this->actingAs($admin)
+        ->get(route('admin.operations.users.edit', $user))
+        ->assertOk()
+        ->assertSee('<select class="input " id="barangay" name="barangay"', false)
+        ->assertSee('<option value="Angarian" selected>Angarian</option>', false)
+        ->assertSee('<option value="Bañaga" >Bañaga</option>', false);
+
+    $this->actingAs($admin)
+        ->get(route('admin.operations.users.create'))
+        ->assertOk()
+        ->assertSee('<option value="" selected>Not set</option>', false);
+});
+
+it('clears the barangay when the admin picks "Not set"', function () {
+    $admin = userManagementAdmin();
+    $user = User::factory()->create(['role' => 'GoBiker', 'barangay' => 'Angarian']);
+
+    $this->actingAs($admin)
+        ->put(route('admin.operations.users.update', $user), userManagementEditPayload(['barangay' => '']))
+        ->assertRedirect(route('admin.operations.users.show', $user));
+
+    expect($user->fresh()->barangay)->toBeNull();
+});
+
 it('rejects invalid or duplicate admin-edited mobile numbers', function (string $mobile, bool $duplicate) {
     $admin = userManagementAdmin();
     $user = User::factory()->create(['role' => 'GoBiker']);

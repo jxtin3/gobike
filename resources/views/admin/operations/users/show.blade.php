@@ -53,14 +53,6 @@
         <div><dt>Mobile</dt><dd>@if ($user->mobile)<a href="tel:{{ $user->mobile }}">{{ $user->mobile }}</a>@else — @endif</dd></div>
         <div><dt>Barangay</dt><dd>{{ $user->barangay ?: '—' }}</dd></div>
         @if ($role === 'GoBiker')
-            @php $schedule = $user->schedule(); @endphp
-            <div><dt>Ronda schedule</dt><dd>
-                @if ($schedule)
-                    {{ implode(', ', $schedule['days']) }} · {{ \Carbon\Carbon::createFromFormat('H:i', $schedule['start'])->format('g:i A') }}–{{ \Carbon\Carbon::createFromFormat('H:i', $schedule['end'])->format('g:i A') }}
-                @else
-                    <span class="muted">Not set</span> · <a href="{{ route('admin.operations.users.edit', $user) }}">Set schedule</a>
-                @endif
-            </dd></div>
             <div><dt>Patient records</dt><dd>{{ $patientCount ? number_format($patientCount) : 'None yet' }}</dd></div>
         @endif
         <div><dt>Joined</dt><dd>{{ $user->created_at->format('F j, Y') }}</dd></div>

@@ -5211,13 +5211,6 @@ tbody tr.is-unread td:first-child { box-shadow: inset 3px 0 0 var(--brand); }
     accent-color: var(--ok);
 }
 
-/* A row of checkboxes (e.g. a GoBiker's ronda days) that wraps on narrow screens. */
-.day-picks {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px 18px;
-}
-
 /* ---------- Emergency alerts (every admin page) ---------- */
 
 .emer-wrap {
