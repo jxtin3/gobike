@@ -40,7 +40,7 @@ it('searches patients by name and filters by barangay', function () {
     $admin = User::factory()->create(['is_admin' => true]);
     $recorder = User::factory()->create(['role' => 'GoBiker']);
     makePatient($recorder);
-    makePatient($recorder, ['name' => 'Maria Lopez', 'barangay' => 'San Isidro']);
+    makePatient($recorder, ['name' => 'Maria Lopez', 'barangay' => 'Salasa']);
 
     $this->actingAs($admin)
         ->get(route('admin.operations.patients.index', ['search' => 'Maria']))

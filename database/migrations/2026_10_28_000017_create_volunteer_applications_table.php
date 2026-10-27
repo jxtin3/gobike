@@ -4,11 +4,9 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
+/** Volunteer sign-ups from the website. The address is free text: applicants can live anywhere. */
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('volunteer_applications', function (Blueprint $table) {
@@ -23,7 +21,6 @@ return new class extends Migration
             $table->string('barangay', 100);
             $table->string('municipality', 100);
             $table->string('province', 100);
-            $table->json('interests')->nullable();
             $table->string('availability', 20);
             $table->boolean('has_bike')->default(false);
             $table->text('motivation')->nullable();
@@ -37,9 +34,6 @@ return new class extends Migration
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('volunteer_applications');

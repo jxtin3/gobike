@@ -29,11 +29,11 @@ it('closes a forgotten ronda when the next one starts', function () {
     $gobiker = User::factory()->create(['role' => 'GoBiker', 'status' => 'Active']);
     Sanctum::actingAs($gobiker);
 
-    $this->postJson(route('api.gobiker.active.start'), ['designated_barangay' => 'San Isidro'])->assertOk();
+    $this->postJson(route('api.gobiker.active.start'), ['designated_barangay' => 'Salasa'])->assertOk();
     $this->travel(1)->day();
     $this->postJson(route('api.gobiker.active.start'))->assertOk();
 
     expect(Ronda::count())->toBe(2)
         ->and(Ronda::whereNull('ended_at')->count())->toBe(1)
-        ->and(Ronda::oldest('id')->first()->barangay)->toBe('San Isidro');
+        ->and(Ronda::oldest('id')->first()->barangay)->toBe('Salasa');
 });

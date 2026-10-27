@@ -25,9 +25,14 @@ return new class extends Migration
             $table->foreignId('handled_by')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamp('responded_at')->nullable();
             $table->timestamp('resolved_at')->nullable();
+            // True when the resident marked their own SOS as resolved (no longer needs help).
+            $table->boolean('resolved_by_resident')->default(false);
+            // "Clear history" in the resident app hides a finished request from the resident only.
+            $table->timestamp('resident_hidden_at')->nullable();
             $table->timestamps();
 
             $table->index(['status', 'created_at']);
+            $table->foreign('barangay')->references('name')->on('barangays')->cascadeOnUpdate()->restrictOnDelete();
         });
     }
 

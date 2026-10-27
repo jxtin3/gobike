@@ -117,9 +117,10 @@ it('makes analytics the admin dashboard and places live operations after the cha
 it('allows admins to edit homepage data and shows the changes publicly', function () {
     $admin = User::factory()->create(['is_admin' => true]);
 
-    $stat = ImpactStat::where('section', 'impact')->firstOrFail();
-    $highlight = ImpactStat::where('section', 'highlight')->firstOrFail();
-    $badge = ImpactStat::where('section', 'badge')->firstOrFail();
+    // The migration adds no stats; the admin enters them.
+    $stat = ImpactStat::create(['section' => 'impact', 'label' => 'Barangays Served', 'value' => '45']);
+    $highlight = ImpactStat::create(['section' => 'highlight', 'label' => 'Medical Missions Conducted', 'value' => '300+']);
+    $badge = ImpactStat::create(['section' => 'badge', 'label' => 'Families Reached', 'value' => '500+']);
 
     $this->actingAs($admin)
         ->get(route('admin.operations.homepage-data.index'))
@@ -149,6 +150,14 @@ it('allows admins to edit homepage data and shows the changes publicly', functio
         ->assertSee('350+')
         ->assertSee('Families supported')
         ->assertSee('600+');
+});
+
+it('shows the homepage without the stats strip until the admin adds stats', function () {
+    $this->get('/')->assertOk()->assertDontSee('aria-label="Impact statistics"', false);
+
+    ImpactStat::create(['section' => 'impact', 'label' => 'Barangays Served', 'value' => '45']);
+
+    $this->get('/')->assertOk()->assertSee('aria-label="Impact statistics"', false)->assertSee('Barangays Served');
 });
 
 it('adds older years that have patient records to the year filter', function () {

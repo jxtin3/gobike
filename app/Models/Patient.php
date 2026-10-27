@@ -28,7 +28,7 @@ class Patient extends Model
     ];
 
     protected $fillable = [
-        'user_id', 'barangay', 'name', 'address', 'contact', 'age',
+        'user_id', 'resident_id', 'barangay', 'name', 'address', 'contact', 'age',
         'sys', 'dia', 'pulse', 'resp', 'temp', 'blood_sugar', 'remarks', 'recorded_at',
     ];
 
@@ -158,5 +158,11 @@ class Patient extends Model
     public function recorder(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id');
+    }
+
+    /** The resident's account, when the person checked has one. */
+    public function resident(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'resident_id');
     }
 }

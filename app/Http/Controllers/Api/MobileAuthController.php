@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\DeviceToken;
 use App\Models\User;
 use App\Services\Push\PushNotifier;
+use App\Support\Barangays;
 use Google\Client as GoogleClient;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -45,7 +46,7 @@ class MobileAuthController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
             'mobile' => ['required', 'string', 'max:30'],
-            'barangay' => ['required', 'string', 'max:255'],
+            'barangay' => ['required', 'string', Rule::in(Barangays::ALL)],
             'role' => ['required', Rule::in(['Resident', 'GoBiker', 'User'])],
             'password' => ['required', 'string', 'min:8', 'max:100'],
         ]);

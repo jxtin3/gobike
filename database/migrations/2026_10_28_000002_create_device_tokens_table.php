@@ -4,26 +4,21 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
+/** The phones that receive push notifications (Firebase Cloud Messaging). */
 return new class extends Migration
 {
-    
     public function up(): void
     {
-        if (Schema::hasTable('gobiker_messages')) {
-            return;
-        }
-
-        Schema::create('gobiker_messages', function (Blueprint $table) {
+        Schema::create('device_tokens', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
-            $table->text('message');
-            $table->boolean('is_read')->default(false);
+            $table->string('token', 512)->unique();
             $table->timestamps();
         });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('gobiker_messages');
+        Schema::dropIfExists('device_tokens');
     }
 };

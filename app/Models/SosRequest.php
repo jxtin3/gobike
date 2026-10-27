@@ -37,6 +37,7 @@ class SosRequest extends Model
             'responded_at' => 'datetime',
             'resolved_at' => 'datetime',
             'resolved_by_resident' => 'boolean',
+            'resident_hidden_at' => 'datetime',
         ];
     }
 

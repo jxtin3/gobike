@@ -23,6 +23,7 @@ class DatabaseSeeder extends Seeder
             'email' => 'admin@onegobike.com',
             'password' => bcrypt('admin123'),
             'is_admin' => true,
+            'role' => 'Admin',
         ]);
 
         $this->call([

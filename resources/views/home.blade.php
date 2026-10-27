@@ -379,6 +379,7 @@
 
 <!-- SECTION 5 impact stat -->
 
+@if ($impactStats->isNotEmpty())
 <section
     id="impact"
     class="border-y border-slate-200 bg-[#F8FAFC] py-4 md:py-5"
@@ -393,6 +394,7 @@
         @endforeach
     </div>
 </section>
+@endif
  
 <!-- 
      SECTION 6 — featured impact -->

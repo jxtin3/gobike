@@ -10,7 +10,7 @@ it('shows a dedicated reader for GoBiker messages in the admin inbox', function 
     $admin = User::factory()->create(['is_admin' => true]);
     $sender = User::factory()->create([
         'name' => 'Test GoBiker',
-        'barangay' => 'San Isidro',
+        'barangay' => 'Salasa',
     ]);
     $message = GobikerMessage::create([
         'user_id' => $sender->id,

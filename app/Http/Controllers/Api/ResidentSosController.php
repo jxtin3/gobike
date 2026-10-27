@@ -4,10 +4,12 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\SosRequest;
+use App\Support\Barangays;
 use App\Support\Media;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 
 /**
  * The resident's SOS button. The request is saved first (so the admin is alerted even on a weak
@@ -33,7 +35,7 @@ class ResidentSosController extends Controller
     {
         $data = $request->validate([
             'municipality' => ['required', 'string', 'max:100'],
-            'barangay' => ['required', 'string', 'max:100'],
+            'barangay' => ['required', 'string', Rule::in(Barangays::ALL)],
             'landmark' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string', 'max:1000'],
             'latitude' => ['nullable', 'numeric', 'between:-90,90', 'required_with:longitude'],

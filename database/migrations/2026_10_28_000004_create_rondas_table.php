@@ -15,12 +15,13 @@ return new class extends Migration
         Schema::create('rondas', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
-            $table->string('barangay')->nullable();
+            $table->string('barangay', 100)->nullable();
             $table->timestamp('started_at');
             $table->timestamp('ended_at')->nullable();
             $table->timestamps();
 
             $table->index(['user_id', 'started_at']);
+            $table->foreign('barangay')->references('name')->on('barangays')->cascadeOnUpdate()->restrictOnDelete();
         });
     }
 

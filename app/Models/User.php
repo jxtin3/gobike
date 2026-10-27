@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -38,6 +39,40 @@ class User extends Authenticatable
     public function patients(): HasMany
     {
         return $this->hasMany(Patient::class);
+    }
+
+    public function barangayRecord(): BelongsTo
+    {
+        return $this->belongsTo(Barangay::class, 'barangay', 'name');
+    }
+
+    public function deviceTokens(): HasMany
+    {
+        return $this->hasMany(DeviceToken::class);
+    }
+
+    // SOS requests this resident sent.
+    public function sosRequests(): HasMany
+    {
+        return $this->hasMany(SosRequest::class);
+    }
+
+    // Home visits this resident requested.
+    public function residentAppointments(): HasMany
+    {
+        return $this->hasMany(Appointment::class, 'resident_id');
+    }
+
+    // Home visits assigned to this GoBiker.
+    public function gobikerAppointments(): HasMany
+    {
+        return $this->hasMany(Appointment::class, 'gobiker_id');
+    }
+
+    // Messages this GoBiker sent to the admin.
+    public function gobikerMessages(): HasMany
+    {
+        return $this->hasMany(GobikerMessage::class);
     }
 
     /** Days a GoBiker can be scheduled on, in week order. */

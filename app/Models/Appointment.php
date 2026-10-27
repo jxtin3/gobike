@@ -36,6 +36,7 @@ class Appointment extends Model
             'preferred_date' => 'date',
             'accepted_at' => 'datetime',
             'completed_at' => 'datetime',
+            'resident_hidden_at' => 'datetime',
         ];
     }
 

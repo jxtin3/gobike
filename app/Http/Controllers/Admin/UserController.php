@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Support\Barangays;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -60,7 +61,7 @@ class UserController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
             'mobile' => ['nullable', 'string', 'regex:/^09[0-9]{9}$/', 'unique:users,mobile'],
-            'barangay' => ['nullable', 'string', 'max:255'],
+            'barangay' => ['nullable', 'string', Rule::in(Barangays::ALL)],
             'password' => ['required', 'confirmed', Password::min(12)->letters()->numbers()],
             'role' => ['required', Rule::in($this->roles)],
         ]);
@@ -109,7 +110,7 @@ class UserController extends Controller
                 'regex:/^09[0-9]{9}$/',
                 Rule::unique('users', 'mobile')->ignore($user),
             ],
-            'barangay' => ['nullable', 'string', 'max:255'],
+            'barangay' => ['nullable', 'string', Rule::in(Barangays::ALL)],
             'password' => ['nullable', 'confirmed', Password::min(12)->letters()->numbers()],
             'role' => ['required', Rule::in($this->roles)],
             ...$this->scheduleRules(),

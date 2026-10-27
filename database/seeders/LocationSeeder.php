@@ -15,31 +15,27 @@ class LocationSeeder extends Seeder
         $locations = [
             [
                 'name' => 'Juan Dela Cruz',
-                'role' => 'Volunteer',
                 'latitude' => 16.0435,
                 'longitude' => 120.3334,
-                'status' => 'Active',
+                'status' => 'active',
             ],
             [
                 'name' => 'Mina Santos',
-                'role' => 'Community Member',
                 'latitude' => 16.0510,
                 'longitude' => 120.3440,
-                'status' => 'Active',
+                'status' => 'active',
             ],
             [
                 'name' => 'Emergency Team 1',
-                'role' => 'Emergency Request',
                 'latitude' => 16.0388,
                 'longitude' => 120.3201,
-                'status' => 'Responding',
+                'status' => 'responding',
             ],
             [
                 'name' => 'Rico Garcia',
-                'role' => 'Volunteer',
                 'latitude' => 16.0592,
                 'longitude' => 120.3555,
-                'status' => 'Offline',
+                'status' => 'offline',
             ],
         ];
 

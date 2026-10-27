@@ -15,10 +15,27 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->string('email')->unique();
+            $table->string('mobile')->nullable()->index();
+            $table->string('barangay', 100)->nullable();
+            // A GoBiker's ronda schedule, set by an admin.
+            $table->json('schedule_days')->nullable(); // e.g. ["Mon","Wed","Fri"]
+            $table->time('schedule_start')->nullable();
+            $table->time('schedule_end')->nullable();
+            // Which push notifications a resident wants (from the app's switches).
+            $table->json('notification_prefs')->nullable();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
+            // False for accounts made with Google sign-in: they may set a password without a "current" one.
+            $table->boolean('has_password')->default(true);
+            $table->boolean('is_admin')->default(false);
+            $table->string('role')->default('User'); // User (resident), GoBiker, Admin
+            $table->string('status')->default('Active'); // Active, Inactive (a GoBiker waiting for approval)
+            $table->string('google_id')->nullable()->unique();
             $table->rememberToken();
             $table->timestamps();
+
+            $table->index(['role', 'status']);
+            $table->foreign('barangay')->references('name')->on('barangays')->cascadeOnUpdate()->restrictOnDelete();
         });
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {

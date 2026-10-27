@@ -6,8 +6,10 @@ use App\Http\Controllers\Controller;
 use App\Models\Patient;
 use App\Models\PatientFollowUp;
 use App\Services\Push\PushNotifier;
+use App\Support\Barangays;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class PatientController extends Controller
 {
@@ -89,7 +91,7 @@ class PatientController extends Controller
             'temp' => ['required', 'numeric', 'between:30,45'],
             // Optional: not every patient is tested. mg/dL.
             'blood_sugar' => ['nullable', 'integer', 'between:20,600'],
-            'barangay' => ['nullable', 'string', 'max:255'],
+            'barangay' => ['nullable', 'string', Rule::in(Barangays::ALL)],
             // Advice for the resident, who can read it in the app. Older app versions don't send it.
             'remarks' => ['nullable', 'string', 'max:1000'],
         ]);

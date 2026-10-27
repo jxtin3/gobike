@@ -24,10 +24,13 @@ return new class extends Migration
             $table->text('decline_note')->nullable();
             $table->timestamp('accepted_at')->nullable();
             $table->timestamp('completed_at')->nullable();
+            // "Clear history" in the resident app hides a closed visit from the resident only.
+            $table->timestamp('resident_hidden_at')->nullable();
             $table->timestamps();
 
             $table->index(['status', 'barangay']);
             $table->index(['gobiker_id', 'status']);
+            $table->foreign('barangay')->references('name')->on('barangays')->cascadeOnUpdate()->restrictOnDelete();
         });
     }
 

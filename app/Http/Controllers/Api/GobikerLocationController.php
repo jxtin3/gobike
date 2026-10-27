@@ -5,8 +5,10 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Location;
 use App\Models\Ronda;
+use App\Support\Barangays;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 /**
  * GoBiker mobile app: share location, start/stop a ronda and send an emergency alert.
@@ -40,7 +42,7 @@ class GobikerLocationController extends Controller
     public function startActiveSession(Request $request): JsonResponse
     {
         $data = $request->validate([
-            'designated_barangay' => ['nullable', 'string', 'max:255'],
+            'designated_barangay' => ['nullable', 'string', Rule::in(Barangays::ALL)],
         ]);
 
         $current = Location::where('user_id', $request->user()->id)->first();
@@ -55,7 +57,6 @@ class GobikerLocationController extends Controller
             ['user_id' => $request->user()->id],
             [
                 'name' => $request->user()->name,
-                'role' => 'GoBiker',
                 'designated_barangay' => $barangay,
                 'status' => Location::isAlertStatus($current?->status) ? strtolower($current->status) : 'active',
                 'active_start_time' => now(),
@@ -136,7 +137,6 @@ class GobikerLocationController extends Controller
             ['user_id' => $request->user()->id],
             [
                 'name' => $request->user()->name,
-                'role' => 'GoBiker',
                 'latitude' => $data['latitude'],
                 'longitude' => $data['longitude'],
                 'status' => 'emergency',
