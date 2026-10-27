@@ -125,18 +125,35 @@ class User extends Authenticatable
             ->delete();
     }
 
-    /**
-     * The check-ups GoBikers recorded for this person. Check-ups carry no user ID, so the person
-     * is recognised the same way the admin does it: same name (ignoring case and spaces) and the
-     * same contact number. Without a mobile number nothing can be matched safely.
-     */
-    public function checkups(): Builder
+    /** The check-ups GoBikers recorded for this resident. */
+    public function checkups(): HasMany
     {
-        if (blank($this->mobile) || blank($this->name)) {
-            return Patient::query()->whereRaw('1 = 0');
+        return $this->hasMany(Patient::class, 'resident_id');
+    }
+
+    /**
+     * Check-ups recorded before this resident had an account (or under the name and mobile they
+     * just switched to) become theirs: same name, ignoring case and spaces, and same mobile.
+     * Check-ups that already belong to someone are left alone.
+     */
+    public function claimCheckups(): void
+    {
+        if ($this->role !== 'User' || $this->is_admin || blank($this->mobile) || blank($this->name)) {
+            return;
         }
 
-        return Patient::query()->forPerson($this->name, $this->mobile);
+        Patient::whereNull('resident_id')
+            ->forPerson($this->name, $this->mobile)
+            ->update(['resident_id' => $this->id]);
+    }
+
+    protected static function booted(): void
+    {
+        static::saved(function (User $user) {
+            if ($user->wasRecentlyCreated || $user->wasChanged(['name', 'mobile', 'role'])) {
+                $user->claimCheckups();
+            }
+        });
     }
 
     /**

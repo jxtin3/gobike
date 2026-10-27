@@ -32,6 +32,17 @@ class Patient extends Model
         'sys', 'dia', 'pulse', 'resp', 'temp', 'blood_sugar', 'remarks', 'recorded_at',
     ];
 
+    protected static function booted(): void
+    {
+        // A new check-up, or one whose name or contact was corrected, belongs to the resident
+        // with that name and mobile (unless the resident was set on purpose).
+        static::saving(function (Patient $patient) {
+            if (! $patient->isDirty('resident_id') && (! $patient->exists || $patient->isDirty(['name', 'contact']))) {
+                $patient->resident_id = $patient->matchingResident()?->id;
+            }
+        });
+    }
+
     protected function casts(): array
     {
         return [
@@ -78,6 +89,24 @@ class Patient extends Model
         return $query
             ->whereRaw('LOWER(TRIM(name)) = ?', [strtolower(trim((string) $name))])
             ->whereRaw("TRIM(COALESCE(contact, '')) = ?", [trim((string) $contact)]);
+    }
+
+    /**
+     * The resident account this check-up is for: a resident with the same name (ignoring case and
+     * spaces) and the same mobile number. Without a contact number nothing is matched.
+     */
+    public function matchingResident(): ?User
+    {
+        if (blank($this->name) || blank($this->contact)) {
+            return null;
+        }
+
+        return User::where('role', 'User')
+            ->where('is_admin', false)
+            ->whereRaw('LOWER(TRIM(name)) = ?', [strtolower(trim($this->name))])
+            ->whereRaw("TRIM(COALESCE(mobile, '')) = ?", [trim($this->contact)])
+            ->orderBy('id')
+            ->first();
     }
 
     public function isNormal(): bool

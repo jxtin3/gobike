@@ -56,16 +56,12 @@ class PushNotifier
         }
     }
 
-    /** A GoBiker saved a check-up: tell the resident it belongs to (same name and mobile). */
+    /** A GoBiker saved a check-up: tell the resident it belongs to. */
     public function checkupSaved(Patient $patient, bool $updated): void
     {
-        $residents = User::where('role', 'User')
-            ->whereRaw('LOWER(TRIM(name)) = ?', [strtolower(trim((string) $patient->name))])
-            ->whereRaw("TRIM(COALESCE(mobile, '')) = ?", [trim((string) $patient->contact)])
-            ->whereRaw("TRIM(COALESCE(mobile, '')) <> ''")
-            ->get();
+        $resident = $patient->resident()->first();
 
-        foreach ($residents as $resident) {
+        if ($resident) {
             $this->toUser(
                 $resident,
                 'checkups',

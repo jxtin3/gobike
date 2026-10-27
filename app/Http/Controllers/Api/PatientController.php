@@ -49,7 +49,9 @@ class PatientController extends Controller
     public function update(Request $request, Patient $patient): JsonResponse
     {
         $this->authorizeOwner($request, $patient);
+        $oldKey = $patient->personKey();
         $patient->update($this->validated($request));
+        $this->moveFollowUp($oldKey, $patient);
         app(PushNotifier::class)->checkupSaved($patient, updated: true);
 
         return response()->json([
@@ -67,6 +69,31 @@ class PatientController extends Controller
     }
 
     // ---------------------------------------------------------------- helpers
+
+    /**
+     * The name or contact of a check-up was corrected. When no other check-up still uses the old
+     * name and contact, the admin's follow-up decision moves with it instead of being left behind.
+     */
+    private function moveFollowUp(string $oldKey, Patient $patient): void
+    {
+        $newKey = $patient->personKey();
+
+        if ($oldKey === $newKey || PatientFollowUp::where('person_key', $newKey)->exists()) {
+            return;
+        }
+
+        [$oldName, $oldContact] = explode('|', $oldKey, 2);
+
+        if (Patient::forPerson($oldName, $oldContact)->exists()) {
+            return;
+        }
+
+        PatientFollowUp::where('person_key', $oldKey)->update([
+            'person_key' => $newKey,
+            'name' => $patient->name,
+            'contact' => $patient->contact,
+        ]);
+    }
 
     private function authorizeOwner(Request $request, Patient $patient): void
     {
