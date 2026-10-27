@@ -1,0 +1,237 @@
+/* PROGRAMS / Section 4 — Training request thank-you note */
+
+.tr-thanks {
+    display: grid;
+    grid-template-columns: 1fr;
+    margin-top: 3rem;
+    scroll-margin-top: 7rem;
+    background: #fff;
+    border-left: 4px solid #F97316;
+    border-radius: 2px;
+    color: #475569;
+}
+
+@media (min-width: 1024px) {
+    .tr-thanks {
+        grid-template-columns: 2fr 3fr;
+    }
+}
+
+.tr-thanks__intro,
+.tr-thanks__next {
+    padding: 1.75rem;
+}
+
+@media (min-width: 640px) {
+    .tr-thanks__intro,
+    .tr-thanks__next {
+        padding: 2.5rem;
+    }
+}
+
+.tr-thanks__intro {
+    border-bottom: 1px solid #E2E8F0;
+}
+
+@media (min-width: 1024px) {
+    .tr-thanks__intro {
+        border-bottom: 0;
+        border-right: 1px solid #E2E8F0;
+    }
+}
+
+.tr-thanks__icon {
+    width: 2.5rem;
+    height: 2.5rem;
+    color: #F97316;
+    margin-bottom: 1.25rem;
+}
+
+.tr-thanks__title {
+    margin: 0 0 0.75rem;
+    font: 700 clamp(1.875rem, 3.5vw, 2.5rem) / 1.1 Oswald, sans-serif;
+    text-transform: uppercase;
+    letter-spacing: -0.01em;
+    color: #132D6B;
+}
+
+.tr-thanks__lead {
+    margin: 0 0 1.75rem;
+    font-size: 1rem;
+    line-height: 1.65;
+}
+
+.tr-thanks__summary {
+    margin: 0;
+    padding: 1rem 1.25rem;
+    background: #F8FAFC;
+    border: 1px solid #E2E8F0;
+    border-radius: 2px;
+    font-size: 0.875rem;
+}
+
+.tr-thanks__row {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.4rem 0;
+}
+
+.tr-thanks__row + .tr-thanks__row {
+    border-top: 1px solid #E2E8F0;
+}
+
+.tr-thanks__row dt {
+    color: #64748B;
+}
+
+.tr-thanks__row dd {
+    margin: 0;
+    font-weight: 600;
+    color: #111827;
+    text-align: right;
+    overflow-wrap: anywhere;
+}
+
+.tr-thanks__heading {
+    margin: 0 0 1.5rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #111827;
+}
+
+/* Steps — markers joined by a thin line */
+.tr-thanks__steps {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.tr-thanks__step {
+    position: relative;
+    display: flex;
+    gap: 1rem;
+    padding-bottom: 1.5rem;
+}
+
+.tr-thanks__step:last-child {
+    padding-bottom: 0;
+}
+
+.tr-thanks__step:not(:last-child)::before {
+    content: '';
+    position: absolute;
+    left: 0.875rem;
+    top: 1.75rem;
+    bottom: 0;
+    width: 2px;
+    margin-left: -1px;
+    background: #E2E8F0;
+}
+
+.tr-thanks__step--done:not(:last-child)::before {
+    background: #132D6B;
+}
+
+.tr-thanks__marker {
+    position: relative;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    border-radius: 999px;
+    border: 2px solid #CBD5E1;
+    background: #fff;
+    color: #64748B;
+    font-size: 0.8125rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+
+.tr-thanks__step--done .tr-thanks__marker {
+    border-color: #132D6B;
+    background: #132D6B;
+    color: #fff;
+}
+
+.tr-thanks__step--current .tr-thanks__marker {
+    border-color: #132D6B;
+    color: #132D6B;
+}
+
+.tr-thanks__step-title {
+    margin: 0.15rem 0 0;
+    font-weight: 600;
+    color: #111827;
+}
+
+.tr-thanks__step-when {
+    font-weight: 400;
+    color: #64748B;
+}
+
+.tr-thanks__step-text {
+    margin: 0.2rem 0 0;
+    font-size: 0.875rem;
+    line-height: 1.6;
+    color: #475569;
+}
+
+/* Actions */
+.tr-thanks__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem 1.5rem;
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #E2E8F0;
+}
+
+.tr-thanks__again {
+    min-height: 2.75rem;
+    padding: 0 1.25rem;
+    border: 1.5px solid #132D6B;
+    border-radius: 2px;
+    background: #fff;
+    color: #132D6B;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.tr-thanks__again:hover {
+    background: #132D6B;
+    color: #fff;
+}
+
+.tr-thanks__contact {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    min-height: 2.75rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #475569;
+    transition: color 0.2s;
+}
+
+.tr-thanks__contact strong {
+    color: #132D6B;
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+.tr-thanks__contact:hover strong {
+    color: #F97316;
+}
+
+.tr-thanks__again:focus-visible,
+.tr-thanks__contact:focus-visible {
+    outline: 2px solid #2FA7FF;
+    outline-offset: 2px;
+}

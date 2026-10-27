@@ -115,39 +115,39 @@
     id="training-plan"
     class="py-20 md:py-15 bg-[#0D1B2A] relative overflow-hidden scroll-mt-16"
     x-data="{
-        selected: null,
-        formVisible: false,
+        selected: @js(old('tier')),
+        formVisible: @js($errors->any()),
         tiers: [
             {
                 key: 'basic',
                 name: 'Basic',
                 price: 'Free',
-                sub: 'No cost for qualifying families',
-                desc: 'Core first-aid awareness for households wanting essential emergency preparedness.',
+                sub: 'Per person / 1 session',
+                desc: 'An introduction to first aid for anyone who wants to know what to do in an emergency.',
                 accent: '#16A34A',
                 accentBg: 'from-[#16A34A] to-[#15803D]',
-                features: ['Basic wound care & CPR demo', 'Emergency contact setup', 'Household safety checklist', '1-session onsite visit']
+                features: ['Basic wound care & CPR demo', 'Emergency contact setup', 'Home safety checklist', '1 onsite training session']
             },
             {
                 key: 'standard',
                 name: 'Standard',
                 price: '₱499',
-                sub: 'Per household / session',
-                desc: 'Comprehensive training for families wanting hands-on skills and readiness planning.',
+                sub: 'Per person / 2 sessions',
+                desc: 'Hands-on first aid training for people who want to practice real skills and plan for emergencies.',
                 accent: '#132D6B',
                 accentBg: 'from-[#132D6B] to-[#1e3a8a]',
-                features: ['Everything in Basic', 'CPR & BLS certification', 'Disaster readiness planning', 'Emergency kit assembly guide', '3-session onsite training', 'Responder group access'],
+                features: ['Everything in Basic', 'CPR & BLS certification', 'Disaster readiness planning', 'Emergency kit assembly guide', '2 onsite training sessions', 'Responder group access'],
                 popular: true
             },
             {
                 key: 'advance',
                 name: 'Advance',
                 price: '₱999',
-                sub: 'Per household / full module',
-                desc: 'Full responder module for those who want to be community-level health advocates.',
+                sub: 'Per person / 2 sessions, full module',
+                desc: 'The full responder module for people who want to become health advocates in their community.',
                 accent: '#9A3412',
                 accentBg: 'from-[#9A3412] to-[#c2410c]',
-                features: ['Everything in Standard', 'Advanced first aid module', 'Volunteer facilitator track', 'Barangay coordination training', '6-session extended program', 'Certificate of completion', 'Priority dispatch access']
+                features: ['Everything in Standard', 'Advanced first aid module', 'Volunteer facilitator track', 'Barangay coordination training', '2 extended training sessions', 'Certificate of completion', 'Priority dispatch access']
             }
         ],
         selectTier(key) {
@@ -162,6 +162,7 @@
             }
         }
     }"
+    x-init="if (formVisible) $nextTick(() => document.getElementById('training-request-form')?.scrollIntoView({ block: 'start', behavior: 'instant' }))"
 >
     <!-- Subtle grid overlay -->
     <div class="absolute inset-0 opacity-[0.03]" style="background-image: linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px); background-size: 48px 48px;" aria-hidden="true"></div>
@@ -171,13 +172,13 @@
         <!-- Section Header -->
         <div class="mb-16 reveal">
             <div class="flex items-center gap-3 mb-5">
-                <span class="text-[10px] font-bold tracking-[0.25em] uppercase text-[#F97316]">House-to-House Training</span>
+                <span class="text-[10px] font-bold tracking-[0.25em] uppercase text-[#F97316]">First Aid Training &middot; Priced Per Person</span>
             </div>
             <h2 class="text-4xl md:text-5xl lg:text-6xl font-heading font-bold text-white uppercase tracking-tight leading-none mb-5">
-                Choose Your<br/><span class="text-[#2FA7FF]">Training Plan</span>
+                Learn To<br/><span class="text-[#2FA7FF]">Save Lives</span>
             </h2>
             <p class="text-white/50 text-base max-w-xl leading-relaxed">
-                Request our trained youth responders to conduct first-aid and emergency preparedness training directly at your home. Select a tier below to get started.
+                Learn first aid and emergency preparedness from Go Bike's trained youth responders. Every plan is priced per person, and we hold the sessions where you are: your home, school, office or barangay hall. Pick a plan below to get started.
             </p>
         </div>
 
@@ -252,6 +253,80 @@
             </template>
         </div>
 
+        @if($thanks = session('training_success'))
+            <script>
+                // Jump straight to the note; the site's smooth scrolling would otherwise glide down from the top
+                document.documentElement.style.scrollBehavior = 'auto';
+                window.addEventListener('load', () => {
+                    document.getElementById('training-thanks')?.scrollIntoView({ block: 'start' });
+                    document.documentElement.style.scrollBehavior = '';
+                });
+            </script>
+            <!-- Thank-you note after a successful request -->
+            <div id="training-thanks" x-data="{ open: true }" x-show="open" class="tr-thanks" role="status">
+
+                <div class="tr-thanks__intro">
+                    <svg class="tr-thanks__icon" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+                    <h3 class="tr-thanks__title">Thank you, {{ $thanks['first_name'] ?? 'friend' }}!</h3>
+                    <p class="tr-thanks__lead">
+                        We received your training request. A Go Bike coordinator will get in touch to set your schedule.
+                    </p>
+                    @isset($thanks['plan'])
+                        <dl class="tr-thanks__summary">
+                            <div class="tr-thanks__row">
+                                <dt>Plan</dt>
+                                <dd>{{ $thanks['plan'] }}</dd>
+                            </div>
+                            <div class="tr-thanks__row">
+                                <dt>We'll reply to</dt>
+                                <dd>{{ $thanks['email'] }}</dd>
+                            </div>
+                        </dl>
+                    @endisset
+                </div>
+
+                <div class="tr-thanks__next">
+                    <h4 class="tr-thanks__heading">What happens next</h4>
+                    <ol class="tr-thanks__steps">
+                        <li class="tr-thanks__step tr-thanks__step--done">
+                            <span class="tr-thanks__marker" aria-hidden="true">
+                                <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
+                            </span>
+                            <div>
+                                <p class="tr-thanks__step-title">Request received <span class="tr-thanks__step-when">· today</span></p>
+                                <p class="tr-thanks__step-text">Your details are now with our dispatch team.</p>
+                            </div>
+                        </li>
+                        <li class="tr-thanks__step tr-thanks__step--current">
+                            <span class="tr-thanks__marker" aria-hidden="true">2</span>
+                            <div>
+                                <p class="tr-thanks__step-title">We contact you <span class="tr-thanks__step-when">· within 48 hours</span></p>
+                                <p class="tr-thanks__step-text">We'll call or email you to agree on a date, time and the number of participants.</p>
+                            </div>
+                        </li>
+                        <li class="tr-thanks__step">
+                            <span class="tr-thanks__marker" aria-hidden="true">3</span>
+                            <div>
+                                <p class="tr-thanks__step-title">Training day</p>
+                                <p class="tr-thanks__step-text">Our youth responders come to your home, school or barangay hall.</p>
+                            </div>
+                        </li>
+                    </ol>
+
+                    <div class="tr-thanks__actions">
+                        <button type="button" class="tr-thanks__again"
+                            @click="open = false; $nextTick(() => document.getElementById('tier-cards-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' }))">
+                            Request another training
+                        </button>
+                        <a href="{{ url('/contact') }}" class="tr-thanks__contact">
+                            Questions? <strong>Contact us</strong>
+                        </a>
+                    </div>
+                </div>
+
+            </div>
+        @endif
+
         <!-- Step 2: Request Form — only visible after tier selected -->
         <div
             id="training-request-form"
@@ -281,7 +356,7 @@
                     </p>
                     <div class="space-y-5">
                         <div class="flex items-start gap-4">
-                            <div class="w-8 h-8 rounded-sm bg-[#F97316]/10 flex items-center justify-center shrink-0 mt-0.5">
+                            <div class="w-8 h-8 flex items-center justify-center shrink-0 mt-0.5">
                                 <svg class="w-4 h-4 text-[#F97316]" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6l4 2m6-2a10 10 0 1 1-20 0 10 10 0 0 1 20 0Z"/></svg>
                             </div>
                             <div>
@@ -290,16 +365,16 @@
                             </div>
                         </div>
                         <div class="flex items-start gap-4">
-                            <div class="w-8 h-8 rounded-sm bg-[#F97316]/10 flex items-center justify-center shrink-0 mt-0.5">
+                            <div class="w-8 h-8 flex items-center justify-center shrink-0 mt-0.5">
                                 <svg class="w-4 h-4 text-[#F97316]" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0ZM19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z"/></svg>
                             </div>
                             <div>
-                                <div class="text-white text-sm font-semibold mb-0.5">On-site at your home</div>
-                                <div class="text-white/40 text-xs">We come to you, anywhere in Pangasinan</div>
+                                <div class="text-white text-sm font-semibold mb-0.5">On-site where you are</div>
+                                <div class="text-white/40 text-xs">Home, school or barangay hall, anywhere in Pangasinan</div>
                             </div>
                         </div>
                         <div class="flex items-start gap-4">
-                            <div class="w-8 h-8 rounded-sm bg-[#F97316]/10 flex items-center justify-center shrink-0 mt-0.5">
+                            <div class="w-8 h-8 flex items-center justify-center shrink-0 mt-0.5">
                                 <svg class="w-4 h-4 text-[#F97316]" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0"/></svg>
                             </div>
                             <div>
@@ -311,10 +386,18 @@
                 </div>
 
                 <div class="lg:col-span-3">
-                    @if(session('training_success'))
-                        <div style="background:rgba(21,128,61,0.15);border:1px solid rgba(21,128,61,0.3);border-radius:6px;padding:16px 20px;margin-bottom:20px;color:#86efac;font-size:14px;display:flex;align-items:center;gap:10px">
-                            <svg class="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
-                            {{ session('training_success') }}
+                    @if($errors->any())
+                        <div class="mb-5 px-5 py-4 border border-[#F87171]/40 bg-[#F87171]/10 text-sm text-[#FECACA]" role="alert">
+                            @error('tier')
+                                Please choose a training plan above, then submit again.
+                            @else
+                                Please check the fields below and try again.
+                                <ul class="list-disc pl-5 mt-2 space-y-1">
+                                    @foreach($errors->all() as $error)
+                                        <li>{{ $error }}</li>
+                                    @endforeach
+                                </ul>
+                            @enderror
                         </div>
                     @endif
                     <form action="{{ route('training-request.store') }}" method="POST" class="space-y-5">
@@ -348,7 +431,7 @@
 
                         <div>
                             <label class="block text-[10px] font-bold tracking-widest uppercase text-white/40 mb-2">Message / Preferred Schedule</label>
-                            <textarea name="message" rows="4" placeholder="Any special requirements, preferred schedule or questions..."
+                            <textarea name="message" rows="4" placeholder="Number of participants, preferred schedule, special requirements or questions..."
                                 class="w-full px-4 py-3.5 bg-white/5 border border-white/10 text-sm text-white placeholder-white/25 focus:outline-none focus:border-[#2FA7FF] focus:bg-white/8 transition-all duration-200 resize-none">{{ old('message') }}</textarea>
                         </div>
 

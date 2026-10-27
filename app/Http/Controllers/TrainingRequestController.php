@@ -20,6 +20,11 @@ class TrainingRequestController extends Controller
 
         TrainingRequest::create($data);
 
-        return back()->with('training_success', 'Your training request has been submitted! Our team will contact you within 48 hours.');
+        // Land on the thank-you note instead of the top of the page
+        return back()->withFragment('training-thanks')->with('training_success', [
+            'first_name' => strtok(trim($data['name']), ' '),
+            'plan' => TrainingRequest::TIERS[$data['tier']],
+            'email' => $data['email'],
+        ]);
     }
 }
