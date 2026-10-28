@@ -71,11 +71,35 @@ it('registers a phone, moves it to the account that logs in, and removes it on l
 
 it('forgets a phone Firebase says is gone', function () {
     $this->push->dead = ['resident-phone'];
+    DeviceToken::where('token', 'resident-phone')->update(['updated_at' => now()->subHour()]);
     $sos = SosRequest::create(['user_id' => $this->resident->id, 'municipality' => 'Bugallon', 'barangay' => 'Poblacion', 'landmark' => 'Chapel']);
 
     $this->actingAs($this->admin, 'web')->patchJson(route('admin.operations.sos.status', $sos), ['status' => 'responding'])->assertOk();
 
     expect(DeviceToken::where('token', 'resident-phone')->exists())->toBeFalse();
+});
+
+it('keeps a phone that only just registered, even if Firebase is not ready for it yet', function () {
+    $this->push->dead = ['resident-phone'];
+    $sos = SosRequest::create(['user_id' => $this->resident->id, 'municipality' => 'Bugallon', 'barangay' => 'Poblacion', 'landmark' => 'Chapel']);
+
+    $this->actingAs($this->admin, 'web')->patchJson(route('admin.operations.sos.status', $sos), ['status' => 'responding'])->assertOk();
+
+    expect(DeviceToken::where('token', 'resident-phone')->exists())->toBeTrue();
+});
+
+it('marks a phone as just registered every time the app registers it', function () {
+    DeviceToken::where('token', 'resident-phone')->update(['updated_at' => now()->subDay()]);
+
+    Sanctum::actingAs($this->resident);
+    $this->postJson('/api/mobile/device-token', ['token' => 'resident-phone'])->assertOk();
+
+    expect(DeviceToken::where('token', 'resident-phone')->first()->updated_at->gt(now()->subMinute()))->toBeTrue();
+});
+
+it('sends to an FCM registration token or, for older app versions, an installation ID', function () {
+    expect(\App\Services\Push\GoogleFcmSender::targetField('dQw4w9WgXcQ:APA91bHPRgkF3JUikC4ENAHEeMrd41Zxv3hVZjC9KtT8OvPVGJ-hQMRKRrZuJAEcl7B338qju59zJMjw2DELjzEvxwYv7hH5Ynpc1ODQ0aT4U4OFEeco8ohsN5PjL1iC2dNtk2BAokeMCg2ZXKqpc8FXKmhX94kIxQ'))->toBe('token')
+        ->and(\App\Services\Push\GoogleFcmSender::targetField('cXyZ1234abcdEFGH5678ij'))->toBe('fid');
 });
 
 // ---------------------------------------------------------------- residents

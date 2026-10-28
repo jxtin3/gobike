@@ -28,8 +28,7 @@ class GoogleFcmSender implements FcmSender
             ->timeout(5)
             ->post('https://fcm.googleapis.com/v1/projects/'.config('services.fcm.project_id').'/messages:send', [
                 'message' => [
-                    // The app registers with a Firebase Installation ID (FID); "token" is deprecated.
-                    'fid' => $token,
+                    self::targetField($token) => $token,
                     'notification' => ['title' => $title, 'body' => $body],
                     'data' => $data,
                     'android' => [
@@ -52,6 +51,15 @@ class GoogleFcmSender implements FcmSender
         Log::warning('Push notification failed', ['status' => $response->status(), 'error' => $response->json('error.message')]);
 
         return true;
+    }
+
+    /**
+     * Where FCM sends: an FCM registration token ("…:APA91b…", from the app since 1.0.13), or a
+     * Firebase Installation ID (22 characters, sent by older app versions).
+     */
+    public static function targetField(string $token): string
+    {
+        return str_contains($token, ':') ? 'token' : 'fid';
     }
 
     private function accessToken(): string

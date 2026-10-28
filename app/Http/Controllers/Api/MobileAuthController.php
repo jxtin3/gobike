@@ -187,7 +187,8 @@ class MobileAuthController extends Controller
         $data = $request->validate(['token' => ['required', 'string', 'max:512']]);
 
         // A phone can change hands (logout, another account logs in): the token moves with it.
-        DeviceToken::updateOrCreate(['token' => $data['token']], ['user_id' => $request->user()->id]);
+        // Touched on every registration, so a freshly registered phone is not forgotten too early.
+        DeviceToken::updateOrCreate(['token' => $data['token']], ['user_id' => $request->user()->id])->touch();
 
         return response()->json(['message' => 'Device registered.']);
     }

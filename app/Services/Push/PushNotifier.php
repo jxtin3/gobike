@@ -131,8 +131,10 @@ class PushNotifier
             return;
         }
 
-        $tokens = DeviceToken::where('user_id', $user->id)->pluck('token', 'id');
+        $tokens = DeviceToken::where('user_id', $user->id)->get(['id', 'user_id', 'token', 'updated_at']);
         if ($tokens->isEmpty()) {
+            Log::info('Push skipped: no registered phone', ['user_id' => $user->id, 'title' => $title]);
+
             return;
         }
 
@@ -145,15 +147,32 @@ class PushNotifier
         };
 
         defer(function () use ($tokens, $title, $body, $data, $channel) {
-            foreach ($tokens as $id => $token) {
+            foreach ($tokens as $device) {
                 try {
-                    if (! $this->sender->send($token, $title, $body, $data, $channel)) {
-                        DeviceToken::whereKey($id)->delete();
+                    if (! $this->sender->send($device->token, $title, $body, $data, $channel)) {
+                        $this->forget($device);
                     }
                 } catch (\Throwable $e) {
-                    Log::warning('Push notification error: '.$e->getMessage());
+                    Log::warning('Push notification error: '.$e->getMessage(), ['user_id' => $device->user_id]);
                 }
             }
         });
+    }
+
+    /**
+     * Firebase says this phone is not registered (the app was uninstalled, or it is still being
+     * set up). A phone that registered in the last 10 minutes is kept: Firebase can need a moment.
+     */
+    private function forget(DeviceToken $device): void
+    {
+        $fresh = $device->updated_at?->gt(now()->subMinutes(10)) ?? false;
+        Log::warning($fresh ? 'Push: phone not ready yet, kept' : 'Push: phone not registered, forgotten', [
+            'user_id' => $device->user_id,
+            'device_token_id' => $device->id,
+        ]);
+
+        if (! $fresh) {
+            $device->delete();
+        }
     }
 }
