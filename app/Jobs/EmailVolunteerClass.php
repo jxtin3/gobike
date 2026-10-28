@@ -7,6 +7,7 @@ use App\Models\VolunteerClass;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Symfony\Component\Mailer\Exception\TransportException;
 use Throwable;
 
 /**
@@ -38,6 +39,14 @@ class EmailVolunteerClass
                     Mail::to($application->email, $application->full_name)
                         ->send(new VolunteerClassScheduled($application, $class));
                     $application->forceFill(['class_emailed_at' => now()])->save();
+                } catch (TransportException $e) {
+                    // The mail server itself can't be reached: the others would fail the same way.
+                    Log::error('Volunteer class emails stopped: the mail server could not be reached', [
+                        'class_id' => $class->id,
+                        'error' => $e->getMessage(),
+                    ]);
+
+                    return false;
                 } catch (Throwable $e) {
                     // One bad address must not stop the rest; the admin can send again or call.
                     Log::warning('Could not email volunteer class details', [

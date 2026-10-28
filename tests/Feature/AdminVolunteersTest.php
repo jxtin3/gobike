@@ -197,3 +197,21 @@ it('emails one volunteer their class details again from their page', function ()
     // Someone not in a class has nothing to be emailed.
     $this->post(route('admin.operations.volunteers.email-class', $waiting))->assertSessionHas('error');
 });
+
+it('stops sending a class its emails when the mail server cannot be reached', function () {
+    $admin = User::factory()->create(['is_admin' => true]);
+    $class = \App\Models\VolunteerClass::create(['starts_on' => now()->addWeek(), 'venue' => 'Hall']);
+    foreach (range(1, 3) as $i) {
+        makeVolunteerApplication(['email' => "c{$i}@example.com", 'application_status' => 'scheduled', 'volunteer_class_id' => $class->id]);
+    }
+    $attempts = 0;
+    \Illuminate\Support\Facades\Mail::shouldReceive('to')->andReturnUsing(function () use (&$attempts) {
+        $attempts++;
+        throw new \Symfony\Component\Mailer\Exception\TransportException('Connection timed out');
+    });
+
+    (new \App\Jobs\EmailVolunteerClass($class->id))->handle();
+
+    expect($attempts)->toBe(1)
+        ->and(VolunteerApplication::whereNotNull('class_emailed_at')->count())->toBe(0);
+});
