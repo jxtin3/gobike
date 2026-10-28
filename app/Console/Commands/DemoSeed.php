@@ -38,6 +38,7 @@ class DemoSeed extends Command
 
     protected $signature = 'demo:seed
         {--fresh : Remove the demo data first, then add it again (refreshes the live map)}
+        {--gobikers=30 : How many GoBikers (more fill the live map; 6 of the first 30 wait for approval)}
         {--force : Skip the confirmation on production}';
 
     protected $description = 'Add fake presentation data (50+ records per admin section). Remove it with demo:clear.';
@@ -128,9 +129,11 @@ class DemoSeed extends Command
     {
         $password = Hash::make(Str::random(40)); // nobody can sign in as a demo account
         $active = $pending = [];
-        foreach (range(1, 30) as $i) {
-            $user = $this->user('gobiker', 'GoBiker', Barangays::ALL[($i - 1) % count(Barangays::ALL)], $password, $i > 24 ? 'Inactive' : 'Active');
-            if ($i > 24) {
+        foreach (range(1, max(30, (int) $this->option('gobikers'))) as $i) {
+            // Numbers 25-30 signed up in the app and wait for the admin's approval.
+            $waiting = $i > 24 && $i <= 30;
+            $user = $this->user('gobiker', 'GoBiker', Barangays::ALL[($i - 1) % count(Barangays::ALL)], $password, $waiting ? 'Inactive' : 'Active');
+            if ($waiting) {
                 $pending[] = $user;
             } else {
                 $active[] = $user;
@@ -175,7 +178,8 @@ class DemoSeed extends Command
     private function mapAndRondas(array $gobikers): void
     {
         foreach ($gobikers as $n => $gobiker) {
-            foreach (range(1, $this->int(3, 6)) as $_) {
+            // The first 24 have a full history; the extra ones (--gobikers) a shorter one.
+            foreach (range(1, $n < 24 ? $this->int(3, 6) : $this->int(1, 3)) as $_) {
                 $start = $this->daysAgo(1, 60)->setTime($this->int(6, 18), $this->pick([0, 15, 30, 45]));
                 Ronda::forceCreate([
                     'user_id' => $gobiker->id, 'barangay' => $gobiker->barangay,
@@ -183,17 +187,19 @@ class DemoSeed extends Command
                 ]);
             }
 
-            $onRonda = $n < 8;
+            // 8 of the first 24 are out now, and about 3 in 4 of the extra ones.
+            $onRonda = $n < 8 || ($n >= 24 && $this->chance(75));
             $start = $onRonda ? now()->subMinutes($this->int(10, 120)) : $this->daysAgo(1, 5)->setTime(8, 0);
             if ($onRonda) {
                 Ronda::forceCreate(['user_id' => $gobiker->id, 'barangay' => $gobiker->barangay, 'started_at' => $start]);
             }
+            [$lat, $lng] = $this->spotIn($gobiker->barangay);
             Location::forceCreate([
                 'user_id' => $gobiker->id,
                 'name' => $gobiker->name,
                 'designated_barangay' => $gobiker->barangay,
-                'latitude' => 15.957 + $this->float(-0.03, 0.03),
-                'longitude' => 120.187 + $this->float(-0.03, 0.03),
+                'latitude' => $lat,
+                'longitude' => $lng,
                 // One emergency the admin is already answering, one still waiting (shows the live alert).
                 'status' => match ($n) { 0 => 'responding', 1 => 'emergency', default => 'active' },
                 'emergency_at' => $n < 2 ? now()->subMinutes(4 + $n * 6) : null,
@@ -535,6 +541,22 @@ class DemoSeed extends Command
     }
 
     // ---------------------------------------------------------------- helpers
+
+    /**
+     * A point near the barangay. The barangays are laid out on a 6×4 grid over Bugallon
+     * (about 15.90–16.00 N, 120.12–120.25 E): close to the real town, not surveyed positions.
+     *
+     * @return array{0: float, 1: float}
+     */
+    private function spotIn(?string $barangay): array
+    {
+        $k = max(0, (int) array_search($barangay, Barangays::ALL, true));
+
+        return [
+            15.905 + intdiv($k, 6) * 0.033 + $this->float(-0.008, 0.008),
+            120.120 + ($k % 6) * 0.026 + $this->float(-0.008, 0.008),
+        ];
+    }
 
     private function demoCount(string $model, string $userColumn): int
     {

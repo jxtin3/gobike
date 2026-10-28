@@ -80,6 +80,32 @@ it('shows the demo data on every admin page and filter', function () {
     }
 });
 
+it('fills the live map with many GoBikers in every Bugallon barangay, and keeps them moving', function () {
+    $admin = User::factory()->create(['is_admin' => true, 'role' => 'Admin']);
+    $this->artisan('demo:seed', ['--force' => true, '--gobikers' => 200])->assertSuccessful();
+
+    expect(User::where('role', 'GoBiker')->count())->toBe(200)
+        ->and(User::pendingApproval()->count())->toBe(6)
+        ->and(Location::count())->toBe(194)
+        ->and(Location::distinct()->count('designated_barangay'))->toBe(count(\App\Support\Barangays::ALL))
+        ->and(Location::whereBetween('latitude', [15.89, 16.02])->whereBetween('longitude', [120.11, 120.26])->count())->toBe(194);
+
+    // Make the "on ronda" ones look stale, then let demo:live bring them back.
+    $onRonda = Location::whereNull('active_end_time')->count();
+    expect($onRonda)->toBeGreaterThan(100);
+    Location::query()->update(['last_seen_at' => now()->subHour()]);
+    $before = Location::whereNull('active_end_time')->orderBy('id')->first();
+
+    $this->artisan('demo:live', ['--once' => true])->assertSuccessful();
+
+    $after = $before->fresh();
+    expect(Location::where('last_seen_at', '>=', now()->subMinute())->count())->toBe($onRonda)
+        ->and([$after->latitude, $after->longitude])->not->toBe([$before->latitude, $before->longitude]);
+
+    $live = $this->actingAs($admin)->getJson('/admin/locations')->assertOk()->json();
+    expect(collect($live)->where('status', 'active')->count())->toBeGreaterThan(100);
+});
+
 it('links check-ups to the demo residents, not to real people', function () {
     $real = User::factory()->create(['role' => 'User', 'mobile' => '09171234567']);
     $this->artisan('demo:seed', ['--force' => true])->assertSuccessful();

@@ -16,7 +16,8 @@
         note: $('map-note'), chip: $('live-chip'), updated: $('last-refresh'),
     };
 
-    const map = L.map(mapEl).setView([16.05, 120.3], 9);
+    // Canvas draws hundreds of GoBiker dots much faster than one SVG element each.
+    const map = L.map(mapEl, { preferCanvas: true }).setView([16.05, 120.3], 9);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; OpenStreetMap contributors',
         maxZoom: 19,
