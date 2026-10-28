@@ -27,7 +27,7 @@ it('lists training requests with tier and status labels', function () {
         ->get(route('admin.operations.training-requests.index'))
         ->assertOk()
         ->assertSee('Lito Garcia')
-        ->assertSee('Standard (₱499)')
+        ->assertSee('Standard (₱1,500)')
         ->assertSee('Pending')
         ->assertSee('id="trainingDialog"', false);
 });
@@ -47,6 +47,35 @@ it('filters training requests by tier and status', function () {
         ->get(route('admin.operations.training-requests.index', ['tier' => 'standard']))
         ->assertOk()
         ->assertSee('No requests match');
+});
+
+it('filters by training date, with upcoming ones soonest first', function () {
+    $admin = User::factory()->create(['is_admin' => true]);
+    makeTrainingRequest(['name' => 'Next Month', 'preferred_date' => now()->addDays(30)->toDateString(), 'preferred_window' => 'morning']);
+    makeTrainingRequest(['name' => 'Tomorrow Person', 'preferred_date' => now()->addDay()->toDateString(), 'preferred_window' => 'afternoon']);
+    makeTrainingRequest(['name' => 'Last Week', 'preferred_date' => now()->subWeek()->toDateString(), 'preferred_window' => 'morning']);
+
+    $this->actingAs($admin)
+        ->get(route('admin.operations.training-requests.index', ['when' => 'upcoming']))
+        ->assertOk()
+        ->assertSeeInOrder(['Tomorrow Person', 'Next Month'])
+        ->assertDontSee('Last Week');
+
+    $this->get(route('admin.operations.training-requests.index', ['when' => 'past']))
+        ->assertSee('Last Week')
+        ->assertDontSee('Tomorrow Person');
+});
+
+it('only lists the retired free plan in the filter while old requests use it', function () {
+    $admin = User::factory()->create(['is_admin' => true]);
+    makeTrainingRequest();
+
+    $this->actingAs($admin)->get(route('admin.operations.training-requests.index'))
+        ->assertSee('Advance (₱2,500)')
+        ->assertDontSee('Basic (no longer offered)');
+
+    makeTrainingRequest(['tier' => 'basic']);
+    $this->get(route('admin.operations.training-requests.index'))->assertSee('Basic (no longer offered)');
 });
 
 it('updates the status of a training request', function () {

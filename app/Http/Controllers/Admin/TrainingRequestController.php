@@ -10,6 +10,8 @@ use Illuminate\Validation\Rule;
 
 class TrainingRequestController extends Controller
 {
+    private const WHEN = ['upcoming', 'today', 'past'];
+
     public function index(Request $request)
     {
         $query = TrainingRequest::latest();
@@ -30,13 +32,29 @@ class TrainingRequestController extends Controller
             $query->where('status', $status);
         }
 
+        // Training date: upcoming ones are listed soonest first, so the team sees what is next.
+        $when = in_array($request->input('when'), self::WHEN, true) ? $request->input('when') : null;
+        match ($when) {
+            'upcoming' => $query->reorder()->whereDate('preferred_date', '>=', today())->orderBy('preferred_date')->orderBy('id'),
+            'today' => $query->whereDate('preferred_date', today()),
+            'past' => $query->whereDate('preferred_date', '<', today()),
+            default => null,
+        };
+
         $requests = $query->paginate(20)->withQueryString();
 
         return view('admin.operations.training-requests.index', [
             'requests' => $requests,
+            'when' => $when,
+            // Plans on offer, plus retired ones only while old requests still use them.
+            'tiers' => array_filter(
+                TrainingRequest::TIERS,
+                fn ($tier) => in_array($tier, TrainingRequest::OFFERED, true) || TrainingRequest::where('tier', $tier)->exists(),
+                ARRAY_FILTER_USE_KEY,
+            ),
             'totalCount' => TrainingRequest::count(),
             'pendingCount' => TrainingRequest::where('status', 'pending')->count(),
-            'contactedCount' => TrainingRequest::where('status', 'contacted')->count(),
+            'upcomingCount' => TrainingRequest::whereIn('status', ['pending', 'contacted'])->whereDate('preferred_date', '>=', today())->count(),
         ]);
     }
 

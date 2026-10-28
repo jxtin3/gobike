@@ -16,16 +16,20 @@ class TrainingRequest extends Model
         'cancelled' => 'neutral',
     ];
 
+    /** The plans people can request now. Free group training is volunteering instead. */
+    public const OFFERED = ['standard', 'advance'];
+
     public const TIERS = [
-        'basic' => 'Basic (Free)',
-        'standard' => 'Standard (₱499)',
-        'advance' => 'Advance (₱999)',
+        'standard' => 'Standard (₱1,500)',
+        'advance' => 'Advance (₱2,500)',
+        // Older requests only.
+        'basic' => 'Basic (no longer offered)',
     ];
 
     public const TIER_PILLS = [
-        'basic' => 'ok',
         'standard' => 'info',
         'advance' => 'warn',
+        'basic' => 'neutral',
     ];
 
     protected $fillable = [
@@ -34,9 +38,29 @@ class TrainingRequest extends Model
         'phone',
         'address',
         'tier',
+        'preferred_date',
+        'preferred_window',
         'message',
         'status',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'preferred_date' => 'date',
+        ];
+    }
+
+    /** "Sat, Nov 7 · Morning", or null for older requests without a date. */
+    public function getScheduleLabelAttribute(): ?string
+    {
+        if (! $this->preferred_date) {
+            return null;
+        }
+
+        return $this->preferred_date->format('D, M j, Y')
+            .($this->preferred_window ? ' · '.ucfirst($this->preferred_window) : '');
+    }
 
     public function getStatusLabelAttribute(): string
     {

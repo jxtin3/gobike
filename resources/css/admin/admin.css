@@ -5326,3 +5326,50 @@ img.detail-image:not(.is-loaded) {
     min-height: 160px;
     background: var(--sk-base);
 }
+
+/* ---------- Volunteer classes ---------- */
+.vol-classes {
+    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+    align-items: start;
+    max-width: none;
+    margin-bottom: var(--sp-4);
+}
+
+@media (max-width: 900px) {
+    .vol-classes { grid-template-columns: 1fr; }
+}
+
+/* Schedule a class: even spacing between every part of the form */
+.vol-schedule {
+    display: grid;
+    gap: var(--sp-4);
+}
+
+.vol-schedule .detail-card-title { margin-bottom: 0; }
+
+.vol-schedule__intro {
+    margin: 0;
+    color: var(--ink-3);
+    font-size: var(--fs-13);
+}
+
+.vol-schedule__intro b { color: var(--ink); }
+
+.vol-schedule .grid-2 { gap: var(--sp-4); }
+
+.vol-schedule .form-actions { padding-top: var(--sp-1); }
+
+.vol-schedule__hint { font-size: var(--fs-13); }
+
+.vol-class-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sp-3);
+    padding: 10px 0;
+    border-top: 1px solid var(--line);
+}
+
+.vol-class-row:first-of-type { border-top: 0; }
+
+.vol-class-row a { color: var(--ink); }

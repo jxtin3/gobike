@@ -16,6 +16,7 @@ use App\Models\SosRequest;
 use App\Models\TrainingRequest;
 use App\Models\User;
 use App\Models\VolunteerApplication;
+use App\Models\VolunteerClass;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -69,6 +70,8 @@ class DemoData
                 'donations' => Donation::where('email', 'like', $email)->delete(), // payments cascade
                 'contact messages' => ContactMessage::where('email', 'like', $email)->delete(),
                 'training requests' => TrainingRequest::where('email', 'like', $email)->delete(),
+                // The classes the demo volunteers are in (before the volunteers themselves).
+                'volunteer classes' => VolunteerClass::whereHas('applications', fn ($q) => $q->where('email', 'like', $email))->delete(),
                 'volunteer applications' => VolunteerApplication::where('email', 'like', $email)->delete(),
                 'chapter inquiries' => ReplicationRequest::where('email', 'like', $email)->delete(),
                 'announcements' => Announcement::whereIn('title', self::ANNOUNCEMENT_TITLES)->delete(),

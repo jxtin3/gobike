@@ -1,13 +1,13 @@
 @extends('admin.operations.layout')
 @section('title', 'Training plan requests')
 @section('heading', 'Training plan requests')
-@section('subheading', 'House-to-house training session requests submitted through the website.')
+@section('subheading', 'Individual first aid training requested through the website. Each one starts on the date the person chose.')
 
 @use('App\Models\TrainingRequest')
 
 @section('content')
 @php
-    $hasQuery = filled(request('search')) || filled(request('tier')) || filled(request('status'));
+    $hasQuery = filled(request('search')) || filled(request('tier')) || filled(request('status')) || filled($when);
 @endphp
 
 <div class="stat-row">
@@ -26,18 +26,18 @@
         </div>
     </div>
     <div class="stat-card">
-        <span class="stat-icon"><x-admin.icon name="phone-call" /></span>
+        <span class="stat-icon"><x-admin.icon name="clock" /></span>
         <div>
-            <div class="stat-num">{{ number_format($contactedCount) }}</div>
-            <div class="stat-label">Contacted</div>
+            <div class="stat-num">{{ number_format($upcomingCount) }}</div>
+            <div class="stat-label">Upcoming trainings</div>
         </div>
     </div>
 </div>
 
 <x-admin.filters :action="route('admin.operations.training-requests.index')" placeholder="Search name, email or address" label="Search training requests" :filtered="$hasQuery">
-    <select class="input" name="tier" aria-label="Filter by tier" data-autosubmit>
-        <option value="">All tiers</option>
-        @foreach (TrainingRequest::TIERS as $value => $label)
+    <select class="input" name="tier" aria-label="Filter by plan" data-autosubmit>
+        <option value="">All plans</option>
+        @foreach ($tiers as $value => $label)
             <option value="{{ $value }}" @selected(request('tier') === $value)>{{ $label }}</option>
         @endforeach
     </select>
@@ -47,6 +47,12 @@
             <option value="{{ $status }}" @selected(request('status') === $status)>{{ ucfirst($status) }}</option>
         @endforeach
     </select>
+    <select class="input" name="when" aria-label="Filter by training date" data-autosubmit>
+        <option value="">Any training date</option>
+        <option value="upcoming" @selected($when === 'upcoming')>Upcoming (soonest first)</option>
+        <option value="today" @selected($when === 'today')>Today</option>
+        <option value="past" @selected($when === 'past')>Past dates</option>
+    </select>
 </x-admin.filters>
 
 <div data-list>
@@ -55,7 +61,8 @@
         <thead>
             <tr>
                 <th>Requester</th>
-                <th>Tier</th>
+                <th>Plan</th>
+                <th>Training date</th>
                 <th>Address</th>
                 <th>Status</th>
                 <th>Submitted</th>
@@ -71,6 +78,7 @@
                     data-mailto="mailto:{{ $req->email }}?subject={{ rawurlencode('Your Go Bike training request') }}"
                     data-phone="{{ $req->phone }}"
                     data-tier="{{ $req->tier_label }}"
+                    data-schedule="{{ $req->schedule_label }}"
                     data-address="{{ $req->address }}"
                     data-message="{{ $req->message }}"
                     data-status="{{ $req->status_label }}"
@@ -90,6 +98,14 @@
                         </div>
                     </td>
                     <td><span class="pill pill-{{ $req->tier_pill }}">{{ $req->tier_label }}</span></td>
+                    <td>
+                        @if ($req->preferred_date)
+                            {{ $req->preferred_date->format('D, M j') }}
+                            <small class="sub-line">{{ ucfirst($req->preferred_window) }}{{ $req->preferred_date->isToday() ? ' · today' : '' }}</small>
+                        @else
+                            <span class="muted">Not set</span>
+                        @endif
+                    </td>
                     <td title="{{ $req->address }}">{{ Str::limit($req->address, 40) }}</td>
                     <td><span class="pill pill-{{ $req->status_pill }}">{{ $req->status_label }}</span></td>
                     <td>
@@ -104,11 +120,11 @@
                 </tr>
             @empty
                 @if ($hasQuery)
-                    <x-admin.empty :row="6" icon="clipboard" title="No requests match" :clear="route('admin.operations.training-requests.index')">
+                    <x-admin.empty :row="7" icon="clipboard" title="No requests match" :clear="route('admin.operations.training-requests.index')">
                         Try a different search, or clear the filters.
                     </x-admin.empty>
                 @else
-                    <x-admin.empty :row="6" icon="clipboard" title="No training requests yet">
+                    <x-admin.empty :row="7" icon="clipboard" title="No training requests yet">
                         Requests submitted through the Programs page will appear here.
                     </x-admin.empty>
                 @endif
@@ -126,7 +142,8 @@
     <dl class="dlg-meta">
         <div><dt>Email</dt><dd data-field="email"></dd></div>
         <div><dt>Phone</dt><dd data-field="phone"></dd></div>
-        <div><dt>Tier</dt><dd data-field="tier"></dd></div>
+        <div><dt>Plan</dt><dd data-field="tier"></dd></div>
+        <div><dt>Training date</dt><dd data-field="schedule"></dd></div>
         <div><dt>Submitted</dt><dd data-field="date"></dd></div>
         <div class="dlg-meta-wide"><dt>Address</dt><dd data-field="address"></dd></div>
     </dl>

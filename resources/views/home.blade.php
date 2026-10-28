@@ -54,15 +54,16 @@
             </p>
 
             <!-- CTA(call to action) -->
-            <div class="flex flex-col sm:flex-row gap-4 mt-2 reveal">
+            <div class="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 mt-2 reveal">
                 <a
-                    href="{{ url('/what-we-do') }}"
-                    id="hero-cta-programs"
+                    href="{{ route('volunteer') }}"
+                    id="hero-cta-volunteer"
                     class="btn-ghost-fill"
                 >
-                    <span>Explore Programs</span>
+                    <span>Volunteer with us</span>
                     <svg class="w-3.5 h-3.5 relative z-10" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/></svg>
                 </a>
+                <span class="text-sm font-semibold uppercase tracking-widest text-white/60 text-center sm:text-left" aria-hidden="true">or</span>
                 <a
                     href="{{ url('/what-we-do#training-plan') }}"
                     id="hero-cta-training-plan"
@@ -555,45 +556,7 @@
 </section>
 
 
-
- <!-- SECTION 8 — CALL TO ACTN (CTA)     -->
-
-<!--  
-<section
-    id="cta"
-    class="relative py-5 md:py-30 overflow-hidden"
-    aria-labelledby="cta-heading"
->
-    <div class="absolute inset-0 z-0 bg-[#F8FAFC]">
-        <img src="{{ asset('images/homepage/pangasinan-map.png') }}" alt="Map of Pangasinan" class="w-full h-full object-cover opacity-[0.3] mix-blend-multiply scale-105">
-    </div>
- 
- 
-    <div class="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center reveal">
- 
-        <h2
-            id="cta-heading"
-            class="text-cta-title font-heading font-bold text-[#111827] mb-6 leading-tight"
-        >
-            Ready To Make<br/>
-            An <span class="text-[#2FA7FF]">Impact?</span>
-        </h2>
- 
-        <p class="text-base md:text-lg text-[#64748B] font-medium leading-relaxed mb-10 max-w-2xl mx-auto">
-            Every act of service creates lasting impact. Join volunteers, partners, and community leaders working together to build healthier, safer, and more resilient communities.        </p>
- 
-        <div class="flex flex-wrap items-center justify-center gap-4">
-            <a href="{{ url('/what-we-do#training-plan') }}" class="btn-wbr btn-wbr-dark">
-                <span>Get Training</span>
-                <svg class="w-5 h-5 arrow" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/></svg>
-            </a>
-        </div>
- 
-    </div>
-</section> -->
-
-
-<!-- SECTION 9 — REPLICATE GO BIKE (last section) -->
+<!-- SECTION 8 — REPLICATE GO BIKE (last section) -->
 @include('partials.replicate-card')
 
 

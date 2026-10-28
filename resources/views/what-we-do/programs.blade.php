@@ -119,35 +119,25 @@
         formVisible: @js($errors->any()),
         tiers: [
             {
-                key: 'basic',
-                name: 'Basic',
-                price: 'Free',
-                sub: 'Per person / 1 session',
-                desc: 'An introduction to first aid for anyone who wants to know what to do in an emergency.',
-                accent: '#16A34A',
-                accentBg: 'from-[#16A34A] to-[#15803D]',
-                features: ['Basic wound care & CPR demo', 'Emergency contact setup', 'Home safety checklist', '1 onsite training session']
-            },
-            {
                 key: 'standard',
                 name: 'Standard',
-                price: '₱499',
-                sub: 'Per person / 2 sessions',
-                desc: 'Hands-on first aid training for people who want to practice real skills and plan for emergencies.',
+                price: '₱1,500',
+                sub: 'Per person · 1-day training',
+                desc: 'First aid and CPR for anyone who wants to know exactly what to do when someone at home, school or work gets hurt.',
                 accent: '#132D6B',
                 accentBg: 'from-[#132D6B] to-[#1e3a8a]',
-                features: ['Everything in Basic', 'CPR & BLS certification', 'Disaster readiness planning', 'Emergency kit assembly guide', '2 onsite training sessions', 'Responder group access'],
+                features: ['Wound care, bleeding control and bandaging', 'Adult and child CPR with hands-on practice', 'Choking and fainting first response', 'Home emergency kit guide', 'Certificate of training'],
                 popular: true
             },
             {
                 key: 'advance',
                 name: 'Advance',
-                price: '₱999',
-                sub: 'Per person / 2 sessions, full module',
-                desc: 'The full responder module for people who want to become health advocates in their community.',
+                price: '₱2,500',
+                sub: 'Per person · 2-day full module',
+                desc: 'The complete First Aid and Basic Life Support module, plus disaster readiness for your family or workplace.',
                 accent: '#9A3412',
                 accentBg: 'from-[#9A3412] to-[#c2410c]',
-                features: ['Everything in Standard', 'Advanced first aid module', 'Volunteer facilitator track', 'Barangay coordination training', '2 extended training sessions', 'Certificate of completion', 'Priority dispatch access']
+                features: ['Everything in Standard', 'Basic Life Support (BLS) with AED use', 'Fractures, burns and patient transport', 'Disaster readiness and evacuation plan', 'Barangay emergency coordination', 'Certificate of completion']
             }
         ],
         selectTier(key) {
@@ -172,18 +162,23 @@
         <!-- Section Header -->
         <div class="mb-16 reveal">
             <div class="flex items-center gap-3 mb-5">
-                <span class="text-[10px] font-bold tracking-[0.25em] uppercase text-[#F97316]">First Aid Training &middot; Priced Per Person</span>
+                <span class="text-[10px] font-bold tracking-[0.25em] uppercase text-[#F97316]">Individual First Aid Training &middot; Starts On Your Date</span>
             </div>
             <h2 class="text-4xl md:text-5xl lg:text-6xl font-heading font-bold text-white uppercase tracking-tight leading-none mb-5">
                 Learn To<br/><span class="text-[#2FA7FF]">Save Lives</span>
             </h2>
-            <p class="text-white/50 text-base max-w-xl leading-relaxed">
-                Learn first aid and emergency preparedness from Go Bike's trained youth responders. Every plan is priced per person, and we hold the sessions where you are: your home, school, office or barangay hall. Pick a plan below to get started.
+            <p class="text-white/60 text-base max-w-xl leading-relaxed">
+                One-on-one training from Go Bike's certified youth responders, on the date you choose and where you are: your home, school, office or barangay hall. No waiting for a class to fill up. Every plan is priced per person.
+            </p>
+            <p class="text-white/60 text-sm max-w-xl leading-relaxed mt-4">
+                Prefer free group training?
+                <a href="{{ route('volunteer') }}" class="text-[#2FA7FF] font-semibold underline underline-offset-4 hover:text-white">Volunteer with us</a>.
+                Volunteer training starts once a class of {{ config('volunteer.class_min', 20) }}–{{ config('volunteer.class_max', 25) }} people is complete.
             </p>
         </div>
 
         <!-- Tier Cards -->
-        <div id="tier-cards-section" class="grid grid-cols-1 lg:grid-cols-3 gap-6 reveal scroll-mt-24">
+        <div id="tier-cards-section" class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto reveal scroll-mt-24">
             <template x-for="tier in tiers" :key="tier.key">
                 <div
                     @click="selectTier(tier.key)"
@@ -269,7 +264,7 @@
                     <svg class="tr-thanks__icon" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
                     <h3 class="tr-thanks__title">Thank you, {{ $thanks['first_name'] ?? 'friend' }}!</h3>
                     <p class="tr-thanks__lead">
-                        We received your training request. A Go Bike coordinator will get in touch to set your schedule.
+                        We received your training request. A Go Bike coordinator will call you to confirm your training day.
                     </p>
                     @isset($thanks['plan'])
                         <dl class="tr-thanks__summary">
@@ -277,6 +272,12 @@
                                 <dt>Plan</dt>
                                 <dd>{{ $thanks['plan'] }}</dd>
                             </div>
+                            @if (! empty($thanks['schedule']))
+                                <div class="tr-thanks__row">
+                                    <dt>Preferred date</dt>
+                                    <dd>{{ $thanks['schedule'] }}</dd>
+                                </div>
+                            @endif
                             <div class="tr-thanks__row">
                                 <dt>We'll reply to</dt>
                                 <dd>{{ $thanks['email'] }}</dd>
@@ -301,14 +302,14 @@
                             <span class="tr-thanks__marker" aria-hidden="true">2</span>
                             <div>
                                 <p class="tr-thanks__step-title">We contact you <span class="tr-thanks__step-when">· within 48 hours</span></p>
-                                <p class="tr-thanks__step-text">We'll call or email you to agree on a date, time and the number of participants.</p>
+                                <p class="tr-thanks__step-text">We'll call or email you to confirm your date, the venue and the number of people.</p>
                             </div>
                         </li>
                         <li class="tr-thanks__step">
                             <span class="tr-thanks__marker" aria-hidden="true">3</span>
                             <div>
-                                <p class="tr-thanks__step-title">Training day</p>
-                                <p class="tr-thanks__step-text">Our youth responders come to your home, school or barangay hall.</p>
+                                <p class="tr-thanks__step-title">Training day <span class="tr-thanks__step-when">· on your date</span></p>
+                                <p class="tr-thanks__step-text">Our certified responders come to your home, school or barangay hall. No waiting for a class.</p>
                             </div>
                         </li>
                     </ol>
@@ -352,7 +353,7 @@
                         Schedule Your<br/>Training Session
                     </h3>
                     <p class="text-white/45 text-sm leading-relaxed mb-8">
-                        Fill out the form and our dispatch team will contact you within 24–48 hours to confirm your schedule.
+                        Pick the day you want to train. Our dispatch team will call you within 24–48 hours to confirm it. Training is one-on-one or for your household, so it starts on your date.
                     </p>
                     <div class="space-y-5">
                         <div class="flex items-start gap-4">
@@ -411,8 +412,8 @@
                                     class="w-full px-4 py-3.5 bg-white/5 border border-white/10 text-sm text-white placeholder-white/25 focus:outline-none focus:border-[#2FA7FF] focus:bg-white/8 transition-all duration-200">
                             </div>
                             <div>
-                                <label class="block text-[10px] font-bold tracking-widest uppercase text-white/40 mb-2">Phone Number</label>
-                                <input type="tel" name="phone" placeholder="+63 900 000 0000" value="{{ old('phone') }}"
+                                <label class="block text-[10px] font-bold tracking-widest uppercase text-white/40 mb-2">Phone Number <span class="text-[#F97316]">*</span></label>
+                                <input type="tel" name="phone" placeholder="+63 900 000 0000" required autocomplete="tel" value="{{ old('phone') }}"
                                     class="w-full px-4 py-3.5 bg-white/5 border border-white/10 text-sm text-white placeholder-white/25 focus:outline-none focus:border-[#2FA7FF] focus:bg-white/8 transition-all duration-200">
                             </div>
                         </div>
@@ -429,9 +430,35 @@
                                 class="w-full px-4 py-3.5 bg-white/5 border border-white/10 text-sm text-white placeholder-white/25 focus:outline-none focus:border-[#2FA7FF] focus:bg-white/8 transition-all duration-200">
                         </div>
 
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                            <div>
+                                <label for="tr-date" class="block text-[10px] font-bold tracking-widest uppercase text-white/40 mb-2">Preferred Date <span class="text-[#F97316]">*</span></label>
+                                <input id="tr-date" type="date" name="preferred_date" required value="{{ old('preferred_date') }}"
+                                    min="{{ now()->addDay()->toDateString() }}" max="{{ now()->addDays(60)->toDateString() }}"
+                                    aria-describedby="tr-date-hint"
+                                    class="w-full px-4 py-3.5 bg-white/5 border border-white/10 text-sm text-white placeholder-white/25 focus:outline-none focus:border-[#2FA7FF] focus:bg-white/8 transition-all duration-200 [color-scheme:dark]">
+                                <p id="tr-date-hint" class="text-xs text-white/40 mt-1.5">From tomorrow, up to 60 days ahead</p>
+                                @error('preferred_date')<p class="text-xs text-[#FECACA] mt-1.5">{{ $message }}</p>@enderror
+                            </div>
+                            <div>
+                                <span id="tr-window-label" class="block text-[10px] font-bold tracking-widest uppercase text-white/40 mb-2">Time of Day <span class="normal-case tracking-normal font-normal text-white/30">(optional)</span></span>
+                                <div class="grid grid-cols-2 gap-2" role="radiogroup" aria-labelledby="tr-window-label">
+                                    @foreach (\App\Models\Appointment::WINDOWS as $value => $label)
+                                        <label class="cursor-pointer">
+                                            <input type="radio" name="preferred_window" value="{{ $value }}" class="peer sr-only" @checked(old('preferred_window') === $value)>
+                                            <span class="block px-3 py-3.5 text-center text-sm border border-white/10 bg-white/5 text-white/70 peer-checked:border-[#2FA7FF] peer-checked:text-white peer-checked:bg-[#2FA7FF]/15 peer-focus-visible:ring-2 peer-focus-visible:ring-[#2FA7FF] transition-colors">
+                                                {{ ucfirst($value) }}
+                                                <small class="block text-[11px] text-white/40">{{ trim(\Illuminate\Support\Str::between($label, '(', ')')) }}</small>
+                                            </span>
+                                        </label>
+                                    @endforeach
+                                </div>
+                            </div>
+                        </div>
+
                         <div>
-                            <label class="block text-[10px] font-bold tracking-widest uppercase text-white/40 mb-2">Message / Preferred Schedule</label>
-                            <textarea name="message" rows="4" placeholder="Number of participants, preferred schedule, special requirements or questions..."
+                            <label class="block text-[10px] font-bold tracking-widest uppercase text-white/40 mb-2">Message</label>
+                            <textarea name="message" rows="4" placeholder="Number of people, venue, special requirements or questions..."
                                 class="w-full px-4 py-3.5 bg-white/5 border border-white/10 text-sm text-white placeholder-white/25 focus:outline-none focus:border-[#2FA7FF] focus:bg-white/8 transition-all duration-200 resize-none">{{ old('message') }}</textarea>
                         </div>
 

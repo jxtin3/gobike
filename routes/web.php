@@ -31,6 +31,7 @@ use App\Http\Controllers\LegalDocumentController;
 use App\Http\Controllers\NewsController;
 use App\Http\Controllers\ReplicationRequestController;
 use App\Http\Controllers\TrainingRequestController;
+use App\Http\Controllers\VolunteerController;
 use App\Http\Controllers\Webhook\PayMongoWebhookController;
 use App\Http\Controllers\Webhook\PayPalWebhookController;
 use App\Http\Middleware\EnsureAdmin;
@@ -46,8 +47,11 @@ Route::get('/news/{slug}', [NewsController::class, 'show'])->name('news.show');
 
 Route::get('/gallery', GalleryController::class);
 
-// Volunteer sign-ups are closed: people join through the training plans instead.
-Route::redirect('/volunteer', '/what-we-do#training-plan', 301)->name('volunteer');
+Route::get('/volunteer', [VolunteerController::class, 'show'])->name('volunteer');
+
+Route::post('/volunteer', [VolunteerController::class, 'store'])
+    ->middleware('throttle:5,1')
+    ->name('volunteer.store');
 
 Route::view('/about', 'who-we-are.about');
 
@@ -227,6 +231,8 @@ Route::middleware([EnsureAdmin::class, AuthenticateSession::class])->prefix('adm
 
         // volunteer applications
         Route::get('/volunteers', [AdminVolunteerController::class, 'index'])->name('volunteers.index');
+        Route::post('/volunteers/classes', [AdminVolunteerController::class, 'scheduleClass'])->name('volunteers.classes.store');
+        Route::patch('/volunteers/classes/{volunteerClass}/complete', [AdminVolunteerController::class, 'completeClass'])->name('volunteers.classes.complete');
         Route::get('/volunteers/{volunteerApplication}', [AdminVolunteerController::class, 'show'])->name('volunteers.show');
         Route::patch('/volunteers/{volunteerApplication}/status', [AdminVolunteerController::class, 'updateStatus'])
             ->name('volunteers.status');

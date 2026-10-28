@@ -74,6 +74,69 @@
     text-decoration: underline;
 }
 
+/* Next volunteer class: how full it is (training starts when it is complete) */
+.vol-class {
+    max-width: 34rem;
+    margin: 0 0 1.25rem;
+    padding: 1rem 1.1rem;
+    border: 1px solid var(--gbp-line);
+    border-radius: 2px;
+    background: #fff;
+}
+
+.vol-class__top {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.25rem 1rem;
+    margin-bottom: 0.55rem;
+}
+
+.vol-class__label {
+    color: var(--gbp-navy);
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.vol-class__count {
+    color: var(--gbp-muted);
+    font-size: 0.9rem;
+    font-variant-numeric: tabular-nums;
+}
+
+.vol-class__count strong {
+    color: var(--gbp-navy);
+    font-size: 1.15rem;
+}
+
+.vol-class__bar {
+    height: 6px;
+    overflow: hidden;
+    border-radius: 3px;
+    background: var(--gbp-line);
+}
+
+.vol-class__bar span {
+    display: block;
+    height: 100%;
+    background: var(--gbp-orange);
+}
+
+.vol-aside .vol-class__text {
+    margin: 0.7rem 0 0.35rem;
+    color: var(--gbp-ink);
+    font-size: 0.9rem;
+    line-height: 1.55;
+}
+
+.vol-aside .vol-class__alt {
+    margin: 0;
+    font-size: 0.85rem;
+}
+
 /* Form card */
 .vol-form-card {
     width: 100%;

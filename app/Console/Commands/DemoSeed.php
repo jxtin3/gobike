@@ -17,6 +17,7 @@ use App\Models\SosRequest;
 use App\Models\TrainingRequest;
 use App\Models\User;
 use App\Models\VolunteerApplication;
+use App\Models\VolunteerClass;
 use App\Support\Barangays;
 use App\Support\DemoData;
 use Illuminate\Console\Command;
@@ -673,35 +674,61 @@ class DemoSeed extends Command
         foreach (range(0, 59) as $i) {
             $created = $this->daysAgo(0, 100);
             TrainingRequest::forceCreate([
-                'name' => $this->name(), 'email' => $this->email('training'), 'phone' => $this->chance(80) ? $this->mobile() : null,
+                'name' => $this->name(), 'email' => $this->email('training'), 'phone' => $this->mobile(),
                 'address' => 'Purok '.$this->int(1, 7).', '.$this->pick(Barangays::ALL).', '.$this->pick(self::TOWNS).', Pangasinan',
-                'tier' => array_keys(TrainingRequest::TIERS)[$i % 3],
+                'tier' => TrainingRequest::OFFERED[$i % 2],
+                // Requests still open train on a coming date; completed ones trained in the past.
+                'preferred_date' => ($status = TrainingRequest::STATUSES[intdiv($i, 3) % count(TrainingRequest::STATUSES)]) === 'completed'
+                    ? $created->copy()->addDays($this->int(2, 10))->min(now()->subDay())->toDateString()
+                    : now()->addDays($i % 9 === 0 ? 0 : $this->int(1, 45))->toDateString(),
+                'preferred_window' => $this->pick(['morning', 'afternoon', null]),
                 'message' => $this->pick(['We are 5 in the family, weekends please.', 'For our office staff, around 12 people.', 'Our youth group wants to learn CPR.', 'Preferred schedule: Saturday morning.', null]),
-                'status' => TrainingRequest::STATUSES[intdiv($i, 3) % count(TrainingRequest::STATUSES)],
+                'status' => $status,
                 'created_at' => $created, 'updated_at' => $created,
             ]);
         }
     }
 
+    /**
+     * Volunteers in every stage: one class already trained, one class coming up, almost a
+     * full class waiting (so the public page shows e.g. "18 of 20"), new sign-ups and rejected ones.
+     */
     private function volunteers(): void
     {
-        foreach (range(0, 54) as $i) {
+        $past = VolunteerClass::forceCreate([
+            'starts_on' => now()->subDays(40)->toDateString(), 'venue' => 'Bugallon Municipal Hall',
+            'notes' => '8:00 AM to 5:00 PM, both days.', 'completed_at' => now()->subDays(38),
+        ]);
+        $next = VolunteerClass::forceCreate([
+            'starts_on' => now()->addDays(12)->toDateString(), 'venue' => 'Bugallon National High School gym',
+            'notes' => '8:00 AM to 5:00 PM. Bring a valid ID and drinking water.',
+        ]);
+
+        $plan = [
+            ...array_fill(0, 24, ['trained', $past, [45, 90]]),
+            ...array_fill(0, 22, ['scheduled', $next, [15, 40]]),
+            ...array_fill(0, 18, ['waiting', null, [2, 30]]),
+            ...array_fill(0, 8, ['pending', null, [0, 3]]),
+            ...array_fill(0, 6, ['rejected', null, [5, 60]]),
+        ];
+
+        foreach ($plan as [$status, $class, [$fromDays, $toDays]]) {
             [$first, $last] = $this->nameParts();
             $occupation = $this->pick(['student', 'student', 'working', 'out-of-school', 'other']);
-            $age = $occupation === 'student' ? $this->int(15, 22) : $this->int(18, 30);
+            $age = $occupation === 'student' ? $this->int(15, 22) : $this->int(18, 25);
             $minor = $age < 18;
-            $created = $this->daysAgo(0, 120);
+            $created = $this->daysAgo($fromDays, $toDays);
             VolunteerApplication::forceCreate([
                 'first_name' => $first, 'last_name' => $last, 'email' => $this->email('volunteer'), 'phone' => $this->mobile(),
                 'age' => $age, 'occupation_status' => $occupation,
                 'school' => $occupation === 'student' ? $this->pick(['Pangasinan State University', 'Bugallon National High School', 'Lyceum-Northwestern University', 'Universidad de Dagupan']) : null,
                 'barangay' => $this->pick(Barangays::ALL), 'municipality' => $this->pick(self::TOWNS), 'province' => 'Pangasinan',
                 'availability' => $this->pick(['weekdays', 'weekends', 'both', 'flexible']),
-                'has_bike' => $this->chance(60),
                 'motivation' => $this->pick(['I want to help the seniors in our barangay.', 'I am a nursing student and want real experience.', 'Go Bike helped my lolo before, I want to give back.', 'I love biking and helping people.', null]),
                 'emergency_name' => $this->name(), 'emergency_phone' => $this->mobile(),
                 'guardian_name' => $minor ? $this->name() : null, 'guardian_phone' => $minor ? $this->mobile() : null, 'guardian_consent' => $minor,
-                'application_status' => VolunteerApplication::STATUSES[$i % count(VolunteerApplication::STATUSES)],
+                'application_status' => $status,
+                'volunteer_class_id' => $class?->id,
                 'created_at' => $created, 'updated_at' => $created,
             ]);
         }

@@ -36,7 +36,7 @@ it('fills every admin section with 50+ records covering each status', function (
         [Donation::class, 'payment_method', ['paypal', 'gcash', 'bank']],
         [Donation::class, 'frequency', ['once', 'monthly']],
         [ContactMessage::class, 'is_read', [true, false]],
-        [TrainingRequest::class, 'tier', array_keys(TrainingRequest::TIERS)],
+        [TrainingRequest::class, 'tier', TrainingRequest::OFFERED],
         [TrainingRequest::class, 'status', TrainingRequest::STATUSES],
         [VolunteerApplication::class, 'application_status', VolunteerApplication::STATUSES],
         [ReplicationRequest::class, 'status', ReplicationRequest::STATUSES],

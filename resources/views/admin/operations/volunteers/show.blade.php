@@ -5,6 +5,7 @@
 @section('back', route('admin.operations.volunteers.index'))
 @section('back_label', 'Back to volunteers')
 @section('actions')
+    <a class="btn btn-secondary" href="tel:{{ $application->phone }}"><x-admin.icon name="phone-call" /> Call {{ $application->first_name }}</a>
     <a class="btn btn-primary" href="mailto:{{ $application->email }}?subject={{ rawurlencode('Your Go Bike volunteer application') }}"><x-admin.icon name="mail" /> Email applicant</a>
 @endsection
 
@@ -47,7 +48,6 @@
             <h2 class="detail-card-title">Volunteer details</h2>
             <dl class="detail-dl">
                 <div><dt>Availability</dt><dd>{{ ucfirst($application->availability) }}</dd></div>
-                <div><dt>Has a bike</dt><dd>{{ $application->has_bike ? 'Yes' : 'No' }}</dd></div>
             </dl>
             @if($application->motivation)
                 <div class="detail-note">
@@ -85,19 +85,30 @@
         <section class="detail-card">
             <h2 class="detail-card-title">Application status</h2>
             <p class="detail-status"><span class="pill pill-{{ $application->status_pill }}">{{ $application->status_label }}</span></p>
+            @if ($application->volunteerClass)
+                <dl class="detail-dl">
+                    <div><dt>Class</dt><dd><a href="{{ route('admin.operations.volunteers.index', ['class' => $application->volunteerClass->id]) }}">{{ $application->volunteerClass->starts_on->format('D, M j, Y') }}</a></dd></div>
+                    <div><dt>Venue</dt><dd>{{ $application->volunteerClass->venue }}</dd></div>
+                    @if ($application->volunteerClass->notes)
+                        <div><dt>Notes</dt><dd>{{ $application->volunteerClass->notes }}</dd></div>
+                    @endif
+                </dl>
+            @elseif (in_array($application->application_status, ['pending', 'waiting'], true))
+                <p class="muted">Not in a class yet. Training starts once {{ config('volunteer.class_min') }} to {{ config('volunteer.class_max') }} volunteers are waiting.</p>
+            @endif
             <form method="POST" action="{{ route('admin.operations.volunteers.status', $application) }}" class="field">
                 @csrf
                 @method('PATCH')
                 <label for="application-status">Change status</label>
                 <select id="application-status" name="application_status" class="input" data-autosubmit>
-                    @foreach (VolunteerApplication::STATUSES as $status)
+                    @foreach (VolunteerApplication::STATUS_LABELS as $status => $label)
                         <option value="{{ $status }}" @selected($application->application_status === $status)
                             @if ($status === 'rejected')
                                 data-confirm-title="Reject this application?"
                                 data-confirm-text="{{ $application->full_name }}'s application will be marked rejected. You can change it again later."
                                 data-confirm-ok="Reject application"
                             @endif
-                        >{{ ucfirst($status) }}</option>
+                        >{{ $label }}</option>
                     @endforeach
                 </select>
             </form>

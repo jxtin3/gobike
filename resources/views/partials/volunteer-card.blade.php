@@ -9,11 +9,11 @@
 
             <ul class="vol-promo-list">
                 @foreach ([
-                    'Basic first aid and CPR demo, free for 1 session',
+                    'First aid and CPR with hands-on practice',
                     'Hands-on CPR & BLS training',
                     'Disaster readiness planning',
                     'Certificate of completion on the full module',
-                    'Priced per person, from free to ₱999',
+                    'From ₱1,500 per person, starts on the date you choose',
                 ] as $item)
                     <li>
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
