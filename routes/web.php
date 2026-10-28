@@ -31,7 +31,6 @@ use App\Http\Controllers\LegalDocumentController;
 use App\Http\Controllers\NewsController;
 use App\Http\Controllers\ReplicationRequestController;
 use App\Http\Controllers\TrainingRequestController;
-use App\Http\Controllers\VolunteerController;
 use App\Http\Controllers\Webhook\PayMongoWebhookController;
 use App\Http\Controllers\Webhook\PayPalWebhookController;
 use App\Http\Middleware\EnsureAdmin;
@@ -47,11 +46,8 @@ Route::get('/news/{slug}', [NewsController::class, 'show'])->name('news.show');
 
 Route::get('/gallery', GalleryController::class);
 
-Route::view('/volunteer', 'join-the-movement.volunteer')->name('volunteer');
-
-Route::post('/volunteer', [VolunteerController::class, 'store'])
-    ->middleware('throttle:5,1')
-    ->name('volunteer.store');
+// Volunteer sign-ups are closed: people join through the training plans instead.
+Route::redirect('/volunteer', '/what-we-do#training-plan', 301)->name('volunteer');
 
 Route::view('/about', 'who-we-are.about');
 

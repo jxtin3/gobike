@@ -313,9 +313,9 @@
                 'icon'   => '<path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z"/>',
                 'bg'     => 'bg-[#b55918ff]',
                 'accent' => '#b55918ff',
-                'title'  => 'Volunteer',
-                'desc'   => 'Join our growing team of youth community responders.',
-                'href'   => '/volunteer',
+                'title'  => 'Get Training',
+                'desc'   => 'Learn first aid and emergency response from our youth responders.',
+                'href'   => '/what-we-do#training-plan',
                 'tag'    => 'Get Involved',
             ],
             [
@@ -557,12 +557,13 @@
 
 
  <!-- SECTION 8 — CALL TO ACTN (CTA)     -->
+
+<!--  
 <section
     id="cta"
     class="relative py-5 md:py-30 overflow-hidden"
     aria-labelledby="cta-heading"
 >
-    <!-- Background Map -->
     <div class="absolute inset-0 z-0 bg-[#F8FAFC]">
         <img src="{{ asset('images/homepage/pangasinan-map.png') }}" alt="Map of Pangasinan" class="w-full h-full object-cover opacity-[0.3] mix-blend-multiply scale-105">
     </div>
@@ -582,14 +583,18 @@
             Every act of service creates lasting impact. Join volunteers, partners, and community leaders working together to build healthier, safer, and more resilient communities.        </p>
  
         <div class="flex flex-wrap items-center justify-center gap-4">
-            <a href="{{ url('/volunteer') }}" class="btn-wbr btn-wbr-dark">
-                <span>Volunteer with us</span>
+            <a href="{{ url('/what-we-do#training-plan') }}" class="btn-wbr btn-wbr-dark">
+                <span>Get Training</span>
                 <svg class="w-5 h-5 arrow" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/></svg>
             </a>
         </div>
  
     </div>
-</section>
+</section> -->
+
+
+<!-- SECTION 9 — REPLICATE GO BIKE (last section) -->
+@include('partials.replicate-card')
 
 
 <x-slot:scripts>

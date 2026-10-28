@@ -462,11 +462,7 @@
     </div>
 </section>
 
-<!-- replicate card -->
-@include('partials.replicate-card')
-
-
-<!-- 
+<!--
      CTA
       -->
 <section class="py-30 bg-white text-center px-4 border-t border-[#F1F5F9]">

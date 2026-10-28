@@ -261,8 +261,8 @@
             </p>
         </div>
         <div class="flex flex-col sm:flex-row gap-3">
-            <a href="{{ url('/volunteer') }}" class="btn-wbr btn-wbr-solid">
-                <span>Join the Ride</span>
+            <a href="{{ url('/what-we-do#training-plan') }}" class="btn-wbr btn-wbr-solid">
+                <span>Get Training</span>
                 <svg class="w-4 h-4 arrow" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/></svg>
             </a>
             <a href="{{ url('/org-structure') }}" class="btn-wbr btn-wbr-light">

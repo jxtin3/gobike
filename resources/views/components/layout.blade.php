@@ -265,7 +265,7 @@
                     <h3 class="font-heading text-[11px] font-bold tracking-[0.2em] uppercase text-[#F97316] mb-5">Get Involved</h3>
                     <ul class="space-y-2" role="list">
                         @foreach ([
-                            ['label' => 'Volunteer',      'href' => '/contact'],
+                            ['label' => 'Get Training',   'href' => '/what-we-do#training-plan'],
                             ['label' => 'Donate',         'href' => '/donate'],
                             ['label' => 'News & Updates', 'href' => '/news'],
                             ['label' => 'Gallery',        'href' => '/gallery'],
