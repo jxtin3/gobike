@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use App\Models\Announcement;
 use App\Models\Appointment;
 use App\Models\ContactMessage;
 use App\Models\Donation;
@@ -28,6 +29,18 @@ class DemoData
 
     /** No real Philippine mobile number starts with 0900, so fake people never match real ones. */
     public const MOBILE_PREFIX = '0900';
+
+    /** Demo announcements have no email or mobile, so clear() knows them by these titles. */
+    public const ANNOUNCEMENT_TITLES = [
+        'General Assembly This Saturday',
+        'Heavy Rain Advisory – Stay Safe on Ronda',
+        'CPR & BLS Refresher Training',
+        'New BP Monitors and Glucose Strips Available',
+        'Thank You, GoBikers!',
+        'Bike Check-up Day at the Municipal Hall',
+        'Medical Mission in Poblacion',
+        'New Ronda Routes for December (draft)',
+    ];
 
     public static function exists(): bool
     {
@@ -58,6 +71,7 @@ class DemoData
                 'training requests' => TrainingRequest::where('email', 'like', $email)->delete(),
                 'volunteer applications' => VolunteerApplication::where('email', 'like', $email)->delete(),
                 'chapter inquiries' => ReplicationRequest::where('email', 'like', $email)->delete(),
+                'announcements' => Announcement::whereIn('title', self::ANNOUNCEMENT_TITLES)->delete(),
             ]);
         });
     }

@@ -200,13 +200,30 @@ it('refuses to add the demo data twice unless asked to replace it', function () 
     expect(User::where('role', 'User')->count())->toBe(45);
 });
 
+it('adds announcements GoBikers see, in every status', function () {
+    $this->artisan('demo:seed', ['--force' => true])->assertSuccessful();
+
+    $all = \App\Models\Announcement::all();
+    expect($all)->toHaveCount(8)
+        ->and($all->pluck('status_label')->unique()->sort()->values()->all())->toBe(['Expired', 'Hidden', 'Live'])
+        ->and(\App\Models\Announcement::live()->count())->toBe(5)
+        ->and(\App\Models\Announcement::live()->latest()->first()->title)->toBe('General Assembly This Saturday');
+
+    $gobiker = User::where('role', 'GoBiker')->where('status', 'Active')->first();
+    \Laravel\Sanctum\Sanctum::actingAs($gobiker);
+    $this->getJson('/api/gobiker/announcements')->assertOk()->assertJsonCount(5, 'announcements');
+});
+
 it('removes only the demo data', function () {
     $real = User::factory()->create(['role' => 'User', 'barangay' => 'Poblacion']);
     $realSos = SosRequest::create(['user_id' => $real->id, 'municipality' => 'Bugallon', 'barangay' => 'Poblacion', 'landmark' => 'Chapel']);
     $realMessage = ContactMessage::create(['name' => 'Real Person', 'email' => 'real@example.com', 'message' => 'Hello']);
+    $realNotice = \App\Models\Announcement::create(['title' => 'Real notice', 'body' => 'Kept.', 'is_active' => true]);
 
     $this->artisan('demo:seed', ['--force' => true])->assertSuccessful();
     $this->artisan('demo:clear', ['--force' => true])->assertSuccessful();
+
+    expect(\App\Models\Announcement::pluck('id')->all())->toBe([$realNotice->id]);
 
     expect(User::pluck('id')->all())->toBe([$real->id])
         ->and(SosRequest::pluck('id')->all())->toBe([$realSos->id])

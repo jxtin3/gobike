@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Models\Announcement;
 use App\Models\Appointment;
 use App\Models\ContactMessage;
 use App\Models\Donation;
@@ -108,6 +109,7 @@ class DemoSeed extends Command
             $this->appointments($core, $residents);
             $this->sos($residents);
             $this->gobikerMessages($gobikers);
+            $this->announcements();
             $this->donations();
             $this->contactMessages();
             $this->trainingRequests();
@@ -127,6 +129,7 @@ class DemoSeed extends Command
             ['Training requests', TrainingRequest::where('email', 'like', '%@'.DemoData::EMAIL_DOMAIN)->count()],
             ['Volunteer applications', VolunteerApplication::where('email', 'like', '%@'.DemoData::EMAIL_DOMAIN)->count()],
             ['Chapter inquiries', ReplicationRequest::where('email', 'like', '%@'.DemoData::EMAIL_DOMAIN)->count()],
+            ['Announcements', Announcement::whereIn('title', DemoData::ANNOUNCEMENT_TITLES)->count()],
         ]);
         $this->info('Done. Remove it all later with: php artisan demo:clear');
 
@@ -506,6 +509,43 @@ class DemoSeed extends Command
                 ]),
                 'is_read' => ! $new,
                 'created_at' => $sent, 'updated_at' => $sent,
+            ]);
+        }
+    }
+
+    /**
+     * Announcements GoBikers see on their dashboard: five live (the newest a few hours old, so it
+     * shows as "New"), two that ended and one hidden draft, so each status shows in the admin.
+     */
+    private function announcements(): void
+    {
+        $saturday = now()->next(Carbon::SATURDAY);
+        $training = now()->addDays(11);
+        [$assembly, $rain, $cpr, $supplies, $thanks, $bikes, $mission, $routes] = DemoData::ANNOUNCEMENT_TITLES;
+
+        $items = [
+            [$thanks, 'This month you recorded more than 800 check-ups across all 24 barangays of Bugallon. The Barangay Captains and the Municipal Health Office thank every GoBiker for your service. Keep up the good work, and ride safe!',
+                true, now()->endOfMonth(), now()->subDays(6)],
+            [$supplies, 'Thanks to our donors, we received 20 new digital BP monitors and glucose test strips. GoBikers whose monitors are broken or low on strips can claim new ones at the Go Bike office, Monday to Friday, 8:00 AM to 5:00 PM.',
+                true, null, now()->subDays(4)],
+            [$cpr, 'A refresher training on CPR and Basic Life Support will be held on '.$training->format('F j').' at Bugallon National High School, 8:00 AM to 4:00 PM. This is required for all GoBikers who joined before '.now()->year.'. A certificate will be given after the training. Message the admin to confirm your slot.',
+                true, $training->copy()->setTime(17, 0), now()->subDays(2)],
+            [$rain, 'PAGASA has raised a heavy rainfall warning for Pangasinan until '.now()->addDays(3)->format('l').'. Avoid flooded roads, especially near the Agno River and low-lying puroks. If the road is not safe, end your ronda early and report through the app. Your safety comes first.',
+                true, now()->addDays(3)->endOfDay(), now()->subDay()],
+            [$assembly, 'All GoBikers are invited to our monthly general assembly this Saturday, '.$saturday->format('F j').', 9:00 AM at the Bugallon Municipal Hall. We will talk about next month\'s rondas, new first aid kits, and the upcoming medical mission. Please bring your Go Biker ID. Snacks will be served.',
+                true, $saturday->copy()->setTime(12, 0), now()->subHours(3)],
+            [$bikes, 'Free bike check-up for all GoBikers at the Municipal Hall parking area, 8:00 AM to 12:00 NN. Our partner mechanics will check brakes, tires and chains.',
+                true, now()->subDays(9), now()->subDays(20)],
+            [$mission, 'Medical mission at the Poblacion covered court with the Municipal Health Office. GoBikers in Poblacion, Salasa and Bacabac, please help guide residents and record BP readings.',
+                true, now()->subDays(25), now()->subDays(35)],
+            [$routes, 'Draft: each barangay will have two ronda routes in December, morning and afternoon. The admin will share the final routes after the general assembly.',
+                false, null, now()->subDays(1)],
+        ];
+
+        foreach ($items as [$title, $body, $active, $expires, $created]) {
+            Announcement::forceCreate([
+                'title' => $title, 'body' => $body, 'is_active' => $active, 'expires_at' => $expires,
+                'created_by' => $this->adminId, 'created_at' => $created, 'updated_at' => $created,
             ]);
         }
     }
