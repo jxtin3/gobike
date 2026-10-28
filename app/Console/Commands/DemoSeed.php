@@ -690,8 +690,8 @@ class DemoSeed extends Command
     }
 
     /**
-     * Volunteers in every stage: one class already trained, one class coming up, almost a
-     * full class waiting (so the public page shows e.g. "18 of 20"), new sign-ups and rejected ones.
+     * Volunteers in every stage: one class already trained, one class coming up, a
+     * full class waiting (22, so the admin can schedule the next class), 16 new sign-ups to review and rejected ones.
      */
     private function volunteers(): void
     {
@@ -707,8 +707,8 @@ class DemoSeed extends Command
         $plan = [
             ...array_fill(0, 24, ['trained', $past, [45, 90]]),
             ...array_fill(0, 22, ['scheduled', $next, [15, 40]]),
-            ...array_fill(0, 18, ['waiting', null, [2, 30]]),
-            ...array_fill(0, 8, ['pending', null, [0, 3]]),
+            ...array_fill(0, 22, ['waiting', null, [2, 30]]),
+            ...array_fill(0, 16, ['pending', null, [0, 3]]),
             ...array_fill(0, 6, ['rejected', null, [5, 60]]),
         ];
 

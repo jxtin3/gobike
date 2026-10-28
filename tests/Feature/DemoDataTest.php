@@ -75,7 +75,7 @@ it('shows the demo data on every admin page and filter', function () {
         'admin/operations/donations', 'admin/operations/donations?status=paid&method=gcash', 'admin/operations/donations?frequency=monthly',
         'admin/operations/messages', 'admin/operations/messages?status=unread',
         'admin/operations/training-requests', 'admin/operations/training-requests?tier=advance&status=pending',
-        'admin/operations/volunteers', 'admin/operations/volunteers?status=waitlisted',
+        'admin/operations/volunteers', 'admin/operations/volunteers?status=waiting',
         'admin/operations/chapter-inquiries', 'admin/operations/chapter-inquiries?status=scheduled&payment=paid',
     ] as $url) {
         $this->get('/'.$url)->assertOk();
@@ -231,4 +231,15 @@ it('removes only the demo data', function () {
     foreach ([Patient::class, Appointment::class, Location::class, GobikerMessage::class, PatientFollowUp::class, Donation::class, TrainingRequest::class, VolunteerApplication::class, ReplicationRequest::class] as $model) {
         expect($model::count())->toBe(0, $model);
     }
+});
+
+it('has volunteers in every stage, with enough waiting for the next class', function () {
+    $this->artisan('demo:seed', ['--force' => true])->assertSuccessful();
+
+    $count = fn ($status) => VolunteerApplication::where('application_status', $status)->count();
+    expect($count('waiting'))->toBe(22)
+        ->and($count('pending'))->toBe(16)
+        ->and($count('scheduled'))->toBe(22)
+        ->and($count('trained'))->toBe(24)
+        ->and(VolunteerApplication::count())->toBe(90);
 });
