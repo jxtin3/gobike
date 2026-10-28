@@ -2,12 +2,15 @@
 
 namespace App\Services\Push;
 
+use App\Models\Announcement;
 use App\Models\Appointment;
 use App\Models\DeviceToken;
 use App\Models\Patient;
+use App\Models\PatientFollowUp;
 use App\Models\SosRequest;
 use App\Models\User;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 /**
  * Tells people on their phones when something they are waiting for happens, even with the app
@@ -113,6 +116,52 @@ class PushNotifier
             : ['Emergency resolved', 'The admin marked your emergency as resolved.'];
 
         $this->toUser($gobiker, null, $title, $body, ['type' => 'emergency']);
+    }
+
+    /** The admin posted an announcement (or made a hidden one live): tell every GoBiker. */
+    public function announcementPosted(Announcement $announcement): void
+    {
+        // Only those with a phone to send to (there can be many GoBikers without one).
+        $gobikers = User::where('role', 'GoBiker')->where('status', 'Active')->whereHas('deviceTokens')->get();
+
+        foreach ($gobikers as $gobiker) {
+            $this->toUser(
+                $gobiker,
+                null,
+                'New announcement',
+                Str::limit($announcement->title.' · '.$announcement->body, 150),
+                ['type' => 'announcement', 'id' => (string) $announcement->id],
+            );
+        }
+    }
+
+    /** The admin decided whether to keep checking a person: tell the GoBikers who checked them. */
+    public function followUpDecided(PatientFollowUp $followUp): void
+    {
+        $title = $followUp->decision === 'stop'
+            ? "{$followUp->name} can stop regular check-ups"
+            : "Keep checking {$followUp->name}";
+        $body = $followUp->note ?: ($followUp->decision === 'stop'
+            ? 'The admin says their recent readings are normal.'
+            : 'The admin asks you to keep visiting and checking them.');
+
+        $ids = Patient::forPerson($followUp->name, $followUp->contact)->distinct()->pluck('user_id');
+        foreach (User::whereIn('id', $ids)->where('role', 'GoBiker')->get() as $gobiker) {
+            $this->toUser($gobiker, null, $title, $body, ['type' => 'follow_up']);
+        }
+    }
+
+    /** A visit the GoBiker was asked for or accepted will not happen. $by: 'resident' or 'admin'. */
+    public function appointmentWithdrawn(Appointment $appointment, string $by): void
+    {
+        $who = $appointment->resident?->name ?? 'The resident';
+        $date = $appointment->preferred_date?->format('M j');
+
+        [$title, $body] = $by === 'resident'
+            ? ['Home visit cancelled', "{$who} cancelled the visit on {$date}."]
+            : ['Visit request closed', "The admin declined {$who}'s visit request for {$date}."];
+
+        $this->toUser($appointment->gobiker, null, $title, $body, ['type' => 'appointment_request', 'id' => (string) $appointment->id]);
     }
 
     // ------------------------------------------------------------ internals

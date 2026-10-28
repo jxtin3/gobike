@@ -205,3 +205,59 @@ it('lets a Google account set a password without a current one, then requires it
         ->assertUnprocessable()
         ->assertJsonValidationErrors('current_password');
 });
+
+// ---------------------------------------------------------------- announcements and others
+
+it('tells GoBikers (not residents) about a new announcement, but not a hidden one or a plain edit', function () {
+    $this->actingAs($this->admin, 'web');
+
+    $this->post(route('admin.operations.announcements.store'), ['title' => 'Hidden draft', 'body' => 'Not yet.'])->assertRedirect();
+    expect($this->push->sent)->toBe([]);
+
+    $this->post(route('admin.operations.announcements.store'), ['title' => 'General Assembly', 'body' => 'Saturday 9 AM.', 'is_active' => '1'])->assertRedirect();
+    expect(titlesFor($this->push, 'gobiker-phone'))->toBe(['New announcement'])
+        ->and(titlesFor($this->push, 'resident-phone'))->toBe([])
+        ->and($this->push->sent[0]['data']['type'])->toBe('announcement')
+        ->and($this->push->sent[0]['body'])->toContain('General Assembly');
+
+    // Editing a live one does not notify again; making the hidden one live does.
+    $live = \App\Models\Announcement::where('title', 'General Assembly')->first();
+    $this->put(route('admin.operations.announcements.update', $live), ['title' => 'General Assembly', 'body' => 'Now 10 AM.', 'is_active' => '1']);
+    expect(titlesFor($this->push, 'gobiker-phone'))->toHaveCount(1);
+
+    $hidden = \App\Models\Announcement::where('title', 'Hidden draft')->first();
+    $this->put(route('admin.operations.announcements.update', $hidden), ['title' => 'Hidden draft', 'body' => 'Now live.', 'is_active' => '1']);
+    expect(titlesFor($this->push, 'gobiker-phone'))->toHaveCount(2);
+});
+
+it('tells the GoBikers who checked a person about the admin\'s follow-up decision', function () {
+    $other = User::factory()->create(['role' => 'GoBiker', 'status' => 'Active']);
+    DeviceToken::create(['user_id' => $other->id, 'token' => 'other-phone']);
+    $checkup = \App\Models\Patient::create([
+        'user_id' => $this->gobiker->id, 'name' => 'Lola Cruz', 'contact' => '09170002222', 'address' => 'Purok 1', 'age' => 80,
+        'sys' => 120, 'dia' => 80, 'pulse' => 70, 'resp' => 16, 'temp' => 36.6, 'recorded_at' => now(),
+    ]);
+
+    $this->actingAs($this->admin, 'web')
+        ->patch(route('admin.operations.patients.follow-up', $checkup), ['decision' => 'stop'])
+        ->assertRedirect();
+
+    expect(titlesFor($this->push, 'gobiker-phone'))->toBe(['Lola Cruz can stop regular check-ups'])
+        ->and(titlesFor($this->push, 'other-phone'))->toBe([]);
+});
+
+it('tells the GoBiker when the resident cancels or the admin declines their visit', function () {
+    $visit = Appointment::create([
+        'resident_id' => $this->resident->id, 'gobiker_id' => $this->gobiker->id, 'barangay' => 'Poblacion', 'address' => 'Purok 3',
+        'preferred_date' => now()->addDays(2)->toDateString(), 'preferred_window' => 'morning', 'reason' => 'BP check', 'status' => 'pending',
+    ]);
+
+    $this->actingAs($this->admin, 'web')
+        ->patch(route('admin.operations.appointments.decline', $visit), ['decline_note' => 'Please go to the RHU.']);
+    expect(titlesFor($this->push, 'gobiker-phone'))->toBe(['Visit request closed']);
+
+    $visit->update(['status' => 'accepted']);
+    Sanctum::actingAs($this->resident);
+    $this->postJson(route('api.resident.appointments.cancel', $visit))->assertOk();
+    expect(titlesFor($this->push, 'gobiker-phone'))->toBe(['Visit request closed', 'Home visit cancelled']);
+});

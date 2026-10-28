@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Announcement;
+use App\Services\Push\PushNotifier;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
@@ -34,7 +35,10 @@ class AnnouncementController extends Controller
         $data = $this->payload($request);
         $data['created_by'] = $request->user()->id;
 
-        Announcement::create($data);
+        $announcement = Announcement::create($data);
+        if ($announcement->status_label === 'Live') {
+            app(PushNotifier::class)->announcementPosted($announcement);
+        }
 
         return redirect()->route('admin.operations.announcements.index')
             ->with('success', $data['is_active'] ? 'Announcement posted. GoBikers will see it in the app.' : 'Announcement saved as hidden.');
@@ -47,7 +51,13 @@ class AnnouncementController extends Controller
 
     public function update(Request $request, Announcement $announcement): RedirectResponse
     {
+        $wasLive = $announcement->status_label === 'Live';
         $announcement->update($this->payload($request, $announcement));
+
+        // Only when it becomes visible to GoBikers, not on every edit.
+        if (! $wasLive && $announcement->status_label === 'Live') {
+            app(PushNotifier::class)->announcementPosted($announcement);
+        }
 
         return redirect()->route('admin.operations.announcements.index')->with('success', 'Announcement updated.');
     }

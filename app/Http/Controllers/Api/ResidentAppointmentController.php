@@ -102,6 +102,9 @@ class ResidentAppointmentController extends Controller
         }
 
         $appointment->update(['status' => 'cancelled']);
+        if ($appointment->gobiker_id) {
+            app(PushNotifier::class)->appointmentWithdrawn($appointment->load('resident', 'gobiker'), 'resident');
+        }
 
         return response()->json([
             'message' => 'Visit request cancelled.',

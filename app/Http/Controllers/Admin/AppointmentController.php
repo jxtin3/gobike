@@ -65,7 +65,11 @@ class AppointmentController extends Controller
         }
 
         $appointment->update(['status' => 'declined', 'decline_note' => $data['decline_note']]);
-        app(PushNotifier::class)->appointmentChanged($appointment->fresh(['resident', 'gobiker']));
+        $appointment = $appointment->fresh(['resident', 'gobiker']);
+        app(PushNotifier::class)->appointmentChanged($appointment);
+        if ($appointment->gobiker) {
+            app(PushNotifier::class)->appointmentWithdrawn($appointment, 'admin');
+        }
 
         return back()->with('success', 'Request declined. The resident will see your note in the app.');
     }

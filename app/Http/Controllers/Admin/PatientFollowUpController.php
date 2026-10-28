@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Patient;
 use App\Models\PatientFollowUp;
+use App\Services\Push\PushNotifier;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -19,7 +20,7 @@ class PatientFollowUpController extends Controller
             'note' => ['nullable', 'string', 'max:500'],
         ]);
 
-        PatientFollowUp::updateOrCreate(
+        $followUp = PatientFollowUp::updateOrCreate(
             ['person_key' => $patient->personKey()],
             [
                 'name' => trim($patient->name),
@@ -30,6 +31,7 @@ class PatientFollowUpController extends Controller
                 'decided_at' => now(),
             ],
         );
+        app(PushNotifier::class)->followUpDecided($followUp);
 
         return back()->with('success', $data['decision'] === 'stop'
             ? "GoBikers will be told they can stop regular check-ups for {$patient->name}."
