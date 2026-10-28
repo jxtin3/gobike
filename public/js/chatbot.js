@@ -11,7 +11,7 @@ document.addEventListener('alpine:init', () => {
         welcomed: false,
         welcomeTimer: null,
         maxHistory: 12,
-        welcomeText: "Hi! I'm GoBot, the OneGoBike assistant. Ask me how to volunteer, get trained, donate, or find any page, and I'll guide you step by step. (English or Tagalog)",
+        welcomeText: "Hi! I'm GoBot, the OneGoBike assistant. Ask me how to volunteer, get trained, donate, or find any page, and I'll guide you step by step.",
 
         toggle() {
             if (this.open) {

@@ -18,6 +18,13 @@ class ChatbotService
      */
     public function reply(string $message, array $history = []): string
     {
+        // Bad words get a polite fixed reply; the AI never sees them.
+        if ($this->hasBlockedWord($message)) {
+            return $this->looksTagalog($message)
+                ? 'Panatilihin nating magalang ang usapan. Matutulungan kita sa Go Bike website, gaya ng pag-volunteer, training, pag-donate, o paghahanap ng page.'
+                : "Let's keep it friendly. I can help you with the Go Bike website, like volunteering, training, donating, or finding pages.";
+        }
+
         $apiKey = config('chatbot.gemini_api_key');
 
         if ($apiKey === '') {
@@ -48,7 +55,7 @@ class ChatbotService
             $reply = $response['candidates'][0]['content']['parts'][0]['text'] ?? null;
 
             if ($reply !== null) {
-                return trim(str_replace('*', '', $reply));
+                return $this->withoutLinks(trim(str_replace('*', '', $reply)));
             }
 
             Log::error('Gemini reply failed', ['model' => $model, 'response' => $response->json()]);
@@ -56,6 +63,45 @@ class ChatbotService
         }
 
         throw new RuntimeException("Gemini request failed: {$lastReason}");
+    }
+
+    private function hasBlockedWord(string $message): bool
+    {
+        $text = mb_strtolower($message);
+        foreach (config('chatbot.blocked_words', []) as $word) {
+            if (preg_match('/(?<![\p{L}])'.preg_quote(mb_strtolower($word), '/').'(?![\p{L}])/u', $text)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /** Common Tagalog words, to answer a blocked message in the visitor's language. */
+    private function looksTagalog(string $message): bool
+    {
+        return (bool) preg_match('/\b(ang|ng|mga|ako|ikaw|ka|mo|ko|po|paano|ano|bakit|saan|sino|hindi|oo|yung|kayo|nyo|niyo|tangina|putangina|gago|ulol|bobo|tanga|tarantado)\b/iu', $message);
+    }
+
+    /**
+     * GoBot guides by menu and button names only: take out any web address or link the AI
+     * still wrote (full URLs, www. addresses, social links, and "Open: /page" lines).
+     */
+    private function withoutLinks(string $reply): string
+    {
+        $patterns = [
+            '/^[ \t]*(open|buksan)\s*:.*$/imu',                                   // "Open: https://…/volunteer"
+            '/\bhttps?:\/\/\S+/iu',                                               // full URLs
+            '/\bwww\.\S+/iu',                                                     // www.example.com
+            '/(?<![@\w.-])[\w-]+(\.[\w-]+)*\.(com|org|net|ph|app|io)\b(\/\S*)?(?<![.,;:!?)])/iu', // facebook.com/…, gobike.up.railway.app (not emails)
+            '/(?<=\s|\()\/[a-z][a-z0-9\-]*(\/[a-z0-9\-#]+)*\/?(?=[\s).,;:!?]|$)/iu', // /volunteer, /what-we-do/programs/alwar
+        ];
+        $clean = preg_replace($patterns, '', $reply);
+
+        // Tidy what the removed links leave behind: empty brackets, doubled spaces, extra blank lines.
+        $clean = preg_replace(['/\(\s*\)/u', '/[ \t]{2,}/u', '/[ \t]+([.,;:!?])/u', '/\n{3,}/u'], ['', ' ', '$1', "\n\n"], $clean);
+
+        return trim($clean);
     }
 
     /**
