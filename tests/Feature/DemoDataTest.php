@@ -140,6 +140,50 @@ it('fills both inboxes with hundreds of varied messages that still page fine', f
     }
 });
 
+it('gives every GoBiker up to 5 check-ups that fill the reports and analytics filters', function () {
+    $admin = User::factory()->create(['is_admin' => true, 'role' => 'Admin']);
+    $this->artisan('demo:seed', ['--force' => true, '--gobikers' => 200])->assertSuccessful();
+
+    // The extra GoBikers (past the first 30) only have these check-ups.
+    $extra = User::where('role', 'GoBiker')->orderBy('id')->skip(30)->take(170)->pluck('id');
+    $perGobiker = Patient::whereIn('user_id', $extra)->selectRaw('user_id, COUNT(*) as n')->groupBy('user_id')->pluck('n');
+    expect($perGobiker->max())->toBeLessThanOrEqual(5)
+        ->and($perGobiker->count())->toBeLessThan(170) // some GoBikers have none
+        ->and($perGobiker->sum())->toBeGreaterThan(250);
+
+    // Every week/month and year filter has check-ups, with every abnormal reading.
+    expect(Patient::where('recorded_at', '>=', now()->startOfWeek())->count())->toBeGreaterThan(0)
+        ->and(Patient::where('recorded_at', '>=', now()->startOfMonth())->count())->toBeGreaterThan(0);
+    foreach (range(0, 4) as $yearsAgo) {
+        expect(Patient::whereYear('recorded_at', now()->subYears($yearsAgo)->year)->count())->toBeGreaterThan(0, "year -{$yearsAgo}");
+    }
+    foreach (array_keys(Patient::READINGS) as $reading) {
+        expect(Patient::withReading($reading)->count())->toBeGreaterThan(5, $reading);
+    }
+
+    $this->actingAs($admin);
+
+    // Barangay filter on the GoBiker reports.
+    $page = $this->get(route('admin.operations.gobiker-reports.index', ['barangay' => 'Samat']))->assertOk();
+    $samat = User::where('role', 'GoBiker')->where('barangay', 'Samat')->first();
+    $poblacion = User::where('role', 'GoBiker')->where('barangay', 'Poblacion')->first();
+    $page->assertSee("/gobiker-reports/{$samat->id}?", false)
+        ->assertDontSee("/gobiker-reports/{$poblacion->id}?", false)
+        ->assertSee('<option value="Samat" selected', false);
+    $this->get(route('admin.operations.gobiker-reports.index', ['barangay' => 'Atlantis']))->assertSessionHasErrors('barangay');
+    $this->get(route('admin.operations.gobiker-reports.index', ['barangay' => 'Samat', 'period' => 'week', 'format' => 'csv']))->assertOk();
+
+    // Analytics: each year it offers has check-ups, and a month view works.
+    foreach (range(0, 4) as $yearsAgo) {
+        $this->get(route('admin.dashboard', ['year' => now()->subYears($yearsAgo)->year]))
+            ->assertOk()
+            ->assertViewHas('checkupsTotal', fn ($total) => $total > 0);
+    }
+    $this->get(route('admin.dashboard', ['year' => now()->year, 'month' => now()->month]))
+        ->assertOk()
+        ->assertViewHas('checkupsTotal', fn ($total) => $total > 0);
+});
+
 it('links check-ups to the demo residents, not to real people', function () {
     $real = User::factory()->create(['role' => 'User', 'mobile' => '09171234567']);
     $this->artisan('demo:seed', ['--force' => true])->assertSuccessful();

@@ -21,10 +21,11 @@ class GobikerActivity
      *
      * @return Collection<int, array<string, mixed>>
      */
-    public function summary(ReportPeriod $period, ?string $search = null): Collection
+    public function summary(ReportPeriod $period, ?string $search = null, ?string $barangay = null): Collection
     {
         $gobikers = User::where('role', 'GoBiker')
             ->when($search, fn ($q, $term) => $q->where('name', 'like', "%{$term}%"))
+            ->when($barangay, fn ($q, $name) => $q->where('barangay', $name))
             ->orderBy('name')
             ->get(['id', 'name', 'email', 'barangay', 'mobile', 'status']);
 

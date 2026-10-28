@@ -98,10 +98,14 @@ class DemoSeed extends Command
         DB::transaction(function () {
             [$gobikers] = $this->gobikers(); // the 6 waiting for approval have no activity yet
             $residents = $this->residents();
+            // The first 24 carry the detailed history (residents' check-ups, home visits);
+            // every GoBiker also gets 0 to 5 check-ups of their own.
+            $core = array_slice($gobikers, 0, 24);
             $this->mapAndRondas($gobikers);
-            $people = $this->checkups($gobikers, $residents);
+            $people = $this->checkups($core, $residents);
+            $this->gobikerCheckups($gobikers);
             $this->followUps($people);
-            $this->appointments($gobikers, $residents);
+            $this->appointments($core, $residents);
             $this->sos($residents);
             $this->gobikerMessages($gobikers);
             $this->donations();
@@ -255,6 +259,23 @@ class DemoSeed extends Command
 
     private function checkup(array $person, User $gobiker, Carbon $when, ?string $issue): Patient
     {
+        return Patient::forceCreate([
+            'user_id' => $gobiker->id,
+            'barangay' => $person['barangay'],
+            'name' => $person['name'],
+            'address' => $person['address'],
+            'contact' => $person['contact'],
+            'age' => $person['age'],
+            'remarks' => $this->remarks($issue),
+            'recorded_at' => $when,
+            'created_at' => $when,
+            'updated_at' => $when,
+        ] + $this->vitals($issue));
+    }
+
+    /** Normal readings, with the one named by $issue (a Patient::READINGS key) out of range. */
+    private function vitals(?string $issue): array
+    {
         $v = [
             'sys' => $this->int(108, 128), 'dia' => $this->int(68, 82), 'pulse' => $this->int(64, 92),
             'resp' => $this->int(14, 18), 'temp' => $this->int(363, 372) / 10, 'blood_sugar' => $this->chance(70) ? $this->int(82, 128) : null,
@@ -273,18 +294,73 @@ class DemoSeed extends Command
             default => null,
         };
 
-        return Patient::forceCreate([
-            'user_id' => $gobiker->id,
-            'barangay' => $person['barangay'],
-            'name' => $person['name'],
-            'address' => $person['address'],
-            'contact' => $person['contact'],
-            'age' => $person['age'],
-            'remarks' => $issue ? $this->pick(['Advised to see the RHU doctor.', 'Rechecked after 10 minutes, still high.', 'Reminded to take maintenance medicine.', 'Family informed.']) : ($this->chance(25) ? 'No complaints.' : null),
-            'recorded_at' => $when,
-            'created_at' => $when,
-            'updated_at' => $when,
-        ] + $v);
+        return $v;
+    }
+
+    private function remarks(?string $issue): ?string
+    {
+        return $issue
+            ? $this->pick(['Advised to see the RHU doctor.', 'Rechecked after 10 minutes, still high.', 'Reminded to take maintenance medicine.', 'Family informed.', 'Referred to the barangay health worker.'])
+            : ($this->chance(25) ? $this->pick(['No complaints.', 'Feeling well.', 'Regular monthly check.']) : null);
+    }
+
+    /**
+     * 0 to 5 check-ups for every active GoBiker, of people in their barangay, spread so every
+     * report and analytics filter has data: this week and month, the past year, and each of
+     * the last 5 years. About 4 in 10 have an abnormal reading. Saved in bulk (there are thousands).
+     */
+    private function gobikerCheckups(array $gobikers): void
+    {
+        $issues = [...array_keys(Patient::READINGS), ...array_fill(0, 15, null)];
+        $rows = [];
+        foreach ($gobikers as $gobiker) {
+            $seen = [];
+            for ($k = 0, $count = $this->int(0, 5); $k < $count; $k++) {
+                // Sometimes a follow-up visit to someone they checked before.
+                if ($seen && $this->chance(25)) {
+                    $person = $this->pick($seen);
+                } else {
+                    $seen[] = $person = [
+                        'name' => $this->name(),
+                        'contact' => $this->mobile(),
+                        'address' => 'Purok '.$this->int(1, 7).', '.$gobiker->barangay,
+                        'age' => $this->int(18, 90),
+                    ];
+                }
+                $issue = $this->pick($issues);
+                $when = $this->checkupDate();
+                $rows[] = [
+                    'user_id' => $gobiker->id,
+                    'barangay' => $gobiker->barangay,
+                    ...$person,
+                    ...$this->vitals($issue),
+                    'remarks' => $this->remarks($issue),
+                    'recorded_at' => $when,
+                    'created_at' => $when,
+                    'updated_at' => $when,
+                ];
+            }
+            if (count($rows) >= 500) {
+                Patient::insert($rows);
+                $rows = [];
+            }
+        }
+        if ($rows) {
+            Patient::insert($rows);
+        }
+    }
+
+    /** This week, this or last month, the past year, or up to 5 years back. */
+    private function checkupDate(): Carbon
+    {
+        $roll = $this->int(1, 100);
+
+        return match (true) {
+            $roll <= 15 => now()->subMinutes($this->int(30, 7 * 24 * 60)),
+            $roll <= 40 => now()->subDays($this->int(1, 60))->setTime($this->int(7, 17), $this->int(0, 59)),
+            $roll <= 70 => now()->subDays($this->int(61, 365))->setTime($this->int(7, 17), $this->int(0, 59)),
+            default => now()->subDays($this->int(366, 5 * 365))->setTime($this->int(7, 17), $this->int(0, 59)),
+        };
     }
 
     /** Admin decisions on some people: keep checking, or stop. */

@@ -4,13 +4,13 @@
 @section('subheading', 'How many rondas each GoBiker took and how many patients they checked.')
 @section('actions')
     <button type="button" class="btn btn-secondary" data-print><x-admin.icon name="printer" /> Print</button>
-    <a class="btn btn-primary" href="{{ route('admin.operations.gobiker-reports.index', $period->query(['search' => $search, 'format' => 'csv'])) }}"><x-admin.icon name="download" /> Download CSV</a>
+    <a class="btn btn-primary" href="{{ route('admin.operations.gobiker-reports.index', $period->query(['search' => $search, 'barangay' => $barangay, 'format' => 'csv'])) }}"><x-admin.icon name="download" /> Download CSV</a>
 @endsection
 
 @section('content')
 @include('admin.partials.print-head', ['title' => 'GoBiker report', 'subtitle' => $period->label()])
 
-@include('admin.operations.gobiker-reports._period', ['route' => 'admin.operations.gobiker-reports.index', 'extra' => ['search' => $search]])
+@include('admin.operations.gobiker-reports._period', ['route' => 'admin.operations.gobiker-reports.index', 'extra' => ['search' => $search, 'barangay' => $barangay]])
 
 @include('admin.operations.gobiker-reports._tracking-note')
 
@@ -46,7 +46,14 @@
 </div>
 
 <x-admin.filters :action="route('admin.operations.gobiker-reports.index')" placeholder="Search GoBiker by name" label="Search GoBikers"
-                 :hidden="['period' => $period->type, 'date' => $period->from->toDateString()]" :filtered="filled($search)" />
+                 :hidden="['period' => $period->type, 'date' => $period->from->toDateString()]" :filtered="filled($search) || filled($barangay)">
+    <select class="input" name="barangay" aria-label="Filter by barangay" data-autosubmit>
+        <option value="">All barangays</option>
+        @foreach ($barangays as $name)
+            <option value="{{ $name }}" @selected($barangay === $name)>{{ $name }}</option>
+        @endforeach
+    </select>
+</x-admin.filters>
 
 @php $maxCheckups = max(1, (int) $rows->max('checkups')); @endphp
 <div class="table-wrap">
@@ -105,9 +112,9 @@
                     </td>
                 </tr>
             @empty
-                @if ($search)
+                @if ($search || $barangay)
                     <x-admin.empty :row="8" icon="users" title="No GoBikers match" :clear="route('admin.operations.gobiker-reports.index', $period->query())">
-                        Try a different name.
+                        Try a different name or barangay.
                     </x-admin.empty>
                 @else
                     <x-admin.empty :row="8" icon="users" title="No GoBikers yet">

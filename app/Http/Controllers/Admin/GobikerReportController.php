@@ -6,10 +6,12 @@ use App\Http\Controllers\Controller;
 use App\Models\Ronda;
 use App\Models\User;
 use App\Services\GobikerActivity;
+use App\Support\Barangays;
 use App\Support\CsvDownload;
 use App\Support\ReportPeriod;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 /** Weekly or monthly reports of how many rondas each GoBiker took and how many patients they checked. */
 class GobikerReportController extends Controller
@@ -18,7 +20,10 @@ class GobikerReportController extends Controller
     {
         $period = ReportPeriod::fromRequest($request);
         $search = trim((string) $request->query('search', ''));
-        $rows = $activity->summary($period, $search ?: null);
+        $barangay = $request->validate([
+            'barangay' => ['nullable', 'string', Rule::in(Barangays::ALL)],
+        ])['barangay'] ?? null;
+        $rows = $activity->summary($period, $search ?: null, $barangay);
 
         $totals = [
             'rondas' => $rows->sum('rondas'),
@@ -48,7 +53,8 @@ class GobikerReportController extends Controller
         }
 
         return view('admin.operations.gobiker-reports.index', [
-            ...compact('period', 'rows', 'totals', 'search'),
+            ...compact('period', 'rows', 'totals', 'search', 'barangay'),
+            'barangays' => Barangays::ALL,
             'trackingSince' => $this->trackingSince(),
         ]);
     }
