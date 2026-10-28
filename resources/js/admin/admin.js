@@ -292,6 +292,34 @@ function decrementCounter(element) {
     });
 })();
 
+/*
+ * Row links. A list row (or card) with data-href opens that page when clicked anywhere,
+ * not just on its eye button. Links and buttons inside the row keep their own action,
+ * selecting text does not navigate, and Ctrl/Cmd or middle click opens a new tab.
+ */
+(() => {
+    const CONTROLS = 'a, button, input, select, textarea, label, form, summary, dialog, video';
+
+    function follow(e) {
+        const row = e.target.closest('[data-href]');
+        if (!row || e.target.closest(CONTROLS)) return;
+        if (window.getSelection()?.toString()) return;
+
+        const href = row.dataset.href;
+        if (e.ctrlKey || e.metaKey || e.button === 1) {
+            window.open(href, '_blank', 'noopener');
+            return;
+        }
+        // Click the row's own link to the same page, so its loading skeleton shows.
+        const link = $$('a[href]', row).find((a) => a.href === new URL(href, location.href).href);
+        if (link) link.click();
+        else location.assign(href);
+    }
+
+    document.addEventListener('click', (e) => { if (e.button === 0) follow(e); });
+    document.addEventListener('auxclick', (e) => { if (e.button === 1) follow(e); });
+})();
+
 /* Print buttons (reports and patient records are styled for paper / Save as PDF) */
 $$('[data-print]').forEach((button) => button.addEventListener('click', () => window.print()));
 

@@ -195,6 +195,33 @@ it('shows the requests and their details to admins only', function () {
         ->assertSee('Responding');
 });
 
+it('lets an admin delete a request with its photo and video', function () {
+    $sos = sendSos($this->resident);
+    $this->post(route('api.resident.sos.media', $sos), [
+        'image' => UploadedFile::fake()->image('scene.jpg'),
+        'video' => UploadedFile::fake()->create('scene.mp4', 512, 'video/mp4'),
+    ], ['Accept' => 'application/json'])->assertOk();
+    $files = [$sos->fresh()->image_path, $sos->fresh()->video_path];
+
+    $this->actingAs($this->resident, 'web')->delete(route('admin.operations.sos.destroy', $sos))->assertForbidden();
+    $this->actingAs($this->admin, 'web')
+        ->delete(route('admin.operations.sos.destroy', $sos))
+        ->assertRedirect(route('admin.operations.sos.index'));
+
+    expect(SosRequest::find($sos->id))->toBeNull();
+    foreach ($files as $file) {
+        Storage::disk('public')->assertMissing($file);
+    }
+});
+
+it('opens a request by clicking anywhere on its row', function () {
+    $sos = sendSos($this->resident);
+
+    $this->actingAs($this->admin, 'web')
+        ->get(route('admin.operations.sos.index', ['status' => 'all']))
+        ->assertSee('data-href="'.route('admin.operations.sos.show', $sos).'"', false);
+});
+
 it('counts waiting requests in the sidebar', function () {
     sendSos($this->resident);
 

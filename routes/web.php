@@ -196,6 +196,7 @@ Route::middleware([EnsureAdmin::class, AuthenticateSession::class])->prefix('adm
         Route::get('/sos', [SosRequestController::class, 'index'])->name('sos.index');
         Route::get('/sos/{sos}', [SosRequestController::class, 'show'])->name('sos.show');
         Route::patch('/sos/{sos}/status', [SosRequestController::class, 'updateStatus'])->name('sos.status');
+        Route::delete('/sos/{sos}', [SosRequestController::class, 'destroy'])->name('sos.destroy');
 
         // patients
         Route::get('/patients', [AdminPatientController::class, 'index'])->name('patients.index');

@@ -71,7 +71,7 @@
                     $initials = collect(preg_split('/\s+/', trim($gobiker->name)))->filter()->take(2)
                         ->map(fn ($part) => mb_strtoupper(mb_substr($part, 0, 1)))->implode('');
                 @endphp
-                <tr @class(['is-idle' => $row['rondas'] === 0 && $row['checkups'] === 0])>
+                <tr @class(['is-idle' => $row['rondas'] === 0 && $row['checkups'] === 0]) data-href="{{ $url }}">
                     <td>
                         <div class="cell-user">
                             <span class="avatar" aria-hidden="true">{{ $initials }}</span>

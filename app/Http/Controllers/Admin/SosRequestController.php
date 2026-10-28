@@ -5,7 +5,9 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\SosRequest;
 use App\Services\Push\PushNotifier;
+use App\Support\Media;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 
 /** Residents' SOS requests: list, details, and moving them to "Responding" / "Resolved". */
@@ -91,5 +93,19 @@ class SosRequestController extends Controller
         return $request->expectsJson()
             ? response()->json(['status' => $sos->status])
             : back()->with('success', $data['status'] === 'resolved' ? 'SOS request resolved.' : 'Marked as responding. The resident can see this in the app.');
+    }
+
+    /** Deletes the request with its photo and video (e.g. a test or a duplicate). */
+    public function destroy(SosRequest $sos)
+    {
+        $files = array_filter([$sos->image_path, $sos->video_path]);
+        $who = $sos->user?->name ?? 'a resident';
+        $sos->delete();
+        if ($files) {
+            Storage::disk(Media::disk())->delete($files);
+        }
+
+        return redirect()->route('admin.operations.sos.index')
+            ->with('success', "SOS request from {$who} deleted.");
     }
 }

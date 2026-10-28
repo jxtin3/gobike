@@ -107,4 +107,16 @@
         </ul>
     </section>
 @endif
+
+<div class="detail-danger no-print">
+    <p>Deleting removes this request, with its photo and video, for good. Use it for tests or duplicates.</p>
+    <form method="POST" action="{{ route('admin.operations.sos.destroy', $sos) }}"
+          data-confirm-title="Delete this SOS request?"
+          data-confirm-text="This permanently deletes the request from {{ $who }} sent {{ $sos->created_at->format('M j, Y g:i A') }}. It also disappears from the resident's history in the app."
+          data-confirm-ok="Delete request">
+        @csrf
+        @method('DELETE')
+        <button type="submit" class="btn btn-danger"><x-admin.icon name="trash" /> Delete request</button>
+    </form>
+</div>
 @endsection

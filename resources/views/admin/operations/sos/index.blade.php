@@ -37,7 +37,7 @@
         <tbody>
             @forelse ($requests as $sos)
                 @php $who = $sos->user?->name ?? 'Deleted resident'; @endphp
-                <tr @class(['is-unread' => $sos->status === 'sent'])>
+                <tr @class(['is-unread' => $sos->status === 'sent']) data-href="{{ route('admin.operations.sos.show', $sos) }}">
                     <td>
                         <a href="{{ route('admin.operations.sos.show', $sos) }}"><b>{{ $who }}</b></a>
                         <small class="sub-line">{{ $sos->user?->mobile ?: 'No mobile number' }}</small>

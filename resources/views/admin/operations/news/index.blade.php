@@ -24,7 +24,7 @@
         </thead>
         <tbody>
             @forelse ($news as $item)
-                <tr>
+                <tr data-href="{{ route('admin.operations.news.show', $item) }}">
                     <td>
                         <b><a class="cell-link" href="{{ route('admin.operations.news.show', $item) }}" title="{{ $item->title }}" data-skeleton="detail">{{ Str::limit($item->title, 70) }}</a></b>
                         <small class="sub-line">{{ Str::limit($item->summary, 90) }}</small>

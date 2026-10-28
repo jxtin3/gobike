@@ -1164,6 +1164,11 @@ tbody tr { transition: background var(--t); }
 
 tbody tr:hover { background: #fafbfd; }
 
+/* Rows and cards that open their page when clicked anywhere (see "Row links" in admin.js). */
+tr[data-href],
+tr[data-dialog],
+.picture-card[data-href] { cursor: pointer; }
+
 tbody tr.is-static:hover { background: none; }
 
 tbody tr.is-pending { background: #fffaf2; }

@@ -27,7 +27,7 @@
         </thead>
         <tbody>
             @forelse ($announcements as $announcement)
-                <tr>
+                <tr data-href="{{ route('admin.operations.announcements.edit', $announcement) }}">
                     <td>
                         <b><a class="cell-link" href="{{ route('admin.operations.announcements.edit', $announcement) }}" title="{{ $announcement->title }}">{{ Str::limit($announcement->title, 70) }}</a></b>
                         <small class="sub-line">{{ Str::limit($announcement->body, 110) }}</small>

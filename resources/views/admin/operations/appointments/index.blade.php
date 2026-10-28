@@ -37,7 +37,7 @@
         <tbody>
             @forelse ($appointments as $a)
                 @php $who = $a->resident?->name ?? 'Deleted resident'; @endphp
-                <tr>
+                <tr data-href="{{ route('admin.operations.appointments.show', $a) }}">
                     <td>
                         <a href="{{ route('admin.operations.appointments.show', $a) }}"><b>{{ $who }}</b></a>
                         <small class="sub-line">{{ $a->barangay }}</small>

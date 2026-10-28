@@ -50,7 +50,7 @@
                     $mediaSrc = \App\Support\Media::url($picture->image_path);
                     $isVideo = $picture->isVideo();
                 @endphp
-                <li class="picture-card">
+                <li class="picture-card" data-href="{{ route('admin.operations.pictures.show', $picture) }}">
                     <button type="button" class="picture-card-media" data-lightbox="{{ $mediaSrc }}" data-video="{{ $isVideo ? '1' : '0' }}" data-title="{{ $picture->title }}"
                             aria-label="Open {{ $isVideo ? 'video' : 'photo' }} {{ $picture->title }}">
                         @if ($isVideo)

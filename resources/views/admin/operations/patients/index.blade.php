@@ -57,7 +57,7 @@
                 @php
                     $abnormal = $patient->abnormalReadings();
                 @endphp
-                <tr>
+                <tr data-href="{{ route('admin.operations.patients.show', $patient) }}">
                     <td>
                         <div class="cell-user">
                             <x-admin.avatar :name="$patient->name" />

@@ -67,7 +67,7 @@
         </thead>
         <tbody>
             @forelse ($inquiries as $inquiry)
-            <tr>
+            <tr data-href="{{ route('admin.operations.chapter-inquiries.show', $inquiry) }}">
                 <td>
                     <div class="cell-user">
                         <x-admin.avatar :name="$inquiry->organization" />

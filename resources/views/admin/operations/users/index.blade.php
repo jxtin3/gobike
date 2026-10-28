@@ -60,7 +60,7 @@
                         $role = $user->role ?? 'User';
                         $pending = $user->isPendingApproval();
                     @endphp
-                    <tr @class(['is-pending' => $pending])>
+                    <tr @class(['is-pending' => $pending]) data-href="{{ route('admin.operations.users.show', $user) }}">
                         <td>
                             <div class="cell-user">
                                 <x-admin.avatar :name="$user->name" />

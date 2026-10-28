@@ -60,7 +60,7 @@
         </thead>
         <tbody>
             @forelse ($applications as $app)
-            <tr>
+            <tr data-href="{{ route('admin.operations.volunteers.show', $app) }}">
                 <td>
                     <div class="cell-user">
                         <x-admin.avatar :name="$app->full_name" />
