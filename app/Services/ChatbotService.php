@@ -11,6 +11,8 @@ use RuntimeException;
 
 class ChatbotService
 {
+    public function __construct(private ChatbotSiteGuide $guide) {}
+
     /**
      * @param  array<int, array{role: string, text: string}>  $history  Prior turns, oldest first. role is 'user' or 'model'.
      */
@@ -34,7 +36,8 @@ class ChatbotService
 
         foreach ($this->models() as $model) {
             try {
-                $response = $this->send($apiKey, $model, $contents);
+                // The main model gets more time (it reads the whole website guide); the backup is faster.
+                $response = $this->send($apiKey, $model, $contents, $model === config('chatbot.model') ? 20 : 12);
             } catch (ConnectionException $e) {
                 Log::warning('Gemini connection failed', ['model' => $model, 'error' => $e->getMessage()]);
                 $lastReason = 'Could not reach Gemini.';
@@ -68,11 +71,11 @@ class ChatbotService
         ])));
     }
 
-    private function send(string $apiKey, string $model, array $contents): Response
+    private function send(string $apiKey, string $model, array $contents, int $timeout): Response
     {
         return Http::withHeaders(['x-goog-api-key' => $apiKey])
             ->acceptJson()
-            ->timeout(12)
+            ->timeout($timeout)
             // One retry, only for "busy" answers. A hanging model skips straight to the backup.
             ->retry(
                 2,
@@ -84,11 +87,13 @@ class ChatbotService
             ->post('https://generativelanguage.googleapis.com/v1beta/models/'.$model.':generateContent', [
                 'contents' => $contents,
                 'systemInstruction' => [
-                    'parts' => [['text' => config('chatbot.system_prompt')]],
+                    // The rules, then what GoBot knows about the website's pages and steps.
+                    'parts' => [['text' => config('chatbot.system_prompt')."\n\n".$this->guide->text()]],
                 ],
                 'generationConfig' => [
                     'temperature' => 0.4,
-                    'maxOutputTokens' => 512,
+                    // Room for a numbered list of steps (the model's own reasoning counts against this too).
+                    'maxOutputTokens' => 2048,
                 ],
             ]);
     }
