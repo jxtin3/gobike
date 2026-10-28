@@ -403,39 +403,22 @@ body.adm.nav-open { overflow: hidden; }
 .badge {
     flex: none;
     min-width: 20px;
-    height: 20px;
-    padding: 0 7px;
-    border-radius: 999px;
     font-size: var(--fs-12);
-    font-weight: 600;
-    line-height: 18px;
-    text-align: center;
+    font-weight: 700;
+    line-height: 20px;
+    text-align: right;
     font-variant-numeric: tabular-nums;
-    border: 1px solid transparent;
 }
 
 .badge[hidden] { display: none; }
 
-.badge-warn {
-    background: var(--warn-bg);
-    color: var(--warn);
-    border-color: var(--warn-line);
-}
+.badge-warn { color: var(--warn); }
 
-.badge-brand {
-    background: var(--brand);
-    color: #fff;
-}
+.badge-brand { color: var(--brand); }
 
-.badge-bad {
-    background: var(--bad);
-    color: #fff;
-}
+.badge-bad { color: var(--bad); }
 
-.badge-soft {
-    background: var(--hover);
-    color: var(--ink-3);
-}
+.badge-soft { color: var(--ink-3); }
 
 /* Footer: alert status, profile, log out. */
 
@@ -866,6 +849,8 @@ a.profile[aria-current="page"] { background: var(--brand-soft); }
         min-width: 0;
         padding: 0;
         border: 2px solid var(--card);
+        border-radius: 50%;
+        background: currentColor;
         font-size: 0;
         line-height: 0;
     }
@@ -1278,14 +1263,11 @@ td > .empty {
 
 /* ---------- Pills, tabs, callouts ---------- */
 
+/* Status, role and reading tags: plain coloured text, no background. */
 .pill {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    height: 22px;
-    padding: 0 9px;
-    border: 1px solid transparent;
-    border-radius: 999px;
     font-size: var(--fs-12);
     font-weight: 600;
     white-space: nowrap;
@@ -1298,31 +1280,15 @@ td > .empty {
     background: currentColor;
 }
 
-.pill-neutral {
-    background: var(--hover);
-    color: var(--ink-2);
-}
+.pill-neutral { color: var(--ink-2); }
 
-.pill-brand {
-    background: var(--brand-soft);
-    color: var(--brand);
-}
+.pill-brand { color: var(--brand); }
 
-.pill-info {
-    background: var(--info-bg);
-    color: var(--info);
-}
+.pill-info { color: var(--info); }
 
-.pill-ok {
-    background: var(--ok-bg);
-    color: var(--ok);
-}
+.pill-ok { color: var(--ok); }
 
-.pill-warn {
-    background: var(--warn-bg);
-    color: var(--warn);
-    border-color: var(--warn-line);
-}
+.pill-warn { color: var(--warn); }
 
 .tabs {
     position: relative;
@@ -3762,11 +3728,7 @@ html:has(dialog:modal) { overflow: hidden; }
     .stat-row .stat-num { font-size: 20px; }
 }
 
-.pill-bad {
-    background: var(--bad-bg);
-    color: var(--bad);
-    border-color: var(--bad-line);
-}
+.pill-bad { color: var(--bad); }
 
 /* ---------- Detail Page Layout (Volunteers, Show views) ---------- */
 
@@ -4332,10 +4294,7 @@ tbody tr.is-unread td:first-child { box-shadow: inset 3px 0 0 var(--brand); }
 
 .detail-status { margin: 0 0 16px; }
 
-.detail-status .pill {
-    padding: 6px 14px;
-    font-size: var(--fs-13);
-}
+.detail-status .pill { font-size: var(--fs-13); }
 
 .detail-lead {
     margin: 0 0 var(--sp-4);
