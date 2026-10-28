@@ -729,6 +729,8 @@ class DemoSeed extends Command
                 'guardian_name' => $minor ? $this->name() : null, 'guardian_phone' => $minor ? $this->mobile() : null, 'guardian_consent' => $minor,
                 'application_status' => $status,
                 'volunteer_class_id' => $class?->id,
+                // Demo addresses are not real: mark them emailed so nobody sends to them.
+                'class_emailed_at' => $class ? $class->created_at : null,
                 'created_at' => $created, 'updated_at' => $created,
             ]);
         }

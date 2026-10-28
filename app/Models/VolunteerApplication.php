@@ -52,6 +52,7 @@ class VolunteerApplication extends Model
         'guardian_consent',
         'application_status',
         'volunteer_class_id',
+        'class_emailed_at',
     ];
 
     protected function casts(): array
@@ -59,6 +60,7 @@ class VolunteerApplication extends Model
         return [
             'has_bike' => 'boolean',
             'guardian_consent' => 'boolean',
+            'class_emailed_at' => 'datetime',
         ];
     }
 

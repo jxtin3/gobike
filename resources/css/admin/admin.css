@@ -5373,3 +5373,10 @@ img.detail-image:not(.is-loaded) {
 .vol-class-row:first-of-type { border-top: 0; }
 
 .vol-class-row a { color: var(--ink); }
+
+.vol-class-row__actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: var(--sp-2);
+}

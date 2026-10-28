@@ -92,7 +92,14 @@
                     @if ($application->volunteerClass->notes)
                         <div><dt>Notes</dt><dd>{{ $application->volunteerClass->notes }}</dd></div>
                     @endif
+                    <div><dt>Email</dt><dd>{{ $application->class_emailed_at ? 'Sent '.$application->class_emailed_at->format('M j, g:i A') : 'Not sent yet' }}</dd></div>
                 </dl>
+                @unless ($application->volunteerClass->isCompleted())
+                    <form method="POST" action="{{ route('admin.operations.volunteers.email-class', $application) }}" class="form-actions">
+                        @csrf
+                        <button type="submit" class="btn btn-secondary btn-sm"><x-admin.icon name="mail" /> {{ $application->class_emailed_at ? 'Email class details again' : 'Email class details' }}</button>
+                    </form>
+                @endunless
             @elseif (in_array($application->application_status, ['pending', 'waiting'], true))
                 <p class="muted">Not in a class yet. Training starts once {{ config('volunteer.class_min') }} to {{ config('volunteer.class_max') }} volunteers are waiting.</p>
             @endif

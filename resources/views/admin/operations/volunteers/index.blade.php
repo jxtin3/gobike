@@ -49,7 +49,7 @@
         <x-admin.icon name="users" />
         <div>
             <b>{{ $waitingCount }} volunteers are waiting: enough for a class</b>
-            <span>Schedule a class below. The {{ $nextClassSize }} who waited longest are added; then call them with the date and venue.</span>
+            <span>Schedule a class below. The {{ $nextClassSize }} who waited longest are added and emailed the date and venue.</span>
         </div>
         <a class="btn btn-secondary btn-sm" href="#schedule-class">Schedule a class</a>
     </div>
@@ -102,10 +102,20 @@
                 <div>
                     <a href="{{ route('admin.operations.volunteers.index', ['class' => $class->id]) }}"><b>{{ $class->starts_on->format('D, M j, Y') }}</b></a>
                     <small class="sub-line">{{ $class->venue }} · {{ $class->applications_count }} {{ \Illuminate\Support\Str::plural('volunteer', $class->applications_count) }}</small>
+                    @unless ($class->isCompleted())
+                        <small class="sub-line">Emailed {{ $class->emailed_count }} of {{ $class->applications_count }}</small>
+                    @endunless
                 </div>
                 @if ($class->isCompleted())
                     <span class="pill pill-ok">Done</span>
                 @else
+                    <div class="vol-class-row__actions">
+                    @if ($class->emailed_count < $class->applications_count)
+                        <form method="POST" action="{{ route('admin.operations.volunteers.classes.email', $class) }}">
+                            @csrf
+                            <button type="submit" class="btn btn-secondary btn-sm"><x-admin.icon name="mail" /> Email {{ $class->applications_count - $class->emailed_count }}</button>
+                        </form>
+                    @endif
                     <form method="POST" action="{{ route('admin.operations.volunteers.classes.complete', $class) }}"
                           data-confirm-title="Mark this class as done?"
                           data-confirm-text="Everyone in the class on {{ $class->starts_on->format('M j') }} will be marked as trained."
@@ -114,6 +124,7 @@
                         @method('PATCH')
                         <button type="submit" class="btn btn-secondary btn-sm"><x-admin.icon name="check" /> Mark trained</button>
                     </form>
+                    </div>
                 @endif
             </div>
         @empty

@@ -153,3 +153,47 @@ it('takes a volunteer out of their class when sent back to waiting', function ()
     $this->patch(route('admin.operations.volunteers.status', $application), ['application_status' => 'waiting']);
     expect($application->fresh())->application_status->toBe('waiting')->volunteer_class_id->toBeNull();
 });
+
+// ---------------------------------------------------------------- class emails
+
+it('emails each volunteer their class date and venue after scheduling, once', function () {
+    \Illuminate\Support\Facades\Mail::fake();
+    $admin = User::factory()->create(['is_admin' => true]);
+    foreach (range(1, 3) as $i) {
+        makeVolunteerApplication(['first_name' => "Vol{$i}", 'email' => "vol{$i}@example.com", 'application_status' => 'waiting']);
+    }
+
+    $this->actingAs($admin)->post(route('admin.operations.volunteers.classes.store'), [
+        'starts_on' => now()->addWeek()->toDateString(), 'venue' => 'Bugallon Municipal Hall', 'notes' => 'Bring a valid ID.',
+    ])->assertSessionHas('success');
+
+    \Illuminate\Support\Facades\Mail::assertSent(\App\Mail\VolunteerClassScheduled::class, 3);
+    \Illuminate\Support\Facades\Mail::assertSent(\App\Mail\VolunteerClassScheduled::class, fn ($mail) => $mail->hasTo('vol1@example.com')
+        && str_contains($mail->render(), 'Bugallon Municipal Hall')
+        && str_contains($mail->render(), 'Bring a valid ID.'));
+    expect(VolunteerApplication::whereNotNull('class_emailed_at')->count())->toBe(3);
+
+    // Sending again only goes to those who did not get it yet.
+    $class = \App\Models\VolunteerClass::sole();
+    VolunteerApplication::where('email', 'vol2@example.com')->update(['class_emailed_at' => null]);
+    $this->post(route('admin.operations.volunteers.classes.email', $class))->assertSessionHas('success');
+    \Illuminate\Support\Facades\Mail::assertSent(\App\Mail\VolunteerClassScheduled::class, 4);
+
+    $this->get(route('admin.operations.volunteers.index'))->assertSee('Emailed 3 of 3');
+});
+
+it('emails one volunteer their class details again from their page', function () {
+    \Illuminate\Support\Facades\Mail::fake();
+    $admin = User::factory()->create(['is_admin' => true]);
+    $class = \App\Models\VolunteerClass::create(['starts_on' => now()->addWeek(), 'venue' => 'Hall']);
+    $application = makeVolunteerApplication(['application_status' => 'scheduled', 'volunteer_class_id' => $class->id]);
+    $waiting = makeVolunteerApplication(['email' => 'w@example.com', 'application_status' => 'waiting']);
+
+    $this->actingAs($admin)->get(route('admin.operations.volunteers.show', $application))->assertSee('Email class details');
+    $this->post(route('admin.operations.volunteers.email-class', $application))->assertSessionHas('success');
+    \Illuminate\Support\Facades\Mail::assertSent(\App\Mail\VolunteerClassScheduled::class, fn ($mail) => $mail->hasTo('carla@example.com'));
+    expect($application->fresh()->class_emailed_at)->not->toBeNull();
+
+    // Someone not in a class has nothing to be emailed.
+    $this->post(route('admin.operations.volunteers.email-class', $waiting))->assertSessionHas('error');
+});

@@ -196,7 +196,7 @@
                             @if ($full)
                                 This class is complete and will be scheduled soon. Sign up now to join it (up to {{ $classMax }}) or the next one.
                             @else
-                                Free training starts once {{ $classMin }} to {{ $classMax }} volunteers have signed up. We'll call or text you with the date and venue.
+                                Free training starts once {{ $classMin }} to {{ $classMax }} volunteers have signed up. We'll email you the date and venue, and may call you too.
                             @endif
                         </p>
                         <p class="vol-class__alt">Want to start sooner? <a href="{{ url('/what-we-do#training-plan') }}">See individual training plans</a>, paid and on your own date.</p>
@@ -224,7 +224,7 @@
                         <p x-show="position" x-cloak>
                             You're <strong x-text="'#' + position"></strong> in line for the next volunteer class.
                             Training starts once <span x-text="classMin"></span> to <span x-text="classMax"></span> volunteers have signed up.
-                            We'll call or text you with the date and venue, so keep your mobile number reachable.
+                            We'll email you the date and venue (check your spam folder too), and may call you.
                         </p>
                         <p x-show="!position">Thank you for signing up to volunteer. Our team will review your application and reach out using the email or mobile number you provided.</p>
                         <button type="button" @click="submitted = false">Submit another application</button>
