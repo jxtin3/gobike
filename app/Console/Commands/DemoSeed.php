@@ -39,6 +39,7 @@ class DemoSeed extends Command
     protected $signature = 'demo:seed
         {--fresh : Remove the demo data first, then add it again (refreshes the live map)}
         {--gobikers=30 : How many GoBikers (more fill the live map; 6 of the first 30 wait for approval)}
+        {--messages=55 : How many contact messages and GoBiker messages (each)}
         {--force : Skip the confirmation on production}';
 
     protected $description = 'Add fake presentation data (50+ records per admin section). Remove it with demo:clear.';
@@ -380,14 +381,53 @@ class DemoSeed extends Command
         }
     }
 
+    /** Messages GoBikers sent the admin from the app; the newest ~10% are unread. */
     private function gobikerMessages(array $gobikers): void
     {
-        $messages = ['Ronda done in my barangay, all clear.', 'Checked 6 seniors today, 2 had high BP.', 'Need more BP cuffs, mine is broken.', 'Road to Purok 5 is flooded, used the other route.', 'Can someone cover my ronda tomorrow morning?', 'Flat tire, will be late for the afternoon ronda.', 'Resident asked about the next medical mission.', 'Low on alcohol and cotton in my kit.', 'Assisted a fall victim, brought to the RHU.', 'Barangay captain says thank you to the team!'];
-        foreach (range(1, 55) as $i) {
-            $new = $i <= 15; // the newest ones are still unread
-            $sent = $new ? now()->subMinutes($this->int(5, 3 * 24 * 60)) : $this->daysAgo(3, 30);
+        $templates = [
+            'Ronda done in {brgy}, all clear.',
+            'Ronda done in Purok {purok}, {brgy}. Checked {n} residents.',
+            'Checked {n} seniors today in {brgy}, {k} had high BP.',
+            'Checked {n} people at the barangay hall, all normal readings.',
+            'Need more BP cuffs, mine is broken.',
+            'My digital thermometer is not working, can I get a new one?',
+            'Low on alcohol and cotton in my kit.',
+            'Running out of glucose strips, only {k} left.',
+            'Road to Purok {purok} is flooded, used the other route.',
+            'Road in {brgy} is muddy after the rain, ronda took longer.',
+            'Can someone cover my ronda tomorrow morning? I have an exam.',
+            'Flat tire, will be late for the afternoon ronda.',
+            'Bike chain broke, I walked the rest of the ronda.',
+            'Resident in Purok {purok} asked about the next medical mission.',
+            'A lola in {brgy} asked if we can visit her every week.',
+            'Assisted a fall victim near the market, brought to the RHU.',
+            'Helped a motorcycle accident victim on the highway, ambulance came.',
+            'Barangay captain of {brgy} says thank you to the team!',
+            'Kagawad asked if we can join the clean-up drive on Saturday.',
+            'Will be absent tomorrow, I have a fever.',
+            'Back on duty today, ready for ronda in {brgy}.',
+            'Dog bite case in Purok {purok}, advised to go to the RHU for anti-rabies.',
+            'Resident with BP {sys}/{dia}, advised to see a doctor today.',
+            'Done with {n} home visits this week.',
+            'Is there a refresher training this month?',
+            'GPS on my phone was off for a while, sorry. Fixed now.',
+            'Heavy rain here in {brgy}, staying at the barangay hall for now.',
+            'Delivered the medicines to the seniors in Purok {purok}.',
+        ];
+        $count = max(55, (int) $this->option('messages'));
+        $unread = max(15, intdiv($count, 10));
+
+        foreach (range(1, $count) as $i) {
+            $gobiker = $this->pick($gobikers);
+            $new = $i <= $unread; // the newest ones are still unread
+            $sent = $new ? now()->subMinutes($this->int(5, 3 * 24 * 60)) : $this->daysAgo(3, 60);
             GobikerMessage::forceCreate([
-                'user_id' => $this->pick($gobikers)->id, 'message' => $this->pick($messages),
+                'user_id' => $gobiker->id,
+                'message' => strtr($this->pick($templates), [
+                    '{brgy}' => $gobiker->barangay, '{purok}' => $this->int(1, 7),
+                    '{n}' => $this->int(4, 18), '{k}' => $this->int(1, 4),
+                    '{sys}' => $this->int(150, 180), '{dia}' => $this->int(95, 110),
+                ]),
                 'is_read' => ! $new,
                 'created_at' => $sent, 'updated_at' => $sent,
             ]);
@@ -451,24 +491,62 @@ class DemoSeed extends Command
         }
     }
 
+    /** Contact-form messages from the website; the newest ~10% are unread. */
     private function contactMessages(): void
     {
         $bySubject = [
-            'volunteer' => 'Hi! I would like to join as a GoBiker volunteer. I have my own bike. How can I apply?',
-            'partnership' => 'Our company would like to partner with Go Bike for our CSR program this year.',
-            'media' => 'I am a reporter from a local station. Can we feature your volunteers this month?',
-            'donation' => 'How can we donate bikes and BP monitors to your chapter?',
-            'program' => 'Can Go Bike hold a first aid training in our school next month?',
-            'others' => 'Thank you to the GoBiker who helped my father last week!',
+            'volunteer' => [
+                'Hi! I would like to help Go Bike in {town}. I have my own bike. How can I join?',
+                'Our youth group in {town} wants to help with your health outreach. Who can we talk to?',
+                'I am a nursing student from {school}. Can I help during your medical missions?',
+            ],
+            'partnership' => [
+                'Our company would like to partner with Go Bike for our CSR program this year.',
+                'The SK of {brgy} would like to partner with you for a first aid seminar.',
+                'We are a cooperative in {town} and want to sponsor bikes for your GoBikers.',
+                'Our school would like to sign a partnership for student first aid training.',
+            ],
+            'media' => [
+                'I am a reporter from a local station. Can we feature your volunteers this month?',
+                'Hello, I am writing a story about youth responders in Pangasinan. Can I interview your team?',
+                'Our campus paper at {school} would like to feature Go Bike. Are you available next week?',
+            ],
+            'donation' => [
+                'How can we donate bikes and BP monitors to your chapter?',
+                'We collected {n} first aid kits from our office. Where can we drop them off?',
+                'Can I donate through GCash every month? I could not find the option.',
+                'Our family wants to donate in memory of our lola. How do we get a receipt?',
+            ],
+            'program' => [
+                'Can Go Bike hold a first aid training in our school next month?',
+                'Do you do home visits in {brgy}? My father needs regular BP checks.',
+                'How much is the training for {n} people in our barangay hall?',
+                'Is the Basic training really free? We are {n} in the family.',
+                'When is the next Ronda Kalusugan in {brgy}?',
+            ],
+            'others' => [
+                'Thank you to the GoBiker who helped my father last week in {brgy}!',
+                'Salamat po sa GoBiker na tumulong sa aking lola kahapon.',
+                'Your website does not load the gallery on my phone, just letting you know.',
+                'I lost my ID during your event in {town}, did anyone find it?',
+            ],
         ];
-        foreach (range(1, 55) as $i) {
-            $new = $i <= 15; // the newest ones are still unread
+        $count = max(55, (int) $this->option('messages'));
+        $unread = max(15, intdiv($count, 10));
+
+        foreach (range(1, $count) as $i) {
+            $new = $i <= $unread; // the newest ones are still unread
             $subject = $this->pick(array_keys($bySubject));
-            $sent = $new ? now()->subMinutes($this->int(5, 4 * 24 * 60)) : $this->daysAgo(4, 90);
+            $sent = $new ? now()->subMinutes($this->int(5, 4 * 24 * 60)) : $this->daysAgo(4, 120);
             ContactMessage::forceCreate([
                 'name' => $this->name(), 'email' => $this->email('contact'), 'phone' => $this->chance(70) ? $this->mobile() : null,
-                'subject' => $subject, 'other_concern' => $subject === 'others' ? 'Thank-you note' : null,
-                'message' => $bySubject[$subject], 'is_read' => ! $new,
+                'subject' => $subject,
+                'other_concern' => $subject === 'others' ? $this->pick(['Thank-you note', 'Website problem', 'Lost item', 'Feedback']) : null,
+                'message' => strtr($this->pick($bySubject[$subject]), [
+                    '{town}' => $this->pick(self::TOWNS), '{brgy}' => $this->pick(Barangays::ALL), '{n}' => $this->int(5, 30),
+                    '{school}' => $this->pick(['Pangasinan State University', 'Bugallon National High School', 'Lyceum-Northwestern University', 'Universidad de Dagupan']),
+                ]),
+                'is_read' => ! $new,
                 'created_at' => $sent, 'updated_at' => $sent,
             ]);
         }

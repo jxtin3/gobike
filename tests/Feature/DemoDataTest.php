@@ -122,6 +122,24 @@ it('fills the live map with many GoBikers on real Bugallon streets, and keeps th
     expect(collect($live)->where('status', 'active')->count())->toBe($onRonda);
 });
 
+it('fills both inboxes with hundreds of varied messages that still page fine', function () {
+    $admin = User::factory()->create(['is_admin' => true, 'role' => 'Admin']);
+    $this->artisan('demo:seed', ['--force' => true, '--messages' => 400])->assertSuccessful();
+
+    expect(ContactMessage::count())->toBe(400)
+        ->and(GobikerMessage::count())->toBe(400)
+        ->and(ContactMessage::where('is_read', false)->count())->toBe(40)
+        ->and(GobikerMessage::where('is_read', false)->count())->toBe(40)
+        // Not the same few lines over and over.
+        ->and(ContactMessage::distinct()->count('message'))->toBeGreaterThan(100)
+        ->and(GobikerMessage::distinct()->count('message'))->toBeGreaterThan(150);
+
+    $this->actingAs($admin);
+    foreach (['admin/operations/messages', 'admin/operations/messages?status=unread&page=3', 'admin/operations/gobiker-messages', 'admin/operations/gobiker-messages?page=20'] as $url) {
+        $this->get('/'.$url)->assertOk();
+    }
+});
+
 it('links check-ups to the demo residents, not to real people', function () {
     $real = User::factory()->create(['role' => 'User', 'mobile' => '09171234567']);
     $this->artisan('demo:seed', ['--force' => true])->assertSuccessful();
