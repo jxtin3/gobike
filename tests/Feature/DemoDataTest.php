@@ -25,11 +25,13 @@ it('fills every admin section with 50+ records covering each status', function (
         ->and(Patient::count())->toBeGreaterThanOrEqual(50)
         ->and(GobikerMessage::count())->toBeGreaterThanOrEqual(50)
         ->and(GobikerMessage::where('is_read', false)->exists())->toBeTrue()
-        ->and(Location::where('status', 'emergency')->count())->toBe(1);
+        // Nothing that rings the admin alarm during a presentation.
+        ->and(Location::whereIn('status', Location::ALERT_STATUSES)->count())->toBe(0)
+        ->and(SosRequest::where('status', 'sent')->count())->toBe(0);
 
     foreach ([
         [Appointment::class, 'status', array_keys(Appointment::STATUSES)],
-        [SosRequest::class, 'status', array_keys(SosRequest::STATUSES)],
+        [SosRequest::class, 'status', ['responding', 'resolved']],
         [Donation::class, 'status', ['paid', 'pending', 'failed', 'cancelled']],
         [Donation::class, 'payment_method', ['paypal', 'gcash', 'bank']],
         [Donation::class, 'frequency', ['once', 'monthly']],
@@ -80,17 +82,32 @@ it('shows the demo data on every admin page and filter', function () {
     }
 });
 
-it('fills the live map with many GoBikers in every Bugallon barangay, and keeps them moving', function () {
+it('fills the live map with many GoBikers on real Bugallon streets, and keeps them live', function () {
     $admin = User::factory()->create(['is_admin' => true, 'role' => 'Admin']);
     $this->artisan('demo:seed', ['--force' => true, '--gobikers' => 200])->assertSuccessful();
 
     expect(User::where('role', 'GoBiker')->count())->toBe(200)
         ->and(User::pendingApproval()->count())->toBe(6)
         ->and(Location::count())->toBe(194)
-        ->and(Location::distinct()->count('designated_barangay'))->toBe(count(\App\Support\Barangays::ALL))
-        ->and(Location::whereBetween('latitude', [15.89, 16.02])->whereBetween('longitude', [120.11, 120.26])->count())->toBe(194);
+        ->and(Location::distinct()->count('designated_barangay'))->toBe(count(\App\Support\Barangays::ALL));
 
-    // Make the "on ronda" ones look stale, then let demo:live bring them back.
+    // Everyone stands on (or within a few metres of) a street point of their own barangay.
+    $streets = json_decode(file_get_contents(database_path('data/bugallon-street-points.json')), true);
+    expect(array_keys($streets))->toEqualCanonicalizing(\App\Support\Barangays::ALL);
+    foreach (Location::all() as $location) {
+        $nearest = collect($streets[$location->designated_barangay])
+            ->map(fn ($p) => hypot(($p[0] - $location->latitude) * 111_320, ($p[1] - $location->longitude) * 107_000))
+            ->min();
+        expect($nearest)->toBeLessThan(25.0, "{$location->name} is {$nearest} m from a street");
+    }
+
+    // Some ride in groups: several GoBikers within 20 m of another one.
+    $points = Location::get(['latitude', 'longitude'])->map(fn ($l) => [$l->latitude, $l->longitude])->all();
+    $grouped = collect($points)->filter(fn ($p, $i) => collect($points)->except($i)
+        ->contains(fn ($q) => hypot(($p[0] - $q[0]) * 111_320, ($p[1] - $q[1]) * 107_000) < 20))->count();
+    expect($grouped)->toBeGreaterThan(20)->toBeLessThan(150);
+
+    // Make the "on ronda" ones look stale, then let demo:live bring them back where they are.
     $onRonda = Location::whereNull('active_end_time')->count();
     expect($onRonda)->toBeGreaterThan(100);
     Location::query()->update(['last_seen_at' => now()->subHour()]);
@@ -98,12 +115,11 @@ it('fills the live map with many GoBikers in every Bugallon barangay, and keeps 
 
     $this->artisan('demo:live', ['--once' => true])->assertSuccessful();
 
-    $after = $before->fresh();
     expect(Location::where('last_seen_at', '>=', now()->subMinute())->count())->toBe($onRonda)
-        ->and([$after->latitude, $after->longitude])->not->toBe([$before->latitude, $before->longitude]);
+        ->and($before->fresh()->only('latitude', 'longitude'))->toBe($before->only('latitude', 'longitude'));
 
     $live = $this->actingAs($admin)->getJson('/admin/locations')->assertOk()->json();
-    expect(collect($live)->where('status', 'active')->count())->toBeGreaterThan(100);
+    expect(collect($live)->where('status', 'active')->count())->toBe($onRonda);
 });
 
 it('links check-ups to the demo residents, not to real people', function () {

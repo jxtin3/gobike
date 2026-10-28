@@ -67,6 +67,12 @@ class DemoSeed extends Command
 
     private int $mail = 0;
 
+    /** @var array<string, list<array{0: float, 1: float}>> street points not used yet, per barangay */
+    private array $unusedSpots = [];
+
+    /** @var array<string, array{0: float, 1: float}> the last spot given out, per barangay */
+    private array $lastSpot = [];
+
     private ?int $adminId;
 
     public function handle(): int
@@ -200,9 +206,8 @@ class DemoSeed extends Command
                 'designated_barangay' => $gobiker->barangay,
                 'latitude' => $lat,
                 'longitude' => $lng,
-                // One emergency the admin is already answering, one still waiting (shows the live alert).
-                'status' => match ($n) { 0 => 'responding', 1 => 'emergency', default => 'active' },
-                'emergency_at' => $n < 2 ? now()->subMinutes(4 + $n * 6) : null,
+                // No emergencies: they would ring the admin alarm during the presentation.
+                'status' => 'active',
                 'last_seen_at' => $onRonda ? now() : $start->copy()->addHours(3),
                 'active_start_time' => $start,
                 'active_end_time' => $onRonda ? null : $start->copy()->addHours(3),
@@ -340,10 +345,10 @@ class DemoSeed extends Command
         }
     }
 
-    /** SOS requests: a few waiting (they show the live alert), some being answered, most resolved. */
+    /** SOS requests: some being answered, most resolved. None waiting, so the admin alarm stays quiet. */
     private function sos(array $residents): void
     {
-        $plan = [...array_fill(0, 3, 'sent'), ...array_fill(0, 9, 'responding'), ...array_fill(0, 48, 'resolved')];
+        $plan = [...array_fill(0, 10, 'responding'), ...array_fill(0, 50, 'resolved')];
         $landmarks = ['Beside the barangay hall', 'Near the chapel', 'In front of the sari-sari store', 'Across the elementary school', 'Near the basketball court', 'Beside the rice mill', 'Behind the health center', 'Near the waiting shed'];
         $what = ['My father fell and cannot stand.', 'Lola is having trouble breathing.', 'A motorcycle accident on the road.', 'My child has a very high fever and is shaking.', 'My neighbor fainted.', 'Deep cut on the hand from a bolo.', 'Chest pain, he is sweating a lot.', 'Elderly woman collapsed at the market.', null];
 
@@ -353,6 +358,7 @@ class DemoSeed extends Command
             $byResident = $status === 'resolved' && $this->chance(20);
             $answered = $status !== 'sent' && ! $byResident;
             $gps = $this->chance(85); // some phones do not share their position
+            [$lat, $lng] = $this->spotIn($resident->barangay);
 
             SosRequest::forceCreate([
                 'user_id' => $resident->id,
@@ -361,8 +367,8 @@ class DemoSeed extends Command
                 'address' => $this->int(1, 250).' '.$this->pick(['Rizal St.', 'Mabini St.', 'Bonifacio St.', 'Luna St.', 'Del Pilar St.']).', Purok '.$this->int(1, 7),
                 'landmark' => $this->pick($landmarks),
                 'description' => $this->pick($what),
-                'latitude' => $gps ? 15.957 + $this->float(-0.03, 0.03) : null,
-                'longitude' => $gps ? 120.187 + $this->float(-0.03, 0.03) : null,
+                'latitude' => $gps ? $lat : null,
+                'longitude' => $gps ? $lng : null,
                 'status' => $status,
                 'handled_by' => $answered ? $this->adminId : null,
                 'responded_at' => $answered ? $sent->copy()->addMinutes($this->int(1, 8)) : null,
@@ -543,19 +549,38 @@ class DemoSeed extends Command
     // ---------------------------------------------------------------- helpers
 
     /**
-     * A point near the barangay. The barangays are laid out on a 6×4 grid over Bugallon
-     * (about 15.90–16.00 N, 120.12–120.25 E): close to the real town, not surveyed positions.
+     * A spot on a real street of the barangay. database/data/bugallon-street-points.json holds
+     * points along Bugallon's streets (from OpenStreetMap, near each barangay's centre), so
+     * nobody stands in a river or a rice field. About 1 in 3 joins the previous GoBiker of the
+     * same barangay, so some ride in small groups and the rest alone.
      *
      * @return array{0: float, 1: float}
      */
     private function spotIn(?string $barangay): array
     {
-        $k = max(0, (int) array_search($barangay, Barangays::ALL, true));
+        $points = self::streetPoints();
+        $barangay = isset($points[$barangay]) ? $barangay : 'Poblacion';
 
-        return [
-            15.905 + intdiv($k, 6) * 0.033 + $this->float(-0.008, 0.008),
-            120.120 + ($k % 6) * 0.026 + $this->float(-0.008, 0.008),
-        ];
+        if (isset($this->lastSpot[$barangay]) && $this->chance(30)) {
+            [$lat, $lng] = $this->lastSpot[$barangay];
+
+            return [$lat + $this->float(-0.00012, 0.00012), $lng + $this->float(-0.00012, 0.00012)];
+        }
+
+        // Use every street point once before reusing any.
+        if (empty($this->unusedSpots[$barangay])) {
+            $this->unusedSpots[$barangay] = $this->rng->shuffleArray($points[$barangay]);
+        }
+
+        return $this->lastSpot[$barangay] = array_pop($this->unusedSpots[$barangay]);
+    }
+
+    /** @return array<string, list<array{0: float, 1: float}>> */
+    private static function streetPoints(): array
+    {
+        static $points;
+
+        return $points ??= json_decode(file_get_contents(database_path('data/bugallon-street-points.json')), true);
     }
 
     private function demoCount(string $model, string $userColumn): int
