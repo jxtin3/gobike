@@ -95,6 +95,7 @@ Route::middleware(['auth:sanctum', 'gobiker', 'throttle:mobile'])->prefix('gobik
 
     Route::get('/appointments', [GobikerAppointmentController::class, 'index'])->name('api.gobiker.appointments.index');
     Route::post('/appointments/{appointment}/accept', [GobikerAppointmentController::class, 'accept'])->name('api.gobiker.appointments.accept');
+    Route::post('/appointments/{appointment}/decline', [GobikerAppointmentController::class, 'decline'])->name('api.gobiker.appointments.decline');
     Route::post('/appointments/{appointment}/complete', [GobikerAppointmentController::class, 'complete'])->name('api.gobiker.appointments.complete');
 
 });
@@ -111,6 +112,7 @@ Route::middleware(['auth:sanctum', 'resident', 'throttle:mobile'])->prefix('resi
     Route::post('/sos/{sos}/media', [ResidentSosController::class, 'media'])->middleware('throttle:10,1')->name('api.resident.sos.media');
     Route::post('/sos/{sos}/resolve', [ResidentSosController::class, 'resolve'])->name('api.resident.sos.resolve');
 
+    Route::get('/gobikers', [ResidentAppointmentController::class, 'gobikers'])->name('api.resident.gobikers');
     Route::get('/appointments', [ResidentAppointmentController::class, 'index'])->name('api.resident.appointments.index');
     Route::post('/appointments', [ResidentAppointmentController::class, 'store'])->middleware('throttle:5,1')->name('api.resident.appointments.store');
     Route::post('/appointments/{appointment}/cancel', [ResidentAppointmentController::class, 'cancel'])->name('api.resident.appointments.cancel');

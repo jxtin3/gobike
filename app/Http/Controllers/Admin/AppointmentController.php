@@ -4,12 +4,13 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Appointment;
-use App\Models\User;
 use App\Services\Push\PushNotifier;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 
-/** Residents' home-visit requests: the admin can assign a GoBiker or decline. */
+/**
+ * Residents' home-visit requests. The resident chooses a GoBiker in the app, who accepts or
+ * declines there; the admin follows them and can still decline one with a note.
+ */
 class AppointmentController extends Controller
 {
     private const TABS = ['pending', 'accepted', 'completed', 'closed', 'all'];
@@ -48,39 +49,9 @@ class AppointmentController extends Controller
 
     public function show(Appointment $appointment)
     {
-        $appointment->load('resident', 'gobiker:id,name,mobile', 'patient');
+        $appointment->load('resident', 'gobiker:id,name,mobile,barangay', 'patient');
 
-        return view('admin.operations.appointments.show', [
-            'appointment' => $appointment,
-            // GoBikers who can take it: active ones, those in the same barangay first.
-            'gobikers' => User::where('role', 'GoBiker')
-                ->where('status', 'Active')
-                ->orderByRaw('CASE WHEN barangay = ? THEN 0 ELSE 1 END', [$appointment->barangay])
-                ->orderBy('name')
-                ->get(['id', 'name', 'barangay']),
-        ]);
-    }
-
-    public function assign(Request $request, Appointment $appointment)
-    {
-        $data = $request->validate([
-            'gobiker_id' => ['required', Rule::exists(User::class, 'id')->where('role', 'GoBiker')->where('status', 'Active')],
-        ]);
-
-        if (! $appointment->isOpen()) {
-            return back()->with('error', 'This request is already '.strtolower($appointment->status_label).'.');
-        }
-
-        $appointment->update([
-            'status' => 'accepted',
-            'gobiker_id' => $data['gobiker_id'],
-            'accepted_at' => $appointment->accepted_at ?? now(),
-        ]);
-        $appointment = $appointment->fresh(['resident', 'gobiker']);
-        app(PushNotifier::class)->appointmentChanged($appointment);
-        app(PushNotifier::class)->appointmentAssigned($appointment);
-
-        return back()->with('success', 'GoBiker assigned. They will see the visit in the app.');
+        return view('admin.operations.appointments.show', ['appointment' => $appointment]);
     }
 
     public function decline(Request $request, Appointment $appointment)

@@ -33,7 +33,19 @@
         <dl class="detail-dl">
             <div><dt>Resident</dt><dd>{{ $who }}</dd></div>
             <div><dt>Mobile</dt><dd>@if ($appointment->resident?->mobile)<a href="tel:{{ $appointment->resident->mobile }}">{{ $appointment->resident->mobile }}</a>@else — @endif</dd></div>
-            <div><dt>GoBiker</dt><dd>{{ $appointment->gobiker?->name ?? 'Not assigned yet' }}</dd></div>
+            <div>
+                <dt>GoBiker</dt>
+                <dd>
+                    @if ($appointment->gobiker)
+                        {{ $appointment->gobiker->name }}{{ $appointment->gobiker->barangay ? ' · '.$appointment->gobiker->barangay : '' }}
+                        @if ($appointment->status === 'pending')
+                            <small class="sub-line">Chosen by the resident · waiting for them to accept</small>
+                        @endif
+                    @else
+                        Any GoBiker in {{ $appointment->barangay }} (sent from an older app version)
+                    @endif
+                </dd>
+            </div>
             @if ($appointment->patient)
                 <div><dt>Check-up</dt><dd><a href="{{ route('admin.operations.patients.show', $appointment->patient) }}">View the check-up recorded on this visit</a></dd></div>
             @endif
@@ -45,29 +57,7 @@
 </div>
 
 @if ($appointment->isOpen())
-    <div class="detail-columns no-print">
-        <form class="detail-card" method="POST" action="{{ route('admin.operations.appointments.assign', $appointment) }}">
-            @csrf
-            @method('PATCH')
-            <h2 class="detail-card-title">{{ $appointment->gobiker ? 'Reassign' : 'Assign a GoBiker' }}</h2>
-            <div class="field">
-                <label for="gobiker_id">GoBiker</label>
-                <select class="input @error('gobiker_id') is-invalid @enderror" id="gobiker_id" name="gobiker_id" required aria-describedby="gobiker-hint gobiker_id-error">
-                    <option value="">Choose a GoBiker…</option>
-                    @foreach ($gobikers as $g)
-                        <option value="{{ $g->id }}" @selected(old('gobiker_id', $appointment->gobiker_id) == $g->id)>
-                            {{ $g->name }}{{ $g->barangay ? ' · '.$g->barangay : '' }}{{ $g->barangay === $appointment->barangay ? ' (same barangay)' : '' }}
-                        </option>
-                    @endforeach
-                </select>
-                <span class="hint" id="gobiker-hint">GoBikers in {{ $appointment->barangay }} are listed first.</span>
-                <x-admin.field-error name="gobiker_id" />
-            </div>
-            <div class="form-actions">
-                <button type="submit" class="btn btn-primary"><x-admin.icon name="user-check" /> Assign</button>
-            </div>
-        </form>
-
+    <div class="no-print">
         <form class="detail-card" method="POST" action="{{ route('admin.operations.appointments.decline', $appointment) }}"
               data-confirm-title="Decline this visit request?"
               data-confirm-text="{{ $who }} will see it as declined, with your note, in the app."

@@ -142,6 +142,20 @@ it('tells GoBikers in the barangay about a new home-visit request', function () 
         ->and(titlesFor($this->push, 'elsewhere-phone'))->toBe([]);
 });
 
+it('tells only the chosen GoBiker about a request sent to them', function () {
+    $chosen = User::factory()->create(['role' => 'GoBiker', 'status' => 'Active', 'barangay' => 'Hacienda']);
+    DeviceToken::create(['user_id' => $chosen->id, 'token' => 'chosen-phone']);
+
+    Sanctum::actingAs($this->resident);
+    $this->postJson(route('api.resident.appointments.store'), [
+        'barangay' => 'Poblacion', 'address' => 'Purok 3', 'preferred_date' => now()->addDay()->toDateString(),
+        'preferred_window' => 'morning', 'reason' => 'BP check', 'gobiker_id' => $chosen->id,
+    ])->assertCreated();
+
+    expect(titlesFor($this->push, 'chosen-phone'))->toBe(['Home-visit request for you'])
+        ->and(titlesFor($this->push, 'gobiker-phone'))->toBe([]);
+});
+
 it('tells the GoBiker when the admin answers their emergency', function () {
     $location = Location::create(['user_id' => $this->gobiker->id, 'name' => 'Maria', 'latitude' => 15.95, 'longitude' => 120.18, 'status' => 'emergency', 'emergency_at' => now()]);
 

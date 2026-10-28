@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Appointment extends Model
 {
     public const STATUSES = [
-        'pending' => 'Waiting for a GoBiker',
+        'pending' => 'Waiting for the GoBiker to accept',
         'accepted' => 'GoBiker assigned',
         'completed' => 'Visit done',
         'declined' => 'Declined',
@@ -88,7 +88,9 @@ class Appointment extends Model
             'preferred_window' => $this->preferred_window,
             'window_label' => $this->window_label,
             'reason' => $this->reason,
+            'gobiker_id' => $this->gobiker_id,
             'gobiker_name' => $this->gobiker?->name,
+            'gobiker_barangay' => $this->gobiker?->barangay,
             'decline_note' => $this->decline_note,
             'created_at' => $this->created_at?->toIso8601String(),
             'accepted_at' => $this->accepted_at?->toIso8601String(),

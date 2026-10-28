@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Appointment;
+use App\Models\User;
 use App\Services\Push\PushNotifier;
 use App\Support\Barangays;
 use Illuminate\Http\JsonResponse;
@@ -15,7 +16,7 @@ class ResidentAppointmentController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        $appointments = Appointment::with('gobiker:id,name')
+        $appointments = Appointment::with('gobiker:id,name,barangay')
             ->where('resident_id', $request->user()->id)
             ->whereNull('resident_hidden_at') // cleared from the resident's history
             ->latest()
@@ -25,6 +26,32 @@ class ResidentAppointmentController extends Controller
 
         return response()->json([
             'appointments' => $appointments->map(fn (Appointment $a) => $a->toApi())->values(),
+        ]);
+    }
+
+    /** GoBikers the resident can ask for a visit: those in a barangay (their own by default). */
+    public function gobikers(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'barangay' => ['nullable', 'string', Rule::in(Barangays::ALL)],
+        ]);
+        $barangay = $data['barangay'] ?? $request->user()->barangay;
+
+        $gobikers = User::where('role', 'GoBiker')
+            ->where('status', 'Active')
+            ->when($barangay, fn ($q) => $q->where('barangay', $barangay))
+            ->withCount(['gobikerAppointments as visits_done' => fn ($q) => $q->where('status', 'completed')])
+            ->orderBy('name')
+            ->get(['id', 'name', 'barangay']);
+
+        return response()->json([
+            'barangay' => $barangay,
+            'gobikers' => $gobikers->map(fn (User $g) => [
+                'id' => $g->id,
+                'name' => $g->name,
+                'barangay' => $g->barangay,
+                'visits_done' => $g->visits_done,
+            ])->values(),
         ]);
     }
 
@@ -44,16 +71,23 @@ class ResidentAppointmentController extends Controller
             'preferred_date' => ['required', 'date_format:Y-m-d', 'after_or_equal:today', 'before_or_equal:'.now()->addDays(30)->toDateString()],
             'preferred_window' => ['required', Rule::in(array_keys(Appointment::WINDOWS))],
             'reason' => ['required', 'string', 'max:500'],
+            // The GoBiker the resident asks; they accept or decline in their app.
+            // App versions up to 1.0.10 send none: any GoBiker in the barangay may then accept.
+            'gobiker_id' => ['nullable', 'integer', Rule::exists(User::class, 'id')->where('role', 'GoBiker')->where('status', 'Active')],
+        ], [
+            'gobiker_id.exists' => 'That GoBiker is not available anymore. Please choose another one.',
         ]);
 
         $appointment = Appointment::create($data + [
             'resident_id' => $resident->id,
             'status' => 'pending',
         ]);
-        app(PushNotifier::class)->newAppointmentRequest($appointment);
+        app(PushNotifier::class)->newAppointmentRequest($appointment->load('resident', 'gobiker'));
 
         return response()->json([
-            'message' => 'Visit requested. A GoBiker in your barangay will accept it soon.',
+            'message' => $appointment->gobiker
+                ? "Visit requested. {$appointment->gobiker->name} will accept or decline it soon."
+                : 'Visit requested. A GoBiker in your barangay will accept it soon.',
             'appointment' => $appointment->toApi(),
         ], 201);
     }
@@ -71,7 +105,7 @@ class ResidentAppointmentController extends Controller
 
         return response()->json([
             'message' => 'Visit request cancelled.',
-            'appointment' => $appointment->load('gobiker:id,name')->toApi(),
+            'appointment' => $appointment->load('gobiker:id,name,barangay')->toApi(),
         ]);
     }
 }

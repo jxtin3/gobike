@@ -1,7 +1,7 @@
 @extends('admin.operations.layout')
 @section('title', 'Appointments')
 @section('heading', 'Appointments')
-@section('subheading', 'Home check-up visits residents request in the RondaGo app. GoBikers in the same barangay can accept them in the app.')
+@section('subheading', 'Home check-up visits residents request in the RondaGo app. The resident chooses a GoBiker, who accepts or declines in the app.')
 
 @section('content')
 @php
@@ -66,7 +66,7 @@
                     </x-admin.empty>
                 @elseif ($tab === 'pending')
                     <x-admin.empty :row="5" icon="check-circle" title="No visits waiting">
-                        Requests residents send from the app appear here until a GoBiker takes them.
+                        Requests residents send from the app appear here until the GoBiker they chose accepts.
                     </x-admin.empty>
                 @else
                     <x-admin.empty :row="5" icon="clipboard" title="Nothing here yet">

@@ -130,17 +130,106 @@ it('marks a visit done with the GoBiker\'s own check-up only', function () {
     expect($visit->fresh()->patient_id)->toBe($checkup->id);
 });
 
+// ------------------------------------------------- choosing a GoBiker
+
+it('lists the GoBikers of the resident\'s barangay, or of another one', function () {
+    User::factory()->create(['name' => 'Jose Cruz', 'role' => 'GoBiker', 'status' => 'Active', 'barangay' => 'Hacienda']);
+    User::factory()->create(['name' => 'Not Approved', 'role' => 'GoBiker', 'status' => 'Inactive', 'barangay' => 'Poblacion']);
+    Sanctum::actingAs($this->resident);
+
+    $this->getJson(route('api.resident.gobikers'))
+        ->assertOk()
+        ->assertJsonPath('barangay', 'Poblacion')
+        ->assertJsonCount(1, 'gobikers')
+        ->assertJsonPath('gobikers.0.name', 'Maria Santos')
+        ->assertJsonPath('gobikers.0.visits_done', 0);
+
+    $this->getJson(route('api.resident.gobikers', ['barangay' => 'Hacienda']))
+        ->assertOk()
+        ->assertJsonCount(1, 'gobikers')
+        ->assertJsonPath('gobikers.0.name', 'Jose Cruz');
+});
+
+it('sends the request to the chosen GoBiker only', function () {
+    $neighbor = User::factory()->create(['role' => 'GoBiker', 'status' => 'Active', 'barangay' => 'Poblacion']);
+    $visit = requestVisit($this->resident, ['gobiker_id' => $this->gobiker->id]);
+
+    expect($visit)->status->toBe('pending')->gobiker_id->toBe($this->gobiker->id);
+
+    Sanctum::actingAs($this->gobiker);
+    $this->getJson(route('api.gobiker.appointments.index'))
+        ->assertJsonCount(1, 'requests')
+        ->assertJsonPath('requests.0.resident_name', 'Ana Reyes')
+        ->assertJsonPath('counts.requests', 1)
+        ->assertJsonCount(0, 'available');
+
+    Sanctum::actingAs($neighbor);
+    $this->getJson(route('api.gobiker.appointments.index'))->assertJsonCount(0, 'requests')->assertJsonCount(0, 'available');
+    $this->postJson(route('api.gobiker.appointments.accept', $visit))->assertForbidden();
+
+    Sanctum::actingAs($this->gobiker);
+    $this->postJson(route('api.gobiker.appointments.accept', $visit))->assertOk()->assertJsonPath('appointment.status', 'accepted');
+});
+
+it('lets the resident choose a GoBiker from another barangay', function () {
+    $elsewhere = User::factory()->create(['name' => 'Jose Cruz', 'role' => 'GoBiker', 'status' => 'Active', 'barangay' => 'Hacienda']);
+    $visit = requestVisit($this->resident, ['gobiker_id' => $elsewhere->id]);
+
+    Sanctum::actingAs($elsewhere);
+    $this->postJson(route('api.gobiker.appointments.accept', $visit))->assertOk();
+
+    Sanctum::actingAs($this->resident);
+    $this->getJson(route('api.resident.appointments.index'))
+        ->assertJsonPath('appointments.0.gobiker_name', 'Jose Cruz')
+        ->assertJsonPath('appointments.0.gobiker_barangay', 'Hacienda');
+});
+
+it('does not accept a GoBiker who is not approved', function () {
+    $inactive = User::factory()->create(['role' => 'GoBiker', 'status' => 'Inactive', 'barangay' => 'Poblacion']);
+    Sanctum::actingAs($this->resident);
+
+    $this->postJson(route('api.resident.appointments.store'), visitPayload(['gobiker_id' => $inactive->id]))
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors('gobiker_id');
+});
+
+it('lets the chosen GoBiker decline, so the resident can ask someone else', function () {
+    $visit = requestVisit($this->resident, ['gobiker_id' => $this->gobiker->id]);
+    $other = User::factory()->create(['role' => 'GoBiker', 'status' => 'Active', 'barangay' => 'Poblacion']);
+
+    Sanctum::actingAs($other);
+    $this->postJson(route('api.gobiker.appointments.decline', $visit))->assertForbidden();
+
+    Sanctum::actingAs($this->gobiker);
+    $this->postJson(route('api.gobiker.appointments.decline', $visit))
+        ->assertOk()
+        ->assertJsonPath('appointment.status', 'declined')
+        ->assertJsonPath('appointment.decline_note', "Maria Santos can't make this visit. You can ask another GoBiker.");
+    $this->postJson(route('api.gobiker.appointments.decline', $visit))->assertUnprocessable();
+
+    // The resident is free to send a new request to another GoBiker.
+    requestVisit($this->resident, ['gobiker_id' => $other->id]);
+});
+
+it('keeps the GoBiker\'s own reason when declining', function () {
+    $visit = requestVisit($this->resident, ['gobiker_id' => $this->gobiker->id]);
+
+    Sanctum::actingAs($this->gobiker);
+    $this->postJson(route('api.gobiker.appointments.decline', $visit), ['note' => 'I am away that day.'])
+        ->assertJsonPath('appointment.decline_note', 'I am away that day.');
+});
+
 // ---------------------------------------------------------------- admin
 
-it('lets the admin assign a GoBiker or decline with a note', function () {
-    $visit = requestVisit($this->resident);
+it('shows the admin the chosen GoBiker, and lets the admin decline with a note', function () {
+    $visit = requestVisit($this->resident, ['gobiker_id' => $this->gobiker->id]);
     $this->actingAs($this->admin, 'web');
 
     $this->get(route('admin.operations.appointments.index'))->assertOk()->assertSee('Ana Reyes');
-    $this->get(route('admin.operations.appointments.show', $visit))->assertOk()->assertSee('Maria Santos · Poblacion (same barangay)');
-
-    $this->patch(route('admin.operations.appointments.assign', $visit), ['gobiker_id' => $this->gobiker->id])->assertSessionHasNoErrors();
-    expect($visit->fresh())->status->toBe('accepted')->gobiker_id->toBe($this->gobiker->id);
+    $this->get(route('admin.operations.appointments.show', $visit))->assertOk()
+        ->assertSee('Maria Santos · Poblacion')
+        ->assertSee('waiting for them to accept')
+        ->assertDontSee('Assign');
 
     $this->patch(route('admin.operations.appointments.decline', $visit), ['decline_note' => 'No GoBiker that day.'])->assertSessionHasNoErrors();
     expect($visit->fresh())->status->toBe('declined')->decline_note->toBe('No GoBiker that day.');

@@ -47,7 +47,7 @@ class PushNotifier
 
         [$title, $body] = match ($appointment->status) {
             'accepted' => ['Home visit accepted', "{$gobiker} will visit you on {$date}."],
-            'declined' => ['Home visit declined', $appointment->decline_note ?: 'The admin could not schedule this visit.'],
+            'declined' => ['Home visit declined', $appointment->decline_note ?: 'This visit could not be scheduled. You can ask another GoBiker.'],
             'completed' => ['Home visit done', 'Your check-up is in your Medical History.'],
             default => [null, null],
         };
@@ -74,8 +74,22 @@ class PushNotifier
 
     // ------------------------------------------------------------- GoBikers
 
+    /** A resident asked for a home visit: tell the GoBiker they chose. */
     public function newAppointmentRequest(Appointment $appointment): void
     {
+        if ($appointment->gobiker) {
+            $this->toUser(
+                $appointment->gobiker,
+                null,
+                'Home-visit request for you',
+                ($appointment->resident?->name ?? 'A resident').' in '.$appointment->barangay.' asked you for a check-up on '.$appointment->preferred_date?->format('M j').'.',
+                ['type' => 'appointment_request', 'id' => (string) $appointment->id],
+            );
+
+            return;
+        }
+
+        // Older app versions don't choose a GoBiker: tell everyone in the barangay.
         $gobikers = User::where('role', 'GoBiker')
             ->where('status', 'Active')
             ->where('barangay', $appointment->barangay)
@@ -90,18 +104,6 @@ class PushNotifier
                 ['type' => 'appointment_request', 'id' => (string) $appointment->id],
             );
         }
-    }
-
-    /** The admin gave a home visit to this GoBiker. */
-    public function appointmentAssigned(Appointment $appointment): void
-    {
-        $this->toUser(
-            $appointment->gobiker,
-            null,
-            'Home visit assigned to you',
-            ($appointment->resident?->name ?? 'A resident').' in '.$appointment->barangay.' on '.$appointment->preferred_date?->format('M j').'.',
-            ['type' => 'appointment_assigned', 'id' => (string) $appointment->id],
-        );
     }
 
     public function emergencyAnswered(User $gobiker, string $status): void

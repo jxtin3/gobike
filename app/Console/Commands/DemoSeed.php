@@ -305,7 +305,10 @@ class DemoSeed extends Command
             $resident = $open ? $residents[$i] : $this->pick($residents); // 24 open requests, 24 different residents
             $requested = $open ? now()->subHours($this->int(2, 72)) : $this->daysAgo(5, 90);
             $date = $open ? now()->addDays($this->int(0, 10)) : $requested->copy()->addDays($this->int(1, 4));
-            $gobiker = in_array($status, ['accepted', 'completed'], true) ? $this->pick($gobikers) : null;
+            // The resident chose this GoBiker, usually one from their own barangay.
+            $local = array_values(array_filter($gobikers, fn (User $g) => $g->barangay === $resident->barangay));
+            $gobiker = $status === 'cancelled' && $this->chance(30) ? null : $this->pick($local && $this->chance(80) ? $local : $gobikers);
+            $accepted = in_array($status, ['accepted', 'completed'], true);
             $done = $status === 'completed' ? $date->copy()->setTime($this->int(8, 16), 30) : null;
             $checkup = $done ? $this->checkup(
                 ['name' => $resident->name, 'contact' => $resident->mobile, 'barangay' => $resident->barangay, 'address' => 'Purok '.$this->int(1, 7).', '.$resident->barangay, 'age' => $this->int(40, 85)],
@@ -322,8 +325,8 @@ class DemoSeed extends Command
                 'status' => $status,
                 'gobiker_id' => $gobiker?->id,
                 'patient_id' => $checkup?->id,
-                'decline_note' => $status === 'declined' ? $this->pick(['No GoBiker available on that date, please request another day.', 'Please go to the RHU, this needs a doctor.', 'Duplicate request.']) : null,
-                'accepted_at' => $gobiker ? $requested->copy()->addHours($this->int(1, 20)) : null,
+                'decline_note' => $status === 'declined' ? $this->pick(["{$gobiker->name} can't make this visit. You can ask another GoBiker.", 'I am out of town that day, sorry po.', 'Please go to the RHU, this needs a doctor.', 'My bike is under repair this week.']) : null,
+                'accepted_at' => $accepted ? $requested->copy()->addHours($this->int(1, 20)) : null,
                 'completed_at' => $done,
                 'created_at' => $requested,
                 'updated_at' => $done ?? $requested,

@@ -189,7 +189,6 @@ Route::middleware([EnsureAdmin::class, AuthenticateSession::class])->prefix('adm
         // residents' home-visit requests
         Route::get('/appointments', [AppointmentController::class, 'index'])->name('appointments.index');
         Route::get('/appointments/{appointment}', [AppointmentController::class, 'show'])->name('appointments.show');
-        Route::patch('/appointments/{appointment}/assign', [AppointmentController::class, 'assign'])->name('appointments.assign');
         Route::patch('/appointments/{appointment}/decline', [AppointmentController::class, 'decline'])->name('appointments.decline');
 
         // residents' SOS requests
