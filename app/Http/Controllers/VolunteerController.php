@@ -15,6 +15,7 @@ class VolunteerController extends Controller
             'queue' => VolunteerApplication::inQueue()->count(),
             'classMin' => (int) config('volunteer.class_min'),
             'classMax' => (int) config('volunteer.class_max'),
+            'idTypes' => VolunteerApplication::ID_TYPES,
         ]);
     }
 
@@ -33,6 +34,9 @@ class VolunteerController extends Controller
             'barangay'        => ['required', 'string', 'max:100'],
             'municipality'    => ['required', 'string', 'max:100'],
             'province'        => ['required', 'string', 'max:100'],
+            'idType'          => ['required', Rule::in(array_keys(VolunteerApplication::ID_TYPES))],
+            'idDocuments'     => ['required', 'array', 'min:1', 'max:'.VolunteerApplication::MAX_ID_FILES],
+            'idDocuments.*'   => ['file', 'mimes:jpg,jpeg,png,webp,pdf', 'max:5120'],
             'availability'    => ['required', Rule::in(['weekdays', 'weekends', 'both', 'flexible'])],
             'motivation'      => ['nullable', 'string', 'max:500'],
             'emergencyName'   => ['required', 'string', 'max:100'],
@@ -41,7 +45,18 @@ class VolunteerController extends Controller
             'guardianPhone'   => [Rule::requiredIf($isMinor), 'nullable', 'string', 'max:30'],
             'guardianConsent' => [Rule::requiredIf($isMinor), 'boolean'],
             'agree'           => ['accepted'],
+        ], [
+            'idDocuments.required' => 'Please upload your ID or barangay certificate.',
+            'idDocuments.max' => 'You can upload up to '.VolunteerApplication::MAX_ID_FILES.' files.',
+            'idDocuments.*.mimes' => 'Each file must be a JPG, PNG, WEBP or PDF.',
+            'idDocuments.*.max' => 'A file is too big. Please upload files under 5 MB each.',
+            'idDocuments.*.uploaded' => 'A file could not be uploaded. Please try a smaller one.',
         ]);
+
+        // Personal documents go on the private disk; only signed-in admins can open them.
+        $idPaths = collect($request->file('idDocuments'))
+            ->map(fn ($file) => $file->store('volunteer-ids', config('filesystems.private_disk')))
+            ->all();
 
         $application = VolunteerApplication::create([
             'first_name'        => $data['firstName'],
@@ -54,6 +69,8 @@ class VolunteerController extends Controller
             'barangay'          => $data['barangay'],
             'municipality'      => $data['municipality'],
             'province'          => $data['province'],
+            'id_type'           => $data['idType'],
+            'id_paths'          => $idPaths,
             'availability'      => $data['availability'],
             'motivation'        => $data['motivation'] ?? null,
             'emergency_name'    => $data['emergencyName'],

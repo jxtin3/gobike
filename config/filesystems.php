@@ -15,6 +15,8 @@ return [
 
     'default' => env('FILESYSTEM_DISK', 'local'),
     'media_disk' => env('MEDIA_DISK', 'public'),
+    // Personal documents (volunteer IDs). Never a public disk: files are only served to signed-in admins.
+    'private_disk' => env('PRIVATE_DISK', 'local'),
 
     /*
     |--------------------------------------------------------------------------

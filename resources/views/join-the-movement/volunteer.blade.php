@@ -33,12 +33,13 @@
 
     $toPrepare = [
         'The barangay and municipality where you live',
+        'A photo or scan of your school ID (preferred if you are a student), another valid ID, or a barangay clearance, indigency or residency certificate',
         'An emergency contact (name and mobile number)',
         'Parent or guardian details, if you are under 18',
     ];
 
     $steps = [ // EDIT: confirm the real process with PadyaRescue
-        ['Sign Up', 'Fill out the volunteer form below. Our team reviews it and calls you.'],
+        ['Sign Up', 'Fill out the volunteer form below and upload your ID. Our team verifies it and calls you.'],
         ['Wait for a Full Class', "Training starts once {$classMin} to {$classMax} volunteers have signed up. We call or text you with the date and venue."],
         ['Training', 'Complete the free 2-day DRRM-CCAM with FA & BLS training with your class.'],
         ['Deployment', 'Join your chapter and take your place in the duty rotation.'],
@@ -49,6 +50,8 @@
          'Our youth responder program accepts volunteers aged 13 to 25. Minors aged 13-17 need written parental consent to take part in active field training and dispatch activities.'],
         ['Do I need training before I sign up?',
          'No. Basic DRRM-CCAM with First Aid & BLS training is part of the program, so you will be trained before going into the field.'],
+        ['What ID do I need to upload?',
+         'A school ID is preferred if you are a student. If you do not have one, or you are not a student, upload another valid ID, or a barangay clearance, certificate of indigency or certificate of residency. We use it to confirm your identity and where you live, and only authorized staff can see it.'],
         ['When does my training start?',
          "Volunteer training is free and given to a whole class at once. A class starts once {$classMin} to {$classMax} volunteers have signed up. When your class is complete, we call or text you with the date and venue, so keep your mobile number reachable."],
         ['Can I get trained sooner?',
@@ -311,6 +314,82 @@
                             </div>
                         </fieldset>
 
+                        {{-- Identity verification --}}
+                        <fieldset class="vol-fieldset">
+                            <legend class="vol-legend">Verify Your Identity</legend>
+                            <div class="vol-alert is-info" role="note">
+                                <span x-show="form.status === 'student'">You are a student, so please upload your <strong>school ID</strong>. If you do not have it with you, a barangay clearance, certificate of indigency or certificate of residency also works.</span>
+                                <span x-show="form.status !== 'student'">To confirm who you are and where you live, upload a valid ID, or a barangay clearance, certificate of indigency or certificate of residency.</span>
+                            </div>
+
+                            <div class="vol-field" style="margin-bottom:1rem;">
+                                <label class="vol-label" for="v-id-type">Document type <i>*</i></label>
+                                <select id="v-id-type" class="vol-select" x-model="form.idType" required>
+                                    <option value="" disabled>Select…</option>
+                                    @foreach ($idTypes as $value => $label)
+                                        @if ($value === 'school-id')
+                                            <option value="{{ $value }}" x-text="form.status === 'student' ? '{{ $label }} (preferred)' : '{{ $label }}'">{{ $label }}</option>
+                                        @else
+                                            <option value="{{ $value }}">{{ $label }}</option>
+                                        @endif
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <div class="vol-field">
+                                <span class="vol-label" id="v-id-file-label">Upload document <i>*</i></span>
+
+                                {{-- Chosen files: one row each, with its own remove button --}}
+                                <ul class="vol-files" x-show="idFiles.length" x-cloak aria-label="Uploaded documents">
+                                    <template x-for="(item, i) in idFiles" :key="item.file.name + item.file.size">
+                                        <li class="vol-file">
+                                            <span class="vol-file__thumb">
+                                                <img x-show="item.preview" :src="item.preview" alt="">
+                                                <svg x-show="!item.preview" width="26" height="26" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor" aria-hidden="true">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"/>
+                                                </svg>
+                                            </span>
+                                            <span class="vol-file__meta">
+                                                <strong x-text="item.file.name"></strong>
+                                                <small x-text="sizeLabel(item.file)"></small>
+                                            </span>
+                                            <button type="button" class="vol-file__remove" @click="removeId(i)" :aria-label="'Remove ' + item.file.name">
+                                                <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
+                                            </button>
+                                        </li>
+                                    </template>
+                                </ul>
+
+                                {{-- The upload rectangle: choose one or several files at once --}}
+                                <label for="v-id-file" class="vol-drop" :class="{ 'is-compact': idFiles.length, 'has-error': idError }" x-show="idFiles.length < idMax">
+                                    <input id="v-id-file" class="vol-drop__input" type="file" multiple
+                                           accept="image/jpeg,image/png,image/webp,application/pdf"
+                                           aria-labelledby="v-id-file-label" aria-describedby="v-id-hint v-id-error"
+                                           :aria-invalid="idError ? 'true' : 'false'" @change="pickIds($event)">
+
+                                    <span class="vol-drop__empty">
+                                        <span class="vol-drop__icon" aria-hidden="true">
+                                            <svg width="26" height="26" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5"/>
+                                            </svg>
+                                        </span>
+                                        <span class="vol-drop__text">
+                                            <strong x-text="idFiles.length ? 'Add another photo or file' : 'Tap to take a photo or choose files'"></strong>
+                                            <small>You can select more than one · JPG, PNG, WEBP or PDF · up to 5 MB each</small>
+                                        </span>
+                                    </span>
+                                </label>
+
+                                <p class="vol-hint" x-show="idFiles.length" x-cloak x-text="idFiles.length + ' of ' + idMax + ' files added'"></p>
+
+                                <p id="v-id-error" class="vol-error" role="alert" x-show="idError" x-cloak x-text="idError"></p>
+
+                                <div id="v-id-hint" class="vol-alert is-warn" role="note" style="margin:0.75rem 0 0;">
+                                    <span>Upload a clear photo, scan or PDF (JPG, PNG, WEBP or PDF, up to 5 MB each). You can add the front and back of your ID, or more than one document. Make sure your name and address are readable to verify your application.</span>
+                                </div>
+                            </div>
+                        </fieldset>
+
                         {{-- Volunteering --}}
                         <fieldset class="vol-fieldset">
                             <legend class="vol-legend">Your Volunteering</legend>
@@ -377,7 +456,7 @@
                         {{-- Consent + submit --}}
                         <label class="vol-check" style="margin-bottom:1.25rem;">
                             <input type="checkbox" x-model="form.agree" required>
-                            <span>I have read and agree to the <a href="{{ route('terms') }}" target="_blank" rel="noopener">Terms &amp; Conditions</a> and consent to the collection and use of my information to process my application, as described in the <a href="{{ route('privacy-policy') }}" target="_blank" rel="noopener">Privacy Policy</a>.</span>
+                            <span>I have read and agree to the <a href="{{ route('terms') }}" target="_blank" rel="noopener">Terms &amp; Conditions</a> and consent to the collection and use of my information, including my uploaded ID, to verify and process my application, as described in the <a href="{{ route('privacy-policy') }}" target="_blank" rel="noopener">Privacy Policy</a>.</span>
                         </label>
 
                         <div x-show="error" x-cloak class="vol-alert is-error">

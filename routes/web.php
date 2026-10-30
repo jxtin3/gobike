@@ -236,6 +236,9 @@ Route::middleware([EnsureAdmin::class, AuthenticateSession::class])->prefix('adm
         Route::post('/volunteers/classes/{volunteerClass}/email', [AdminVolunteerController::class, 'emailClass'])->name('volunteers.classes.email');
         Route::post('/volunteers/{volunteerApplication}/email-class', [AdminVolunteerController::class, 'emailOne'])->name('volunteers.email-class');
         Route::get('/volunteers/{volunteerApplication}', [AdminVolunteerController::class, 'show'])->name('volunteers.show');
+        Route::get('/volunteers/{volunteerApplication}/id/{index}', [AdminVolunteerController::class, 'idDocument'])
+            ->whereNumber('index')
+            ->name('volunteers.id');
         Route::patch('/volunteers/{volunteerApplication}/status', [AdminVolunteerController::class, 'updateStatus'])
             ->name('volunteers.status');
         Route::delete('/volunteers/{volunteerApplication}', [AdminVolunteerController::class, 'destroy'])

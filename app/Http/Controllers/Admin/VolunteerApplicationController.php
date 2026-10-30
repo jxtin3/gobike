@@ -11,6 +11,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Throwable;
 
@@ -178,9 +179,25 @@ class VolunteerApplicationController extends Controller
         return back()->with('success', "Class on {$volunteerClass->starts_on->format('M j')} marked as done. Its volunteers are now trained.");
     }
 
+    /** Shows one uploaded ID in the browser. Private: it is never reachable by a public URL. */
+    public function idDocument(VolunteerApplication $volunteerApplication, int $index)
+    {
+        $disk = Storage::disk(config('filesystems.private_disk'));
+        $path = $volunteerApplication->id_paths[$index] ?? null;
+        abort_unless($path && $disk->exists($path), 404);
+
+        return $disk->response($path, null, [
+            'Cache-Control' => 'private, no-store',
+            'X-Content-Type-Options' => 'nosniff',
+        ]);
+    }
+
     public function destroy(VolunteerApplication $volunteerApplication): RedirectResponse
     {
         $name = $volunteerApplication->full_name;
+        if ($volunteerApplication->id_paths) {
+            Storage::disk(config('filesystems.private_disk'))->delete($volunteerApplication->id_paths);
+        }
         $volunteerApplication->delete();
 
         return redirect()->route('admin.operations.volunteers.index')->with('success', "Application from {$name} deleted.");

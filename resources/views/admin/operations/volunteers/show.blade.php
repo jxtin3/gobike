@@ -43,6 +43,26 @@
             </dl>
         </section>
 
+        {{-- Identity verification --}}
+        <section class="detail-card">
+            <h2 class="detail-card-title">Identity &amp; address proof</h2>
+            @if ($application->id_paths)
+                <dl class="detail-dl">
+                    <div><dt>Document</dt><dd>{{ $application->id_type_label ?? 'Not specified' }}</dd></div>
+                </dl>
+                <div class="form-actions">
+                    @foreach ($application->id_paths as $i => $path)
+                        <a class="btn btn-secondary btn-sm" href="{{ route('admin.operations.volunteers.id', [$application, $i]) }}" target="_blank" rel="noopener">
+                            <x-admin.icon name="eye" /> {{ count($application->id_paths) > 1 ? 'View document '.($i + 1) : 'View uploaded document' }}
+                        </a>
+                    @endforeach
+                </div>
+                <p class="muted">Check that the name matches and that the address is in {{ $application->barangay }}, {{ $application->municipality }}. Only signed-in admins can open this file.</p>
+            @else
+                <p class="muted">No ID was uploaded. This application was sent before ID verification was required, so ask the volunteer to bring one to training.</p>
+            @endif
+        </section>
+
         {{-- Volunteer Details --}}
         <section class="detail-card">
             <h2 class="detail-card-title">Volunteer details</h2>

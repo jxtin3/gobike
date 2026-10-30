@@ -1,6 +1,19 @@
 <?php
+use App\Models\User;
 use App\Models\VolunteerApplication;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 
+/** The identity proof every application must include. */
+function volunteerIdFields(array $overrides = []): array
+{
+    return array_merge([
+        'idType' => 'school-id',
+        'idDocuments' => [UploadedFile::fake()->image('school-id.jpg', 600, 400)],
+    ], $overrides);
+}
+
+beforeEach(fn () => Storage::fake('local'));
 
 // volunteer
 it('volunteer page',
@@ -27,7 +40,7 @@ it('stores a valid volunteer application', function () {
         'emergencyName' => 'Emergency Contact',
         'emergencyPhone' => '09987654321',
         'agree' => true,
-    ]);
+    ] + volunteerIdFields());
 
     $response->assertStatus(200)
         ->assertJson([
@@ -35,6 +48,7 @@ it('stores a valid volunteer application', function () {
         ]);
 
     $this->assertDatabaseHas('volunteer_applications', [
+        'id_type' => 'school-id',
         'first_name' => 'Test',
         'last_name' => 'Volunteer',
         'email' => 'volunteer@example.com',
@@ -67,7 +81,7 @@ it('requires guardian information for a minor volunteer', function () {
         'emergencyName' => 'Emergency Contact',
         'emergencyPhone' => '09987654321',
         'agree' => true,
-    ]);
+    ] + volunteerIdFields());
 
     $response->assertStatus(422)
         ->assertJsonValidationErrors([
@@ -101,7 +115,7 @@ it('stores a valid minor volunteer application with guardian information', funct
         'guardianConsent' => true,
 
         'agree' => true,
-    ]);
+    ] + volunteerIdFields(['idType' => 'barangay-clearance']));
 
     $response->assertStatus(200)
         ->assertJson([
@@ -139,8 +153,98 @@ it('rejects a volunteer application with missing required fields', function () {
         'availability',
         'emergencyName',
         'emergencyPhone',
+        'idType',
+        'idDocuments',
         'agree',
     ]);
+});
+
+it('keeps the uploaded ID on the private disk, never in a public folder', function () {
+    $this->postJson('/volunteer', [
+        'firstName' => 'Ana', 'lastName' => 'Reyes', 'email' => 'ana@example.com', 'phone' => '09123456789',
+        'age' => 19, 'status' => 'student', 'barangay' => 'Poblacion', 'municipality' => 'Bugallon',
+        'province' => 'Pangasinan', 'availability' => 'weekends', 'emergencyName' => 'Mom',
+        'emergencyPhone' => '09987654321', 'agree' => true,
+    ] + volunteerIdFields(['idDocuments' => [UploadedFile::fake()->create('clearance.pdf', 200, 'application/pdf')], 'idType' => 'residency']))
+        ->assertOk();
+
+    $application = VolunteerApplication::firstWhere('email', 'ana@example.com');
+
+    expect($application->id_type)->toBe('residency')
+        ->and($application->id_type_label)->toBe('Certificate of residency')
+        ->and($application->id_paths)->toHaveCount(1)
+        ->and($application->id_paths[0])->toStartWith('volunteer-ids/');
+    Storage::disk('local')->assertExists($application->id_paths[0]);
+    Storage::disk('public')->assertMissing($application->id_paths[0]);
+});
+
+it('rejects an ID that is the wrong kind of file, too big, or an unknown document type', function () {
+    $base = [
+        'firstName' => 'Ana', 'lastName' => 'Reyes', 'email' => 'ana@example.com', 'phone' => '09123456789',
+        'age' => 19, 'status' => 'student', 'barangay' => 'Poblacion', 'municipality' => 'Bugallon',
+        'province' => 'Pangasinan', 'availability' => 'weekends', 'emergencyName' => 'Mom',
+        'emergencyPhone' => '09987654321', 'agree' => true,
+    ];
+
+    $this->postJson('/volunteer', $base + volunteerIdFields(['idDocuments' => [UploadedFile::fake()->create('virus.exe', 10)]]))
+        ->assertJsonValidationErrors('idDocuments.0');
+    $this->postJson('/volunteer', $base + volunteerIdFields(['idDocuments' => [UploadedFile::fake()->create('huge.pdf', 6000, 'application/pdf')]]))
+        ->assertJsonValidationErrors('idDocuments.0');
+    $this->postJson('/volunteer', $base + volunteerIdFields(['idType' => 'library-card']))
+        ->assertJsonValidationErrors('idType');
+
+    expect(VolunteerApplication::count())->toBe(0);
+});
+
+it('lets only a signed-in admin open an uploaded ID, and deletes the file with the application', function () {
+    Storage::disk('local')->put('volunteer-ids/proof.jpg', 'fake-image');
+    Storage::disk('local')->put('volunteer-ids/proof-back.jpg', 'fake-image-back');
+    $application = VolunteerApplication::create([
+        'first_name' => 'Ana', 'last_name' => 'Reyes', 'email' => 'ana@example.com', 'phone' => '09170000000',
+        'age' => 19, 'occupation_status' => 'student', 'barangay' => 'Poblacion', 'municipality' => 'Bugallon',
+        'province' => 'Pangasinan', 'availability' => 'weekends', 'emergency_name' => 'Mom', 'emergency_phone' => '09170000001',
+        'id_type' => 'school-id', 'id_paths' => ['volunteer-ids/proof.jpg', 'volunteer-ids/proof-back.jpg'],
+    ]);
+
+    auth()->logout();
+    $this->get(route('admin.operations.volunteers.id', [$application, 0]))->assertRedirect();
+
+    $admin = User::factory()->create(['is_admin' => true]);
+    $this->actingAs($admin)->get(route('admin.operations.volunteers.show', $application))
+        ->assertOk()->assertSee('School ID')->assertSee('View document 1')->assertSee('View document 2');
+    $this->actingAs($admin)->get(route('admin.operations.volunteers.id', [$application, 0]))->assertOk();
+    $this->actingAs($admin)->get(route('admin.operations.volunteers.id', [$application, 1]))->assertOk();
+    $this->actingAs($admin)->get(route('admin.operations.volunteers.id', [$application, 2]))->assertNotFound();
+
+    $this->actingAs($admin)->delete(route('admin.operations.volunteers.destroy', $application));
+    Storage::disk('local')->assertMissing('volunteer-ids/proof.jpg');
+    Storage::disk('local')->assertMissing('volunteer-ids/proof-back.jpg');
+});
+
+it('accepts several ID files at once, but no more than five', function () {
+    $base = [
+        'firstName' => 'Ana', 'lastName' => 'Reyes', 'email' => 'ana@example.com', 'phone' => '09123456789',
+        'age' => 19, 'status' => 'student', 'barangay' => 'Poblacion', 'municipality' => 'Bugallon',
+        'province' => 'Pangasinan', 'availability' => 'weekends', 'emergencyName' => 'Mom',
+        'emergencyPhone' => '09987654321', 'agree' => true,
+    ];
+
+    $this->postJson('/volunteer', $base + volunteerIdFields(['idDocuments' => [
+        UploadedFile::fake()->image('front.jpg', 600, 400),
+        UploadedFile::fake()->image('back.png', 600, 400),
+        UploadedFile::fake()->create('clearance.pdf', 200, 'application/pdf'),
+    ]]))->assertOk();
+
+    $application = VolunteerApplication::firstWhere('email', 'ana@example.com');
+    expect($application->id_paths)->toHaveCount(3);
+    foreach ($application->id_paths as $path) {
+        Storage::disk('local')->assertExists($path);
+    }
+
+    $tooMany = array_map(fn ($i) => UploadedFile::fake()->image("id-{$i}.jpg", 300, 200), range(1, 6));
+    $this->postJson('/volunteer', array_merge($base, ['email' => 'many@example.com']) + volunteerIdFields(['idDocuments' => $tooMany]))
+        ->assertJsonValidationErrors('idDocuments');
+    expect(VolunteerApplication::where('email', 'many@example.com')->exists())->toBeFalse();
 });
 it('offers "Volunteer with us" or "Get Trained" in the home page hero', function () {
     $this->get('/')->assertOk()
@@ -180,5 +284,5 @@ it('shows how full the next class is and tells a new volunteer their place in li
         'age' => 19, 'status' => 'working', 'barangay' => 'Poblacion', 'municipality' => 'Bugallon',
         'province' => 'Pangasinan', 'availability' => 'weekends', 'emergencyName' => 'Mom',
         'emergencyPhone' => '09987654321', 'agree' => true,
-    ])->assertOk()->assertJson(['position' => 13, 'class_min' => 20, 'class_max' => 25]);
+    ] + volunteerIdFields())->assertOk()->assertJson(['position' => 13, 'class_min' => 20, 'class_max' => 25]);
 });

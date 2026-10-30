@@ -31,6 +31,18 @@ class VolunteerApplication extends Model
         'rejected' => 'bad',
     ];
 
+    /** The most files a volunteer can upload as proof (front and back of an ID, a clearance, ...). */
+    public const MAX_ID_FILES = 5;
+
+    /** Accepted proofs of identity and address. A school ID is preferred for students. */
+    public const ID_TYPES = [
+        'school-id' => 'School ID',
+        'valid-id' => 'Other valid ID',
+        'barangay-clearance' => 'Barangay clearance',
+        'indigency' => 'Certificate of indigency',
+        'residency' => 'Certificate of residency',
+    ];
+
     protected $fillable = [
         'first_name',
         'last_name',
@@ -42,6 +54,8 @@ class VolunteerApplication extends Model
         'barangay',
         'municipality',
         'province',
+        'id_type',
+        'id_paths',
         'availability',
         'has_bike',
         'motivation',
@@ -60,6 +74,7 @@ class VolunteerApplication extends Model
         return [
             'has_bike' => 'boolean',
             'guardian_consent' => 'boolean',
+            'id_paths' => 'array',
             'class_emailed_at' => 'datetime',
         ];
     }
@@ -78,6 +93,11 @@ class VolunteerApplication extends Model
     public function getFullNameAttribute(): string
     {
         return trim("{$this->first_name} {$this->last_name}");
+    }
+
+    public function getIdTypeLabelAttribute(): ?string
+    {
+        return self::ID_TYPES[$this->id_type] ?? null;
     }
 
     public function getStatusLabelAttribute(): string
