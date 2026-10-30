@@ -28,6 +28,7 @@
     $whoCanJoin = [
         'Aged 13 to 25',
         'Written parent or guardian consent if you are 13 to 17',
+        'Physically fit and with no current illness',
         'Willing to complete the basic training before field activities',
     ];
 
@@ -49,7 +50,7 @@
         ['What is the minimum age to volunteer?',
          'Our youth responder program accepts volunteers aged 13 to 25. Minors aged 13-17 need written parental consent to take part in active field training and dispatch activities.'],
         ['Do I need training before I sign up?',
-         'No. Basic DRRM-CCAM with First Aid & BLS training is part of the program, so you will be trained before going into the field.'],
+         'No. You do not need any knowledge of basic first aid or any other skill before you sign up. Basic DRRM-CCAM with First Aid & BLS training is part of the program, so you will be trained before going into the field. What we do ask is that you are physically fit and have no current illness.'],
         ['What ID do I need to upload?',
          'A school ID is preferred if you are a student. If you do not have one, or you are not a student, upload another valid ID, or a barangay clearance, certificate of indigency or certificate of residency. We use it to confirm your identity and where you live, and only authorized staff can see it.'],
         ['When does my training start?',
@@ -208,6 +209,7 @@
                         <li>Open to youth aged 13 to 25</li>
                         <li>Parent or guardian consent needed if under 18</li>
                         <li>No prior experience required</li>
+                        <li>Physically fit, with no current illness</li>
                     </ul>
                     <p class="vol-aside-note">
                         Questions first? <a href="{{ url('/contact') }}">Reach out to us</a>.
@@ -317,10 +319,10 @@
                         {{-- Identity verification --}}
                         <fieldset class="vol-fieldset">
                             <legend class="vol-legend">Verify Your Identity</legend>
-                            <div class="vol-alert is-info" role="note">
+                            <p class="vol-note" role="note">
                                 <span x-show="form.status === 'student'">You are a student, so please upload your <strong>school ID</strong>. If you do not have it with you, a barangay clearance, certificate of indigency or certificate of residency also works.</span>
                                 <span x-show="form.status !== 'student'">To confirm who you are and where you live, upload a valid ID, or a barangay clearance, certificate of indigency or certificate of residency.</span>
-                            </div>
+                            </p>
 
                             <div class="vol-field" style="margin-bottom:1rem;">
                                 <label class="vol-label" for="v-id-type">Document type <i>*</i></label>
@@ -384,15 +386,17 @@
 
                                 <p id="v-id-error" class="vol-error" role="alert" x-show="idError" x-cloak x-text="idError"></p>
 
-                                <div id="v-id-hint" class="vol-alert is-warn" role="note" style="margin:0.75rem 0 0;">
-                                    <span>Upload a clear photo, scan or PDF (JPG, PNG, WEBP or PDF, up to 5 MB each). You can add the front and back of your ID, or more than one document. Make sure your name and address are readable to verify your application.</span>
-                                </div>
+                                <p id="v-id-hint" class="vol-note" role="note" style="margin-top:0.75rem;">Upload a clear photo, scan or PDF (JPG, PNG, WEBP or PDF, up to 5 MB each). You can add the front and back of your ID, or more than one document. Make sure your name and address are readable to verify your application.</p>
                             </div>
                         </fieldset>
 
                         {{-- Volunteering --}}
                         <fieldset class="vol-fieldset">
                             <legend class="vol-legend">Your Volunteering</legend>
+
+                            <div class="vol-alert is-info" role="note">
+                                <span><strong>Physical fitness:</strong> Go Bike volunteers ride and do field work, so you must be physically fit and have no current illness to take part. You do not need any first aid knowledge, because we train you.</span>
+                            </div>
 
                             <div class="vol-row">
                                 <div class="vol-field">

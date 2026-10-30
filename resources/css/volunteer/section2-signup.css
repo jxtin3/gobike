@@ -262,6 +262,14 @@
     font-size: 0.75rem;
 }
 
+/* Plain explanatory text (no box) */
+.vol-note {
+    margin: 0 0 1rem;
+    color: var(--gbp-muted);
+    font-size: 0.9rem;
+    line-height: 1.6;
+}
+
 .vol-error {
     margin: 0.4rem 0 0;
     color: #b91c1c;

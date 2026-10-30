@@ -211,7 +211,9 @@ it('lets only a signed-in admin open an uploaded ID, and deletes the file with t
 
     $admin = User::factory()->create(['is_admin' => true]);
     $this->actingAs($admin)->get(route('admin.operations.volunteers.show', $application))
-        ->assertOk()->assertSee('School ID')->assertSee('View document 1')->assertSee('View document 2');
+        ->assertOk()->assertSee('School ID')->assertSee('View document 1 larger')->assertSee('View document 2 larger')
+        ->assertSee(route('admin.operations.volunteers.id', [$application, 0]), false)
+        ->assertSee('id="idViewer"', false);
     $this->actingAs($admin)->get(route('admin.operations.volunteers.id', [$application, 0]))->assertOk();
     $this->actingAs($admin)->get(route('admin.operations.volunteers.id', [$application, 1]))->assertOk();
     $this->actingAs($admin)->get(route('admin.operations.volunteers.id', [$application, 2]))->assertNotFound();

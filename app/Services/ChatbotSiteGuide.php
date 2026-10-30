@@ -62,7 +62,7 @@ Volunteer (free):
 1. Open Volunteer: tap "Volunteer with us" on the home page.
 2. Scroll to "Ready to ride with us?" and fill in the form: About You, Where You Live, Your Volunteering (availability), Verify Your Identity (upload a school ID, which is preferred for students, another valid ID, or a barangay clearance, indigency or residency certificate), Emergency Contact; if under 18, the Parent / Guardian part.
 3. Tick the agreement and tap "Submit Application". The page then shows your place in line.
-- Who can join: ages 13 to 25; ages 13–17 need parent or guardian consent; no experience needed.
+- Who can join: ages 13 to 25; ages 13–17 need parent or guardian consent; no experience or first aid knowledge needed; volunteers must be physically fit with no current illness.
 - Training is free (2-day DRRM-CCAM with First Aid & Basic Life Support) and is given to a whole class: it starts once {$classMin} to {$classMax} volunteers have signed up. The "Next volunteer class" box on the page shows how full the next class is. Go Bike emails (and may call or text) the date and venue when the class is set.
 - Want to train sooner? Book individual training (below).
 

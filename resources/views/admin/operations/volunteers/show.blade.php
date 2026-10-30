@@ -15,89 +15,105 @@
 
 <div class="detail-grid">
 
-    {{-- Left: main info --}}
+    {{-- Left: everything about the applicant, in one card --}}
     <div class="detail-main">
-
-        {{-- Personal Info --}}
         <section class="detail-card">
-            <h2 class="detail-card-title">Personal information</h2>
-            <dl class="detail-dl">
-                <div><dt>Full name</dt><dd>{{ $application->full_name }}</dd></div>
-                <div><dt>Email</dt><dd><a href="mailto:{{ $application->email }}">{{ $application->email }}</a></dd></div>
-                <div><dt>Phone</dt><dd><a href="tel:{{ $application->phone }}">{{ $application->phone }}</a></dd></div>
-                <div><dt>Age</dt><dd>{{ $application->age }} yrs</dd></div>
-                <div><dt>Occupation</dt><dd>{{ ucfirst(str_replace('-', ' ', $application->occupation_status)) }}</dd></div>
-                @if($application->school)
-                    <div><dt>School / Institution</dt><dd>{{ $application->school }}</dd></div>
-                @endif
-            </dl>
-        </section>
 
-        {{-- Location --}}
-        <section class="detail-card">
-            <h2 class="detail-card-title">Location</h2>
-            <dl class="detail-dl">
-                <div><dt>Barangay</dt><dd>{{ $application->barangay }}</dd></div>
-                <div><dt>Municipality</dt><dd>{{ $application->municipality }}</dd></div>
-                <div><dt>Province</dt><dd>{{ $application->province }}</dd></div>
-            </dl>
-        </section>
-
-        {{-- Identity verification --}}
-        <section class="detail-card">
-            <h2 class="detail-card-title">Identity &amp; address proof</h2>
-            @if ($application->id_paths)
+            {{-- Personal Info --}}
+            <div class="detail-section">
+                <h2 class="detail-section-title">Personal information</h2>
                 <dl class="detail-dl">
-                    <div><dt>Document</dt><dd>{{ $application->id_type_label ?? 'Not specified' }}</dd></div>
+                    <div><dt>Full name</dt><dd>{{ $application->full_name }}</dd></div>
+                    <div><dt>Email</dt><dd class="detail-wrap"><a href="mailto:{{ $application->email }}">{{ $application->email }}</a></dd></div>
+                    <div><dt>Phone</dt><dd><a href="tel:{{ $application->phone }}">{{ $application->phone }}</a></dd></div>
+                    <div><dt>Age</dt><dd>{{ $application->age }} yrs</dd></div>
+                    <div><dt>Occupation</dt><dd>{{ ucfirst(str_replace('-', ' ', $application->occupation_status)) }}</dd></div>
+                    @if($application->school)
+                        <div><dt>School / Institution</dt><dd>{{ $application->school }}</dd></div>
+                    @endif
                 </dl>
-                <div class="form-actions">
-                    @foreach ($application->id_paths as $i => $path)
-                        <a class="btn btn-secondary btn-sm" href="{{ route('admin.operations.volunteers.id', [$application, $i]) }}" target="_blank" rel="noopener">
-                            <x-admin.icon name="eye" /> {{ count($application->id_paths) > 1 ? 'View document '.($i + 1) : 'View uploaded document' }}
-                        </a>
-                    @endforeach
-                </div>
-                <p class="muted">Check that the name matches and that the address is in {{ $application->barangay }}, {{ $application->municipality }}. Only signed-in admins can open this file.</p>
-            @else
-                <p class="muted">No ID was uploaded. This application was sent before ID verification was required, so ask the volunteer to bring one to training.</p>
+            </div>
+
+            {{-- Location --}}
+            <div class="detail-section">
+                <h2 class="detail-section-title">Location</h2>
+                <dl class="detail-dl">
+                    <div><dt>Barangay</dt><dd>{{ $application->barangay }}</dd></div>
+                    <div><dt>Municipality</dt><dd>{{ $application->municipality }}</dd></div>
+                    <div><dt>Province</dt><dd>{{ $application->province }}</dd></div>
+                </dl>
+            </div>
+
+            {{-- Identity verification: the photos show right here; click one to see it large --}}
+            <div class="detail-section">
+                <h2 class="detail-section-title">Identity &amp; address proof</h2>
+                @if ($application->id_paths)
+                    <dl class="detail-dl">
+                        <div><dt>Document</dt><dd>{{ $application->id_type_label ?? 'Not specified' }}</dd></div>
+                    </dl>
+                    <ul class="id-proofs">
+                        @foreach ($application->id_paths as $i => $path)
+                            @php
+                                $url = route('admin.operations.volunteers.id', [$application, $i]);
+                                $isImage = \Illuminate\Support\Str::endsWith(strtolower($path), ['.jpg', '.jpeg', '.png', '.webp']);
+                            @endphp
+                            <li>
+                                @if ($isImage)
+                                    <button type="button" class="id-proof" data-id-view="{{ $url }}" data-id-title="Document {{ $i + 1 }} of {{ count($application->id_paths) }}" aria-label="View document {{ $i + 1 }} larger">
+                                        <img src="{{ $url }}" alt="Uploaded document {{ $i + 1 }}" loading="lazy">
+                                    </button>
+                                @else
+                                    <a class="id-proof id-proof--pdf" href="{{ $url }}" target="_blank" rel="noopener" aria-label="Open PDF document {{ $i + 1 }} in a new tab">
+                                        <x-admin.icon name="file-text" />
+                                        <span>PDF document</span>
+                                        <small>Click to open</small>
+                                    </a>
+                                @endif
+                            </li>
+                        @endforeach
+                    </ul>
+                    <p class="muted">Check that the name matches and that the address is in {{ $application->barangay }}, {{ $application->municipality }}.</p>
+                @else
+                    <p class="muted">No ID was uploaded. This application was sent before ID verification was required, so ask the volunteer to bring one to training.</p>
+                @endif
+            </div>
+
+            {{-- Volunteer Details --}}
+            <div class="detail-section">
+                <h2 class="detail-section-title">Volunteer details</h2>
+                <dl class="detail-dl">
+                    <div><dt>Availability</dt><dd>{{ ucfirst($application->availability) }}</dd></div>
+                </dl>
+                @if($application->motivation)
+                    <div class="detail-note">
+                        <span class="detail-note-label">Motivation</span>
+                        <p>{{ $application->motivation }}</p>
+                    </div>
+                @endif
+            </div>
+
+            {{-- Emergency Contact --}}
+            <div class="detail-section">
+                <h2 class="detail-section-title">Emergency contact</h2>
+                <dl class="detail-dl">
+                    <div><dt>Name</dt><dd>{{ $application->emergency_name }}</dd></div>
+                    <div><dt>Phone</dt><dd><a href="tel:{{ $application->emergency_phone }}">{{ $application->emergency_phone }}</a></dd></div>
+                </dl>
+            </div>
+
+            @if($application->guardian_name)
+            {{-- Guardian Info (minors) --}}
+            <div class="detail-section">
+                <h2 class="detail-section-title">Guardian / Parent</h2>
+                <dl class="detail-dl">
+                    <div><dt>Name</dt><dd>{{ $application->guardian_name }}</dd></div>
+                    <div><dt>Phone</dt><dd><a href="tel:{{ $application->guardian_phone }}">{{ $application->guardian_phone }}</a></dd></div>
+                    <div><dt>Consent given</dt><dd>{{ $application->guardian_consent ? 'Yes' : 'No' }}</dd></div>
+                </dl>
+            </div>
             @endif
-        </section>
 
-        {{-- Volunteer Details --}}
-        <section class="detail-card">
-            <h2 class="detail-card-title">Volunteer details</h2>
-            <dl class="detail-dl">
-                <div><dt>Availability</dt><dd>{{ ucfirst($application->availability) }}</dd></div>
-            </dl>
-            @if($application->motivation)
-                <div class="detail-note">
-                    <span class="detail-note-label">Motivation</span>
-                    <p>{{ $application->motivation }}</p>
-                </div>
-            @endif
         </section>
-
-        {{-- Emergency Contact --}}
-        <section class="detail-card">
-            <h2 class="detail-card-title">Emergency contact</h2>
-            <dl class="detail-dl">
-                <div><dt>Name</dt><dd>{{ $application->emergency_name }}</dd></div>
-                <div><dt>Phone</dt><dd><a href="tel:{{ $application->emergency_phone }}">{{ $application->emergency_phone }}</a></dd></div>
-            </dl>
-        </section>
-
-        @if($application->guardian_name)
-        {{-- Guardian Info (minors) --}}
-        <section class="detail-card">
-            <h2 class="detail-card-title">Guardian / Parent</h2>
-            <dl class="detail-dl">
-                <div><dt>Name</dt><dd>{{ $application->guardian_name }}</dd></div>
-                <div><dt>Phone</dt><dd><a href="tel:{{ $application->guardian_phone }}">{{ $application->guardian_phone }}</a></dd></div>
-                <div><dt>Consent given</dt><dd>{{ $application->guardian_consent ? 'Yes' : 'No' }}</dd></div>
-            </dl>
-        </section>
-        @endif
-
     </div>
 
     {{-- Right: status + actions --}}
@@ -154,4 +170,21 @@
     </div>
 
 </div>
+@if ($application->id_paths)
+    {{-- Photo viewer: opened by a click on an uploaded document (resources/js/admin/admin.js) --}}
+    <dialog class="dlg dlg-photo" id="idViewer" aria-labelledby="idViewerTitle">
+        <div class="dlg-head">
+            <div class="dlg-head-main">
+                <p class="dlg-kicker">{{ $application->full_name }} · {{ $application->id_type_label ?? 'Identity proof' }}</p>
+                <h2 id="idViewerTitle" data-id-title>Document</h2>
+            </div>
+            <button type="button" class="icon-btn" data-dialog-close aria-label="Close"><x-admin.icon name="x" /></button>
+        </div>
+        <div class="picture-detail-media"><img data-id-img alt="Uploaded document, large view"></div>
+        <div class="dlg-foot">
+            <a class="btn btn-secondary" data-id-open href="#" target="_blank" rel="noopener"><x-admin.icon name="external-link" /> Open in new tab</a>
+            <div class="dlg-foot-main"><button type="button" class="btn btn-primary" data-dialog-close>Close</button></div>
+        </div>
+    </dialog>
+@endif
 @endsection

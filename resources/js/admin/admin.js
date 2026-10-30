@@ -292,6 +292,32 @@ function decrementCounter(element) {
     });
 })();
 
+/* Uploaded ID photos: a click on one opens it large in a dialog. */
+(() => {
+    const dlg = $('#idViewer');
+    if (!dlg) return;
+
+    const img = $('[data-id-img]', dlg);
+    const title = $('[data-id-title]', dlg);
+    const openLink = $('[data-id-open]', dlg);
+    const onBackdrop = backdropClick(dlg);
+
+    document.addEventListener('click', (e) => {
+        const tile = e.target.closest('[data-id-view]');
+        if (!tile) return;
+        img.src = tile.dataset.idView;
+        img.alt = tile.dataset.idTitle;
+        title.textContent = tile.dataset.idTitle;
+        openLink.href = tile.dataset.idView;
+        dlg.showModal();
+    });
+
+    dlg.addEventListener('click', (e) => {
+        if (onBackdrop(e) || e.target.closest('[data-dialog-close]')) dlg.close();
+    });
+    dlg.addEventListener('close', () => { img.removeAttribute('src'); });
+})();
+
 /*
  * Row links. A list row (or card) with data-href opens that page when clicked anywhere,
  * not just on its eye button. Links and buttons inside the row keep their own action,
