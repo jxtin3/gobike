@@ -225,18 +225,18 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
                             </svg>
                         </div>
-                        <h3>Application Received!</h3>
+                        <h3 x-ref="thanks" tabindex="-1">Application Received!</h3>
                         <p x-show="position" x-cloak>
                             You're <strong x-text="'#' + position"></strong> in line for the next volunteer class.
                             Training starts once <span x-text="classMin"></span> to <span x-text="classMax"></span> volunteers have signed up.
                             We'll email you the date and venue (check your spam folder too), and may call you.
                         </p>
                         <p x-show="!position">Thank you for signing up to volunteer. Our team will review your application and reach out using the email or mobile number you provided.</p>
-                        <button type="button" @click="submitted = false">Submit another application</button>
+                        <button type="button" @click="submitted = false; showCard('form')">Submit another application</button>
                     </div>
 
                     {{-- Form --}}
-                    <form x-show="!submitted" @submit.prevent="submitForm">
+                    <form x-show="!submitted" x-ref="form" tabindex="-1" @submit.prevent="submitForm">
 
                         {{-- About you --}}
                         <fieldset class="vol-fieldset">

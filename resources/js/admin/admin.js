@@ -299,7 +299,6 @@ function decrementCounter(element) {
 
     const img = $('[data-id-img]', dlg);
     const title = $('[data-id-title]', dlg);
-    const openLink = $('[data-id-open]', dlg);
     const onBackdrop = backdropClick(dlg);
 
     document.addEventListener('click', (e) => {
@@ -308,7 +307,6 @@ function decrementCounter(element) {
         img.src = tile.dataset.idView;
         img.alt = tile.dataset.idTitle;
         title.textContent = tile.dataset.idTitle;
-        openLink.href = tile.dataset.idView;
         dlg.showModal();
     });
 

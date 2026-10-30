@@ -181,10 +181,6 @@
             <button type="button" class="icon-btn" data-dialog-close aria-label="Close"><x-admin.icon name="x" /></button>
         </div>
         <div class="picture-detail-media"><img data-id-img alt="Uploaded document, large view"></div>
-        <div class="dlg-foot">
-            <a class="btn btn-secondary" data-id-open href="#" target="_blank" rel="noopener"><x-admin.icon name="external-link" /> Open in new tab</a>
-            <div class="dlg-foot-main"><button type="button" class="btn btn-primary" data-dialog-close>Close</button></div>
-        </div>
     </dialog>
 @endif
 @endsection

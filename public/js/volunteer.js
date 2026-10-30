@@ -60,6 +60,21 @@ document.addEventListener('alpine:init', () => {
             idError: '',
             idMax: 5,
 
+            /**
+             * The form is much taller than the thank-you card, so when one replaces the other the page
+             * gets shorter and the browser leaves the visitor near the footer. Bring the card back into
+             * view and move focus into it, so screen readers announce it too.
+             */
+            showCard(target) {
+                this.$nextTick(() => {
+                    requestAnimationFrame(() => {
+                        const calm = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+                        this.$root.scrollIntoView({ block: 'start', behavior: calm ? 'auto' : 'smooth' });
+                        this.$refs[target]?.focus({ preventScroll: true });
+                    });
+                });
+            },
+
             init() {
                 // Reset the form only when the user chooses to submit another one
                 this.$watch('submitted', (value) => {
@@ -192,6 +207,7 @@ document.addEventListener('alpine:init', () => {
                     this.classMin = data.class_min ?? this.classMin;
                     this.classMax = data.class_max ?? this.classMax;
                     this.submitted = true;
+                    this.showCard('thanks');
                     // this.form = blank();
                 } catch (e) {
                     this.error = true;
