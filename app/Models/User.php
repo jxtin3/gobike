@@ -4,6 +4,7 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use App\Services\Push\PushNotifier;
+use App\Support\Media;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
@@ -14,10 +15,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Storage;
 use Laravel\Sanctum\HasApiTokens;
 use Laravel\Sanctum\PersonalAccessToken;
 
-#[Fillable(['name', 'email', 'password', 'role', 'status', 'mobile', 'barangay', 'google_id', 'has_password', 'notification_prefs'])]
+#[Fillable(['name', 'email', 'password', 'role', 'status', 'mobile', 'barangay', 'photo_path', 'google_id', 'has_password', 'notification_prefs'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -131,6 +133,14 @@ class User extends Authenticatable
         static::saved(function (User $user) {
             if ($user->wasRecentlyCreated || $user->wasChanged(['name', 'mobile', 'role'])) {
                 $user->claimCheckups();
+            }
+        });
+
+        // Don't leave the profile photo behind in storage, whichever way the account goes
+        // (an admin declining a sign-up, or deleting the user).
+        static::deleting(function (User $user) {
+            if ($user->photo_path) {
+                Storage::disk(Media::disk())->delete($user->photo_path);
             }
         });
     }

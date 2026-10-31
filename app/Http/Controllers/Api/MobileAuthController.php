@@ -7,11 +7,13 @@ use App\Models\DeviceToken;
 use App\Models\User;
 use App\Services\Push\PushNotifier;
 use App\Support\Barangays;
+use App\Support\Media;
 use Google\Client as GoogleClient;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
@@ -49,6 +51,15 @@ class MobileAuthController extends Controller
             'barangay' => ['required', 'string', Rule::in(Barangays::ALL)],
             'role' => ['required', Rule::in(['Resident', 'GoBiker', 'User'])],
             'password' => ['required', 'string', 'min:8', 'max:100'],
+            // A GoBiker is sent to people's homes, so the resident and the admin must be able to
+            // see who is coming. The sign-up screen refuses to submit without one.
+            //
+            // TEMPORARY: the rule here is 'required_if:role,GoBiker' and must go back as soon as
+            // app 1.0.15 reaches the testers. It is held open because released app 1.0.14 sends no
+            // photo at all, and rejecting it would stop every GoBiker sign-up from the installed app.
+            'photo' => ['nullable', 'image', 'mimes:jpg,jpeg,png', 'max:5120'],
+        ], [
+            'photo.uploaded' => 'The photo could not be uploaded. Please try a smaller one.',
         ]);
 
         // GoBikers can see/track people, so they must be approved by an admin first.
@@ -59,6 +70,9 @@ class MobileAuthController extends Controller
             'email' => strtolower(trim($data['email'])),
             'mobile' => trim($data['mobile']),
             'barangay' => $data['barangay'],
+            'photo_path' => $request->hasFile('photo')
+                ? $request->file('photo')->store('profile-photos', Media::disk())
+                : null,
             'password' => $data['password'], // hashed automatically by the model
             'role' => $isGoBiker ? 'GoBiker' : 'User',
             'status' => $isGoBiker ? 'Inactive' : 'Active',
@@ -219,6 +233,35 @@ class MobileAuthController extends Controller
         return response()->json(['notification_prefs' => $user->notificationPrefs()]);
     }
 
+    /**
+     * Sets or replaces the signed-in user's profile photo.
+     *
+     * GoBikers who registered before a photo was required use this to add one; anyone can use it
+     * to change theirs. The file it replaces is deleted, so nothing is left behind.
+     */
+    public function updatePhoto(Request $request): JsonResponse
+    {
+        $request->validate([
+            'photo' => ['required', 'image', 'mimes:jpg,jpeg,png', 'max:5120'],
+        ], [
+            'photo.uploaded' => 'The photo could not be uploaded. Please try a smaller one.',
+        ]);
+
+        /** @var User $user */
+        $user = $request->user();
+        $old = $user->photo_path;
+        $user->photo_path = $request->file('photo')->store('profile-photos', Media::disk());
+        $user->save();
+        if ($old) {
+            Storage::disk(Media::disk())->delete($old);
+        }
+
+        return response()->json([
+            'message' => 'Profile photo updated.',
+            'user' => $this->userPayload($user),
+        ]);
+    }
+
     public function logout(Request $request): JsonResponse
     {
         $request->user()->currentAccessToken()?->delete();
@@ -260,6 +303,7 @@ class MobileAuthController extends Controller
             'email' => $user->email,
             'mobile' => $user->mobile,
             'barangay' => $user->barangay,
+            'photo_url' => Media::url($user->photo_path),
             'role' => $user->role,
             // Ronda days and hours set by the admin (GoBikers only; null when not set).
             // False for Google sign-in accounts: the app offers "Set a password" instead of "Change".

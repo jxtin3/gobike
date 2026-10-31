@@ -38,6 +38,8 @@ it('updates the authenticated GoBiker profile', function () {
                 'email' => $user->email,
                 'mobile' => '09123456789',
                 'barangay' => 'Poblacion',
+                // This GoBiker signed up before a photo was required.
+                'photo_url' => null,
                 'role' => 'GoBiker',
                 'has_password' => true,
                 'notification_prefs' => ['sos_updates' => true, 'appointments' => true, 'checkups' => true, 'sound' => true, 'vibration' => true],
