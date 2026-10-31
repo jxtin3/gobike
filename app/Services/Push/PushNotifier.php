@@ -34,8 +34,12 @@ class PushNotifier
     public function sosStatusChanged(SosRequest $sos): void
     {
         [$title, $body] = match ($sos->status) {
-            'responding' => ['Someone is Responding', 'The Go Bike admin is handling your SOS request.'],
-            'resolved' => ['SOS resolved', 'The admin marked your SOS request as resolved.'],
+            'responding' => $sos->assignedGobiker
+                ? ['Someone is Responding', "{$sos->assignedGobiker->name} is on the way to help you."]
+                : ['Someone is Responding', 'The Go Bike admin is handling your SOS request.'],
+            'resolved' => $sos->resolved_by_gobiker_id
+                ? ['SOS resolved', ($sos->resolvedBy?->name ?? 'The GoBiker').' marked your SOS request as resolved. Tap to rate the response.']
+                : ['SOS resolved', 'The admin marked your SOS request as resolved.'],
             default => [null, null],
         };
         if ($title) {
@@ -76,6 +80,20 @@ class PushNotifier
     }
 
     // ------------------------------------------------------------- GoBikers
+
+    /** The admin sent a GoBiker to answer a resident's SOS. */
+    public function sosAssigned(SosRequest $sos): void
+    {
+        $where = $sos->address ?: $sos->landmark;
+
+        $this->toUser(
+            $sos->assignedGobiker,
+            null,
+            'SOS: you are assigned',
+            ($sos->user?->name ?? 'A resident').' needs help'.($where ? " at {$where}" : '').'. Tap to see the map.',
+            ['type' => 'sos_assigned', 'id' => (string) $sos->id],
+        );
+    }
 
     /** A resident asked for a home visit: tell the GoBiker they chose. */
     public function newAppointmentRequest(Appointment $appointment): void

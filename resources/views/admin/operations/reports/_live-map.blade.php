@@ -1,4 +1,7 @@
-<section class="dashboard-map-section" aria-labelledby="dashboard-map-title" data-locations-url="{{ route('admin.locations.index') }}">
+<section class="dashboard-map-section" aria-labelledby="dashboard-map-title" data-locations-url="{{ route('admin.locations.index') }}"
+    data-sos-url="{{ route('admin.sos-pins.index') }}"
+    data-sos-status-url="{{ route('admin.operations.sos.status', '__ID__') }}"
+    data-sos-gobikers-url="{{ route('admin.operations.sos.gobikers', '__ID__') }}">
     <header class="dashboard-map-heading">
         <div>
             <span class="analytics-eyebrow">Live operations</span>
@@ -71,6 +74,11 @@
                 <span><i class="status-dot s-emergency"></i>Emergency</span>
                 <span><i class="status-dot s-responding"></i>Responding</span>
                 <span><i class="status-dot s-offline"></i>Offline</span>
+            </div>
+            <div class="legend rider-legend sos-legend" aria-label="Resident SOS pins">
+                <span><i class="sos-ring s-sent"></i>SOS sent</span>
+                <span><i class="sos-ring s-sos-responding"></i>SOS responding</span>
+                <span><i class="sos-ring s-sos-resolved"></i>SOS resolved</span>
             </div>
             <header><h2 id="rider-panel-title">GoBikers</h2><span class="count" id="rider-count">–</span></header>
             <ul id="rider-list" aria-busy="true">

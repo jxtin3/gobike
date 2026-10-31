@@ -26,7 +26,8 @@ class SosRequest extends Model
     protected $fillable = [
         'user_id', 'municipality', 'barangay', 'address', 'landmark', 'description',
         'latitude', 'longitude', 'image_path', 'video_path',
-        'status', 'handled_by', 'responded_at', 'resolved_at', 'resolved_by_resident',
+        'status', 'handled_by', 'assigned_gobiker_id', 'resolved_by_gobiker_id',
+        'responded_at', 'resolved_at', 'resolved_by_resident',
     ];
 
     protected function casts(): array
@@ -34,6 +35,10 @@ class SosRequest extends Model
         return [
             'latitude' => 'float',
             'longitude' => 'float',
+            // Cast: only the assigned GoBiker may see and resolve the request, and that check is a
+            // strict comparison against the signed-in id.
+            'assigned_gobiker_id' => 'integer',
+            'resolved_by_gobiker_id' => 'integer',
             'responded_at' => 'datetime',
             'resolved_at' => 'datetime',
             'resolved_by_resident' => 'boolean',
@@ -49,6 +54,18 @@ class SosRequest extends Model
     public function handler(): BelongsTo
     {
         return $this->belongsTo(User::class, 'handled_by');
+    }
+
+    /** The GoBiker the admin sent to help. */
+    public function assignedGobiker(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'assigned_gobiker_id');
+    }
+
+    /** The GoBiker who marked it resolved: the resident rates them. */
+    public function resolvedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'resolved_by_gobiker_id');
     }
 
     /** Requests no admin has answered yet: these ring the alarm. */

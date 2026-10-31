@@ -150,6 +150,7 @@ Route::middleware([EnsureAdmin::class, AuthenticateSession::class])->prefix('adm
     Route::get('/locations', [LocationController::class, 'index'])->name('locations.index');
     Route::patch('/locations/{location}/status', [LocationController::class, 'updateStatus'])->name('locations.status');
     Route::get('/emergencies', [EmergencyAlertController::class, 'index'])->name('emergencies.index');
+    Route::get('/sos-pins', [SosRequestController::class, 'mapPins'])->name('sos-pins.index');
 
     // profile
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
@@ -195,6 +196,7 @@ Route::middleware([EnsureAdmin::class, AuthenticateSession::class])->prefix('adm
         Route::get('/sos', [SosRequestController::class, 'index'])->name('sos.index');
         Route::get('/sos/{sos}', [SosRequestController::class, 'show'])->name('sos.show');
         Route::patch('/sos/{sos}/status', [SosRequestController::class, 'updateStatus'])->name('sos.status');
+        Route::get('/sos/{sos}/gobikers', [SosRequestController::class, 'gobikers'])->name('sos.gobikers');
         Route::delete('/sos/{sos}', [SosRequestController::class, 'destroy'])->name('sos.destroy');
 
         // patients

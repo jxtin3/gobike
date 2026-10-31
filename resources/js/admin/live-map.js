@@ -7,6 +7,15 @@
     const COLORS = { active: '#16a34a', responding: '#eab308', emergency: '#dc2626', offline: '#94a3b8' };
     const LABELS = { active: 'Active', responding: 'Responding', emergency: 'Emergency', offline: 'Offline' };
     const RANK = { emergency: 0, responding: 1, active: 2, offline: 3 };
+    // Residents' SOS requests: red when sent, yellow once a GoBiker is responding, green when resolved.
+    const section = mapEl.closest('[data-sos-url]');
+    const SOS_URL = section?.dataset.sosUrl;
+    const SOS_STATUS_URL = section?.dataset.sosStatusUrl;
+    const SOS_GOBIKERS_URL = section?.dataset.sosGobikersUrl;
+    const SOS_COLORS = { sent: '#dc2626', responding: '#eab308', resolved: '#16a34a' };
+    const SOS_LABELS = { sent: 'SOS: waiting', responding: 'SOS: responding', resolved: 'SOS: resolved' };
+    // The swatch classes carry the colour; the pin keeps pulsing until someone has resolved it.
+    const SOS_CLASS = { sent: 's-sent', responding: 's-sos-responding', resolved: 's-sos-resolved' };
 
     const $ = (id) => document.getElementById(id);
     const els = {
@@ -24,6 +33,7 @@
     }).addTo(map);
 
     const markers = new Map();
+    const sosMarkers = new Map();
     let riders = [];
     let loaded = false;
     let timer = null;
@@ -162,6 +172,164 @@
         if (loaded) setOverlay(riders.length ? 'none' : 'empty');
     }
 
+    const initials = (name) => String(name ?? '').trim().split(/\s+/).filter(Boolean)
+        .slice(0, 2).map((part) => part[0].toUpperCase()).join('') || '?';
+
+    /* Who is on their way, so the admin can see at a glance that someone is actually going. */
+    function responderChip(p) {
+        if (!p.assigned_gobiker) return '';
+        const where = p.assigned_gobiker_barangay ? ` · ${esc(p.assigned_gobiker_barangay)}` : '';
+
+        return `<div class="sos-responder">
+            <span class="avatar" aria-hidden="true">${esc(initials(p.assigned_gobiker))}</span>
+            <span class="sos-responder-main">
+                <b>${esc(p.assigned_gobiker)}</b>
+                <small><em class="s-text s-sos-responding">Responding</em>${where}</small>
+            </span>
+        </div>`;
+    }
+
+    /* The barangay filter and the GoBiker list; both are filled in once the popup opens. */
+    function assignBlock(p, action, label) {
+        return `<div class="sos-assign">
+            <label>Barangay
+                <select class="sos-barangay" data-sos-barangay="${esc(p.id)}"><option value="">Loading…</option></select>
+            </label>
+            <label>Send a GoBiker
+                <select class="sos-gobiker" data-sos-gobikers="${esc(p.id)}"><option value="">Loading GoBikers…</option></select>
+            </label>
+            <button type="button" class="btn btn-sm gb-act gb-act-resp" data-sos-action="${esc(action)}" data-sos="${esc(p.id)}">${esc(label)}</button>
+        </div>`;
+    }
+
+    function sosPopup(p) {
+        const mobile = p.mobile ? `<a href="tel:${esc(p.mobile)}">${esc(p.mobile)}</a>` : 'Not provided';
+        const actions = p.status === 'sent'
+            ? assignBlock(p, 'responding', 'Responding')
+            // Already being answered: the admin can still hand it to someone nearer.
+            : p.status === 'responding' ? assignBlock(p, 'responding', 'Send another GoBiker') : '';
+        const handler = p.status === 'resolved'
+            ? `<dt>Resolved by</dt><dd>${esc(p.resolved_by || 'Unknown')}</dd>`
+            : '';
+
+        return `<div class="gb-pop">
+            <strong>${esc(p.resident)} <em class="s-text" style="color: ${SOS_COLORS[p.status] || SOS_COLORS.sent}">${esc(SOS_LABELS[p.status] || p.status)}</em></strong>
+            <dl>
+                <dt>Mobile</dt><dd>${mobile}</dd>
+                <dt>Barangay</dt><dd>${esc(p.barangay || '')}</dd>
+                <dt>Address</dt><dd>${esc(p.address || 'Not given')}</dd>
+                <dt>Landmark</dt><dd>${esc(p.landmark || 'Not given')}</dd>
+                ${p.description ? `<dt>Details</dt><dd>${esc(p.description)}</dd>` : ''}
+                <dt>Sent</dt><dd>${esc(ago(p.created_at))}</dd>
+                ${handler}
+            </dl>
+            ${p.status === 'responding' ? responderChip(p) : ''}
+            ${actions}
+        </div>`;
+    }
+
+    /* A div marker, not a canvas circle: only an element in the page can be made to pulse. */
+    function sosIcon(status) {
+        return L.divIcon({
+            className: 'sos-pin-wrap',
+            html: `<span class="sos-pin ${SOS_CLASS[status] || SOS_CLASS.sent}"></span>`,
+            iconSize: [28, 28],
+            iconAnchor: [14, 14],
+            popupAnchor: [0, -14],
+        });
+    }
+
+    function renderSos(pins) {
+        const ids = new Set(pins.map((p) => String(p.id)));
+        pins.forEach((p) => {
+            const id = String(p.id);
+            // Rebuild the popup only when something changed, so a half-picked GoBiker isn't lost.
+            const key = `${p.status}|${p.assigned_gobiker}|${p.resolved_by}`;
+            let marker = sosMarkers.get(id);
+            if (!marker) {
+                marker = L.marker([p.latitude, p.longitude], {
+                    icon: sosIcon(p.status),
+                    // Always above the GoBiker dots: an emergency must never end up underneath one.
+                    zIndexOffset: 1000,
+                    keyboard: true,
+                    title: `${p.resident}: ${SOS_LABELS[p.status] || p.status}`,
+                }).addTo(map);
+                marker.bindPopup(sosPopup(p), { minWidth: 260 });
+                marker.on('popupopen', () => fillGobikers(id));
+                sosMarkers.set(id, marker);
+            } else {
+                marker.setLatLng([p.latitude, p.longitude]);
+                if (marker.sosStatus !== p.status) marker.setIcon(sosIcon(p.status));
+                if (marker.sosKey !== key) {
+                    marker.setPopupContent(sosPopup(p));
+                    // Rebuilding threw away the dropdowns: fill the new ones.
+                    if (marker.isPopupOpen()) fillGobikers(id);
+                }
+            }
+            marker.sosStatus = p.status;
+            marker.sosKey = key;
+        });
+        sosMarkers.forEach((marker, id) => {
+            if (!ids.has(id)) { map.removeLayer(marker); sosMarkers.delete(id); }
+        });
+    }
+
+    async function loadSos() {
+        if (!SOS_URL) return;
+        try {
+            const res = await fetch(SOS_URL, {
+                headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                credentials: 'same-origin',
+            });
+            if (res.ok) renderSos(await res.json());
+        } catch {
+            // The GoBiker layer shows the connection error; SOS pins catch up on the next refresh.
+        }
+    }
+
+    /* "Juan Dela Cruz · Poblacion · 1.2 km · online" — enough to pick whoever is really nearest. */
+    function gobikerLabel(g) {
+        const bits = [g.barangay, Number.isFinite(g.distance_km) ? `${g.distance_km} km` : null, g.online ? 'online' : 'offline'];
+
+        return `${g.name} · ${bits.filter(Boolean).join(' · ')}`;
+    }
+
+    function fillBarangays(id, data, chosen) {
+        const select = document.querySelector(`[data-sos-barangay="${CSS.escape(id)}"]`);
+        if (!select) return;
+        const selected = chosen ?? data.barangay ?? 'all';
+        select.innerHTML = '<option value="all">All barangays</option>'
+            + (data.barangays ?? []).map((n) => `<option value="${esc(n)}">${esc(n)}</option>`).join('');
+        select.value = [...select.options].some((o) => o.value === selected) ? selected : 'all';
+    }
+
+    /**
+     * The GoBikers the admin may send. Called when the popup opens (no barangay: the server
+     * defaults to the emergency's own) and again whenever the admin changes the barangay.
+     */
+    async function fillGobikers(id, barangay) {
+        const select = document.querySelector(`[data-sos-gobikers="${CSS.escape(id)}"]`);
+        if (!select || (barangay === undefined && select.dataset.loaded)) return;
+        select.innerHTML = '<option value="">Loading GoBikers…</option>';
+        const base = SOS_GOBIKERS_URL.replace('__ID__', encodeURIComponent(id));
+        const url = barangay === undefined ? base : `${base}?barangay=${encodeURIComponent(barangay)}`;
+        try {
+            const res = await fetch(url, {
+                headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                credentials: 'same-origin',
+            });
+            if (!res.ok) throw new Error(String(res.status));
+            const data = await res.json();
+            fillBarangays(id, data, barangay);
+            select.innerHTML = data.gobikers.length
+                ? '<option value="">Choose a GoBiker</option>' + data.gobikers.map((g) => `<option value="${esc(g.id)}">${esc(gobikerLabel(g))}</option>`).join('')
+                : `<option value="">No GoBiker covers ${esc(barangay === 'all' ? 'the town' : (barangay ?? data.barangay ?? 'this barangay'))}</option>`;
+            select.dataset.loaded = '1';
+        } catch {
+            select.innerHTML = '<option value="">Could not load GoBikers</option>';
+        }
+    }
+
     async function load() {
         controller?.abort();
         controller = new AbortController();
@@ -181,6 +349,7 @@
             els.updated.textContent = `Updated ${time(new Date().toISOString(), { hour: '2-digit', minute: '2-digit', second: '2-digit' })}`;
             syncBarangays();
             render();
+            await loadSos();
             if (pendingFocus !== null) {
                 focusLocation(pendingFocus);
                 pendingFocus = null;
@@ -267,6 +436,48 @@
     document.addEventListener('gobike:emergencies-changed', (e) => {
         if (e.detail?.source !== 'map') load();
     });
+
+    /* The admin picked another barangay: reload the GoBikers from there. */
+    document.addEventListener('change', (e) => {
+        const select = e.target.closest('.gb-pop [data-sos-barangay]');
+        if (select) fillGobikers(select.dataset.sosBarangay, select.value);
+    });
+
+    /* Resident SOS popup: send a GoBiker and mark it as responding. Only that GoBiker resolves it. */
+    document.addEventListener('click', async (e) => {
+        const btn = e.target.closest('.gb-pop [data-sos-action]');
+        if (!btn) return;
+        const id = btn.dataset.sos;
+        const gobikerId = document.querySelector(`[data-sos-gobikers="${CSS.escape(id)}"]`)?.value;
+        if (!gobikerId) { notice('Choose the GoBiker who will respond first.'); return; }
+
+        btn.disabled = true;
+        try {
+            const res = await fetch(SOS_STATUS_URL.replace('__ID__', encodeURIComponent(id)), {
+                method: 'PATCH',
+                headers: {
+                    Accept: 'application/json',
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content ?? '',
+                },
+                credentials: 'same-origin',
+                body: JSON.stringify({ status: 'responding', gobiker_id: Number(gobikerId) }),
+            });
+            const body = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                notice(body.message || 'Could not update the SOS. Please try again.');
+                btn.disabled = false;
+                return;
+            }
+            window.adminToast?.({ text: `Marked as responding. ${body.assigned_gobiker || 'The GoBiker'} was notified.` });
+            document.dispatchEvent(new CustomEvent('gobike:emergencies-changed', { detail: { source: 'map' } }));
+            await loadSos();
+        } catch {
+            notice('Could not update the SOS. Please try again.');
+            btn.disabled = false;
+        }
+    }, true);
 
     /* Admin actions inside the popup: "Responding" / "Resolve" */
     document.addEventListener('click', async (e) => {

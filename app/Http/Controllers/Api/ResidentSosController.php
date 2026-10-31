@@ -21,6 +21,7 @@ class ResidentSosController extends Controller
     public function index(Request $request): JsonResponse
     {
         $requests = SosRequest::where('user_id', $request->user()->id)
+            ->with('assignedGobiker:id,name,barangay', 'resolvedBy:id,name,barangay')
             ->whereNull('resident_hidden_at') // cleared from the resident's history
             ->latest()
             ->latest('id')
@@ -119,6 +120,10 @@ class ResidentSosController extends Controller
 
     private function payload(SosRequest $sos): array
     {
+        // Who is coming, or who came. The resident is told this in a push too, but a push can be
+        // missed or switched off, so the name belongs in the request itself.
+        $responder = $sos->resolvedBy ?? $sos->assignedGobiker;
+
         return [
             'id' => $sos->id,
             'status' => $sos->status,
@@ -135,6 +140,10 @@ class ResidentSosController extends Controller
             'responded_at' => $sos->responded_at?->toIso8601String(),
             'resolved_at' => $sos->resolved_at?->toIso8601String(),
             'resolved_by_resident' => (bool) $sos->resolved_by_resident,
+            'responder' => $responder ? [
+                'name' => $responder->name,
+                'barangay' => $responder->barangay,
+            ] : null,
         ];
     }
 }

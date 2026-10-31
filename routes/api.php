@@ -4,11 +4,14 @@ use App\Http\Controllers\Api\GobikerAnnouncementController;
 use App\Http\Controllers\Api\GobikerAppointmentController;
 use App\Http\Controllers\Api\GobikerController;
 use App\Http\Controllers\Api\GobikerLocationController;
+use App\Http\Controllers\Api\GobikerMapController;
 use App\Http\Controllers\Api\GobikerProfileController;
 use App\Http\Controllers\Api\MobileAuthController;
 use App\Http\Controllers\Api\PatientController;
 use App\Http\Controllers\Api\ResidentAppointmentController;
 use App\Http\Controllers\Api\ResidentController;
+use App\Http\Controllers\Api\ResidentFeedbackController;
+use App\Http\Controllers\Api\ResidentMapController;
 use App\Http\Controllers\Api\ResidentSosController;
 use Illuminate\Support\Facades\Route;
 
@@ -98,6 +101,11 @@ Route::middleware(['auth:sanctum', 'gobiker', 'throttle:mobile'])->prefix('gobik
     Route::post('/appointments/{appointment}/decline', [GobikerAppointmentController::class, 'decline'])->name('api.gobiker.appointments.decline');
     Route::post('/appointments/{appointment}/complete', [GobikerAppointmentController::class, 'complete'])->name('api.gobiker.appointments.complete');
 
+    // Live map and the residents' SOS requests the admin assigned to this GoBiker
+    Route::get('/map', [GobikerMapController::class, 'index'])->name('api.gobiker.map');
+    Route::get('/sos', [GobikerMapController::class, 'sos'])->name('api.gobiker.sos.index');
+    Route::post('/sos/{sos}/resolve', [GobikerMapController::class, 'resolve'])->name('api.gobiker.sos.resolve');
+
 });
 
 // Residents (role "User")
@@ -116,4 +124,11 @@ Route::middleware(['auth:sanctum', 'resident', 'throttle:mobile'])->prefix('resi
     Route::get('/appointments', [ResidentAppointmentController::class, 'index'])->name('api.resident.appointments.index');
     Route::post('/appointments', [ResidentAppointmentController::class, 'store'])->middleware('throttle:5,1')->name('api.resident.appointments.store');
     Route::post('/appointments/{appointment}/cancel', [ResidentAppointmentController::class, 'cancel'])->name('api.resident.appointments.cancel');
+
+    // Live map: the GoBikers nearby. The resident's own position stays on their phone.
+    Route::get('/map', [ResidentMapController::class, 'map'])->name('api.resident.map');
+
+    // Rating the GoBiker after an SOS or a check-up
+    Route::get('/feedback/pending', [ResidentFeedbackController::class, 'pending'])->name('api.resident.feedback.pending');
+    Route::post('/feedback', [ResidentFeedbackController::class, 'store'])->middleware('throttle:10,1')->name('api.resident.feedback.store');
 });
