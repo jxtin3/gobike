@@ -4,6 +4,7 @@
 @section('subheading', 'All donation submissions received through the website.')
 
 @use('App\Models\Donation')
+@use('App\Support\Currency')
 
 @section('content')
 @php
@@ -78,7 +79,9 @@
             @forelse ($donations as $donation)
                 @php
                     $monthly = $donation->isMonthlySubscription();
-                    $amount = '$'.number_format($donation->amount_usd, 2);
+                    // Shown in the donor's own currency; USD equivalent alongside for comparison.
+                    $amount = Currency::format((float) ($donation->amount ?? $donation->amount_usd), $donation->currency);
+                    $amountUsd = '$'.number_format($donation->amount_usd, 2);
                 @endphp
                 <tr class="is-clickable"
                     data-dialog="#donationDialog"
@@ -87,9 +90,10 @@
                     data-phone="{{ $donation->phone }}"
                     data-donor-type="{{ ucfirst($donation->donor_type) }}"
                     data-org="{{ $donation->org_name }}"
-                    data-amount-usd="{{ $amount }}"
+                    data-amount="{{ $amount }}"
+                    data-amount-usd="{{ $amountUsd }}"
                     data-amount-php="{{ $donation->amount_php ? '₱'.number_format($donation->amount_php, 2) : '' }}"
-                    data-fee="${{ number_format($donation->platform_fee_usd, 2) }}"
+                    data-fee="{{ Currency::format((float) ($donation->amount === null ? $donation->platform_fee_usd : $donation->platform_fee), $donation->currency) }}"
                     data-method="{{ $donation->method_label }}"
                     data-frequency="{{ $donation->frequency_label }}"
                     data-status="{{ ucfirst($donation->status) }}"
@@ -101,7 +105,7 @@
                     data-monthly="{{ $monthly ? '1' : '0' }}"
                     data-subscription="{{ $donation->subscription_label }}"
                     data-subscription-pill="{{ $donation->subscription_pill }}"
-                    data-payments="{{ $donation->payments_count }} ({{ '$'.number_format((float) $donation->payments_sum_amount, 2) }} incl. fees)"
+                    data-payments="{{ $donation->payments_count }} ({{ Currency::format((float) $donation->payments_sum_amount, $donation->currency) }} incl. fees)"
                     data-can-cancel="{{ $donation->canCancelSubscription() ? '1' : '0' }}"
                     data-cancel-url="{{ $donation->canCancelSubscription() ? route('admin.operations.donations.cancel-subscription', $donation) : '' }}"
                     data-delete-url="{{ route('admin.operations.donations.destroy', $donation) }}"
@@ -117,7 +121,10 @@
                     </td>
                     <td class="num">
                         <b>{{ $amount }}</b>
-                        @if ($donation->amount_php)
+                        @if ($donation->currency !== 'USD')
+                            <small class="sub-line">≈ {{ $amountUsd }}</small>
+                        @endif
+                        @if ($donation->amount_php && $donation->currency !== 'PHP')
                             <small class="sub-line">₱{{ number_format($donation->amount_php, 2) }}</small>
                         @endif
                     </td>
@@ -161,7 +168,8 @@
     <x-slot:sub><span data-pill-field="status"></span> <span data-field="reference"></span></x-slot:sub>
 
     <dl class="dlg-meta">
-        <div><dt>Amount (USD)</dt><dd data-field="amountUsd"></dd></div>
+        <div><dt>Amount</dt><dd data-field="amount"></dd></div>
+        <div><dt>USD equivalent</dt><dd data-field="amountUsd"></dd></div>
         <div><dt>Amount (PHP)</dt><dd data-field="amountPhp"></dd></div>
         <div><dt>Platform fee</dt><dd data-field="fee"></dd></div>
         <div><dt>Method</dt><dd data-field="method"></dd></div>

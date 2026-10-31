@@ -1,6 +1,9 @@
 <?php
 
 namespace App\Services;
+use App\Models\PaypalDonationPlan;
+use App\Support\Currency;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use App\Models\Donation;
@@ -40,8 +43,8 @@ class PayPalDonationService
                     'reference_id' => $donation->uuid,
                     'description' => 'Go Bike Donation',
                     'amount' => [
-                        'currency_code' => 'USD',
-                        'value' => number_format($donation->total_usd, 2, '.', ''),
+                        'currency_code' => $donation->currency,
+                        'value' => Currency::toDecimalString($donation->total, $donation->currency),
                     ],
                 ],
             ],
@@ -85,11 +88,7 @@ class PayPalDonationService
     {
         $this->ensureConfigured();
 
-        $planId = config('donation.paypal.plan_id');
-
-        if (! $planId) {
-            throw new RuntimeException('PayPal donation plan is not configured. Run `php artisan paypal:setup-donation-plan` and add PAYPAL_DONATION_PLAN_ID to your .env file.');
-        }
+        $planId = $this->planIdFor($donation->currency);
 
         $response = Http::withToken($this->getAccessToken())
             ->acceptJson()
@@ -109,8 +108,8 @@ class PayPalDonationService
                             'sequence' => 1,
                             'pricing_scheme' => [
                                 'fixed_price' => [
-                                    'value' => number_format($donation->total_usd, 2, '.', ''),
-                                    'currency_code' => 'USD',
+                                    'value' => Currency::toDecimalString($donation->total, $donation->currency),
+                                    'currency_code' => $donation->currency,
                                 ],
                             ],
                         ],
@@ -148,6 +147,99 @@ class PayPalDonationService
             'approval_url' => $approvalUrl,
             'subscription_id' => $data['id'],
         ];
+    }
+
+    /**
+     * The PayPal billing plan for monthly donations in this currency. A subscription can only
+     * override a plan's price in the plan's own currency, so each currency needs its own plan.
+     * Plans are created the first time they're needed and saved per PayPal mode, so switching
+     * from sandbox to live never reuses a sandbox plan.
+     */
+    public function planIdFor(string $currency): string
+    {
+        $mode = (string) config('paypal.mode');
+        $existing = fn () => PaypalDonationPlan::where('mode', $mode)->where('currency', $currency)->value('plan_id');
+
+        if ($planId = $existing()) {
+            return $planId;
+        }
+
+        // Two donors starting at once must not create two plans.
+        return Cache::lock("paypal-donation-plan:{$mode}:{$currency}", 30)->block(20, function () use ($existing, $mode, $currency) {
+            if ($planId = $existing()) {
+                return $planId;
+            }
+
+            $productId = $this->productId($mode);
+
+            $response = Http::withToken($this->getAccessToken())
+                ->acceptJson()
+                ->post("{$this->apiBaseUrl()}/v1/billing/plans", [
+                    'product_id' => $productId,
+                    'name' => "Go Bike Monthly Donation ({$currency})",
+                    'description' => 'Charges the donor-selected amount every month',
+                    'billing_cycles' => [
+                        [
+                            'frequency' => ['interval_unit' => 'MONTH', 'interval_count' => 1],
+                            'tenure_type' => 'REGULAR',
+                            'sequence' => 1,
+                            'total_cycles' => 0, // runs until cancelled
+                            'pricing_scheme' => [
+                                'fixed_price' => [
+                                    // Placeholder; each subscription sets the donor's amount.
+                                    'value' => Currency::toDecimalString(1, $currency),
+                                    'currency_code' => $currency,
+                                ],
+                            ],
+                        ],
+                    ],
+                    'payment_preferences' => [
+                        'auto_bill_outstanding' => true,
+                        'setup_fee_failure_action' => 'CONTINUE',
+                        'payment_failure_threshold' => 3,
+                    ],
+                ]);
+
+            if (! $response->successful()) {
+                Log::error('PayPal plan creation failed', ['currency' => $currency, 'response' => $response->json()]);
+
+                throw new RuntimeException("PayPal plan creation failed for {$currency}: ".($response->json('message') ?? $response->body()));
+            }
+
+            return PaypalDonationPlan::create([
+                'mode' => $mode,
+                'currency' => $currency,
+                'product_id' => $productId,
+                'plan_id' => $response->json('id'),
+            ])->plan_id;
+        });
+    }
+
+    /** The PayPal catalog product the donation plans belong to: one per mode, created once. */
+    private function productId(string $mode): string
+    {
+        $productId = config('donation.paypal.product_id')
+            ?: PaypalDonationPlan::where('mode', $mode)->value('product_id');
+
+        if ($productId) {
+            return $productId;
+        }
+
+        $response = Http::withToken($this->getAccessToken())
+            ->acceptJson()
+            ->post("{$this->apiBaseUrl()}/v1/catalogs/products", [
+                'name' => 'Go Bike Monthly Donation',
+                'description' => 'Recurring monthly donation to Go Bike',
+                'type' => 'SERVICE',
+            ]);
+
+        if (! $response->successful()) {
+            Log::error('PayPal product creation failed', ['response' => $response->json()]);
+
+            throw new RuntimeException('PayPal product creation failed: '.($response->json('message') ?? $response->body()));
+        }
+
+        return $response->json('id');
     }
 
     /** Names the variables for the current mode (sandbox or live) so the error points at the right ones. */

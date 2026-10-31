@@ -98,8 +98,8 @@ class PayPalWebhookController extends Controller
             ['gateway_payment_id' => $saleId],
             [
                 'gateway' => 'paypal',
-                'amount' => $resource['amount']['total'] ?? $donation->total_usd,
-                'currency' => $resource['amount']['currency'] ?? 'USD',
+                'amount' => $resource['amount']['total'] ?? $donation->total,
+                'currency' => $resource['amount']['currency'] ?? $donation->currency,
                 'paid_at' => isset($resource['create_time']) ? Carbon::parse($resource['create_time']) : now(),
             ],
         );

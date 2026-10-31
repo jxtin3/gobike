@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\Currency;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
@@ -19,6 +20,7 @@ class Donation extends Model
         'city',
         'postcode',
         'state', 'country', 'other_country',
+        'currency', 'amount', 'platform_fee',
         'amount_usd', 'amount_php',
         'platform_fee_usd',
         'frequency',
@@ -28,6 +30,10 @@ class Donation extends Model
         'subscription_status', 'cancelled_at',
         'paymongo_session_id', 'paymongo_payment_id',
         'receipt_email',
+    ];
+
+    protected $attributes = [
+        'currency' => 'USD',
     ];
 
     /** Readable labels for a monthly donation's PayPal subscription state. */
@@ -55,6 +61,8 @@ class Donation extends Model
     protected function casts(): array
     {
         return [
+            'amount' => 'decimal:2',
+            'platform_fee' => 'decimal:2',
             'amount_usd' => 'decimal:2',
             'amount_php' => 'decimal:2',
             'platform_fee_usd' => 'decimal:2',
@@ -111,9 +119,23 @@ class Donation extends Model
         return 'uuid';
     }
 
+    /** USD equivalent of what the donor paid, for admin totals. */
     public function getTotalUsdAttribute(): float
     {
         return (float) $this->amount_usd + (float) $this->platform_fee_usd;
+    }
+
+    /** What the donor pays, in their own currency. Older donations without `amount` were in USD. */
+    public function getTotalAttribute(): float
+    {
+        return $this->amount === null
+            ? $this->total_usd
+            : (float) $this->amount + (float) $this->platform_fee;
+    }
+
+    public function getFormattedTotalAttribute(): string
+    {
+        return Currency::format($this->total, $this->currency ?? 'USD');
     }
 
     public function getStatusPillAttribute(): string

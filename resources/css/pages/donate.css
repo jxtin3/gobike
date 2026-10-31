@@ -248,6 +248,40 @@
     color: #6b7280;
 }
 
+/* "This donation is in [USD ▾]" */
+.donate-currency {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+}
+
+.donate-currency__select {
+    appearance: none;
+    -webkit-appearance: none;
+    min-height: 32px;
+    padding: 0.3rem 1.9rem 0.3rem 0.6rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0;
+    background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230D1B2A' stroke-width='2.5'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='m19.5 8.25-7.5 7.5-7.5-7.5'/%3E%3C/svg%3E") no-repeat right 0.55rem center / 0.75rem;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #0D1B2A;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: border-color 0.18s;
+}
+
+.donate-currency__select:hover {
+    border-color: #0D1B2A;
+}
+
+.donate-currency__select:focus-visible {
+    outline: 2px solid #0D1B2A;
+    outline-offset: 2px;
+}
+
 
 /* -- Frequency / donor toggle -- */
 .donate-freq {
@@ -453,6 +487,18 @@
 
 .donate-custom:focus-within {
     border-color: #0D1B2A;
+}
+
+.donate-custom.has-error {
+    border-color: #DC2626;
+    margin-bottom: 0.4rem;
+}
+
+.donate-custom__error {
+    margin: 0 1.75rem 1rem;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #DC2626;
 }
 
 .donate-custom__symbol {
@@ -903,6 +949,12 @@
 
     .donate-amounts {
         grid-template-columns: repeat(2, 1fr);
+    }
+
+    /* 16px stops iOS zooming in when the dropdown is tapped */
+    .donate-currency__select {
+        font-size: 1rem;
+        min-height: 40px;
     }
 
     .donate-form__row {

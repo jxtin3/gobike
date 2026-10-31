@@ -5,7 +5,9 @@ namespace App\Http\Controllers;
 use App\Http\Requests\CheckoutDonationRequest;
 use App\Models\Donation;
 use App\Services\PayMongoDonationService;
+use App\Services\ExchangeRateService;
 use App\Services\PayPalDonationService;
+use App\Support\Currency;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -25,11 +27,12 @@ class DonationController extends Controller
         CheckoutDonationRequest $request,
         PayPalDonationService $paypal,
         PayMongoDonationService $paymongo,
+        ExchangeRateService $rates,
     ): JsonResponse {
         $validated = $request->validated();
-        $amountUsd = round((float) $validated['amount'], 2);
-        $platformFee = round((float) ($validated['platform_fee'] ?? 0), 2);
-        $usdToPhp = (float) config('donation.usd_to_php');
+        $currency = $validated['currency'];
+        $amount = Currency::round((float) $validated['amount'], $currency);
+        $platformFee = Currency::round((float) ($validated['platform_fee'] ?? 0), $currency);
 
         $donation = Donation::create([
             'donor_type' => $validated['donor_type'],
@@ -45,9 +48,13 @@ class DonationController extends Controller
             'state' => $validated['state'],
             'country' => $validated['country'],
             'other_country' => $validated['other_country'] ?? null,
-            'amount_usd' => $amountUsd,
-            'amount_php' => round(($amountUsd + $platformFee) * $usdToPhp, 2),
-            'platform_fee_usd' => $platformFee,
+            'currency' => $currency,
+            'amount' => $amount,
+            'platform_fee' => $platformFee,
+            // USD equivalents for admin totals, and the PHP amount GCash / online banking charge.
+            'amount_usd' => round($rates->convert($amount, $currency, 'USD'), 2),
+            'platform_fee_usd' => round($rates->convert($platformFee, $currency, 'USD'), 2),
+            'amount_php' => round($rates->convert($amount + $platformFee, $currency, 'PHP'), 2),
             'frequency' => $validated['frequency'],
             'payment_method' => $validated['payment_method'],
             'status' => 'pending',

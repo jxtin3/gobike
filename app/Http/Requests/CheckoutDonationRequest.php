@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Support\Currency;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -17,9 +18,37 @@ class CheckoutDonationRequest extends FormRequest
      */
     public function rules(): array
     {
+        $currency = Currency::supports($this->input('currency')) ? $this->input('currency') : null;
+
         return [
-            'amount' => ['required', 'numeric', 'min:1', 'max:10000'],
-            'platform_fee' => ['nullable', 'numeric', 'min:0', 'max:1000'],
+            'currency' => ['required', Rule::in(Currency::codes())],
+            'amount' => [
+                'required',
+                'numeric',
+                'gt:0',
+                'decimal:0,'.($currency ? Currency::decimals($currency) : 2),
+                function (string $attribute, mixed $value, \Closure $fail) use ($currency) {
+                    if (! $currency || ! is_numeric($value)) {
+                        return;
+                    }
+
+                    [$min, $max] = Currency::limits($currency);
+
+                    if ((float) $value < $min || (float) $value > $max) {
+                        $fail('Please enter an amount between '.Currency::format($min, $currency, 0).' and '.Currency::format($max, $currency, 0).'.');
+                    }
+                },
+            ],
+            'platform_fee' => [
+                'nullable',
+                'numeric',
+                function (string $attribute, mixed $value, \Closure $fail) use ($currency) {
+                    // Either nothing, or exactly the fee shown for this currency.
+                    if ($currency && (float) $value != 0 && abs((float) $value - Currency::platformFee($currency)) > 0.001) {
+                        $fail('The platform fee is not valid.');
+                    }
+                },
+            ],
             'frequency' => ['required', Rule::in(['once', 'monthly'])],
             'payment_method' => [
                 'required',

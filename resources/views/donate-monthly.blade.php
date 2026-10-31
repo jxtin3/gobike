@@ -3,7 +3,7 @@
     Linked from the thank-you screen. Cancelling stops all future PayPal charges.
 --}}
 @php
-    $amount = '$'.number_format($donation->total_usd, 2);
+    $amount = $donation->formatted_total;
     $status = $donation->subscription_status ?? 'active';
     $badgeClass = match ($status) {
         'active' => 'is-ok',
@@ -53,7 +53,7 @@
 
             <dl class="gbi-summary">
                 <div><dt>Reference</dt><dd>{{ $donation->reference }}</dd></div>
-                <div><dt>Monthly amount</dt><dd>{{ $amount }} USD</dd></div>
+                <div><dt>Monthly amount</dt><dd>{{ $amount }} {{ $donation->currency }}</dd></div>
                 <div><dt>Started</dt><dd>{{ $donation->created_at->format('F j, Y') }}</dd></div>
                 @if ($nextChargeAt)
                     <div><dt>Next donation</dt><dd>{{ $nextChargeAt->format('F j, Y') }}</dd></div>

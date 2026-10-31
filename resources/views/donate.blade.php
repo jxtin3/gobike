@@ -3,11 +3,14 @@
     description="Support the Go Bike Project with a one-time or monthly donation. Your gift helps youth volunteers bring health, safety and emergency response to communities across Pangasinan."
 >
 
+@inject('exchangeRates', 'App\Services\ExchangeRateService')
+
 {{-- Full-page donate wrapper --}}
 <div
     class="donate-page"
     x-data="donateApp({
-        usdToPhp: {{ config('donation.usd_to_php') }},
+        currencies: @js(config('donation.currencies')),
+        rates: @js($exchangeRates->rates()),
         checkoutUrl: '{{ route('donate.checkout') }}',
         paidDonation: @json($paidDonation ?? null),
         cancelledDonation: @json($cancelledDonation ?? null),
@@ -109,7 +112,19 @@
                 <div x-show="step === 1" x-transition:enter="donate-step-enter" x-transition:enter-start="donate-step-enter-start" x-transition:enter-end="donate-step-enter-end">
                     <div class="donate-card__header">
                         <h2 class="donate-card__title">I'd like to make this donation</h2>
-                        <p class="donate-card__sub">This donation is in USD</p>
+                        <p class="donate-card__sub donate-currency">
+                            <label for="donate-currency">This donation is in</label>
+                            <select
+                                id="donate-currency"
+                                class="donate-currency__select"
+                                :value="currency"
+                                @change="setCurrency($event.target.value)"
+                            >
+                                @foreach (config('donation.currencies') as $code => $currency)
+                                    <option value="{{ $code }}">{{ $code }} — {{ $currency['name'] }}</option>
+                                @endforeach
+                            </select>
+                        </p>
                     </div>
 
                     {{-- Once / Monthly toggle --}}
@@ -141,31 +156,36 @@
                                 class="donate-amount__btn"
                                 :class="{ 'is-active': amount === amt && !customMode }"
                                 @click="selectPreset(amt)"
-                                x-text="'$' + amt + (freq === 'monthly' ? '/mo' : '')"
+                                x-text="format(amt, 0) + (freq === 'monthly' ? '/mo' : '')"
                             ></button>
                         </template>
                     </div>
 
                     {{-- Custom amount --}}
-                    <div class="donate-custom">
-                        <span class="donate-custom__symbol">$</span>
+                    <div class="donate-custom" :class="{ 'has-error': amountError }">
+                        <span class="donate-custom__symbol" x-text="currencyInfo.symbol" aria-hidden="true"></span>
                         <input
                             id="custom-amount"
                             type="number"
                             min="1"
+                            :step="currencyInfo.decimals === 0 ? 1 : 0.01"
+                            inputmode="decimal"
                             placeholder="Other Amount"
+                            :aria-label="'Other amount in ' + currency"
+                            aria-describedby="custom-amount-error"
                             class="donate-custom__input"
                             x-model="customAmount"
                             @focus="customMode = true"
                             @input="customMode = true; amount = parseFloat(customAmount) || 0"
                         />
                     </div>
+                    <p id="custom-amount-error" class="donate-custom__error" x-show="amountError" x-text="amountError" role="alert"></p>
 
                     <button
                         id="donate-step1-btn"
                         class="donate-cta"
                         @click="goStep2()"
-                        :disabled="effectiveAmount <= 0"
+                        :disabled="effectiveAmount <= 0 || !!amountError"
                     >Donate</button>
 
                     <p class="donate-help">
@@ -179,7 +199,7 @@
                 <div x-show="step === 2" x-transition:enter="donate-step-enter" x-transition:enter-start="donate-step-enter-start" x-transition:enter-end="donate-step-enter-end">
                     <div class="donate-card__header">
                         <h2 class="donate-card__title">Your Details</h2>
-                        <p class="donate-card__sub">This donation is in USD</p>
+                        <p class="donate-card__sub">This donation is in <span x-text="currency"></span></p>
                     </div>
 
                     {{-- Individual / Organization --}}
@@ -300,7 +320,7 @@
                 <div x-show="step === 3" x-transition:enter="donate-step-enter" x-transition:enter-start="donate-step-enter-start" x-transition:enter-end="donate-step-enter-end">
                     <div class="donate-card__header">
                         <h2 class="donate-card__title">Payment Details</h2>
-                        <p class="donate-card__sub">This donation is in USD</p>
+                        <p class="donate-card__sub">This donation is in <span x-text="currency"></span></p>
                     </div>
 
                     {{-- Secure badge --}}
@@ -350,19 +370,19 @@
                             <div class="donate-pay-summary">
                                 <div class="donate-pay-summary__row">
                                     <span>Donation</span>
-                                    <span x-text="'$' + effectiveAmount.toFixed(2)"></span>
+                                    <span x-text="format(effectiveAmount)"></span>
                                 </div>
-                                <div class="donate-pay-summary__row" x-show="parseFloat(platformFee) > 0">
+                                <div class="donate-pay-summary__row" x-show="platformFee > 0">
                                     <span>Platform fee</span>
-                                    <span x-text="'$' + parseFloat(platformFee).toFixed(2)"></span>
+                                    <span x-text="format(platformFee)"></span>
                                 </div>
                                 <div class="donate-pay-summary__row donate-pay-summary__row--total">
-                                    <span>Total (USD)</span>
-                                    <span x-text="'$' + totalAmount.toFixed(2)"></span>
+                                    <span x-text="'Total (' + currency + ')'"></span>
+                                    <span x-text="format(totalAmount)"></span>
                                 </div>
-                                <div class="donate-pay-summary__row donate-pay-summary__row--php">
-                                    <span>Approx. in PHP</span>
-                                    <span x-text="'₱' + amountPhp.toFixed(2)"></span>
+                                <div class="donate-pay-summary__row donate-pay-summary__row--php" x-show="currency !== 'PHP'">
+                                    <span>Charged in PHP (approx.)</span>
+                                    <span x-text="formatPhp(amountPhp)"></span>
                                 </div>
                             </div>
                         </div>
@@ -378,15 +398,15 @@
                             <div class="donate-pay-summary">
                                 <div class="donate-pay-summary__row">
                                     <span>Donation</span>
-                                    <span x-text="'$' + effectiveAmount.toFixed(2)"></span>
+                                    <span x-text="format(effectiveAmount)"></span>
                                 </div>
-                                <div class="donate-pay-summary__row" x-show="parseFloat(platformFee) > 0">
+                                <div class="donate-pay-summary__row" x-show="platformFee > 0">
                                     <span>Platform fee</span>
-                                    <span x-text="'$' + parseFloat(platformFee).toFixed(2)"></span>
+                                    <span x-text="format(platformFee)"></span>
                                 </div>
                                 <div class="donate-pay-summary__row donate-pay-summary__row--total">
-                                    <span>Total (USD)</span>
-                                    <span x-text="'$' + totalAmount.toFixed(2)"></span>
+                                    <span x-text="'Total (' + currency + ')'"></span>
+                                    <span x-text="format(totalAmount)"></span>
                                 </div>
                             </div>
                         </div>
@@ -402,19 +422,19 @@
                             <div class="donate-pay-summary">
                                 <div class="donate-pay-summary__row">
                                     <span>Donation</span>
-                                    <span x-text="'$' + effectiveAmount.toFixed(2)"></span>
+                                    <span x-text="format(effectiveAmount)"></span>
                                 </div>
-                                <div class="donate-pay-summary__row" x-show="parseFloat(platformFee) > 0">
+                                <div class="donate-pay-summary__row" x-show="platformFee > 0">
                                     <span>Platform fee</span>
-                                    <span x-text="'$' + parseFloat(platformFee).toFixed(2)"></span>
+                                    <span x-text="format(platformFee)"></span>
                                 </div>
                                 <div class="donate-pay-summary__row donate-pay-summary__row--total">
-                                    <span>Total (USD)</span>
-                                    <span x-text="'$' + totalAmount.toFixed(2)"></span>
+                                    <span x-text="'Total (' + currency + ')'"></span>
+                                    <span x-text="format(totalAmount)"></span>
                                 </div>
-                                <div class="donate-pay-summary__row donate-pay-summary__row--php">
-                                    <span>Approx. in PHP</span>
-                                    <span x-text="'₱' + amountPhp.toFixed(2)"></span>
+                                <div class="donate-pay-summary__row donate-pay-summary__row--php" x-show="currency !== 'PHP'">
+                                    <span>Charged in PHP (approx.)</span>
+                                    <span x-text="formatPhp(amountPhp)"></span>
                                 </div>
                             </div>
                         </div>
@@ -426,9 +446,9 @@
                             <label class="donate-form__label" for="platform-cost">
                                 Cover platform costs
                             </label>
-                            <select id="platform-cost" class="donate-form__select" x-model="platformFee">
-                                <option value="1.88">$1.88</option> 
-                                <option value="0">I don't wish to cover platform costs</option>
+                            <select id="platform-cost" class="donate-form__select" x-model="coverFee">
+                                <option value="yes" x-text="format(currencyInfo.platform_fee)"></option>
+                                <option value="no">I don't wish to cover platform costs</option>
                             </select>
                         </div>
 
@@ -457,7 +477,7 @@
                             <span x-show="!isSubmitting">Donate with </span>
                             <!-- <span x-show="!isSubmitting" x-text="paymentMethodLabel()"></span> -->
                             <span x-show="isSubmitting">Redirecting…</span>
-                            <span x-show="!isSubmitting" x-text="'$' + totalAmount.toFixed(2) + (freq === 'monthly' ? ' / month' : '')"></span>
+                            <span x-show="!isSubmitting" x-text="format(totalAmount) + (freq === 'monthly' ? ' / month' : '')"></span>
                         </button>
                     </div>
                 </div>
@@ -471,13 +491,13 @@
                         <h2 class="donate-thankyou__title">Thank You!</h2>
                         @if ($paidDonation->isMonthlySubscription())
                             <p class="donate-thankyou__sub">
-                                Your monthly donation of <strong>${{ number_format($paidDonation->total_usd, 2) }}</strong> is set up.<br>
+                                Your monthly donation of <strong>{{ $paidDonation->formatted_total }}</strong> is set up.<br>
                                 PayPal will charge it every month until you cancel.
                             </p>
                         @else
                             <p class="donate-thankyou__sub">
-                                Your donation of <strong>${{ number_format($paidDonation->total_usd, 2) }}</strong>
-                                @if ($paidDonation->payment_method !== 'paypal' && $paidDonation->amount_php)
+                                Your donation of <strong>{{ $paidDonation->formatted_total }}</strong>
+                                @if ($paidDonation->payment_method !== 'paypal' && $paidDonation->currency !== 'PHP' && $paidDonation->amount_php)
                                     (₱{{ number_format($paidDonation->amount_php, 2) }})
                                 @endif
                                 has been received.<br>
