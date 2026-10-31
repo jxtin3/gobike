@@ -1,11 +1,14 @@
 <?php
 
+use App\Models\Announcement;
 use App\Models\Appointment;
 use App\Models\DeviceToken;
 use App\Models\Location;
+use App\Models\Patient;
 use App\Models\SosRequest;
 use App\Models\User;
 use App\Services\Push\FcmSender;
+use App\Services\Push\GoogleFcmSender;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Laravel\Sanctum\Sanctum;
@@ -98,8 +101,8 @@ it('marks a phone as just registered every time the app registers it', function 
 });
 
 it('sends to an FCM registration token or, for older app versions, an installation ID', function () {
-    expect(\App\Services\Push\GoogleFcmSender::targetField('dQw4w9WgXcQ:APA91bHPRgkF3JUikC4ENAHEeMrd41Zxv3hVZjC9KtT8OvPVGJ-hQMRKRrZuJAEcl7B338qju59zJMjw2DELjzEvxwYv7hH5Ynpc1ODQ0aT4U4OFEeco8ohsN5PjL1iC2dNtk2BAokeMCg2ZXKqpc8FXKmhX94kIxQ'))->toBe('token')
-        ->and(\App\Services\Push\GoogleFcmSender::targetField('cXyZ1234abcdEFGH5678ij'))->toBe('fid');
+    expect(GoogleFcmSender::targetField('dQw4w9WgXcQ:APA91bHPRgkF3JUikC4ENAHEeMrd41Zxv3hVZjC9KtT8OvPVGJ-hQMRKRrZuJAEcl7B338qju59zJMjw2DELjzEvxwYv7hH5Ynpc1ODQ0aT4U4OFEeco8ohsN5PjL1iC2dNtk2BAokeMCg2ZXKqpc8FXKmhX94kIxQ'))->toBe('token')
+        ->and(GoogleFcmSender::targetField('cXyZ1234abcdEFGH5678ij'))->toBe('fid');
 });
 
 // ---------------------------------------------------------------- residents
@@ -111,7 +114,8 @@ it('tells the resident when the admin answers their SOS', function () {
     $this->patchJson(route('admin.operations.sos.status', $sos), ['status' => 'responding'])->assertOk();
     $this->patchJson(route('admin.operations.sos.status', $sos), ['status' => 'resolved'])->assertOk();
 
-    expect(titlesFor($this->push, 'resident-phone'))->toBe(['Someone is Responding', 'SOS resolved'])
+    // Nobody was assigned, so the title must not claim a person is on the way.
+    expect(titlesFor($this->push, 'resident-phone'))->toBe(['Admin is handling it', 'SOS resolved'])
         ->and($this->push->sent[0]['data'])->toBe(['type' => 'sos', 'id' => (string) $sos->id])
         ->and($this->push->sent[0]['channel'])->toBe('rondago_alerts');
 });
@@ -221,11 +225,11 @@ it('tells GoBikers (not residents) about a new announcement, but not a hidden on
         ->and($this->push->sent[0]['body'])->toContain('General Assembly');
 
     // Editing a live one does not notify again; making the hidden one live does.
-    $live = \App\Models\Announcement::where('title', 'General Assembly')->first();
+    $live = Announcement::where('title', 'General Assembly')->first();
     $this->put(route('admin.operations.announcements.update', $live), ['title' => 'General Assembly', 'body' => 'Now 10 AM.', 'is_active' => '1']);
     expect(titlesFor($this->push, 'gobiker-phone'))->toHaveCount(1);
 
-    $hidden = \App\Models\Announcement::where('title', 'Hidden draft')->first();
+    $hidden = Announcement::where('title', 'Hidden draft')->first();
     $this->put(route('admin.operations.announcements.update', $hidden), ['title' => 'Hidden draft', 'body' => 'Now live.', 'is_active' => '1']);
     expect(titlesFor($this->push, 'gobiker-phone'))->toHaveCount(2);
 });
@@ -233,7 +237,7 @@ it('tells GoBikers (not residents) about a new announcement, but not a hidden on
 it('tells the GoBikers who checked a person about the admin\'s follow-up decision', function () {
     $other = User::factory()->create(['role' => 'GoBiker', 'status' => 'Active']);
     DeviceToken::create(['user_id' => $other->id, 'token' => 'other-phone']);
-    $checkup = \App\Models\Patient::create([
+    $checkup = Patient::create([
         'user_id' => $this->gobiker->id, 'name' => 'Lola Cruz', 'contact' => '09170002222', 'address' => 'Purok 1', 'age' => 80,
         'sys' => 120, 'dia' => 80, 'pulse' => 70, 'resp' => 16, 'temp' => 36.6, 'recorded_at' => now(),
     ]);

@@ -34,9 +34,10 @@ class PushNotifier
     public function sosStatusChanged(SosRequest $sos): void
     {
         [$title, $body] = match ($sos->status) {
+            // Only say a person is coming once one has actually been sent.
             'responding' => $sos->assignedGobiker
                 ? ['Someone is Responding', "{$sos->assignedGobiker->name} is on the way to help you."]
-                : ['Someone is Responding', 'The Go Bike admin is handling your SOS request.'],
+                : ['Admin is handling it', 'The Go Bike admin is handling your SOS request.'],
             'resolved' => $sos->resolved_by_gobiker_id
                 ? ['SOS resolved', ($sos->resolvedBy?->name ?? 'The GoBiker').' marked your SOS request as resolved. Tap to rate the response.']
                 : ['SOS resolved', 'The admin marked your SOS request as resolved.'],

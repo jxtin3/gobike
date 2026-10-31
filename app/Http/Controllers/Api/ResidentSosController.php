@@ -21,7 +21,7 @@ class ResidentSosController extends Controller
     public function index(Request $request): JsonResponse
     {
         $requests = SosRequest::where('user_id', $request->user()->id)
-            ->with('assignedGobiker:id,name,barangay', 'resolvedBy:id,name,barangay')
+            ->with('assignedGobiker:id,name,barangay,photo_path', 'resolvedBy:id,name,barangay,photo_path')
             ->whereNull('resident_hidden_at') // cleared from the resident's history
             ->latest()
             ->latest('id')
@@ -97,25 +97,18 @@ class ResidentSosController extends Controller
         ]);
     }
 
-    /** The resident no longer needs help and closes their own request. */
-    public function resolve(Request $request, SosRequest $sos): JsonResponse
+    /**
+     * Residents no longer close their own emergency: an emergency stays open until the GoBiker
+     * sent to help, or an admin, says it is over.
+     *
+     * The route is kept so app versions that still show a "Mark as resolved" button get this
+     * sentence rather than a bare "route not found". It can go once everyone has updated.
+     * Older requests a resident did close keep their `resolved_by_resident` flag and still read
+     * that way in the app and on the admin page.
+     */
+    public function resolve(): never
     {
-        abort_unless($sos->user_id === $request->user()->id, 403, 'You can only resolve your own request.');
-
-        if (! $sos->canMoveTo('resolved')) {
-            return response()->json(['message' => 'This request is already resolved.'], 422);
-        }
-
-        $sos->update([
-            'status' => 'resolved',
-            'resolved_at' => now(),
-            'resolved_by_resident' => true,
-        ]);
-
-        return response()->json([
-            'message' => 'SOS request resolved. Glad you are okay.',
-            'sos' => $this->payload($sos),
-        ]);
+        abort(403, 'Only the GoBiker sent to help, or the Go Bike admin, can close an emergency request.');
     }
 
     private function payload(SosRequest $sos): array
@@ -143,6 +136,7 @@ class ResidentSosController extends Controller
             'responder' => $responder ? [
                 'name' => $responder->name,
                 'barangay' => $responder->barangay,
+                'photo_url' => Media::url($responder->photo_path),
             ] : null,
         ];
     }

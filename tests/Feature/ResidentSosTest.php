@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Appointment;
 use App\Models\SosRequest;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -232,31 +233,19 @@ it('counts waiting requests in the sidebar', function () {
         ->assertSee('SOS requests waiting for a response');
 });
 
-// ---------------------------------------------------------------- resident resolves
+// ---------------------------------------------------------- nobody but a responder resolves
 
-it('lets the resident mark their own SOS as resolved, which stops the alarm', function () {
+it('does not let a resident close their own emergency, whatever its status', function (string $status) {
+    // An emergency stays open until the GoBiker sent to help, or an admin, ends it.
     $sos = sendSos($this->resident);
+    $sos->update(['status' => $status]);
 
     $this->postJson(route('api.resident.sos.resolve', $sos))
-        ->assertOk()
-        ->assertJsonPath('sos.status', 'resolved')
-        ->assertJsonPath('sos.resolved_by_resident', true);
+        ->assertForbidden()
+        ->assertJsonPath('message', 'Only the GoBiker sent to help, or the Go Bike admin, can close an emergency request.');
 
-    expect($sos->fresh()->resolved_at)->not->toBeNull();
-
-    $this->actingAs($this->admin, 'web')
-        ->getJson(route('admin.emergencies.index'))
-        ->assertJsonPath('emergencies', []);
-    $this->get(route('admin.operations.sos.show', $sos))->assertSee('the resident marked it resolved');
-});
-
-it('lets the resident resolve while the admin is responding, but not twice', function () {
-    $sos = sendSos($this->resident);
-    $sos->update(['status' => 'responding']);
-
-    $this->postJson(route('api.resident.sos.resolve', $sos))->assertOk();
-    $this->postJson(route('api.resident.sos.resolve', $sos))->assertUnprocessable();
-});
+    expect($sos->fresh())->status->toBe($status)->resolved_at->toBeNull();
+})->with(['sent', 'responding']);
 
 it('does not let anyone resolve another resident\'s SOS', function () {
     $sos = sendSos($this->resident);
@@ -266,13 +255,26 @@ it('does not let anyone resolve another resident\'s SOS', function () {
     expect($sos->fresh()->status)->toBe('sent');
 });
 
+it('still shows an older request the resident closed themselves', function () {
+    // Residents could close their own emergency once; those rows must keep reading that way.
+    $sos = sendSos($this->resident);
+    $sos->update(['status' => 'resolved', 'resolved_at' => now(), 'resolved_by_resident' => true]);
+
+    $this->actingAs($this->admin, 'web')
+        ->get(route('admin.operations.sos.show', $sos))
+        ->assertSee('the resident marked it resolved');
+
+    Sanctum::actingAs($this->resident);
+    $this->getJson(route('api.resident.sos.index'))->assertJsonPath('sos.0.resolved_by_resident', true);
+});
+
 // ---------------------------------------------------------------- clear history
 
 it('clears finished SOS requests and visits from the resident history, keeping open ones and the admin records', function () {
     $done = sendSos($this->resident);
     $done->update(['status' => 'resolved', 'resolved_at' => now()]);
     $open = sendSos($this->resident, ['landmark' => 'Still waiting']);
-    $closedVisit = \App\Models\Appointment::create([
+    $closedVisit = Appointment::create([
         'resident_id' => $this->resident->id, 'barangay' => 'Poblacion', 'address' => 'Purok 3',
         'preferred_date' => now()->addDay(), 'preferred_window' => 'morning', 'reason' => 'BP', 'status' => 'cancelled',
     ]);
@@ -288,6 +290,6 @@ it('clears finished SOS requests and visits from the resident history, keeping o
 
     // The admin still has everything.
     expect(SosRequest::count())->toBe(2)
-        ->and(\App\Models\Appointment::find($closedVisit->id))->not->toBeNull();
+        ->and(Appointment::find($closedVisit->id))->not->toBeNull();
     $this->actingAs($this->admin, 'web')->get(route('admin.operations.sos.show', $done))->assertOk();
 });
