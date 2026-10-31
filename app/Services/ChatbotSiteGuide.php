@@ -69,7 +69,7 @@ Volunteer (free):
 Get individual first aid training (paid, starts on the date you choose, one-on-one or for your household):
 1. Open What We Do, or tap "Get Trained" on the home page or "Get Training" in the footer .
 2. In "Learn To Save Lives", choose a plan: {$plans} per person. Standard is a 1-day First Aid & CPR training; Advance is the 2-day full First Aid & Basic Life Support module with disaster readiness.
-3. The form "Schedule Your Training Session" opens: Full Name, Phone Number (required), Email Address, Home Address, Preferred Date (tomorrow up to 60 days ahead), Time of Day (optional), Message.
+3. The form "Schedule Your Training Session" opens: Full Name, Phone Number (required), Email Address, Home Address, Preferred Date (tomorrow up to 60 days ahead), Time of Day (optional), Valid ID (required: upload one or more photos or PDFs of a government-issued or school ID, front and back), Message. Trainees must be physically fit with no current illness.
 4. Tap "Submit Request". A thank-you note confirms it; the team calls within 24–48 hours to confirm. Training happens at your home, school, office or barangay hall in Pangasinan.
 
 Donate:

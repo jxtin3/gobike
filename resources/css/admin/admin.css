@@ -2030,6 +2030,36 @@ html:has(dialog:modal) { overflow: hidden; }
     word-break: break-word;
 }
 
+/* ID photos inside a detail dialog: small tiles that open the file in a new tab. */
+.dlg .id-proofs {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    margin: 0;
+}
+
+.dlg a.id-proof { cursor: pointer; }
+
+.id-proof-file {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--sp-2);
+    color: var(--ink-2);
+    font-size: var(--fs-12);
+}
+
+.id-proof-file svg { width: 28px; height: 28px; }
+
+/* A note box whose content (buttons or a short line) sits in the middle. */
+.dlg-text--center {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: var(--sp-2);
+    min-height: 0;
+    text-align: center;
+}
+
 .dlg-status {
     display: flex;
     flex-wrap: wrap;

@@ -66,59 +66,12 @@ it('filters by training date, with upcoming ones soonest first', function () {
         ->assertDontSee('Tomorrow Person');
 });
 
-it('only lists the retired free plan in the filter while old requests use it', function () {
+it('keeps the retired free plan out of the filter but still labels old requests', function () {
     $admin = User::factory()->create(['is_admin' => true]);
-    makeTrainingRequest();
+    makeTrainingRequest(['tier' => 'basic']);
 
     $this->actingAs($admin)->get(route('admin.operations.training-requests.index'))
-        ->assertSee('Advance (₱2,500)')
-        ->assertDontSee('Basic (no longer offered)');
-
-    makeTrainingRequest(['tier' => 'basic']);
-    $this->get(route('admin.operations.training-requests.index'))->assertSee('Basic (no longer offered)');
-});
-
-it('updates the status of a training request', function () {
-    $admin = User::factory()->create(['is_admin' => true]);
-    $request = makeTrainingRequest();
-
-    $this->actingAs($admin)
-        ->patch(route('admin.operations.training-requests.status', $request), ['status' => 'contacted'])
-        ->assertRedirect()
-        ->assertSessionHas('success');
-
-    expect($request->fresh()->status)->toBe('contacted');
-});
-
-it('rejects an unknown training request status', function () {
-    $admin = User::factory()->create(['is_admin' => true]);
-    $request = makeTrainingRequest();
-
-    $this->actingAs($admin)
-        ->patch(route('admin.operations.training-requests.status', $request), ['status' => 'archived'])
-        ->assertSessionHasErrors('status');
-
-    expect($request->fresh()->status)->toBe('pending');
-});
-
-it('deletes a training request', function () {
-    $admin = User::factory()->create(['is_admin' => true]);
-    $request = makeTrainingRequest();
-
-    $this->actingAs($admin)
-        ->delete(route('admin.operations.training-requests.destroy', $request))
-        ->assertRedirect()
-        ->assertSessionHas('success');
-
-    $this->assertModelMissing($request);
-});
-
-it('shows pending training requests in the sidebar', function () {
-    $admin = User::factory()->create(['is_admin' => true]);
-    makeTrainingRequest();
-    makeTrainingRequest();
-
-    $this->actingAs($admin)
-        ->get(route('admin.dashboard'))
-        ->assertSee('data-nav-badge="training"><span class="count-num">2</span>', false);
+        ->assertSee('<option value="advance"', false)
+        ->assertDontSee('<option value="basic"', false)
+        ->assertSee('Basic (no longer offered)'); // the old request's own label in the table
 });

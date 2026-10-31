@@ -217,6 +217,9 @@ Route::middleware([EnsureAdmin::class, AuthenticateSession::class])->prefix('adm
 
         // training plan requests
         Route::get('/training-requests', [AdminTrainingRequestController::class, 'index'])->name('training-requests.index');
+        Route::get('/training-requests/{trainingRequest}/id/{index}', [AdminTrainingRequestController::class, 'idDocument'])
+            ->whereNumber('index')
+            ->name('training-requests.id');
         Route::patch('/training-requests/{trainingRequest}/status', [AdminTrainingRequestController::class, 'updateStatus'])
             ->name('training-requests.status');
         Route::delete('/training-requests/{trainingRequest}', [AdminTrainingRequestController::class, 'destroy'])

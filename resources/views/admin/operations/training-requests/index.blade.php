@@ -81,6 +81,15 @@
                     data-schedule="{{ $req->schedule_label }}"
                     data-address="{{ $req->address }}"
                     data-message="{{ $req->message }}"
+                    data-no-id="{{ empty($req->id_paths) ? 1 : 0 }}"
+                    @foreach ($req->id_paths ?? [] as $i => $path)
+                        data-id-url{{ $i }}="{{ route('admin.operations.training-requests.id', [$req, $i]) }}"
+                        @if (\Illuminate\Support\Str::endsWith(strtolower($path), ['.jpg', '.jpeg', '.png', '.webp']))
+                            data-id-img{{ $i }}="{{ route('admin.operations.training-requests.id', [$req, $i]) }}"
+                        @else
+                            data-id-pdf{{ $i }}="1"
+                        @endif
+                    @endforeach
                     data-status="{{ $req->status_label }}"
                     data-status-pill="{{ $req->status_pill }}"
                     data-status-value="{{ $req->status }}"
@@ -149,6 +158,25 @@
     </dl>
 
     <section>
+        <h3 class="dlg-label">Identity verification</h3>
+        <ul class="id-proofs">
+            @for ($i = 0; $i < TrainingRequest::MAX_ID_FILES; $i++)
+                <li data-show-field="idUrl{{ $i }}">
+                    {{-- A picture opens large in the viewer below, right on this page --}}
+                    <button type="button" class="id-proof" data-view-field="idImg{{ $i }}" data-show-field="idImg{{ $i }}" data-id-title="ID photo {{ $i + 1 }}" aria-label="View ID photo {{ $i + 1 }} larger">
+                        <img data-src-field="idImg{{ $i }}" alt="Uploaded ID photo {{ $i + 1 }}">
+                    </button>
+                    {{-- A PDF cannot show as a picture, so it opens in its own tab --}}
+                    <a class="id-proof" href="#" data-href-field="idUrl{{ $i }}" data-show-field="idPdf{{ $i }}" target="_blank" rel="noopener" aria-label="Open PDF {{ $i + 1 }} in a new tab">
+                        <span class="id-proof-file"><x-admin.icon name="file-text" /> PDF document</span>
+                    </a>
+                </li>
+            @endfor
+        </ul>
+        <p class="dlg-text dlg-text--center" data-show-field="noId">No ID uploaded.</p>
+    </section>
+
+    <section>
         <h3 class="dlg-label">Message and preferred schedule</h3>
         <p class="dlg-text" data-field="message"></p>
     </section>
@@ -181,4 +209,16 @@
         </div>
     </x-slot:foot>
 </x-admin.dialog>
+
+{{-- Photo viewer: opened by a click on an ID photo above (resources/js/admin/admin.js) --}}
+<dialog class="dlg dlg-photo" id="idViewer" aria-labelledby="idViewerTitle">
+    <div class="dlg-head">
+        <div class="dlg-head-main">
+            <p class="dlg-kicker">Training request · Identity verification</p>
+            <h2 id="idViewerTitle" data-id-title>ID photo</h2>
+        </div>
+        <button type="button" class="icon-btn" data-dialog-close aria-label="Close"><x-admin.icon name="x" /></button>
+    </div>
+    <div class="picture-detail-media"><img data-id-img alt="Uploaded ID, large view"></div>
+</dialog>
 @endsection

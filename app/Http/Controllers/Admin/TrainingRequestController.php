@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\TrainingRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 
 class TrainingRequestController extends Controller
@@ -46,12 +47,8 @@ class TrainingRequestController extends Controller
         return view('admin.operations.training-requests.index', [
             'requests' => $requests,
             'when' => $when,
-            // Plans on offer, plus retired ones only while old requests still use them.
-            'tiers' => array_filter(
-                TrainingRequest::TIERS,
-                fn ($tier) => in_array($tier, TrainingRequest::OFFERED, true) || TrainingRequest::where('tier', $tier)->exists(),
-                ARRAY_FILTER_USE_KEY,
-            ),
+            // The filter lists the plans on offer; old requests on a retired plan still show in the table.
+            'tiers' => array_intersect_key(TrainingRequest::TIERS, array_flip(TrainingRequest::OFFERED)),
             'totalCount' => TrainingRequest::count(),
             'pendingCount' => TrainingRequest::where('status', 'pending')->count(),
             'upcomingCount' => TrainingRequest::whereIn('status', ['pending', 'contacted'])->whereDate('preferred_date', '>=', today())->count(),
@@ -69,9 +66,25 @@ class TrainingRequestController extends Controller
         return back()->with('success', "Request from {$trainingRequest->name} marked {$trainingRequest->status_label}.");
     }
 
+    /** Shows one uploaded ID in the browser. Private: it is never reachable by a public URL. */
+    public function idDocument(TrainingRequest $trainingRequest, int $index)
+    {
+        $disk = Storage::disk(config('filesystems.private_disk'));
+        $path = $trainingRequest->id_paths[$index] ?? null;
+        abort_unless($path && $disk->exists($path), 404);
+
+        return $disk->response($path, null, [
+            'Cache-Control' => 'private, no-store',
+            'X-Content-Type-Options' => 'nosniff',
+        ]);
+    }
+
     public function destroy(TrainingRequest $trainingRequest): RedirectResponse
     {
         $name = $trainingRequest->name;
+        if ($trainingRequest->id_paths) {
+            Storage::disk(config('filesystems.private_disk'))->delete($trainingRequest->id_paths);
+        }
         $trainingRequest->delete();
 
         return back()->with('success', "Training request from {$name} deleted.");

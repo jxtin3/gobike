@@ -41,13 +41,18 @@ class TrainingRequest extends Model
         'preferred_date',
         'preferred_window',
         'message',
+        'id_paths',
         'status',
     ];
+
+    /** Most ID photos a person can upload (front, back, a second ID, ...). */
+    public const MAX_ID_FILES = 5;
 
     protected function casts(): array
     {
         return [
             'preferred_date' => 'date',
+            'id_paths' => 'array',
         ];
     }
 

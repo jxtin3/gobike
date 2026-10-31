@@ -204,6 +204,8 @@ function decrementCounter(element) {
  *   [data-field=key]          text (— when empty)
  *   [data-pill-field=key]     pill text, colour from data-{key}-pill
  *   [data-href-field=key]     link href
+ *   [data-src-field=key]      image src (hidden when empty)
+ *   [data-view-field=key]     photo URL for the large viewer (data-id-view)
  *   [data-action-field=key]   form action
  *   [data-show-field=key]     shown only when the value is set and not "0"
  *   [data-confirm-field=key]  form's confirm text
@@ -221,6 +223,12 @@ function decrementCounter(element) {
             el.className = `pill pill-${data[`${key}Pill`] || 'neutral'}`;
         });
         $$('[data-href-field]', dlg).forEach((el) => { el.href = data[el.dataset.hrefField] || '#'; });
+        $$('[data-view-field]', dlg).forEach((el) => { el.dataset.idView = data[el.dataset.viewField] || ''; });
+        $$('[data-src-field]', dlg).forEach((el) => {
+            const src = data[el.dataset.srcField];
+            el.hidden = !src;
+            if (src) el.src = src; else el.removeAttribute('src');
+        });
         $$('[data-action-field]', dlg).forEach((el) => { el.action = data[el.dataset.actionField] || ''; });
         $$('[data-show-field]', dlg).forEach((el) => { el.hidden = !isSet(data[el.dataset.showField]); });
         $$('[data-confirm-field]', dlg).forEach((el) => { el.dataset.confirmText = data[el.dataset.confirmField] || ''; });

@@ -294,21 +294,21 @@
                                 <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
                             </span>
                             <div>
-                                <p class="tr-thanks__step-title">Request received <span class="tr-thanks__step-when">· today</span></p>
+                                <p class="tr-thanks__step-title">Request received</p>
                                 <p class="tr-thanks__step-text">Your details are now with our dispatch team.</p>
                             </div>
                         </li>
                         <li class="tr-thanks__step tr-thanks__step--current">
                             <span class="tr-thanks__marker" aria-hidden="true">2</span>
                             <div>
-                                <p class="tr-thanks__step-title">We contact you <span class="tr-thanks__step-when">· within 48 hours</span></p>
+                                <p class="tr-thanks__step-title">We contact you</p>
                                 <p class="tr-thanks__step-text">We'll call or email you to confirm your date, the venue and the number of people.</p>
                             </div>
                         </li>
                         <li class="tr-thanks__step">
                             <span class="tr-thanks__marker" aria-hidden="true">3</span>
                             <div>
-                                <p class="tr-thanks__step-title">Training day <span class="tr-thanks__step-when">· on your date</span></p>
+                                <p class="tr-thanks__step-title">Training day</p>
                                 <p class="tr-thanks__step-text">Our certified responders come to your home, school or barangay hall. No waiting for a class.</p>
                             </div>
                         </li>
@@ -355,35 +355,25 @@
                     <p class="text-white/45 text-sm leading-relaxed mb-8">
                         Pick the day you want to train. Our dispatch team will call you within 24–48 hours to confirm it. Training is one-on-one or for your household, so it starts on your date.
                     </p>
-                    <div class="space-y-5">
-                        <div class="flex items-start gap-4">
-                            <div class="w-8 h-8 flex items-center justify-center shrink-0 mt-0.5">
-                                <svg class="w-4 h-4 text-[#F97316]" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6l4 2m6-2a10 10 0 1 1-20 0 10 10 0 0 1 20 0Z"/></svg>
-                            </div>
-                            <div>
-                                <div class="text-white text-sm font-semibold mb-0.5">Response within 48 hours</div>
-                                <div class="text-white/40 text-xs">Our team reviews all requests quickly</div>
-                            </div>
-                        </div>
-                        <div class="flex items-start gap-4">
-                            <div class="w-8 h-8 flex items-center justify-center shrink-0 mt-0.5">
-                                <svg class="w-4 h-4 text-[#F97316]" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0ZM19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z"/></svg>
-                            </div>
-                            <div>
-                                <div class="text-white text-sm font-semibold mb-0.5">On-site where you are</div>
-                                <div class="text-white/40 text-xs">Home, school or barangay hall, anywhere in Pangasinan</div>
-                            </div>
-                        </div>
-                        <div class="flex items-start gap-4">
-                            <div class="w-8 h-8 flex items-center justify-center shrink-0 mt-0.5">
-                                <svg class="w-4 h-4 text-[#F97316]" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0"/></svg>
-                            </div>
-                            <div>
-                                <div class="text-white text-sm font-semibold mb-0.5">Certified youth responders</div>
-                                <div class="text-white/40 text-xs">Trained, vetted, and accredited volunteers</div>
-                            </div>
-                        </div>
-                    </div>
+                    <div class="text-[10px] font-bold tracking-widest uppercase text-[#F97316] mb-4">Requirements</div>
+                    <ul class="space-y-4">
+                        @foreach ([
+                            ['Physically fit, with no current illness', 'You must be physically able to take part in the training.'],
+                            ['Valid ID for verification', 'Upload a photo of a government-issued or school ID with your request. We use it to confirm who you are and to issue your certificate.'],
+                            ['No prior experience needed', 'You do not need any first aid knowledge. We teach you from the start.'],
+                            ['Parent or guardian consent if under 18', 'A parent or guardian must agree before a minor joins.'],
+                        ] as [$req, $note])
+                            <li class="flex items-start gap-4">
+                                <div class="w-8 h-8 flex items-center justify-center shrink-0 mt-0.5">
+                                    <svg class="w-4 h-4 text-[#F97316]" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
+                                </div>
+                                <div>
+                                    <div class="text-white text-sm font-semibold mb-0.5">{{ $req }}</div>
+                                    <div class="text-white/40 text-xs">{{ $note }}</div>
+                                </div>
+                            </li>
+                        @endforeach
+                    </ul>
                 </div>
 
                 <div class="lg:col-span-3">
@@ -401,7 +391,7 @@
                             @enderror
                         </div>
                     @endif
-                    <form action="{{ route('training-request.store') }}" method="POST" class="space-y-5">
+                    <form action="{{ route('training-request.store') }}" method="POST" enctype="multipart/form-data" class="space-y-5">
                         @csrf
                         <input type="hidden" name="tier" :value="selected">
 
@@ -454,6 +444,51 @@
                                     @endforeach
                                 </div>
                             </div>
+                        </div>
+
+                        <div x-data="{
+                            max: {{ \App\Models\TrainingRequest::MAX_ID_FILES }},
+                            files: [],
+                            error: '',
+                            add(list) {
+                                this.error = '';
+                                for (const f of list) {
+                                    if (this.files.some(x => x.name === f.name && x.size === f.size)) continue;
+                                    if (this.files.length >= this.max) { this.error = 'You can upload up to ' + this.max + ' photos.'; break; }
+                                    this.files.push(f);
+                                }
+                                this.sync();
+                            },
+                            remove(i) { this.files.splice(i, 1); this.error = ''; this.sync(); },
+                            sync() {
+                                const dt = new DataTransfer();
+                                this.files.forEach(f => dt.items.add(f));
+                                this.$refs.input.files = dt.files;
+                            }
+                        }">
+                            <span id="tr-id-label" class="block text-[10px] font-bold tracking-widest uppercase text-white/40 mb-2">Valid ID <span class="text-[#F97316]">*</span></span>
+                            <label for="tr-id" class="flex items-center gap-3 px-4 py-3.5 bg-white/5 border border-dashed border-white/20 text-sm text-white/70 cursor-pointer hover:border-[#2FA7FF] focus-within:border-[#2FA7FF] focus-within:ring-2 focus-within:ring-[#2FA7FF] transition-all duration-200" x-show="files.length < max">
+                                <svg class="w-5 h-5 shrink-0 text-[#F97316]" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5"/></svg>
+                                <span x-text="files.length ? 'Add another photo' : 'Upload photos or PDFs of your ID'">Upload photos or PDFs of your ID</span>
+                                <input id="tr-id" x-ref="input" type="file" name="id_documents[]" multiple required
+                                    accept=".jpg,.jpeg,.png,.webp,.pdf,image/jpeg,image/png,image/webp,application/pdf"
+                                    aria-labelledby="tr-id-label" aria-describedby="tr-id-hint"
+                                    x-on:change="add($event.target.files)"
+                                    class="sr-only">
+                            </label>
+                            <ul class="mt-2 space-y-1.5" x-show="files.length" x-cloak>
+                                <template x-for="(f, i) in files" :key="f.name + f.size">
+                                    <li class="flex items-center gap-3 px-4 py-2.5 bg-white/5 border border-white/10 text-sm text-white">
+                                        <svg class="w-4 h-4 shrink-0 text-[#F97316]" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
+                                        <span class="min-w-0 flex-1 truncate" x-text="f.name"></span>
+                                        <button type="button" class="shrink-0 text-xs font-semibold text-white/50 hover:text-white underline underline-offset-4" x-on:click="remove(i)" x-bind:aria-label="'Remove ' + f.name">Remove</button>
+                                    </li>
+                                </template>
+                            </ul>
+                            <p class="text-xs text-[#FECACA] mt-1.5" x-show="error" x-text="error" x-cloak role="alert"></p>
+                            <p id="tr-id-hint" class="text-xs text-white/40 mt-1.5">Government-issued or school ID, front and back. Add up to {{ \App\Models\TrainingRequest::MAX_ID_FILES }} photos, one after another or all at once. JPG, PNG, WEBP or PDF, under 5 MB each. Only our team can see it.</p>
+                            @error('id_documents')<p class="text-xs text-[#FECACA] mt-1.5">{{ $message }}</p>@enderror
+                            @error('id_documents.*')<p class="text-xs text-[#FECACA] mt-1.5">{{ $message }}</p>@enderror
                         </div>
 
                         <div>
