@@ -72,7 +72,6 @@
                             </li>
                         @endforeach
                     </ul>
-                    <p class="muted">Check that the name matches and that the address is in {{ $application->barangay }}, {{ $application->municipality }}.</p>
                 @else
                     <p class="muted">No ID was uploaded. This application was sent before ID verification was required, so ask the volunteer to bring one to training.</p>
                 @endif
