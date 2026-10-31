@@ -7,15 +7,29 @@
     const COLORS = { active: '#16a34a', responding: '#eab308', emergency: '#dc2626', offline: '#94a3b8' };
     const LABELS = { active: 'Active', responding: 'Responding', emergency: 'Emergency', offline: 'Offline' };
     const RANK = { emergency: 0, responding: 1, active: 2, offline: 3 };
-    // Residents' SOS requests: red when sent, yellow once a GoBiker is responding, green when resolved.
+    /*
+     * Residents' SOS requests: red while nobody has answered, yellow once an admin has. Resolved
+     * ones are not sent to the map at all, so the pin disappears when the emergency is over.
+     * Checked about once a second, far more often than the GoBiker dots.
+     */
+    const SOS_POLL_MS = 1000;
     const section = mapEl.closest('[data-sos-url]');
     const SOS_URL = section?.dataset.sosUrl;
     const SOS_STATUS_URL = section?.dataset.sosStatusUrl;
     const SOS_GOBIKERS_URL = section?.dataset.sosGobikersUrl;
-    const SOS_COLORS = { sent: '#dc2626', responding: '#eab308', resolved: '#16a34a' };
-    const SOS_LABELS = { sent: 'SOS: waiting', responding: 'SOS: responding', resolved: 'SOS: resolved' };
-    // The swatch classes carry the colour; the pin keeps pulsing until someone has resolved it.
-    const SOS_CLASS = { sent: 's-sent', responding: 's-sos-responding', resolved: 's-sos-resolved' };
+    const SOS_STATE_CLASS = { sent: 'is-waiting', responding: 'is-responding' };
+    // Decorative line icons for the report rows; the label beside each one carries the meaning.
+    const SOS_ICONS = {
+        barangay: '<path d="M3 10.5 12 3l9 7.5V21a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z"/>',
+        address: '<path d="M12 21s7-5.6 7-11a7 7 0 1 0-14 0c0 5.4 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/>',
+        landmark: '<path d="M4 21h16M6 21V8l6-4 6 4v13M10 21v-4h4v4"/>',
+        details: '<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 7.6h.01"/>',
+        sent: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+    };
+    // "Responding" only when a GoBiker was actually sent: an admin can take a request on without
+    // assigning anyone yet, and the map must not claim somebody is on the way.
+    const SOS_LABELS = { sent: 'SOS: waiting', assigned: 'SOS: responding', handled: 'SOS: admin handling' };
+    const SOS_CLASS = { sent: 's-sent', responding: 's-sos-responding' };
 
     const $ = (id) => document.getElementById(id);
     const els = {
@@ -39,6 +53,10 @@
     let timer = null;
     let controller = null;
     let noteTimer = null;
+    let sosInFlight = false;
+    let sosQueued = false;
+    let sosTicker = null;
+    let sosFallbackTimer = null;
     let pendingFocus = new URLSearchParams(window.location.search).get('focus');
 
     const esc = (value) => String(value ?? '').replace(/[&<>'"]/g, (c) => ({
@@ -175,13 +193,22 @@
     const initials = (name) => String(name ?? '').trim().split(/\s+/).filter(Boolean)
         .slice(0, 2).map((part) => part[0].toUpperCase()).join('') || '?';
 
+    /* Someone's photo, or their initials in the same circle when they have not added one. */
+    function face(name, photo, size) {
+        const style = size ? ` style="--avatar-size: ${size}px"` : '';
+
+        return photo
+            ? `<img class="avatar avatar-photo" src="${esc(photo)}" alt="${esc(name)}" loading="lazy"${style}>`
+            : `<span class="avatar" aria-hidden="true"${style}>${esc(initials(name))}</span>`;
+    }
+
     /* Who is on their way, so the admin can see at a glance that someone is actually going. */
     function responderChip(p) {
         if (!p.assigned_gobiker) return '';
         const where = p.assigned_gobiker_barangay ? ` · ${esc(p.assigned_gobiker_barangay)}` : '';
 
         return `<div class="sos-responder">
-            <span class="avatar" aria-hidden="true">${esc(initials(p.assigned_gobiker))}</span>
+            ${face(p.assigned_gobiker, p.assigned_gobiker_photo)}
             <span class="sos-responder-main">
                 <b>${esc(p.assigned_gobiker)}</b>
                 <small><em class="s-text s-sos-responding">Responding</em>${where}</small>
@@ -202,28 +229,48 @@
         </div>`;
     }
 
+    /* What the pin's headline says: who, if anyone, is actually on the way. */
+    function sosHeadline(p) {
+        if (p.status === 'sent') return SOS_LABELS.sent;
+
+        return p.assigned_gobiker ? SOS_LABELS.assigned : SOS_LABELS.handled;
+    }
+
+    /* One line of the report: its icon, the muted label, then what the resident told us. */
+    function fact(name, label, value) {
+        const icon = `<svg class="sos-fact-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">${SOS_ICONS[name]}</svg>`;
+
+        return `<dt>${icon}${esc(label)}</dt><dd>${esc(value)}</dd>`;
+    }
+
     function sosPopup(p) {
-        const mobile = p.mobile ? `<a href="tel:${esc(p.mobile)}">${esc(p.mobile)}</a>` : 'Not provided';
+        const mobile = p.mobile
+            ? `<a class="sos-pop-mobile" href="tel:${esc(p.mobile)}">${esc(p.mobile)}</a>`
+            : '<span class="sos-pop-mobile">Not provided</span>';
         const actions = p.status === 'sent'
             ? assignBlock(p, 'responding', 'Responding')
-            // Already being answered: the admin can still hand it to someone nearer.
-            : p.status === 'responding' ? assignBlock(p, 'responding', 'Send another GoBiker') : '';
-        const handler = p.status === 'resolved'
-            ? `<dt>Resolved by</dt><dd>${esc(p.resolved_by || 'Unknown')}</dd>`
-            : '';
+            // Already being answered: the admin can still send someone, or someone nearer.
+            : assignBlock(p, 'responding', p.assigned_gobiker ? 'Send another GoBiker' : 'Send a GoBiker');
 
-        return `<div class="gb-pop">
-            <strong>${esc(p.resident)} <em class="s-text" style="color: ${SOS_COLORS[p.status] || SOS_COLORS.sent}">${esc(SOS_LABELS[p.status] || p.status)}</em></strong>
-            <dl>
-                <dt>Mobile</dt><dd>${mobile}</dd>
-                <dt>Barangay</dt><dd>${esc(p.barangay || '')}</dd>
-                <dt>Address</dt><dd>${esc(p.address || 'Not given')}</dd>
-                <dt>Landmark</dt><dd>${esc(p.landmark || 'Not given')}</dd>
-                ${p.description ? `<dt>Details</dt><dd>${esc(p.description)}</dd>` : ''}
-                <dt>Sent</dt><dd>${esc(ago(p.created_at))}</dd>
-                ${handler}
+        return `<div class="gb-pop sos-pop">
+            <div class="sos-pop-head">
+                ${face(p.resident, p.resident_photo, 48)}
+                <div class="sos-pop-who">
+                    <p class="sos-pop-name">
+                        <b>${esc(p.resident)}</b>
+                        <em class="s-text sos-state ${esc(SOS_STATE_CLASS[p.status] || SOS_STATE_CLASS.sent)}">${esc(sosHeadline(p))}</em>
+                    </p>
+                    ${mobile}
+                </div>
+            </div>
+            <dl class="sos-facts">
+                ${fact('barangay', 'Barangay', p.barangay || 'Not given')}
+                ${fact('address', 'Address', p.address || 'Not given')}
+                ${fact('landmark', 'Landmark', p.landmark || 'Not given')}
+                ${p.description ? fact('details', 'Details', p.description) : ''}
+                ${fact('sent', 'Sent', ago(p.created_at))}
             </dl>
-            ${p.status === 'responding' ? responderChip(p) : ''}
+            ${responderChip(p)}
             ${actions}
         </div>`;
     }
@@ -239,12 +286,17 @@
         });
     }
 
+    /*
+     * Draws the emergencies that are still open, and takes away any pin that is no longer in the
+     * list — which is how a resolved one disappears. Keyed by request id, so removing one leaves
+     * every other emergency exactly where it was.
+     */
     function renderSos(pins) {
         const ids = new Set(pins.map((p) => String(p.id)));
         pins.forEach((p) => {
             const id = String(p.id);
             // Rebuild the popup only when something changed, so a half-picked GoBiker isn't lost.
-            const key = `${p.status}|${p.assigned_gobiker}|${p.resolved_by}`;
+            const key = `${p.status}|${p.assigned_gobiker}`;
             let marker = sosMarkers.get(id);
             if (!marker) {
                 marker = L.marker([p.latitude, p.longitude], {
@@ -252,9 +304,9 @@
                     // Always above the GoBiker dots: an emergency must never end up underneath one.
                     zIndexOffset: 1000,
                     keyboard: true,
-                    title: `${p.resident}: ${SOS_LABELS[p.status] || p.status}`,
+                    title: `${p.resident}: ${sosHeadline(p)}`,
                 }).addTo(map);
-                marker.bindPopup(sosPopup(p), { minWidth: 260 });
+                marker.bindPopup(sosPopup(p), { minWidth: 268, maxWidth: 340 });
                 marker.on('popupopen', () => fillGobikers(id));
                 sosMarkers.set(id, marker);
             } else {
@@ -274,16 +326,59 @@
         });
     }
 
+    /*
+     * Reloads the open emergencies. Runs about once a second, so it must never overlap itself:
+     * two answers landing out of order would put a resolved pin back on the map. A tick arriving
+     * while one is in flight is collapsed into a single trailing call.
+     */
     async function loadSos() {
         if (!SOS_URL) return;
+        if (sosInFlight) {
+            sosQueued = true;
+
+            return;
+        }
+        sosInFlight = true;
         try {
             const res = await fetch(SOS_URL, {
                 headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
                 credentials: 'same-origin',
+                cache: 'no-store',
+                signal: AbortSignal.timeout(8000),
             });
             if (res.ok) renderSos(await res.json());
         } catch {
-            // The GoBiker layer shows the connection error; SOS pins catch up on the next refresh.
+            // The GoBiker layer shows the connection error; SOS pins catch up on the next tick.
+        } finally {
+            sosInFlight = false;
+            if (sosQueued) {
+                sosQueued = false;
+                loadSos();
+            }
+        }
+    }
+
+    /*
+     * Its own timer, ten times faster than the GoBiker dots: an emergency appearing or being
+     * resolved has to show at once, while the full location list is heavier and can wait.
+     * Ticked by a worker because browsers slow page timers right down in a background tab.
+     */
+    function startSosTimer() {
+        if (!SOS_URL) return;
+        const fallback = () => {
+            sosTicker?.terminate();
+            sosTicker = null;
+            clearInterval(sosFallbackTimer);
+            sosFallbackTimer = setInterval(loadSos, SOS_POLL_MS);
+        };
+        try {
+            sosTicker = new Worker(new URL('./emergency-ticker.js', import.meta.url));
+            sosTicker.onmessage = loadSos;
+            sosTicker.onerror = fallback;
+            sosTicker.postMessage(SOS_POLL_MS);
+        } catch {
+            // e.g. while `npm run dev` serves scripts from another address
+            fallback();
         }
     }
 
@@ -538,4 +633,5 @@
 
     setOverlay('loading');
     load().then(schedule);
+    startSosTimer();
 })();

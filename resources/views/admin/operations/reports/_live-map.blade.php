@@ -75,10 +75,10 @@
                 <span><i class="status-dot s-responding"></i>Responding</span>
                 <span><i class="status-dot s-offline"></i>Offline</span>
             </div>
+            {{-- Resolved emergencies leave the map, so there is no resolved pin to explain. --}}
             <div class="legend rider-legend sos-legend" aria-label="Resident SOS pins">
-                <span><i class="sos-ring s-sent"></i>SOS sent</span>
-                <span><i class="sos-ring s-sos-responding"></i>SOS responding</span>
-                <span><i class="sos-ring s-sos-resolved"></i>SOS resolved</span>
+                <span><i class="sos-ring s-sent"></i>SOS waiting</span>
+                <span><i class="sos-ring s-sos-responding"></i>SOS answered</span>
             </div>
             <header><h2 id="rider-panel-title">GoBikers</h2><span class="count" id="rider-count">–</span></header>
             <ul id="rider-list" aria-busy="true">

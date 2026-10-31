@@ -617,8 +617,8 @@ a.profile:hover { background: var(--surface-2); }
 a.profile[aria-current="page"] { background: var(--brand-soft); }
 
 .avatar {
-    width: 34px;
-    height: 34px;
+    width: var(--avatar-size, 34px);
+    height: var(--avatar-size, 34px);
     flex: none;
     display: grid;
     place-items: center;
@@ -627,6 +627,24 @@ a.profile[aria-current="page"] { background: var(--brand-soft); }
     color: var(--brand);
     font-size: var(--fs-12);
     font-weight: 700;
+}
+
+/* A real photo in the same circle. Cropped to fill, so portraits aren't squashed. */
+.avatar-photo {
+    object-fit: cover;
+    background: var(--brand-soft);
+}
+
+/* A resident's rating. The number is shown next to it: never the stars alone. */
+.stars {
+    display: inline-flex;
+    gap: 1px;
+    color: var(--line);
+}
+
+.star.is-on {
+    fill: var(--resp);
+    color: var(--resp);
 }
 
 .profile-meta { min-width: 0; }
@@ -3738,8 +3756,6 @@ html:has(dialog:modal) { overflow: hidden; }
 
 .s-sos-responding { --c: #eab308; }
 
-.s-sos-resolved { --c: #16a34a; }
-
 .sos-legend { margin-top: 6px; }
 
 /* The pin on the map. It beats like a signal until someone has resolved the emergency. */
@@ -3755,9 +3771,6 @@ html:has(dialog:modal) { overflow: hidden; }
     box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--c);
     animation: sos-signal 1.5s ease-out infinite;
 }
-
-/* Answered and done: it stays on the map a while, but it stops calling for attention. */
-.sos-pin.s-sos-resolved { animation: none; }
 
 @keyframes sos-signal {
     0%, 100% {
@@ -3796,12 +3809,108 @@ html:has(dialog:modal) { overflow: hidden; }
     margin-top: var(--sp-2);
     padding: var(--sp-2);
     border-radius: 8px;
-    background: color-mix(in srgb, var(--resp) 12%, transparent);
+    background: var(--surface-2);
 }
 
 .sos-responder-main { display: flex; flex-direction: column; line-height: 1.3; }
 
 .sos-responder-main small { color: var(--ink-3); }
+
+/* ---------- A resident's SOS popup ---------- */
+
+/*
+ * Who sent the emergency: their face, their name, and the status as plain coloured text. No
+ * badge and no pill, so nothing in the header looks like something to press.
+ */
+.sos-pop-head {
+    display: flex;
+    gap: var(--sp-3);
+    align-items: center;
+    margin-bottom: var(--sp-3);
+    padding-bottom: var(--sp-3);
+    border-bottom: 1px solid var(--line);
+}
+
+.sos-pop-who {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 2px;
+}
+
+/* A long name pushes the status onto its own line rather than squeezing it. */
+.sos-pop-name {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--sp-1) var(--sp-2);
+    margin: 0;
+    font-size: var(--fs-14);
+}
+
+.sos-pop-name b { font-weight: 700; }
+
+.sos-state {
+    display: inline;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: none;
+    color: var(--c);
+}
+
+.sos-state.is-waiting { --c: #dc2626; }
+
+.sos-state.is-responding { --c: #f59e0b; }
+
+.sos-pop-mobile {
+    color: var(--ink-3);
+    font-size: var(--fs-12);
+}
+
+a.sos-pop-mobile { text-decoration: underline; }
+
+/* The report: icon, muted label, then the value, which may run to several lines. */
+.sos-facts {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: var(--sp-2) var(--sp-3);
+    align-items: start;
+    margin: 0;
+    font-size: var(--fs-12);
+}
+
+.sos-pop dt {
+    display: flex;
+    gap: var(--sp-2);
+    align-items: center;
+    color: var(--ink-3);
+    font-weight: 500;
+}
+
+.sos-fact-icon {
+    width: 15px;
+    height: 15px;
+    flex: none;
+    color: var(--ink-3);
+}
+
+/* Left aligned, unlike the GoBiker popup: an address or a sentence has to wrap readably. */
+.sos-pop dd {
+    margin: 0;
+    color: var(--ink-2);
+    font-weight: 600;
+    text-align: left;
+    overflow-wrap: anywhere;
+}
+
+/* On a phone the bubble must stay inside the map instead of running off its edge. */
+@media (max-width: 480px) {
+    .leaflet-popup-content {
+        min-width: 0;
+        max-width: calc(100vw - 80px);
+    }
+}
 
 /* ---------- Stat rows ---------- */
 

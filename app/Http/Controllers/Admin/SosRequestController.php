@@ -122,16 +122,23 @@ class SosRequestController extends Controller
     }
 
     /**
-     * Residents' SOS requests for the live map: open ones, and ones resolved in the last 30 minutes
-     * (shown green for a while). Only requests sent with a GPS position can be drawn.
+     * Residents' SOS requests for the live map: the open ones only. Resolved requests leave the
+     * map, so what the admin sees is what still needs someone. Who resolved it, and when, stays
+     * on the request's own page.
+     *
+     * Only requests sent with a GPS position can be drawn. The map asks for this about once a
+     * second, so the columns are listed rather than selecting the whole row.
      */
     public function mapPins()
     {
-        $pins = SosRequest::with('user:id,name,mobile', 'assignedGobiker:id,name,barangay', 'resolvedBy:id,name,barangay')
+        $pins = SosRequest::with('user:id,name,mobile,photo_path', 'assignedGobiker:id,name,barangay,photo_path')
+            ->select([
+                'id', 'user_id', 'status', 'barangay', 'address', 'landmark', 'description',
+                'latitude', 'longitude', 'assigned_gobiker_id', 'created_at',
+            ])
             ->whereNotNull('latitude')
             ->whereNotNull('longitude')
-            ->where(fn ($q) => $q->open()
-                ->orWhere(fn ($q) => $q->where('status', 'resolved')->where('resolved_at', '>=', now()->subMinutes(30))))
+            ->open()
             ->latest()
             ->limit(200)
             ->get()
@@ -140,6 +147,7 @@ class SosRequestController extends Controller
                 'status' => $sos->status,
                 'resident' => $sos->user?->name ?? 'Resident',
                 'mobile' => $sos->user?->mobile,
+                'resident_photo' => Media::url($sos->user?->photo_path),
                 'barangay' => $sos->barangay,
                 'address' => $sos->address,
                 'landmark' => $sos->landmark,
@@ -148,7 +156,7 @@ class SosRequestController extends Controller
                 'longitude' => $sos->longitude,
                 'assigned_gobiker' => $sos->assignedGobiker?->name,
                 'assigned_gobiker_barangay' => $sos->assignedGobiker?->barangay,
-                'resolved_by' => $sos->resolvedBy?->name ?? ($sos->resolved_by_resident ? 'the resident' : ($sos->status === 'resolved' ? 'an admin' : null)),
+                'assigned_gobiker_photo' => Media::url($sos->assignedGobiker?->photo_path),
                 'created_at' => $sos->created_at?->toIso8601String(),
             ]);
 

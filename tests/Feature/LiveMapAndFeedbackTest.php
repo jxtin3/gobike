@@ -147,6 +147,35 @@ it('lists the GoBikers who can respond, nearest first, and the SOS pins for the 
     $this->getJson(route('admin.sos-pins.index'))->assertOk()->assertJsonCount(1)->assertJsonPath('0.status', 'sent');
 });
 
+it('sends the face of whoever asked for help with their pin, and nothing at all when they have no photo', function () {
+    liveSos($this->resident);
+
+    // Most residents never add one: the map draws their initials instead.
+    $this->actingAs($this->admin)->getJson(route('admin.sos-pins.index'))
+        ->assertOk()
+        ->assertJsonPath('0.resident', 'Ana Reyes')
+        ->assertJsonPath('0.resident_photo', null);
+
+    $this->resident->update(['photo_path' => 'profile-photos/ana.jpg']);
+
+    $this->getJson(route('admin.sos-pins.index'))
+        ->assertOk()
+        ->assertJsonPath('0.resident_photo', fn ($url) => is_string($url) && str_contains($url, 'profile-photos/ana.jpg'));
+});
+
+it('takes a resolved emergency off the admin map, and leaves the others alone', function () {
+    $first = liveSos($this->resident);
+    $middle = liveSos($this->neighbor);
+    $last = liveSos($this->resident);
+
+    $this->actingAs($this->admin)->getJson(route('admin.sos-pins.index'))->assertOk()->assertJsonCount(3);
+
+    $middle->update(['status' => 'resolved', 'resolved_at' => now(), 'resolved_by_gobiker_id' => $this->gobiker->id]);
+
+    $ids = collect($this->getJson(route('admin.sos-pins.index'))->assertOk()->assertJsonCount(2)->json())->pluck('id');
+    expect($ids)->toContain($first->id)->toContain($last->id)->not->toContain($middle->id);
+});
+
 it('hides a waiting SOS from every GoBiker until the admin assigns one', function () {
     $sos = liveSos($this->resident);
 
