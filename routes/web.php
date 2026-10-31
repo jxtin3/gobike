@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\ContactMessageController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\DonationController as AdminDonationController;
 use App\Http\Controllers\Admin\EmergencyAlertController;
+use App\Http\Controllers\Admin\FeedbackController;
 use App\Http\Controllers\Admin\GobikerMessageController;
 use App\Http\Controllers\Admin\GobikerReportController;
 use App\Http\Controllers\Admin\HomepageDataController;
@@ -204,6 +205,9 @@ Route::middleware([EnsureAdmin::class, AuthenticateSession::class])->prefix('adm
         Route::get('/patients/{patient}', [AdminPatientController::class, 'show'])->name('patients.show');
         Route::delete('/patients/{patient}', [AdminPatientController::class, 'destroy'])->name('patients.destroy');
         Route::patch('/patients/{patient}/follow-up', [PatientFollowUpController::class, 'update'])->name('patients.follow-up');
+
+        // residents' ratings of the GoBikers who helped them
+        Route::get('/feedback', [FeedbackController::class, 'index'])->name('feedback.index');
 
         // GoBiker activity reports
         Route::get('/gobiker-reports', [GobikerReportController::class, 'index'])->name('gobiker-reports.index');

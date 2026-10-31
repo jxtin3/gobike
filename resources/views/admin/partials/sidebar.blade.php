@@ -21,6 +21,7 @@
                 ['route' => 'admin.operations.appointments.index', 'match' => ['admin.operations.appointments.*'], 'icon' => 'clock', 'label' => 'Appointments', 'skeleton' => 'table',
                     'badge' => ['count' => $navAppointmentsPending ?? 0, 'tone' => 'warn', 'label' => 'waiting for a GoBiker', 'name' => 'appointments']],
                 ['route' => 'admin.operations.gobiker-reports.index', 'match' => ['admin.operations.gobiker-reports.*'], 'icon' => 'trending-up', 'label' => 'GoBiker reports', 'skeleton' => 'table'],
+                ['route' => 'admin.operations.feedback.index', 'match' => ['admin.operations.feedback.*'], 'icon' => 'star', 'label' => 'Feedback', 'skeleton' => 'table'],
             ],
         ],
         'requests' => [
