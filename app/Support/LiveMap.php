@@ -4,6 +4,7 @@ namespace App\Support;
 
 use App\Models\Location;
 use App\Models\User;
+use Carbon\CarbonInterface;
 use Illuminate\Support\Collection;
 
 /** Who appears on the live map in the mobile app: everyone is limited to their own barangay. */
@@ -13,6 +14,24 @@ class LiveMap
     public static function gobikerBarangay(User $gobiker): ?string
     {
         return $gobiker->location?->designated_barangay ?? $gobiker->barangay;
+    }
+
+    /**
+     * A position older than this is stale: the GoBiker's app is closed or has lost signal, and
+     * they count as offline. One definition, used by the maps and by assignment alike, so the
+     * admin can never be shown somebody the server will then refuse.
+     */
+    public static function staleBefore(): CarbonInterface
+    {
+        return now()->subSeconds((int) config('app.location_stale_after_seconds', 30));
+    }
+
+    /** Is this GoBiker's app on and reporting right now? */
+    public static function isOnline(?int $userId): bool
+    {
+        return $userId !== null && Location::where('user_id', $userId)
+            ->where('last_seen_at', '>=', self::staleBefore())
+            ->exists();
     }
 
     /**
@@ -29,7 +48,7 @@ class LiveMap
         return Location::query()
             ->with('user:id,name,barangay')
             ->whereHas('user', fn ($user) => $user->where('role', 'GoBiker')->where('status', 'Active'))
-            ->where('last_seen_at', '>=', now()->subSeconds((int) config('app.location_stale_after_seconds', 30)))
+            ->where('last_seen_at', '>=', self::staleBefore())
             ->whereNotNull('latitude')
             ->whereNotNull('longitude')
             ->when($exceptUserId, fn ($q) => $q->where('user_id', '!=', $exceptUserId))
@@ -53,7 +72,7 @@ class LiveMap
      */
     public static function gobikersFor(?string $barangay): Collection
     {
-        $stale = now()->subSeconds((int) config('app.location_stale_after_seconds', 30));
+        $stale = self::staleBefore();
 
         return User::query()
             ->with('location:id,user_id,designated_barangay,last_seen_at,latitude,longitude')
@@ -74,7 +93,7 @@ class LiveMap
     }
 
     /**
-     * The same list, ordered by how near each GoBiker actually is to the emergency.
+     * The GoBikers the admin may actually send: the online ones, nearest first.
      *
      * The barangays have no coordinates and no record of which ones adjoin, so "nearby" cannot be
      * worked out from the names. Where both the SOS and the GoBiker's app have sent a position,
@@ -85,6 +104,9 @@ class LiveMap
     public static function gobikersForAssignment(?float $latitude, ?float $longitude, ?string $barangay): Collection
     {
         return self::gobikersFor($barangay)
+            // Only GoBikers who are actually online: someone whose app is closed cannot be told
+            // an emergency is waiting, so the admin must not be offered them in the first place.
+            ->filter(fn (array $gobiker) => $gobiker['online'])
             ->map(function (array $gobiker) use ($latitude, $longitude) {
                 $gobiker['distance_km'] = self::distanceKm(
                     $latitude, $longitude,
@@ -94,7 +116,6 @@ class LiveMap
                 return $gobiker;
             })
             ->sortBy([
-                ['online', 'desc'],
                 // sortBy puts nulls first, so unknown distances are pushed past every known one.
                 [fn (array $a, array $b) => ($a['distance_km'] ?? INF) <=> ($b['distance_km'] ?? INF), 'asc'],
                 ['name', 'asc'],

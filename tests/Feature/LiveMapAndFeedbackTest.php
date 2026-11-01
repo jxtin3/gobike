@@ -64,6 +64,7 @@ it('never plots residents for a GoBiker, only the GoBikers of their barangay', f
 // ---------------------------------------------------------------- SOS assignment
 
 it('lets the admin send a GoBiker to an SOS', function () {
+    onlineGobiker($this->gobiker);
     $sos = liveSos($this->resident);
 
     $this->actingAs($this->admin)
@@ -75,6 +76,7 @@ it('lets the admin send a GoBiker to an SOS', function () {
 });
 
 it('lets the admin send a GoBiker from another barangay, who then sees the request', function () {
+    onlineGobiker($this->faraway, 16.05, 120.30);
     $sos = liveSos($this->resident);
 
     // The nearest GoBiker often covers the next barangay, so assignment is not limited to
@@ -100,7 +102,42 @@ it('does not let the admin send anyone but an active GoBiker', function () {
     }
 });
 
+it('refuses to send a GoBiker whose app is shut, however the request is made', function () {
+    $sos = liveSos($this->resident);
+    // Maria Santos is active and covers the barangay, but her app has not reported in.
+    $this->actingAs($this->admin)
+        ->patchJson(route('admin.operations.sos.status', $sos), ['status' => 'responding', 'gobiker_id' => $this->gobiker->id])
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors('gobiker_id')
+        ->assertJsonPath('errors.gobiker_id.0', 'That GoBiker is offline. Send one whose app is on and showing on the map.');
+
+    expect($sos->fresh())->assigned_gobiker_id->toBeNull()->status->toBe('sent');
+
+    // The same GoBiker, once their app is reporting again.
+    onlineGobiker($this->gobiker);
+    $this->patchJson(route('admin.operations.sos.status', $sos), ['status' => 'responding', 'gobiker_id' => $this->gobiker->id])
+        ->assertOk();
+
+    expect($sos->fresh()->assigned_gobiker_id)->toBe($this->gobiker->id);
+});
+
+it('offers nobody when every GoBiker is offline, and the stale ones drop out', function () {
+    $sos = liveSos($this->resident);
+
+    $this->actingAs($this->admin)->getJson(route('admin.operations.sos.gobikers', $sos))
+        ->assertOk()
+        ->assertJsonCount(0, 'gobikers');
+
+    onlineGobiker($this->gobiker);
+    $this->getJson(route('admin.operations.sos.gobikers', $sos))->assertOk()->assertJsonCount(1, 'gobikers');
+
+    // Their last position is now older than the staleness window: they are offline again.
+    $this->gobiker->location->update(['last_seen_at' => now()->subSeconds(config('app.location_stale_after_seconds') + 5)]);
+    $this->getJson(route('admin.operations.sos.gobikers', $sos))->assertOk()->assertJsonCount(0, 'gobikers');
+});
+
 it('lets the admin hand a responding SOS to another GoBiker', function () {
+    onlineGobiker($this->colleague);
     $sos = liveSos($this->resident, ['status' => 'responding', 'assigned_gobiker_id' => $this->gobiker->id, 'responded_at' => now()]);
 
     $this->actingAs($this->admin)
@@ -122,21 +159,21 @@ it('lists the GoBikers who can respond, nearest first, and the SOS pins for the 
     $sos = liveSos($this->resident);
     liveSos($this->neighbor, ['latitude' => null, 'longitude' => null]);
 
-    // The request's own barangay by default.
+    // The request's own barangay by default. Maria Santos covers it too but her app is shut,
+    // so she is not offered: a closed app can never be told that someone needs help.
     $this->actingAs($this->admin)->getJson(route('admin.operations.sos.gobikers', $sos))
         ->assertOk()
         ->assertJsonPath('barangay', 'Poblacion')
         ->assertJsonPath('gobikers.0.name', 'Jose Lim')
         ->assertJsonPath('gobikers.0.distance_km', 0)
-        ->assertJsonCount(2, 'gobikers');
+        ->assertJsonCount(1, 'gobikers');
 
-    // Widened to the whole town: online first, then whoever is really nearest.
+    // Widened to the whole town: still only the online ones, nearest first.
     $this->getJson(route('admin.operations.sos.gobikers', $sos).'?barangay=all')
         ->assertOk()
         ->assertJsonPath('gobikers.0.name', 'Jose Lim')
         ->assertJsonPath('gobikers.1.name', 'Rico Dela')
-        ->assertJsonPath('gobikers.2.name', 'Maria Santos')
-        ->assertJsonCount(3, 'gobikers');
+        ->assertJsonCount(2, 'gobikers');
 
     // One barangay at a time, for picking a neighbouring responder.
     $this->getJson(route('admin.operations.sos.gobikers', $sos).'?barangay=Hacienda')

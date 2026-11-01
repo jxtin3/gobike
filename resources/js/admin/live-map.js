@@ -104,7 +104,7 @@
                 : '';
 
         return `<div class="gb-pop">
-            <strong>${esc(r.name)} <em class="s-text s-${esc(r.status)}">${esc(status)}</em></strong>
+            <strong>${face(r.name, r.photo_url, 32)}<span>${esc(r.name)} <em class="s-text s-${esc(r.status)}">${esc(status)}</em></span></strong>
             <dl>
                 <dt>Mobile</dt><dd>${mobile}</dd>
                 <dt>Barangay</dt><dd>${esc(r.designated_barangay || 'Not assigned')}</dd>
@@ -382,9 +382,9 @@
         }
     }
 
-    /* "Juan Dela Cruz · Poblacion · 1.2 km · online" — enough to pick whoever is really nearest. */
+    /* "Juan Dela Cruz · Poblacion · 1.2 km" — everyone listed is online, so only who and where. */
     function gobikerLabel(g) {
-        const bits = [g.barangay, Number.isFinite(g.distance_km) ? `${g.distance_km} km` : null, g.online ? 'online' : 'offline'];
+        const bits = [g.barangay, Number.isFinite(g.distance_km) ? `${g.distance_km} km` : null];
 
         return `${g.name} · ${bits.filter(Boolean).join(' · ')}`;
     }
@@ -416,9 +416,13 @@
             if (!res.ok) throw new Error(String(res.status));
             const data = await res.json();
             fillBarangays(id, data, barangay);
+            // Offline GoBikers are not in this list at all: their app is shut and would never
+            // hear about the emergency. Say so plainly when that leaves nobody to send.
+            const where = esc(barangay === 'all' ? 'the town' : (barangay ?? data.barangay ?? 'this barangay'));
             select.innerHTML = data.gobikers.length
                 ? '<option value="">Choose a GoBiker</option>' + data.gobikers.map((g) => `<option value="${esc(g.id)}">${esc(gobikerLabel(g))}</option>`).join('')
-                : `<option value="">No GoBiker covers ${esc(barangay === 'all' ? 'the town' : (barangay ?? data.barangay ?? 'this barangay'))}</option>`;
+                : `<option value="">No GoBiker is online in ${where}</option>`;
+            select.dataset.none = data.gobikers.length ? '' : '1';
             select.dataset.loaded = '1';
         } catch {
             select.innerHTML = '<option value="">Could not load GoBikers</option>';
@@ -543,8 +547,15 @@
         const btn = e.target.closest('.gb-pop [data-sos-action]');
         if (!btn) return;
         const id = btn.dataset.sos;
-        const gobikerId = document.querySelector(`[data-sos-gobikers="${CSS.escape(id)}"]`)?.value;
-        if (!gobikerId) { notice('Choose the GoBiker who will respond first.'); return; }
+        const picker = document.querySelector(`[data-sos-gobikers="${CSS.escape(id)}"]`);
+        const gobikerId = picker?.value;
+        if (!gobikerId) {
+            notice(picker?.dataset.none === '1'
+                ? 'Nobody is online to send. Try another barangay, or wait for a GoBiker to start their ronda.'
+                : 'Choose the GoBiker who will respond first.');
+
+            return;
+        }
 
         btn.disabled = true;
         try {

@@ -8,6 +8,7 @@ use App\Services\Push\PushNotifier;
 use App\Support\Barangays;
 use App\Support\LiveMap;
 use App\Support\Media;
+use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
@@ -71,10 +72,16 @@ class SosRequestController extends Controller
         $data = $request->validate([
             'status' => ['required', Rule::in(['responding', 'resolved'])],
             // The GoBiker sent to help (live map). Only they can then see and resolve it in the app.
-            // Any active GoBiker may be sent: the nearest one often covers the next barangay.
+            // Any active GoBiker may be sent: the nearest one often covers the next barangay. They
+            // must be online, though — a closed app cannot be told that someone needs help, and
+            // the picker only offers online GoBikers, so this closes the same door to the API.
             'gobiker_id' => ['nullable', 'integer', Rule::exists('users', 'id')
                 ->where('role', 'GoBiker')
-                ->where('status', 'Active')],
+                ->where('status', 'Active'),
+                fn (string $attribute, mixed $value, Closure $fail) => LiveMap::isOnline((int) $value)
+                    ? null
+                    : $fail('That GoBiker is offline. Send one whose app is on and showing on the map.'),
+            ],
         ]);
 
         $newGobikerId = $data['gobiker_id'] ?? null;
