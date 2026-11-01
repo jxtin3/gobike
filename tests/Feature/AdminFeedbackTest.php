@@ -22,20 +22,52 @@ function makeRating(array $overrides = []): Feedback
     ], $overrides));
 }
 
-it('lists the ratings residents gave, newest first', function () {
+it('lists the ratings residents gave, best first', function () {
     $admin = User::factory()->create(['is_admin' => true]);
-    makeRating(['comment' => 'The older one', 'created_at' => now()->subDay()]);
-    makeRating(['subject_id' => 2, 'comment' => 'The newer one']);
+    makeRating(['rating' => 2, 'comment' => 'Two stars', 'created_at' => now()->subDay()]);
+    makeRating(['subject_id' => 2, 'rating' => 5, 'comment' => 'Five stars', 'created_at' => now()->subDays(3)]);
+    // A skip has no stars; it belongs at the bottom, not among the one-star ratings.
+    makeRating(['subject_id' => 3, 'rating' => null, 'comment' => 'Skipped this one']);
+    makeRating(['subject_id' => 4, 'rating' => 4, 'comment' => 'Four stars', 'created_at' => now()->subDays(2)]);
 
     $this->actingAs($admin)
         ->get(route('admin.operations.feedback.index'))
         ->assertOk()
         ->assertSee('Maria Santos')
         ->assertSee('Ana Reyes')
-        ->assertSee('The newer one')
-        ->assertSeeInOrder(['The newer one', 'The older one'])
+        ->assertSeeInOrder(['Five stars', 'Four stars', 'Two stars', 'Skipped this one'])
         ->assertSee('5/5')
         ->assertSee('Emergency SOS');
+});
+
+it('keeps the best-first order across pages, and when a tab or a search narrows it', function () {
+    $admin = User::factory()->create(['is_admin' => true]);
+    // 16 ratings: one page holds 15, so the worst of them has to fall onto the second page.
+    foreach (range(1, 16) as $i) {
+        makeRating(['subject_id' => $i, 'rating' => $i === 16 ? 1 : 5, 'comment' => "Rating number {$i}"]);
+    }
+
+    $this->actingAs($admin)
+        ->get(route('admin.operations.feedback.index'))
+        ->assertOk()
+        ->assertDontSee('Rating number 16')
+        ->assertSee('Rating number 15');
+
+    $this->get(route('admin.operations.feedback.index', ['page' => 2]))
+        ->assertOk()
+        ->assertSee('Rating number 16');
+
+    // The same order inside a tab and a search, not only on the unfiltered list.
+    makeRating(['kind' => 'checkup', 'subject_id' => 90, 'rating' => 3, 'comment' => 'Checkup three']);
+    makeRating(['kind' => 'checkup', 'subject_id' => 91, 'rating' => 5, 'comment' => 'Checkup five']);
+
+    $this->get(route('admin.operations.feedback.index', ['kind' => 'checkup']))
+        ->assertOk()
+        ->assertSeeInOrder(['Checkup five', 'Checkup three']);
+
+    $this->get(route('admin.operations.feedback.index', ['search' => 'Checkup']))
+        ->assertOk()
+        ->assertSeeInOrder(['Checkup five', 'Checkup three']);
 });
 
 it('shows the average rating and how many were skipped', function () {

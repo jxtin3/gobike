@@ -35,6 +35,12 @@ class FeedbackController extends Controller
                         ->orWhere('comment', 'like', "%{$search}%");
                 });
             })
+            // Best first, worst last: an admin opens this to see how the service is going, not to
+            // read the newest row. A skip carries no stars at all, so it sits below the one-star
+            // ratings instead of being treated as the worst. Ratings that tie stay newest-first,
+            // and the id breaks any remaining tie so the order holds across pages.
+            ->orderByRaw('CASE WHEN rating IS NULL THEN 1 ELSE 0 END')
+            ->orderByDesc('rating')
             ->latest()
             ->latest('id')
             ->paginate(15)
