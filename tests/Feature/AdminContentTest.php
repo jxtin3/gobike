@@ -118,3 +118,22 @@ it('only puts current GoBikers on the live map', function () {
         ->assertJsonPath('0.name', 'On Ronda')
         ->assertJsonPath('0.status', 'active');
 });
+
+it('sends each GoBiker their own photo for the map pin, and nothing when they have none', function () {
+    $admin = User::factory()->create(['is_admin' => true]);
+    $withPhoto = User::factory()->create(['role' => 'GoBiker', 'name' => 'Maria Santos', 'photo_path' => 'profile-photos/maria.jpg']);
+    $without = User::factory()->create(['role' => 'GoBiker', 'name' => 'Jose Lim']);
+    foreach ([$withPhoto, $without] as $i => $gobiker) {
+        Location::create([
+            'user_id' => $gobiker->id, 'latitude' => 16.0 + $i, 'longitude' => 120.3,
+            'status' => 'active', 'last_seen_at' => now(),
+        ]);
+    }
+
+    $pins = collect($this->actingAs($admin)->getJson(route('admin.locations.index'))->assertOk()->json())
+        ->keyBy('name');
+
+    // Each pin carries its own GoBiker's photo; the other one draws initials instead.
+    expect($pins['Maria Santos']['photo_url'])->toContain('profile-photos/maria.jpg')
+        ->and($pins['Jose Lim']['photo_url'])->toBeNull();
+});

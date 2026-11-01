@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Location;
 use App\Services\Push\PushNotifier;
+use App\Support\Media;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -18,7 +19,7 @@ class LocationController extends Controller
     {
         $locations = Location::query()
             ->whereHas('user', fn ($user) => $user->where('role', 'GoBiker'))
-            ->with('user:id,name,mobile')
+            ->with('user:id,name,mobile,photo_path')
             ->select([
                 'id', 'user_id', 'name', 'designated_barangay', 'status',
                 'latitude', 'longitude', 'last_seen_at', 'active_start_time',
@@ -36,6 +37,8 @@ class LocationController extends Controller
                     'location_id' => $location->id,
                     'name' => $location->user?->name ?? $location->name ?? 'Unnamed GoBiker',
                     'mobile' => $location->user?->mobile,
+                    // So the admin sees who is on the pin, not just a dot and a name.
+                    'photo_url' => Media::url($location->user?->photo_path),
                     'designated_barangay' => $location->designated_barangay,
                     'latitude' => $location->latitude,
                     'longitude' => $location->longitude,
