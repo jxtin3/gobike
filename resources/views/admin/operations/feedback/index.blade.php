@@ -1,11 +1,11 @@
 @extends('admin.operations.layout')
 @section('title', 'Feedback')
 @section('heading', 'Feedback')
-@section('subheading', 'What residents thought of the GoBiker who helped them, rated in the app after an emergency or a check-up.')
+@section('subheading', 'What residents thought of the GoBiker who helped them, rated in the app after an emergency or a check-up. Open a GoBiker to read what each resident said.')
 
 @section('content')
 @php
-    $tabs = ['all' => 'All', 'sos' => 'Emergency SOS', 'checkup' => 'Check-ups', 'skipped' => 'Skipped'];
+    $tabs = ['all' => 'All', 'sos' => 'Emergency SOS', 'checkup' => 'Check-ups'];
     $searching = filled(request('search'));
     $average = $figures['average'] ? number_format($figures['average'], 1) : null;
 @endphp
@@ -43,7 +43,7 @@
     @endforeach
 </nav>
 
-<x-admin.filters :action="route('admin.operations.feedback.index')" placeholder="Search by resident, GoBiker or comment" label="Search feedback"
+<x-admin.filters :action="route('admin.operations.feedback.index')" placeholder="Search by GoBiker or barangay" label="Search GoBikers"
                  :hidden="['kind' => $tab === 'all' ? null : $tab]" :filtered="$searching" />
 
 <div data-list>
@@ -52,87 +52,76 @@
         <thead>
             <tr>
                 <th>GoBiker</th>
-                <th>Rating</th>
-                <th>Resident</th>
-                <th>Comment</th>
-                <th>For</th>
-                <th>Given</th>
+                <th>Average rating</th>
+                <th>Ratings</th>
+                <th>Last rated</th>
                 <th><span class="sr-only">Actions</span></th>
             </tr>
         </thead>
         <tbody>
-            @forelse ($ratings as $rating)
+            @forelse ($gobikers as $row)
                 @php
-                    $gobiker = $rating->gobiker?->name ?? 'Deleted GoBiker';
-                    $resident = $rating->resident?->name ?? 'Deleted resident';
+                    $user = $users->get($row->gobiker_id);
+                    $name = $user?->name ?? 'Deleted GoBiker';
+                    $rated = (int) $row->rated;
+                    $skipped = (int) $row->skipped;
+                    $mean = $rated ? (float) $row->average : null;
+                    $lastRated = \Illuminate\Support\Carbon::parse($row->last_at);
+                    $url = $user ? route('admin.operations.feedback.show', $user) : null;
                 @endphp
-                <tr class="is-clickable"
-                    data-dialog="#feedbackDialog"
-                    data-name="{{ $gobiker }}"
-                    data-stars="{{ $rating->was_skipped ? 'Skipped' : $rating->rating.' out of 5' }}"
-                    data-status="{{ $rating->was_skipped ? 'Skipped' : $rating->rating.'/5' }}"
-                    data-status-pill="{{ $rating->rating_pill }}"
-                    data-resident="{{ $resident }}"
-                    data-barangay="{{ $rating->resident?->barangay ?? 'Unknown' }}"
-                    data-kind="{{ $rating->kind_label }}"
-                    data-comment="{{ $rating->comment ?: 'No comment' }}"
-                    data-date="{{ $rating->created_at->format('M j, Y g:i A') }}"
-                    @if ($links[$rating->id] ?? '') data-subject-url="{{ $links[$rating->id] }}" @endif>
+                {{-- The whole row opens the GoBiker's page; the name is a real link for keyboards and screen readers. --}}
+                <tr @if ($url) data-href="{{ $url }}" @endif>
                     <td>
                         <div class="cell-user">
-                            <x-admin.avatar :name="$gobiker" :src="$rating->gobiker?->photo_path ? \App\Support\Media::url($rating->gobiker->photo_path) : null" />
+                            <x-admin.avatar :name="$name" :src="$user?->photo_path ? \App\Support\Media::url($user->photo_path) : null" />
                             <div>
-                                <b>{{ $gobiker }}</b>
-                                <small>{{ $rating->gobiker?->barangay ?? 'No barangay' }}</small>
+                                @if ($url)
+                                    <a href="{{ $url }}"><b>{{ $name }}</b></a>
+                                @else
+                                    <b>{{ $name }}</b>
+                                @endif
+                                <small>{{ $user?->barangay ?? 'No barangay' }}</small>
                             </div>
                         </div>
                     </td>
                     <td>
-                        @if ($rating->was_skipped)
-                            <span class="pill pill-neutral">Skipped</span>
+                        @if ($mean === null)
+                            <span class="pill pill-neutral">Skipped only</span>
                         @else
                             {{-- Stars for a glance, the number for anyone who cannot tell them apart. --}}
-                            <span class="stars" role="img" aria-label="{{ $rating->rating }} out of 5 stars">
+                            <span class="stars" role="img" aria-label="Average {{ number_format($mean, 1) }} out of 5 stars">
                                 @for ($i = 1; $i <= 5; $i++)
-                                    <x-admin.icon name="star" @class(['star', 'is-on' => $i <= $rating->rating]) />
+                                    <x-admin.icon name="star" @class(['star', 'is-on' => $i <= round($mean)]) />
                                 @endfor
                             </span>
-                            <small class="sub-line">{{ $rating->rating }}/5</small>
+                            <small class="sub-line">{{ number_format($mean, 1) }}/5</small>
                         @endif
                     </td>
                     <td>
-                        {{ $resident }}
-                        <small class="sub-line">{{ $rating->resident?->barangay ?? 'No barangay' }}</small>
-                    </td>
-                    <td title="{{ $rating->comment }}">
-                        @if ($rating->comment)
-                            {{ Str::limit($rating->comment, 60) }}
-                        @else
-                            <span class="muted">No comment</span>
+                        {{ number_format($rated) }} {{ Str::plural('rating', $rated) }}
+                        @if ($skipped)
+                            <small class="sub-line">{{ number_format($skipped) }} skipped</small>
                         @endif
                     </td>
-                    <td>{{ $rating->kind_label }}</td>
                     <td>
-                        {{ $rating->created_at->format('M j, Y') }}
-                        <small class="sub-line">{{ $rating->created_at->diffForHumans() }}</small>
+                        {{ $lastRated->format('M j, Y') }}
+                        <small class="sub-line">{{ $lastRated->diffForHumans() }}</small>
                     </td>
                     <td>
                         <div class="row-actions">
-                            <button type="button" class="icon-btn" data-open title="Open" aria-label="Open the feedback for {{ $gobiker }}"><x-admin.icon name="eye" /></button>
+                            @if ($url)
+                                <a class="icon-btn" href="{{ $url }}" title="Open" aria-label="Open the feedback for {{ $name }}"><x-admin.icon name="eye" /></a>
+                            @endif
                         </div>
                     </td>
                 </tr>
             @empty
                 @if ($searching)
-                    <x-admin.empty :row="7" icon="star" title="No feedback matches these filters" :clear="route('admin.operations.feedback.index')">
-                        Try a different name or word, or clear the filters.
-                    </x-admin.empty>
-                @elseif ($tab === 'skipped')
-                    <x-admin.empty :row="7" icon="star" title="Nobody has skipped a rating">
-                        Residents who close the rating without answering appear here.
+                    <x-admin.empty :row="5" icon="star" title="No GoBiker matches these filters" :clear="route('admin.operations.feedback.index')">
+                        Try a different name or barangay, or clear the filters.
                     </x-admin.empty>
                 @else
-                    <x-admin.empty :row="7" icon="star" title="No feedback yet">
+                    <x-admin.empty :row="5" icon="star" title="No feedback yet">
                         After a GoBiker resolves an emergency or records a check-up, the resident is asked to rate them. Their answers appear here.
                     </x-admin.empty>
                 @endif
@@ -141,31 +130,6 @@
     </table>
 </div>
 
-    <x-admin.pager :paginator="$ratings" noun="rating" />
+    <x-admin.pager :paginator="$gobikers" noun="GoBiker" />
 </div>
-
-<x-admin.dialog id="feedbackDialog" kicker="Feedback for" size="sm">
-    <x-slot:sub><span data-pill-field="status"></span></x-slot:sub>
-
-    <dl class="dlg-meta">
-        <div><dt>Rating</dt><dd data-field="stars"></dd></div>
-        <div><dt>For</dt><dd data-field="kind"></dd></div>
-        <div><dt>Resident</dt><dd data-field="resident"></dd></div>
-        <div><dt>Barangay</dt><dd data-field="barangay"></dd></div>
-        <div class="dlg-meta-wide"><dt>Given</dt><dd data-field="date"></dd></div>
-    </dl>
-
-    <section>
-        <h3 class="dlg-label">Comment</h3>
-        <p class="dlg-text" data-field="comment"></p>
-    </section>
-
-    <x-slot:foot>
-        <div class="dlg-foot-main">
-            {{-- Hidden when the emergency or check-up has since been deleted. --}}
-            <a class="btn btn-ghost" data-href-field="subjectUrl" data-show-field="subjectUrl">Open the record</a>
-            <button type="button" class="btn" data-dialog-close>Close</button>
-        </div>
-    </x-slot:foot>
-</x-admin.dialog>
 @endsection

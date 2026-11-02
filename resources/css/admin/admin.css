@@ -647,6 +647,14 @@ a.profile[aria-current="page"] { background: var(--brand-soft); }
     color: var(--resp);
 }
 
+/* A resident's comment on a GoBiker's feedback page: shown whole, wrapping, never cut off. */
+.feedback-comment {
+    min-width: 200px;
+    max-width: 420px;
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+
 .profile-meta { min-width: 0; }
 
 .profile-meta b,

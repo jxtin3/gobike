@@ -208,6 +208,7 @@ Route::middleware([EnsureAdmin::class, AuthenticateSession::class])->prefix('adm
 
         // residents' ratings of the GoBikers who helped them
         Route::get('/feedback', [FeedbackController::class, 'index'])->name('feedback.index');
+        Route::get('/feedback/gobikers/{gobiker}', [FeedbackController::class, 'show'])->name('feedback.show');
 
         // GoBiker activity reports
         Route::get('/gobiker-reports', [GobikerReportController::class, 'index'])->name('gobiker-reports.index');
