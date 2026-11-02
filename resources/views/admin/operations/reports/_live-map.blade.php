@@ -80,21 +80,29 @@
                 <span><i class="sos-ring s-sent"></i>SOS waiting</span>
                 <span><i class="sos-ring s-sos-responding"></i>SOS answered</span>
             </div>
-            <header><h2 id="rider-panel-title">GoBikers</h2><span class="count" id="rider-count">–</span></header>
-            <ul id="rider-list" aria-busy="true">
-                @for ($i = 0; $i < 6; $i++)
-                    <li class="rider-sk" aria-hidden="true">
-                        <span class="sk sk-avatar" style="width: 10px; height: 10px"></span>
-                        <span class="sk-stack"><span class="sk sk-line" style="--w: {{ 120 + $i * 12 }}px"></span><span class="sk sk-line" style="--w: 80px"></span></span>
-                    </li>
-                @endfor
-            </ul>
-            <div class="empty" id="rider-empty" hidden>
-                <x-admin.icon name="search" />
-                <b>No GoBikers match</b>
-                <p>Try a different name, status or barangay.</p>
-                <button type="button" class="btn btn-secondary btn-sm" id="clear-filters">Clear filters</button>
-            </div>
+            {{-- Two dropdowns: residents who need help come first, and the long GoBiker list can be folded away. --}}
+            <details class="rider-section" open>
+                <summary><h2>Residents</h2><span class="count" id="sos-count">–</span><x-admin.icon name="chevron-down" class="rider-chevron" /></summary>
+                <ul id="sos-list"></ul>
+                <p class="rider-none" id="sos-empty">No resident needs help right now.</p>
+            </details>
+            <details class="rider-section" open>
+                <summary><h2 id="rider-panel-title">GoBikers</h2><span class="count" id="rider-count">–</span><x-admin.icon name="chevron-down" class="rider-chevron" /></summary>
+                <ul id="rider-list" aria-busy="true">
+                    @for ($i = 0; $i < 6; $i++)
+                        <li class="rider-sk" aria-hidden="true">
+                            <span class="sk sk-avatar" style="width: 10px; height: 10px"></span>
+                            <span class="sk-stack"><span class="sk sk-line" style="--w: {{ 120 + $i * 12 }}px"></span><span class="sk sk-line" style="--w: 80px"></span></span>
+                        </li>
+                    @endfor
+                </ul>
+                <div class="empty" id="rider-empty" hidden>
+                    <x-admin.icon name="search" />
+                    <b>No GoBikers match</b>
+                    <p>Try a different name, status or barangay.</p>
+                    <button type="button" class="btn btn-secondary btn-sm" id="clear-filters">Clear filters</button>
+                </div>
+            </details>
         </aside>
     </div>
 </section>

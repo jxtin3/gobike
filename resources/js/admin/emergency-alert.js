@@ -78,9 +78,10 @@
     const ringing = () => (stopped ? [] : emergencies.filter((e) => !silenced.has(e.key)));
     const mapHref = (id) => `${root.dataset.mapUrl}?focus=${encodeURIComponent(id)}`;
     const isResident = (e) => e.kind === 'resident';
-    // A resident's SOS opens its request page; a GoBiker's emergency opens the live map.
+    const sosMapHref = (id) => `${root.dataset.mapUrl}?sos=${encodeURIComponent(id)}`;
+    // Both kinds open on the live map, zoomed to the person who needs help.
     const openEmergency = (e) => {
-        if (isResident(e)) window.location.href = e.view_url;
+        if (isResident(e)) showSosOnMap(e.sos_id);
         else showOnMap(e.location_id);
     };
 
@@ -251,9 +252,9 @@
         const map = $('[data-field-href="map"]', li);
         const respond = $('[data-emer-respond]', li);
         if (isResident(e)) {
-            map.href = e.view_url;
-            delete map.dataset.emerMap;
-            $('[data-field="open-label"]', map).textContent = 'Open request';
+            // Same as a GoBiker's: the map, zoomed to their pin with its popup open.
+            map.href = sosMapHref(e.sos_id);
+            map.dataset.sosId = e.sos_id;
             respond.dataset.respondUrl = e.respond_url;
         } else {
             map.href = mapHref(e.location_id);
@@ -498,6 +499,14 @@
         }
     }
 
+    function showSosOnMap(sosId) {
+        if (document.getElementById('map')) {
+            document.dispatchEvent(new CustomEvent('gobike:show-sos', { detail: { sosId: Number(sosId) } }));
+            return;
+        }
+        window.location.href = sosMapHref(sosId);
+    }
+
     function showOnMap(locationId) {
         // Already on the live map: move the map instead of reloading the page.
         if (document.getElementById('map')) {
@@ -521,7 +530,8 @@
         const mapLink = e.target.closest('[data-emer-map]');
         if (mapLink && document.getElementById('map')) {
             e.preventDefault();
-            showOnMap(mapLink.dataset.locationId);
+            if (mapLink.dataset.sosId) showSosOnMap(mapLink.dataset.sosId);
+            else showOnMap(mapLink.dataset.locationId);
             return;
         }
         if (e.target.closest('[data-emer-silence]')) silenceAll();

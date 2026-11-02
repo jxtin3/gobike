@@ -41,6 +41,7 @@
         list: $('rider-list'), listEmpty: $('rider-empty'), riderCount: $('rider-count'),
         overlay: $('map-overlay'), error: $('map-error'), errorText: $('map-error-text'),
         note: $('map-note'), chip: $('live-chip'), updated: $('last-refresh'),
+        sosList: $('sos-list'), sosCount: $('sos-count'), sosEmpty: $('sos-empty'),
     };
 
     // Canvas draws hundreds of GoBiker dots much faster than one SVG element each.
@@ -62,6 +63,10 @@
     let sosTicker = null;
     let sosFallbackTimer = null;
     let pendingFocus = new URLSearchParams(window.location.search).get('focus');
+    // ?sos=<id>: the emergency banner sent the admin here to see a resident's SOS.
+    let pendingSosFocus = new URLSearchParams(window.location.search).get('sos');
+    let sosPins = [];
+    let sosListHtml = null;
 
     const esc = (value) => String(value ?? '').replace(/[&<>'"]/g, (c) => ({
         '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#039;', '"': '&quot;',
@@ -263,7 +268,7 @@
 
         return `<div class="gb-pop sos-pop">
             <div class="sos-pop-head">
-                ${face(p.resident, p.resident_photo, 64)}
+                ${face(p.resident, p.resident_photo, 44)}
                 <div class="sos-pop-who">
                     <p class="sos-pop-name">
                         <b>${esc(p.resident)}</b>
@@ -295,6 +300,39 @@
         });
     }
 
+    /* Who needs help, in the side panel: waiting ones first, then the newest. */
+    function renderSosList() {
+        const q = els.search.value.trim().toLowerCase();
+        const rank = { sent: 0 };
+        const visible = sosPins
+            .filter((p) => !q || String(p.resident).toLowerCase().includes(q))
+            .sort((a, b) => (rank[a.status] ?? 1) - (rank[b.status] ?? 1)
+                || new Date(b.created_at) - new Date(a.created_at));
+        els.sosCount.textContent = visible.length;
+        els.sosEmpty.hidden = visible.length > 0;
+        els.sosEmpty.textContent = sosPins.length ? 'No resident matches this search.' : 'No resident needs help right now.';
+        const focusedId = document.activeElement?.dataset?.sosId;
+        const html = visible.map((p) => `
+            <li><button type="button" class="rider" data-sos-id="${esc(p.id)}">
+                <i class="sos-ring ${esc(SOS_CLASS[p.status] || SOS_CLASS.sent)}"></i>
+                <span class="rider-main"><b>${esc(p.resident)}</b><small>${esc(p.barangay || 'No barangay')} · ${esc(ago(p.created_at))}</small></span>
+                <span class="rider-meta"><em class="s-text sos-state ${esc(SOS_STATE_CLASS[p.status] || SOS_STATE_CLASS.sent)}">${esc(sosHeadline(p))}</em></span>
+            </button></li>`).join('');
+        // Polled every second: only touch the page when something on it changed.
+        if (html === sosListHtml) return;
+        sosListHtml = html;
+        els.sosList.innerHTML = html;
+        if (focusedId) els.sosList.querySelector(`[data-sos-id="${CSS.escape(focusedId)}"]`)?.focus({ preventScroll: true });
+    }
+
+    /* Moves the map to a resident's SOS and opens its popup, like "Show on map" does for a GoBiker. */
+    function focusSos(id) {
+        const marker = sosMarkers.get(String(id));
+        if (!marker) return false;
+        flyToMarker(marker);
+        return true;
+    }
+
     /*
      * Draws the emergencies that are still open, and takes away any pin that is no longer in the
      * list — which is how a resolved one disappears. Keyed by request id, so removing one leaves
@@ -315,7 +353,7 @@
                     keyboard: true,
                     title: `${p.resident}: ${sosHeadline(p)}`,
                 }).addTo(map);
-                marker.bindPopup(sosPopup(p), { minWidth: 340, maxWidth: 400 });
+                marker.bindPopup(sosPopup(p), { minWidth: 300, maxWidth: 340 });
                 marker.on('popupopen', () => fillGobikers(id));
                 sosMarkers.set(id, marker);
             } else {
@@ -333,6 +371,8 @@
         sosMarkers.forEach((marker, id) => {
             if (!ids.has(id)) { map.removeLayer(marker); sosMarkers.delete(id); }
         });
+        sosPins = pins;
+        renderSosList();
     }
 
     /*
@@ -462,6 +502,11 @@
                 focusLocation(pendingFocus);
                 pendingFocus = null;
             }
+            if (pendingSosFocus !== null) {
+                // Gone already (answered or cancelled while the admin was on the way): say so.
+                if (!focusSos(pendingSosFocus)) notice('That SOS is no longer open.');
+                pendingSosFocus = null;
+            }
         } catch (err) {
             if (err.name === 'AbortError') return;
             els.chip.dataset.state = 'error';
@@ -520,6 +565,7 @@
     ['input', 'change'].forEach((type) => {
         [els.search, els.status, els.barangay].forEach((el) => el.addEventListener(type, render));
     });
+    els.search.addEventListener('input', renderSosList);
     $('locate-map').addEventListener('click', () => map.locate({ setView: true, maxZoom: 16 }));
     map.on('locationerror', () => notice('We could not get your location. Allow location access in your browser and try again.'));
     $('map-retry').addEventListener('click', () => { load(); schedule(); });
@@ -529,6 +575,10 @@
         els.barangay.value = 'all';
         render();
     });
+    els.sosList.addEventListener('click', (e) => {
+        const item = e.target.closest('[data-sos-id]');
+        if (item) focusSos(item.dataset.sosId);
+    });
     els.list.addEventListener('click', (e) => {
         const item = e.target.closest('[data-id]');
         const marker = item && markers.get(item.dataset.id);
@@ -536,6 +586,11 @@
         flyToMarker(marker);
     });
     document.addEventListener('visibilitychange', () => { if (!document.hidden) { load(); schedule(); } });
+    // "Show on map" on a resident's SOS in the emergency banner.
+    document.addEventListener('gobike:show-sos', (e) => {
+        if (!loaded) pendingSosFocus = e.detail.sosId;
+        else if (!focusSos(e.detail.sosId)) notice('That SOS is no longer open.');
+    });
     document.addEventListener('gobike:show-location', (e) => {
         if (loaded) focusLocation(e.detail.locationId);
         else pendingFocus = e.detail.locationId;
