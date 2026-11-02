@@ -566,8 +566,6 @@
         [els.search, els.status, els.barangay].forEach((el) => el.addEventListener(type, render));
     });
     els.search.addEventListener('input', renderSosList);
-    $('locate-map').addEventListener('click', () => map.locate({ setView: true, maxZoom: 16 }));
-    map.on('locationerror', () => notice('We could not get your location. Allow location access in your browser and try again.'));
     $('map-retry').addEventListener('click', () => { load(); schedule(); });
     $('clear-filters')?.addEventListener('click', () => {
         els.search.value = '';

@@ -45,7 +45,6 @@
                     <span>Barangay</span>
                     <select id="barangay-filter"><option value="all">All barangays</option></select>
                 </label>
-                <button id="locate-map" class="btn btn-secondary" type="button"><x-admin.icon name="crosshair" /> Locate me</button>
             </div>
 
             <div class="map-stage">
