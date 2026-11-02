@@ -25,6 +25,10 @@
         landmark: '<path d="M4 21h16M6 21V8l6-4 6 4v13M10 21v-4h4v4"/>',
         details: '<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 7.6h.01"/>',
         sent: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+        phone: '<path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/>',
+        assignBarangay: '<path d="M4 21V5l8-2v18M12 8h8v13M8 8h.01M8 12h.01M8 16h.01M16 12h.01M16 16h.01M3 21h18"/>',
+        assignGobiker: '<path d="M8 8a4 4 0 0 1 8 0v1H8zM12 4V2M5 21v-2a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v2M12 14v3"/>',
+        send: '<path d="m21 3-9.5 18-2.5-7.5L1.5 11zM9 13.5 21 3"/>',
     };
     // "Responding" only when a GoBiker was actually sent: an admin can take a request on without
     // assigning anyone yet, and the map must not claim somebody is on the way.
@@ -216,16 +220,23 @@
         </div>`;
     }
 
+    /* A decorative line icon; the text beside it always carries the meaning. */
+    function icon(name, cls) {
+        return `<svg class="${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">${SOS_ICONS[name]}</svg>`;
+    }
+
     /* The barangay filter and the GoBiker list; both are filled in once the popup opens. */
     function assignBlock(p, action, label) {
         return `<div class="sos-assign">
-            <label>Barangay
+            <label>
+                <span class="sos-assign-label">${icon('assignBarangay', 'sos-fact-icon')}Barangay</span>
                 <select class="sos-barangay" data-sos-barangay="${esc(p.id)}"><option value="">Loading…</option></select>
             </label>
-            <label>Send a GoBiker
+            <label>
+                <span class="sos-assign-label">${icon('assignGobiker', 'sos-fact-icon')}Send a GoBiker</span>
                 <select class="sos-gobiker" data-sos-gobikers="${esc(p.id)}"><option value="">Loading GoBikers…</option></select>
             </label>
-            <button type="button" class="btn btn-sm gb-act gb-act-resp" data-sos-action="${esc(action)}" data-sos="${esc(p.id)}">${esc(label)}</button>
+            <button type="button" class="btn btn-sm gb-act gb-act-resp sos-send" data-sos-action="${esc(action)}" data-sos="${esc(p.id)}">${icon('send', 'sos-send-icon')}<span>${esc(label)}</span></button>
         </div>`;
     }
 
@@ -238,15 +249,13 @@
 
     /* One line of the report: its icon, the muted label, then what the resident told us. */
     function fact(name, label, value) {
-        const icon = `<svg class="sos-fact-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">${SOS_ICONS[name]}</svg>`;
-
-        return `<dt>${icon}${esc(label)}</dt><dd>${esc(value)}</dd>`;
+        return `<dt>${icon(name, 'sos-fact-icon')}${esc(label)}</dt><dd>${esc(value)}</dd>`;
     }
 
     function sosPopup(p) {
         const mobile = p.mobile
-            ? `<a class="sos-pop-mobile" href="tel:${esc(p.mobile)}">${esc(p.mobile)}</a>`
-            : '<span class="sos-pop-mobile">Not provided</span>';
+            ? `<a class="sos-pop-mobile" href="tel:${esc(p.mobile)}">${icon('phone', 'sos-mobile-icon')}${esc(p.mobile)}</a>`
+            : `<span class="sos-pop-mobile">${icon('phone', 'sos-mobile-icon')}Not provided</span>`;
         const actions = p.status === 'sent'
             ? assignBlock(p, 'responding', 'Responding')
             // Already being answered: the admin can still send someone, or someone nearer.
@@ -254,7 +263,7 @@
 
         return `<div class="gb-pop sos-pop">
             <div class="sos-pop-head">
-                ${face(p.resident, p.resident_photo, 48)}
+                ${face(p.resident, p.resident_photo, 64)}
                 <div class="sos-pop-who">
                     <p class="sos-pop-name">
                         <b>${esc(p.resident)}</b>
@@ -306,7 +315,7 @@
                     keyboard: true,
                     title: `${p.resident}: ${sosHeadline(p)}`,
                 }).addTo(map);
-                marker.bindPopup(sosPopup(p), { minWidth: 268, maxWidth: 340 });
+                marker.bindPopup(sosPopup(p), { minWidth: 340, maxWidth: 400 });
                 marker.on('popupopen', () => fillGobikers(id));
                 sosMarkers.set(id, marker);
             } else {
