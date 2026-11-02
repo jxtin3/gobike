@@ -49,7 +49,7 @@ class ResidentController extends Controller
         $userId = $request->user()->id;
 
         $sos = SosRequest::where('user_id', $userId)
-            ->where('status', 'resolved')
+            ->whereIn('status', ['resolved', 'cancelled'])
             ->whereNull('resident_hidden_at')
             ->update(['resident_hidden_at' => now()]);
 

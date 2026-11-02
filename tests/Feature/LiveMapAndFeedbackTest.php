@@ -90,6 +90,23 @@ it('lets the admin send a GoBiker from another barangay, who then sees the reque
     $this->getJson(route('api.gobiker.map'))->assertOk()->assertJsonPath('sos.0.id', $sos->id);
 });
 
+it('shows the GoBiker who was sent that the resident cancelled, as a closed request', function () {
+    onlineGobiker($this->gobiker);
+    $sos = liveSos($this->resident, ['status' => 'responding', 'assigned_gobiker_id' => $this->gobiker->id]);
+
+    Sanctum::actingAs($this->resident);
+    $this->postJson(route('api.resident.sos.cancel', $sos))->assertOk();
+
+    Sanctum::actingAs($this->gobiker);
+    // Gone from the list of emergencies they must answer...
+    $this->getJson(route('api.gobiker.sos.index'))->assertOk()->assertJsonCount(0, 'sos');
+    // ...and on the map it reads as closed, never as open (older apps know no "cancelled").
+    $this->getJson(route('api.gobiker.map'))->assertOk()
+        ->assertJsonPath('sos.0.id', $sos->id)
+        ->assertJsonPath('sos.0.status', 'resolved')
+        ->assertJsonPath('sos.0.cancelled', true);
+});
+
 it('does not let the admin send anyone but an active GoBiker', function () {
     $sos = liveSos($this->resident);
     $suspended = User::factory()->create(['role' => 'GoBiker', 'status' => 'Suspended', 'barangay' => 'Poblacion']);

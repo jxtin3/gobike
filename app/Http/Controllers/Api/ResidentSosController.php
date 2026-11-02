@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\SosRequest;
+use App\Services\Push\PushNotifier;
 use App\Support\Barangays;
 use App\Support\Media;
 use Illuminate\Http\JsonResponse;
@@ -111,6 +112,34 @@ class ResidentSosController extends Controller
         abort(403, 'Only the GoBiker sent to help, or the Go Bike admin, can close an emergency request.');
     }
 
+    /**
+     * The resident no longer needs help (a mistake, or they are fine) and withdraws the request.
+     *
+     * Allowed while it is still open, including once a GoBiker was sent: that GoBiker is told not
+     * to come. It is kept as "cancelled", not deleted, so the admin still has the record, and it
+     * is not "resolved", so nobody is asked to rate a response that never happened.
+     */
+    public function cancel(Request $request, SosRequest $sos): JsonResponse
+    {
+        abort_unless($sos->user_id === $request->user()->id, 403, 'You can only cancel your own request.');
+
+        if (! $sos->canBeCancelled()) {
+            return response()->json(['message' => 'This request is already closed.'], 422);
+        }
+
+        $sos->update([
+            'status' => 'cancelled',
+            'resolved_at' => now(),
+            'resolved_by_resident' => true,
+        ]);
+        app(PushNotifier::class)->sosCancelled($sos->load('user', 'assignedGobiker'));
+
+        return response()->json([
+            'message' => 'SOS cancelled.',
+            'sos' => $this->payload($sos),
+        ]);
+    }
+
     private function payload(SosRequest $sos): array
     {
         // Who is coming, or who came. The resident is told this in a push too, but a push can be
@@ -119,7 +148,9 @@ class ResidentSosController extends Controller
 
         return [
             'id' => $sos->id,
-            'status' => $sos->status,
+            // Older apps only know sent / responding / resolved: see SosRequest::getApiStatusAttribute.
+            'status' => $sos->api_status,
+            'cancelled' => $sos->isCancelled(),
             'status_label' => $sos->status_label,
             'municipality' => $sos->municipality,
             'barangay' => $sos->barangay,

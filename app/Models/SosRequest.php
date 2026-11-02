@@ -14,6 +14,8 @@ class SosRequest extends Model
         'sent' => 'Waiting for response',
         'responding' => 'Responding',
         'resolved' => 'Resolved',
+        // The resident no longer needs help. Only they can set it; the admin and the GoBiker resolve.
+        'cancelled' => 'Cancelled',
     ];
 
     /** Which statuses an admin may move a request to from each status. */
@@ -21,6 +23,7 @@ class SosRequest extends Model
         'sent' => ['responding', 'resolved'],
         'responding' => ['resolved'],
         'resolved' => [],
+        'cancelled' => [],
     ];
 
     protected $fillable = [
@@ -83,6 +86,27 @@ class SosRequest extends Model
     public function canMoveTo(string $status): bool
     {
         return in_array($status, self::NEXT[$this->status] ?? [], true);
+    }
+
+    /** The resident can still withdraw it: nobody has closed it yet. */
+    public function canBeCancelled(): bool
+    {
+        return in_array($this->status, ['sent', 'responding'], true);
+    }
+
+    public function isCancelled(): bool
+    {
+        return $this->status === 'cancelled';
+    }
+
+    /**
+     * The status the mobile apps are told. Apps released before "cancelled" existed treat any
+     * status other than "resolved" as an emergency that is still open, so a cancelled request is
+     * reported to them as resolved; newer apps also get `cancelled: true` and tell the two apart.
+     */
+    public function getApiStatusAttribute(): string
+    {
+        return $this->isCancelled() ? 'resolved' : $this->status;
     }
 
     public function getStatusLabelAttribute(): string

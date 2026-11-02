@@ -268,6 +268,86 @@ it('still shows an older request the resident closed themselves', function () {
     $this->getJson(route('api.resident.sos.index'))->assertJsonPath('sos.0.resolved_by_resident', true);
 });
 
+// ---------------------------------------------------------------- cancelling
+
+it('lets a resident cancel their own open SOS, and keeps the record', function (string $status) {
+    $sos = sendSos($this->resident);
+    $sos->update(['status' => $status]);
+
+    $this->postJson(route('api.resident.sos.cancel', $sos))
+        ->assertOk()
+        ->assertJsonPath('message', 'SOS cancelled.')
+        ->assertJsonPath('sos.cancelled', true)
+        ->assertJsonPath('sos.status_label', 'Cancelled')
+        // Apps from before "cancelled" existed read anything but "resolved" as still open.
+        ->assertJsonPath('sos.status', 'resolved');
+
+    expect($sos->fresh())
+        ->status->toBe('cancelled')
+        ->resolved_by_resident->toBeTrue()
+        ->resolved_at->not->toBeNull()
+        ->resolved_by_gobiker_id->toBeNull();
+    expect(SosRequest::open()->count())->toBe(0);
+})->with(['sent', 'responding']);
+
+it('refuses to cancel an SOS that is already closed', function (string $status) {
+    $sos = sendSos($this->resident);
+    $sos->update(['status' => $status, 'resolved_at' => now()]);
+
+    $this->postJson(route('api.resident.sos.cancel', $sos))
+        ->assertUnprocessable()
+        ->assertJsonPath('message', 'This request is already closed.');
+
+    expect($sos->fresh()->status)->toBe($status);
+})->with(['resolved', 'cancelled']);
+
+it("does not let anyone cancel another resident's SOS", function () {
+    $sos = sendSos($this->resident);
+    Sanctum::actingAs(User::factory()->create(['role' => 'User', 'status' => 'Active']));
+
+    $this->postJson(route('api.resident.sos.cancel', $sos))->assertForbidden();
+    expect($sos->fresh()->status)->toBe('sent');
+});
+
+it('takes a cancelled SOS off the live map and the alarm, and shows it to the admin', function () {
+    $sos = sendSos($this->resident);
+    $this->postJson(route('api.resident.sos.cancel', $sos))->assertOk();
+
+    $this->actingAs($this->admin, 'web')
+        ->getJson(route('admin.sos-pins.index'))
+        ->assertOk()
+        ->assertJsonCount(0);
+    $this->actingAs($this->admin, 'web')
+        ->getJson(route('admin.emergencies.index'))
+        ->assertOk()
+        ->assertJsonMissing(['sos_id' => $sos->id]);
+    $this->actingAs($this->admin, 'web')
+        ->get(route('admin.operations.sos.index', ['status' => 'cancelled']))
+        ->assertOk()
+        ->assertSee('Ana Reyes');
+    $this->actingAs($this->admin, 'web')
+        ->get(route('admin.operations.sos.show', $sos))
+        ->assertSee('the resident cancelled it');
+});
+
+it('does not let an admin move a cancelled SOS back', function () {
+    $sos = sendSos($this->resident);
+    $this->postJson(route('api.resident.sos.cancel', $sos))->assertOk();
+
+    $this->actingAs($this->admin, 'web')
+        ->patchJson(route('admin.operations.sos.status', $sos), ['status' => 'responding'])
+        ->assertUnprocessable();
+    expect($sos->fresh()->status)->toBe('cancelled');
+});
+
+it('clears a cancelled SOS from the resident history', function () {
+    $sos = sendSos($this->resident);
+    $this->postJson(route('api.resident.sos.cancel', $sos))->assertOk();
+
+    $this->postJson(route('api.resident.history.clear'))->assertOk();
+    $this->getJson(route('api.resident.sos.index'))->assertJsonCount(0, 'sos');
+});
+
 // ---------------------------------------------------------------- clear history
 
 it('clears finished SOS requests and visits from the resident history, keeping open ones and the admin records', function () {

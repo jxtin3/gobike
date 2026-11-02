@@ -29,7 +29,7 @@ class GobikerMapController extends Controller
 
         $sos = $this->assigned($request)
             ->where(fn ($q) => $q->where('status', 'responding')
-                ->orWhere(fn ($q) => $q->where('status', 'resolved')->where('resolved_at', '>=', now()->subMinutes(self::RESOLVED_MINUTES))))
+                ->orWhere(fn ($q) => $q->whereIn('status', ['resolved', 'cancelled'])->where('resolved_at', '>=', now()->subMinutes(self::RESOLVED_MINUTES))))
             ->get();
 
         return response()->json([
@@ -87,7 +87,9 @@ class GobikerMapController extends Controller
     {
         return [
             'id' => $sos->id,
-            'status' => $sos->status,
+            // Apps from before "cancelled" existed would read an unknown status as still open.
+            'status' => $sos->api_status,
+            'cancelled' => $sos->isCancelled(),
             'resident_name' => $sos->user?->name,
             'mobile' => $sos->user?->mobile,
             'barangay' => $sos->barangay,

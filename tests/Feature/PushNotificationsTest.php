@@ -265,3 +265,31 @@ it('tells the GoBiker when the resident cancels or the admin declines their visi
     $this->postJson(route('api.resident.appointments.cancel', $visit))->assertOk();
     expect(titlesFor($this->push, 'gobiker-phone'))->toBe(['Visit request closed', 'Home visit cancelled']);
 });
+
+it('tells the GoBiker who was sent that the resident cancelled, and nobody else', function () {
+    $sos = SosRequest::create([
+        'user_id' => $this->resident->id, 'municipality' => 'Bugallon', 'barangay' => 'Poblacion',
+        'landmark' => 'Beside the chapel', 'status' => 'responding', 'assigned_gobiker_id' => $this->gobiker->id,
+    ]);
+
+    Sanctum::actingAs($this->resident);
+    $this->postJson(route('api.resident.sos.cancel', $sos))->assertOk();
+
+    expect(titlesFor($this->push, 'gobiker-phone'))->toBe(['SOS cancelled']);
+    expect(collect($this->push->sent)->firstWhere('token', 'gobiker-phone')['body'])
+        ->toBe('Ana Reyes cancelled their request. You do not need to go.');
+    // The resident did it themselves, so no push to them.
+    expect(titlesFor($this->push, 'resident-phone'))->toBe([]);
+});
+
+it('sends no push when a waiting SOS with nobody assigned is cancelled', function () {
+    $sos = SosRequest::create([
+        'user_id' => $this->resident->id, 'municipality' => 'Bugallon', 'barangay' => 'Poblacion',
+        'landmark' => 'Beside the chapel', 'status' => 'sent',
+    ]);
+
+    Sanctum::actingAs($this->resident);
+    $this->postJson(route('api.resident.sos.cancel', $sos))->assertOk();
+
+    expect($this->push->sent)->toBe([]);
+});

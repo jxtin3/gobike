@@ -96,6 +96,22 @@ class PushNotifier
         );
     }
 
+    /** The resident cancelled an SOS: tell the GoBiker who was sent that they need not go. */
+    public function sosCancelled(SosRequest $sos): void
+    {
+        if (! $sos->assignedGobiker) {
+            return;
+        }
+
+        $this->toUser(
+            $sos->assignedGobiker,
+            null,
+            'SOS cancelled',
+            ($sos->user?->name ?? 'The resident').' cancelled their request. You do not need to go.',
+            ['type' => 'sos_cancelled', 'id' => (string) $sos->id],
+        );
+    }
+
     /** A resident asked for a home visit: tell the GoBiker they chose. */
     public function newAppointmentRequest(Appointment $appointment): void
     {

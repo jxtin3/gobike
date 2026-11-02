@@ -121,6 +121,7 @@ Route::middleware(['auth:sanctum', 'resident', 'throttle:mobile'])->prefix('resi
     Route::post('/sos', [ResidentSosController::class, 'store'])->middleware('throttle:3,1')->name('api.resident.sos.store');
     Route::post('/sos/{sos}/media', [ResidentSosController::class, 'media'])->middleware('throttle:10,1')->name('api.resident.sos.media');
     Route::post('/sos/{sos}/resolve', [ResidentSosController::class, 'resolve'])->name('api.resident.sos.resolve');
+    Route::post('/sos/{sos}/cancel', [ResidentSosController::class, 'cancel'])->name('api.resident.sos.cancel');
 
     Route::get('/gobikers', [ResidentAppointmentController::class, 'gobikers'])->name('api.resident.gobikers');
     Route::get('/appointments', [ResidentAppointmentController::class, 'index'])->name('api.resident.appointments.index');

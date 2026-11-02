@@ -16,7 +16,7 @@ use Illuminate\Validation\Rule;
 /** Residents' SOS requests: list, details, and moving them to "Responding" / "Resolved". */
 class SosRequestController extends Controller
 {
-    private const TABS = ['open', 'sent', 'responding', 'resolved', 'all'];
+    private const TABS = ['open', 'sent', 'responding', 'resolved', 'cancelled', 'all'];
 
     public function index(Request $request)
     {
@@ -25,7 +25,7 @@ class SosRequestController extends Controller
 
         $requests = SosRequest::with('user:id,name,mobile')
             ->when($tab === 'open', fn ($q) => $q->open())
-            ->when(in_array($tab, ['sent', 'responding', 'resolved'], true), fn ($q) => $q->where('status', $tab))
+            ->when(in_array($tab, ['sent', 'responding', 'resolved', 'cancelled'], true), fn ($q) => $q->where('status', $tab))
             ->when($search !== '', function ($q) use ($search) {
                 $q->where(function ($query) use ($search) {
                     $query->whereHas('user', fn ($user) => $user->where('name', 'like', "%{$search}%"))
@@ -48,6 +48,7 @@ class SosRequestController extends Controller
                 'sent' => SosRequest::where('status', 'sent')->count(),
                 'responding' => SosRequest::where('status', 'responding')->count(),
                 'resolved' => SosRequest::where('status', 'resolved')->count(),
+                'cancelled' => SosRequest::where('status', 'cancelled')->count(),
                 'all' => SosRequest::count(),
             ],
         ]);
