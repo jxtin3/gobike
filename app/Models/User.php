@@ -4,6 +4,7 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use App\Services\Push\PushNotifier;
+use App\Support\Age;
 use App\Support\Media;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -19,12 +20,18 @@ use Illuminate\Support\Facades\Storage;
 use Laravel\Sanctum\HasApiTokens;
 use Laravel\Sanctum\PersonalAccessToken;
 
-#[Fillable(['name', 'email', 'password', 'role', 'status', 'mobile', 'barangay', 'photo_path', 'google_id', 'has_password', 'notification_prefs'])]
+#[Fillable(['name', 'email', 'password', 'role', 'status', 'mobile', 'barangay', 'birthdate', 'photo_path', 'google_id', 'has_password', 'notification_prefs'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
     use HasApiTokens, HasFactory, Notifiable;
+
+    /** Whole years old today, from the birthdate; null when they have not given one. */
+    public function getAgeAttribute(): ?int
+    {
+        return Age::fromBirthdate($this->birthdate);
+    }
 
     public function location(): HasOne
     {
@@ -154,6 +161,7 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
+            'birthdate' => 'date',
             'password' => 'hashed',
             'is_admin' => 'boolean',
             'has_password' => 'boolean',

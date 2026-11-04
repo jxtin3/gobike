@@ -43,6 +43,7 @@ Route::middleware(['auth:sanctum', 'throttle:mobile'])->group(function () {
     Route::put('/mobile/notification-preferences', [MobileAuthController::class, 'updateNotificationPrefs'])->name('api.mobile.notification-prefs');
     // Add or change a profile photo (GoBikers who signed up before it was required).
     Route::post('/mobile/photo', [MobileAuthController::class, 'updatePhoto'])->middleware('throttle:10,1')->name('api.mobile.photo');
+    Route::delete('/mobile/photo', [MobileAuthController::class, 'removePhoto'])->middleware('throttle:10,1')->name('api.mobile.photo.remove');
 });
 
 Route::put('/mobile/password', [

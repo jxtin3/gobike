@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\DeviceToken;
 use App\Models\User;
 use App\Services\Push\PushNotifier;
+use App\Support\Age;
 use App\Support\Barangays;
 use App\Support\Media;
 use Google\Client as GoogleClient;
@@ -51,15 +52,23 @@ class MobileAuthController extends Controller
             'barangay' => ['required', 'string', Rule::in(Barangays::ALL)],
             'role' => ['required', Rule::in(['Resident', 'GoBiker', 'User'])],
             'password' => ['required', 'string', 'min:8', 'max:100'],
-            // A GoBiker is sent to people's homes, so the resident and the admin must be able to
-            // see who is coming. The sign-up screen refuses to submit without one.
+            // Old enough to use the app (see App\Support\Age). The sign-up screen will not submit
+            // without one, and refuses anyone under the minimum before it gets here.
+            'birthdate' => Age::rules($request->input('role')),
+            // A GoBiker is sent to people's homes, and a resident is the person they are sent to,
+            // so each must be able to see who the other is. The sign-up screen will not submit
+            // without a photo.
             //
-            // TEMPORARY: the rule here is 'required_if:role,GoBiker' and must go back as soon as
-            // app 1.0.15 reaches the testers. It is held open because released app 1.0.14 sends no
-            // photo at all, and rejecting it would stop every GoBiker sign-up from the installed app.
+            // TEMPORARY: the server still does not require the photo or the birthdate. Released
+            // apps (up to 1.0.20) send neither for a resident, and older ones send no birthdate
+            // for anyone; requiring them here would stop every sign-up from the apps people have.
+            // Once the testers are on the new version, make 'photo' and 'birthdate' required for
+            // everyone, and turn the "still registers from an older app" tests into "will not
+            // register without ..." ones.
             'photo' => ['nullable', 'image', 'mimes:jpg,jpeg,png', 'max:5120'],
         ], [
             'photo.uploaded' => 'The photo could not be uploaded. Please try a smaller one.',
+            ...Age::messages($request->input('role')),
         ]);
 
         // GoBikers can see/track people, so they must be approved by an admin first.
@@ -70,6 +79,7 @@ class MobileAuthController extends Controller
             'email' => strtolower(trim($data['email'])),
             'mobile' => trim($data['mobile']),
             'barangay' => $data['barangay'],
+            'birthdate' => $data['birthdate'] ?? null,
             'photo_path' => $request->hasFile('photo')
                 ? $request->file('photo')->store('profile-photos', Media::disk())
                 : null,
@@ -262,6 +272,24 @@ class MobileAuthController extends Controller
         ]);
     }
 
+    /** Takes the profile photo off the account, and the file off the disk. */
+    public function removePhoto(Request $request): JsonResponse
+    {
+        /** @var User $user */
+        $user = $request->user();
+        $old = $user->photo_path;
+        $user->photo_path = null;
+        $user->save();
+        if ($old) {
+            Storage::disk(Media::disk())->delete($old);
+        }
+
+        return response()->json([
+            'message' => 'Profile photo removed.',
+            'user' => $this->userPayload($user),
+        ]);
+    }
+
     public function logout(Request $request): JsonResponse
     {
         $request->user()->currentAccessToken()?->delete();
@@ -303,6 +331,8 @@ class MobileAuthController extends Controller
             'email' => $user->email,
             'mobile' => $user->mobile,
             'barangay' => $user->barangay,
+            'birthdate' => $user->birthdate?->toDateString(),
+            'age' => $user->age,
             'photo_url' => Media::url($user->photo_path),
             'role' => $user->role,
             // Ronda days and hours set by the admin (GoBikers only; null when not set).

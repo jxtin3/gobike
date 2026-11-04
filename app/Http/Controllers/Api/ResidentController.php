@@ -7,6 +7,7 @@ use App\Models\Appointment;
 use App\Models\Patient;
 use App\Models\SosRequest;
 use App\Models\User;
+use App\Support\Age;
 use App\Support\Barangays;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -25,12 +26,16 @@ class ResidentController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'mobile' => ['required', 'string', 'regex:/^09[0-9]{9}$/'],
             'barangay' => ['required', 'string', Rule::in(Barangays::ALL)],
-        ]);
+            // Optional: an account made before the birthdate was asked can add it here.
+            'birthdate' => Age::rules($user->role),
+        ], Age::messages($user->role));
 
         $user->update([
             'name' => trim($data['name']),
             'mobile' => $data['mobile'],
             'barangay' => $data['barangay'],
+            // Left alone when the app sends none; never wiped by an empty value.
+            ...(! empty($data['birthdate']) ? ['birthdate' => $data['birthdate']] : []),
         ]);
 
         return response()->json([

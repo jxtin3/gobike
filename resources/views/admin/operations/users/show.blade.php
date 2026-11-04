@@ -20,7 +20,8 @@
         <x-admin.icon name="user-check" />
         <div>
             <b>Waiting for approval</b>
-            <span>This GoBiker signed up in the mobile app and cannot sign in yet.</span>
+            <span>This GoBiker signed up in the mobile app and cannot sign in yet.
+                {{ $user->age !== null ? 'They are '.$user->age.' years old.' : 'They did not give a date of birth.' }}</span>
         </div>
         <form method="POST" action="{{ route('admin.operations.users.approve', $user) }}" class="callout-action"
               data-confirm-title="Approve {{ $user->name }}?"
@@ -52,6 +53,8 @@
         </dd></div>
         <div><dt>Mobile</dt><dd>@if ($user->mobile)<a href="tel:{{ $user->mobile }}">{{ $user->mobile }}</a>@else — @endif</dd></div>
         <div><dt>Barangay</dt><dd>{{ $user->barangay ?: '—' }}</dd></div>
+        <div><dt>Age</dt><dd>@if ($user->age !== null){{ $user->age }} years old @else — @endif</dd></div>
+        <div><dt>Date of birth</dt><dd>{{ $user->birthdate?->format('F j, Y') ?? '—' }}</dd></div>
         @if ($role === 'GoBiker')
             <div><dt>Patient records</dt><dd>{{ $patientCount ? number_format($patientCount) : 'None yet' }}</dd></div>
         @endif

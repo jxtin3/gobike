@@ -50,6 +50,7 @@
                     <th>User</th>
                     <th>Role</th>
                     <th>Contact</th>
+                    <th>Age</th>
                     <th>Joined</th>
                     <th><span class="sr-only">Actions</span></th>
                 </tr>
@@ -80,6 +81,13 @@
                             @if ($user->mobile || $user->barangay)
                                 {{ $user->mobile ?: '—' }}
                                 <small class="sub-line">{{ $user->barangay ?: 'No barangay' }}</small>
+                            @else
+                                <span class="muted">—</span>
+                            @endif
+                        </td>
+                        <td>
+                            @if ($user->age !== null)
+                                {{ $user->age }}
                             @else
                                 <span class="muted">—</span>
                             @endif
@@ -120,15 +128,15 @@
                     </tr>
                 @empty
                     @if ($filter === 'pending' && ! $searching)
-                        <x-admin.empty :row="5" icon="user-check" title="No sign-ups waiting">
+                        <x-admin.empty :row="6" icon="user-check" title="No sign-ups waiting">
                             New GoBiker registrations from the mobile app will appear here for approval.
                         </x-admin.empty>
                     @elseif ($hasQuery)
-                        <x-admin.empty :row="5" icon="users" title="No users match these filters" :clear="route('admin.operations.users.index')">
+                        <x-admin.empty :row="6" icon="users" title="No users match these filters" :clear="route('admin.operations.users.index')">
                             Try a different name or email, or clear the filters.
                         </x-admin.empty>
                     @else
-                        <x-admin.empty :row="5" icon="users" title="No users yet">
+                        <x-admin.empty :row="6" icon="users" title="No users yet">
                             Add the first account to get started.
                             <x-slot:action><a class="btn btn-secondary btn-sm" href="{{ route('admin.operations.users.create') }}"><x-admin.icon name="plus" /> Add user</a></x-slot:action>
                         </x-admin.empty>
