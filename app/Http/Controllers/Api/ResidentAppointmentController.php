@@ -59,9 +59,11 @@ class ResidentAppointmentController extends Controller
     {
         $resident = $request->user();
 
-        if (Appointment::open()->where('resident_id', $resident->id)->exists()) {
+        // Up to MAX_OPEN at once, so a resident who is waiting on one GoBiker can ask another.
+        $open = Appointment::open()->where('resident_id', $resident->id)->get(['id', 'gobiker_id']);
+        if ($open->count() >= Appointment::MAX_OPEN) {
             return response()->json([
-                'message' => 'You already have a visit request. Cancel it first to ask for a new one.',
+                'message' => 'You can have up to '.Appointment::MAX_OPEN.' open visit requests. Cancel one first to ask for a new one.',
             ], 422);
         }
 
@@ -77,6 +79,16 @@ class ResidentAppointmentController extends Controller
         ], [
             'gobiker_id.exists' => 'That GoBiker is not available anymore. Please choose another one.',
         ]);
+
+        // Never the same GoBiker twice: they would get two requests from one person.
+        $chosen = $data['gobiker_id'] ?? null;
+        if ($chosen !== null && $open->contains('gobiker_id', (int) $chosen)) {
+            $name = User::find($chosen)?->name ?? 'that GoBiker';
+
+            return response()->json([
+                'message' => "You already asked {$name}. Wait for their answer, or cancel that request first.",
+            ], 422);
+        }
 
         $appointment = Appointment::create($data + [
             'resident_id' => $resident->id,

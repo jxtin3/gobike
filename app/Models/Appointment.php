@@ -17,8 +17,15 @@ class Appointment extends Model
         'cancelled' => 'Cancelled',
     ];
 
-    /** Still to be visited (a resident may have only one of these at a time). */
+    /** Still to be visited. */
     public const OPEN = ['pending', 'accepted'];
+
+    /**
+     * How many of these a resident may have at once, each with a different GoBiker. Nothing is
+     * cancelled for them when one answers: two GoBikers can both accept the same day, and the
+     * resident cancels the one they no longer want.
+     */
+    public const MAX_OPEN = 3;
 
     public const WINDOWS = [
         'morning' => 'Morning (8 AM – 12 PM)',
@@ -93,6 +100,9 @@ class Appointment extends Model
             'gobiker_barangay' => $this->gobiker?->barangay,
             'decline_note' => $this->decline_note,
             'created_at' => $this->created_at?->toIso8601String(),
+            // When the status last changed: when it was declined or cancelled, which has no
+            // timestamp of its own.
+            'updated_at' => $this->updated_at?->toIso8601String(),
             'accepted_at' => $this->accepted_at?->toIso8601String(),
             'completed_at' => $this->completed_at?->toIso8601String(),
         ] + ($forGobiker ? [

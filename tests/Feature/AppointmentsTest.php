@@ -39,12 +39,90 @@ function requestVisit(User $resident, array $overrides = []): Appointment
 
 // ---------------------------------------------------------------- resident
 
-it('lets a resident request one visit at a time', function () {
+/** Another approved GoBiker, so a resident has someone else to ask. */
+function anotherGobiker(string $name): User
+{
+    return User::factory()->create(['name' => $name, 'role' => 'GoBiker', 'status' => 'Active', 'barangay' => 'Poblacion']);
+}
+
+it('lets a resident have up to three open requests, each with a different GoBiker', function () {
+    $a = $this->gobiker;
+    $b = anotherGobiker('Jose Lim');
+    $c = anotherGobiker('Rico Dela');
+    $d = anotherGobiker('Pia Tan');
+
+    requestVisit($this->resident, ['gobiker_id' => $a->id]);
+    requestVisit($this->resident, ['gobiker_id' => $b->id]);
+    requestVisit($this->resident, ['gobiker_id' => $c->id]);
+
+    // A fourth is one too many, however different the GoBiker.
+    $this->postJson(route('api.resident.appointments.store'), visitPayload(['gobiker_id' => $d->id]))
+        ->assertUnprocessable()
+        ->assertJsonPath('message', 'You can have up to 3 open visit requests. Cancel one first to ask for a new one.');
+
+    expect(Appointment::where('resident_id', $this->resident->id)->count())->toBe(3);
+});
+
+it('refuses to ask the same GoBiker twice while their answer is awaited', function () {
+    requestVisit($this->resident, ['gobiker_id' => $this->gobiker->id]);
+
+    $this->postJson(route('api.resident.appointments.store'), visitPayload(['gobiker_id' => $this->gobiker->id]))
+        ->assertUnprocessable()
+        ->assertJsonPath('message', 'You already asked Maria Santos. Wait for their answer, or cancel that request first.');
+
+    expect(Appointment::count())->toBe(1);
+});
+
+it('lets a resident ask the same GoBiker again once that request is declined, cancelled or done', function (string $status) {
+    $first = requestVisit($this->resident, ['gobiker_id' => $this->gobiker->id]);
+    $first->update(['status' => $status]);
+
+    $this->postJson(route('api.resident.appointments.store'), visitPayload(['gobiker_id' => $this->gobiker->id]))
+        ->assertCreated();
+})->with(['declined', 'cancelled', 'completed']);
+
+it('frees a slot when an open request is cancelled or answered', function () {
+    $people = [$this->gobiker, anotherGobiker('Jose Lim'), anotherGobiker('Rico Dela')];
+    $visits = collect($people)->map(fn (User $g) => requestVisit($this->resident, ['gobiker_id' => $g->id]));
+    $fourth = anotherGobiker('Pia Tan');
+
+    $this->postJson(route('api.resident.appointments.store'), visitPayload(['gobiker_id' => $fourth->id]))->assertUnprocessable();
+
+    // One GoBiker declines: that frees a place.
+    $visits[0]->update(['status' => 'declined']);
+    $this->postJson(route('api.resident.appointments.store'), visitPayload(['gobiker_id' => $fourth->id]))->assertCreated();
+});
+
+it('does not count another resident\'s requests against the limit', function () {
+    $other = User::factory()->create(['role' => 'User', 'status' => 'Active', 'barangay' => 'Poblacion']);
+    foreach ([$this->gobiker, anotherGobiker('Jose Lim'), anotherGobiker('Rico Dela')] as $g) {
+        requestVisit($other, ['gobiker_id' => $g->id]);
+    }
+
+    requestVisit($this->resident, ['gobiker_id' => $this->gobiker->id]);
+});
+
+it('still counts requests that name no GoBiker (older apps) towards the limit, but not as the same GoBiker', function () {
+    // Apps up to 1.0.10 send none, so two of them are not "the same GoBiker twice".
+    requestVisit($this->resident);
+    requestVisit($this->resident);
     requestVisit($this->resident);
 
-    $this->postJson(route('api.resident.appointments.store'), visitPayload())
-        ->assertUnprocessable()
-        ->assertJsonPath('message', 'You already have a visit request. Cancel it first to ask for a new one.');
+    $this->postJson(route('api.resident.appointments.store'), visitPayload())->assertUnprocessable();
+});
+
+it('tells the app when a request was last changed', function () {
+    $visit = requestVisit($this->resident, ['gobiker_id' => $this->gobiker->id]);
+
+    $this->travel(2)->hours();
+    Sanctum::actingAs($this->gobiker);
+    $this->postJson(route('api.gobiker.appointments.decline', $visit), ['note' => 'Away that week.'])->assertOk();
+
+    Sanctum::actingAs($this->resident);
+    $row = $this->getJson(route('api.resident.appointments.index'))->assertOk()->json('appointments.0');
+    expect($row['status'])->toBe('declined')
+        ->and($row['decline_note'])->toBe('Away that week.')
+        ->and($row['updated_at'])->not->toBe($row['created_at']);
 });
 
 it('rejects a visit in the past or too far ahead', function (int $days) {

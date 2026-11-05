@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\GobikerAnnouncementController;
 use App\Http\Controllers\Api\GobikerAppointmentController;
 use App\Http\Controllers\Api\GobikerController;
+use App\Http\Controllers\Api\GobikerHistoryController;
 use App\Http\Controllers\Api\GobikerLocationController;
 use App\Http\Controllers\Api\GobikerMapController;
 use App\Http\Controllers\Api\GobikerProfileController;
@@ -98,6 +99,9 @@ Route::middleware(['auth:sanctum', 'gobiker', 'throttle:mobile'])->prefix('gobik
     Route::post('/patients', [PatientController::class, 'store'])->name('api.gobiker.patients.store');
     Route::put('/patients/{patient}', [PatientController::class, 'update'])->name('api.gobiker.patients.update');
     Route::delete('/patients/{patient}', [PatientController::class, 'destroy'])->name('api.gobiker.patients.destroy');
+
+    // Everything this GoBiker finished: home visits done, declined or cancelled, and SOS answered.
+    Route::get('/history', [GobikerHistoryController::class, 'index'])->name('api.gobiker.history');
 
     Route::get('/appointments', [GobikerAppointmentController::class, 'index'])->name('api.gobiker.appointments.index');
     Route::post('/appointments/{appointment}/accept', [GobikerAppointmentController::class, 'accept'])->name('api.gobiker.appointments.accept');
