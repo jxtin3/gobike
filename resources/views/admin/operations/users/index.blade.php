@@ -29,6 +29,40 @@
     </div>
 @endif
 
+@if ($filter === 'pending' && $counts['pending'] > 1)
+    <div class="callout">
+        <x-admin.icon name="user-check" />
+        <div>
+            <b>{{ $counts['pending'] }} sign-ups waiting</b>
+            <span>Approve them all at once. Each GoBiker gets an email saying they can sign in.</span>
+        </div>
+        <form method="POST" action="{{ route('admin.operations.users.approve-all') }}" class="callout-action"
+              data-confirm-title="Approve all {{ $counts['pending'] }} sign-ups?"
+              data-confirm-text="All {{ $counts['pending'] }} GoBikers will be able to sign in to the app right away, and each gets an approval email."
+              data-confirm-ok="Approve all" data-confirm-tone="ok">
+            @csrf @method('PATCH')
+            <button type="submit" class="btn btn-ok btn-sm"><x-admin.icon name="check" /> Approve all ({{ $counts['pending'] }})</button>
+        </form>
+    </div>
+@endif
+
+@if ($counts['unemailed'] > 0)
+    <div class="callout">
+        <x-admin.icon name="mail" />
+        <div>
+            <b>{{ $counts['unemailed'] }} approved {{ \Illuminate\Support\Str::plural('GoBiker', $counts['unemailed']) }} not emailed yet</b>
+            <span>Their approval email did not go out. Send it so they know they can sign in.</span>
+        </div>
+        <form method="POST" action="{{ route('admin.operations.users.email-approved') }}" class="callout-action"
+              data-confirm-title="Email {{ $counts['unemailed'] }} approved {{ \Illuminate\Support\Str::plural('GoBiker', $counts['unemailed']) }}?"
+              data-confirm-text="Each one gets an email saying their account is approved and they can sign in to the GoBiker app."
+              data-confirm-ok="Send emails" data-confirm-tone="ok">
+            @csrf
+            <button type="submit" class="btn btn-secondary btn-sm"><x-admin.icon name="mail" /> Email them</button>
+        </form>
+    </div>
+@endif
+
 <nav class="tabs" aria-label="Filter users">
     @foreach ($tabs as $key => $label)
         <a href="{{ route('admin.operations.users.index', array_filter(['filter' => $key === 'all' ? null : $key, 'search' => request('search')])) }}"
@@ -101,7 +135,7 @@
                                 @if ($pending)
                                     <form method="POST" action="{{ route('admin.operations.users.approve', $user) }}"
                                           data-confirm-title="Approve {{ $user->name }}?"
-                                          data-confirm-text="They will be able to sign in to the GoBiker app right away."
+                                          data-confirm-text="They will be able to sign in to the GoBiker app right away, and we'll email {{ $user->email }} to let them know."
                                           data-confirm-ok="Approve" data-confirm-tone="ok">
                                         @csrf @method('PATCH')
                                         <button type="submit" class="btn btn-ok btn-sm"><x-admin.icon name="check" /> Approve</button>

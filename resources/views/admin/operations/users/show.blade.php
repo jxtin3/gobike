@@ -25,7 +25,7 @@
         </div>
         <form method="POST" action="{{ route('admin.operations.users.approve', $user) }}" class="callout-action"
               data-confirm-title="Approve {{ $user->name }}?"
-              data-confirm-text="They will be able to sign in to the GoBiker app right away."
+              data-confirm-text="They will be able to sign in to the GoBiker app right away, and we'll email {{ $user->email }} to let them know."
               data-confirm-ok="Approve" data-confirm-tone="ok">
             @csrf @method('PATCH')
             <button type="submit" class="btn btn-ok btn-sm"><x-admin.icon name="check" /> Approve</button>
@@ -57,6 +57,25 @@
         <div><dt>Date of birth</dt><dd>{{ $user->birthdate?->format('F j, Y') ?? '—' }}</dd></div>
         @if ($role === 'GoBiker')
             <div><dt>Patient records</dt><dd>{{ $patientCount ? number_format($patientCount) : 'None yet' }}</dd></div>
+        @endif
+        @if ($user->approved_at)
+            <div><dt>Approved</dt><dd>{{ $user->approved_at->format('F j, Y') }}</dd></div>
+        @endif
+        @if ($role === 'GoBiker' && $user->status === 'Active')
+            <div><dt>Approval email</dt><dd class="dd-with-action">
+                @if ($user->approval_emailed_at)
+                    <span class="pill pill-ok"><i class="dot"></i> Sent {{ $user->approval_emailed_at->format('M j, Y') }}</span>
+                @else
+                    <span class="pill pill-neutral"><i class="dot"></i> Not sent</span>
+                @endif
+                <form method="POST" action="{{ route('admin.operations.users.email-approval', $user) }}"
+                      data-confirm-title="{{ $user->approval_emailed_at ? 'Resend' : 'Send' }} the approval email?"
+                      data-confirm-text="{{ $user->name }} gets an email at {{ $user->email }} saying their account is approved and they can sign in."
+                      data-confirm-ok="Send email" data-confirm-tone="ok">
+                    @csrf
+                    <button type="submit" class="btn btn-secondary btn-sm"><x-admin.icon name="mail" /> {{ $user->approval_emailed_at ? 'Resend' : 'Send' }}</button>
+                </form>
+            </dd></div>
         @endif
         <div><dt>Joined</dt><dd>{{ $user->created_at->format('F j, Y') }}</dd></div>
         <div><dt>Last updated</dt><dd>{{ $user->updated_at->format('F j, Y') }}</dd></div>

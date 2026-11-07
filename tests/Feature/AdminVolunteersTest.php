@@ -1,8 +1,14 @@
 <?php
 
+use App\Jobs\EmailVolunteerClass;
+use App\Mail\VolunteerClassScheduled;
 use App\Models\User;
 use App\Models\VolunteerApplication;
+use App\Models\VolunteerClass;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Mail;
+use Symfony\Component\Mailer\Exception\TransportException;
+use Symfony\Component\Mailer\Exception\UnexpectedResponseException;
 
 uses(RefreshDatabase::class);
 
@@ -110,10 +116,10 @@ it('schedules a class with the volunteers who waited longest, up to a full class
         'starts_on' => now()->addWeek()->toDateString(), 'venue' => 'Bugallon Municipal Hall',
     ])->assertRedirect()->assertSessionHas('success');
 
-    $class = \App\Models\VolunteerClass::sole();
+    $class = VolunteerClass::sole();
     expect($class->applications()->count())->toBe(25)
         ->and($class->applications()->pluck('first_name')->sort()->values()->all())
-            ->not->toContain('Waiting26', 'Waiting27', 'Brand')
+        ->not->toContain('Waiting26', 'Waiting27', 'Brand')
         ->and(VolunteerApplication::where('application_status', 'waiting')->count())->toBe(2)
         ->and($new->fresh()->application_status)->toBe('pending');
 
@@ -138,12 +144,12 @@ it('needs someone waiting, a future date and a venue to schedule a class', funct
     $this->post(route('admin.operations.volunteers.classes.store'), [
         'starts_on' => now()->addWeek()->toDateString(), 'venue' => 'Hall',
     ])->assertSessionHas('error');
-    expect(\App\Models\VolunteerClass::count())->toBe(0);
+    expect(VolunteerClass::count())->toBe(0);
 });
 
 it('takes a volunteer out of their class when sent back to waiting', function () {
     $admin = User::factory()->create(['is_admin' => true]);
-    $class = \App\Models\VolunteerClass::create(['starts_on' => now()->addWeek(), 'venue' => 'Hall']);
+    $class = VolunteerClass::create(['starts_on' => now()->addWeek(), 'venue' => 'Hall']);
     $application = makeVolunteerApplication(['application_status' => 'scheduled', 'volunteer_class_id' => $class->id]);
 
     $this->actingAs($admin)->get(route('admin.operations.volunteers.show', $application))
@@ -157,7 +163,7 @@ it('takes a volunteer out of their class when sent back to waiting', function ()
 // ---------------------------------------------------------------- class emails
 
 it('emails each volunteer their class date and venue after scheduling, once', function () {
-    \Illuminate\Support\Facades\Mail::fake();
+    Mail::fake();
     $admin = User::factory()->create(['is_admin' => true]);
     foreach (range(1, 3) as $i) {
         makeVolunteerApplication(['first_name' => "Vol{$i}", 'email' => "vol{$i}@example.com", 'application_status' => 'waiting']);
@@ -167,31 +173,31 @@ it('emails each volunteer their class date and venue after scheduling, once', fu
         'starts_on' => now()->addWeek()->toDateString(), 'venue' => 'Bugallon Municipal Hall', 'notes' => 'Bring a valid ID.',
     ])->assertSessionHas('success');
 
-    \Illuminate\Support\Facades\Mail::assertSent(\App\Mail\VolunteerClassScheduled::class, 3);
-    \Illuminate\Support\Facades\Mail::assertSent(\App\Mail\VolunteerClassScheduled::class, fn ($mail) => $mail->hasTo('vol1@example.com')
+    Mail::assertSent(VolunteerClassScheduled::class, 3);
+    Mail::assertSent(VolunteerClassScheduled::class, fn ($mail) => $mail->hasTo('vol1@example.com')
         && str_contains($mail->render(), 'Bugallon Municipal Hall')
         && str_contains($mail->render(), 'Bring a valid ID.'));
     expect(VolunteerApplication::whereNotNull('class_emailed_at')->count())->toBe(3);
 
     // Sending again only goes to those who did not get it yet.
-    $class = \App\Models\VolunteerClass::sole();
+    $class = VolunteerClass::sole();
     VolunteerApplication::where('email', 'vol2@example.com')->update(['class_emailed_at' => null]);
     $this->post(route('admin.operations.volunteers.classes.email', $class))->assertSessionHas('success');
-    \Illuminate\Support\Facades\Mail::assertSent(\App\Mail\VolunteerClassScheduled::class, 4);
+    Mail::assertSent(VolunteerClassScheduled::class, 4);
 
     $this->get(route('admin.operations.volunteers.index'))->assertSee('Emailed 3 of 3');
 });
 
 it('emails one volunteer their class details again from their page', function () {
-    \Illuminate\Support\Facades\Mail::fake();
+    Mail::fake();
     $admin = User::factory()->create(['is_admin' => true]);
-    $class = \App\Models\VolunteerClass::create(['starts_on' => now()->addWeek(), 'venue' => 'Hall']);
+    $class = VolunteerClass::create(['starts_on' => now()->addWeek(), 'venue' => 'Hall']);
     $application = makeVolunteerApplication(['application_status' => 'scheduled', 'volunteer_class_id' => $class->id]);
     $waiting = makeVolunteerApplication(['email' => 'w@example.com', 'application_status' => 'waiting']);
 
     $this->actingAs($admin)->get(route('admin.operations.volunteers.show', $application))->assertSee('Email class details');
     $this->post(route('admin.operations.volunteers.email-class', $application))->assertSessionHas('success');
-    \Illuminate\Support\Facades\Mail::assertSent(\App\Mail\VolunteerClassScheduled::class, fn ($mail) => $mail->hasTo('carla@example.com'));
+    Mail::assertSent(VolunteerClassScheduled::class, fn ($mail) => $mail->hasTo('carla@example.com'));
     expect($application->fresh()->class_emailed_at)->not->toBeNull();
 
     // Someone not in a class has nothing to be emailed.
@@ -200,18 +206,39 @@ it('emails one volunteer their class details again from their page', function ()
 
 it('stops sending a class its emails when the mail server cannot be reached', function () {
     $admin = User::factory()->create(['is_admin' => true]);
-    $class = \App\Models\VolunteerClass::create(['starts_on' => now()->addWeek(), 'venue' => 'Hall']);
+    $class = VolunteerClass::create(['starts_on' => now()->addWeek(), 'venue' => 'Hall']);
     foreach (range(1, 3) as $i) {
         makeVolunteerApplication(['email' => "c{$i}@example.com", 'application_status' => 'scheduled', 'volunteer_class_id' => $class->id]);
     }
     $attempts = 0;
-    \Illuminate\Support\Facades\Mail::shouldReceive('to')->andReturnUsing(function () use (&$attempts) {
+    Mail::shouldReceive('to')->andReturnUsing(function () use (&$attempts) {
         $attempts++;
-        throw new \Symfony\Component\Mailer\Exception\TransportException('Connection timed out');
+        throw new TransportException('Connection timed out');
     });
 
-    (new \App\Jobs\EmailVolunteerClass($class->id))->handle();
+    (new EmailVolunteerClass($class->id))->handle();
 
     expect($attempts)->toBe(1)
         ->and(VolunteerApplication::whereNotNull('class_emailed_at')->count())->toBe(0);
+});
+
+it('keeps emailing a class when the mail server refuses one address', function () {
+    $class = VolunteerClass::create(['starts_on' => now()->addWeek(), 'venue' => 'Hall']);
+    foreach (range(1, 3) as $i) {
+        makeVolunteerApplication(['email' => "c{$i}@example.com", 'application_status' => 'scheduled', 'volunteer_class_id' => $class->id]);
+    }
+    $attempts = 0;
+    Mail::shouldReceive('to')->andReturnUsing(function () use (&$attempts) {
+        if (++$attempts === 1) {
+            throw new UnexpectedResponseException('550 Mailbox not found');
+        }
+
+        return Mockery::mock()->shouldReceive('send')->andReturnNull()->getMock();
+    });
+
+    (new EmailVolunteerClass($class->id))->handle();
+
+    expect($attempts)->toBe(3)
+        ->and(VolunteerApplication::whereNotNull('class_emailed_at')->pluck('email')->all())
+        ->toEqualCanonicalizing(['c2@example.com', 'c3@example.com']);
 });

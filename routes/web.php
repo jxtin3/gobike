@@ -177,9 +177,12 @@ Route::middleware([EnsureAdmin::class, AuthenticateSession::class])->prefix('adm
         Route::resource('news', AdminNewsController::class);
         Route::resource('pictures', PictureController::class)->only(['index', 'store', 'show', 'destroy']);
 
-        // users
+        // users (the bulk routes come before the resource so "approve-all" is not read as a user id)
+        Route::patch('/users/approve-all', [AdminUserController::class, 'approveAll'])->name('users.approve-all');
+        Route::post('/users/email-approved', [AdminUserController::class, 'emailApproved'])->name('users.email-approved');
         Route::resource('users', AdminUserController::class);
         Route::patch('/users/{user}/approve', [AdminUserController::class, 'approve'])->name('users.approve');
+        Route::post('/users/{user}/email-approval', [AdminUserController::class, 'emailApproval'])->name('users.email-approval');
         Route::delete('/users/{user}/decline', [AdminUserController::class, 'decline'])->name('users.decline');
 
         // contact form messages

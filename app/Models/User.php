@@ -98,6 +98,23 @@ class User extends Authenticatable
         return $query->where('role', 'GoBiker')->where('status', 'Inactive');
     }
 
+    // Approved by an admin since approval emails began, but the email has not reached them yet.
+    // Reserved .test addresses (the demo accounts) can never receive mail, so they are left out.
+    public function scopeAwaitingApprovalEmail(Builder $query): Builder
+    {
+        return $query->where('role', 'GoBiker')
+            ->where('status', 'Active')
+            ->whereNotNull('approved_at')
+            ->whereNull('approval_emailed_at')
+            ->where('email', 'not like', '%.test');
+    }
+
+    /** False for reserved .test addresses (demo accounts), which no mail server delivers to. */
+    public function canReceiveEmail(): bool
+    {
+        return filled($this->email) && ! str_ends_with(strtolower($this->email), '.test');
+    }
+
     public function isPendingApproval(): bool
     {
         return $this->role === 'GoBiker' && $this->status === 'Inactive';
@@ -162,6 +179,8 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'birthdate' => 'date',
+            'approved_at' => 'datetime',
+            'approval_emailed_at' => 'datetime',
             'password' => 'hashed',
             'is_admin' => 'boolean',
             'has_password' => 'boolean',
