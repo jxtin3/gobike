@@ -43,7 +43,7 @@
 <section class="detail-card detail-narrow">
     <h2 class="detail-card-title">Account</h2>
     <dl class="detail-dl">
-        <div><dt>Role</dt><dd><span class="pill {{ $role === 'GoBiker' ? 'pill-info' : 'pill-neutral' }}">{{ $role }}</span></dd></div>
+        <div><dt>Role</dt><dd><span class="pill {{ $role === 'GoBiker' ? 'pill-info' : 'pill-neutral' }}">{{ \App\Models\User::roleLabelFor($role) }}</span></dd></div>
         <div><dt>Status</dt><dd>
             @if ($pending)
                 <span class="pill pill-warn"><i class="dot"></i> Pending approval</span>

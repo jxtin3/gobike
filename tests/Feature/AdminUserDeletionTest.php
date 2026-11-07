@@ -19,7 +19,7 @@ it('will not delete a GoBiker who recorded patient check-ups', function () {
     $this->actingAs($admin)
         ->delete(route('admin.operations.users.destroy', $gobiker))
         ->assertRedirect()
-        ->assertSessionHas('error', 'Rider One has recorded 1 patient record. Change the role to User instead of deleting the account.');
+        ->assertSessionHas('error', 'Rider One has recorded 1 patient record. Change the role to Resident instead of deleting the account.');
 
     $this->assertModelExists($gobiker);
     $this->assertModelExists($patient);

@@ -92,6 +92,14 @@ class User extends Authenticatable
         return array_map('boolval', $saved + PushNotifier::PREFS);
     }
 
+    /** What the admin sees for each role. "User" is stored (the app relies on it) but shown as Resident. */
+    public const ROLE_LABELS = ['GoBiker' => 'GoBiker', 'User' => 'Resident', 'Admin' => 'Admin'];
+
+    public static function roleLabelFor(?string $role): string
+    {
+        return self::ROLE_LABELS[$role ?? 'User'] ?? $role;
+    }
+
     // A GoBiker who signed up in the mobile app and is waiting for admin approval.
     public function scopePendingApproval(Builder $query): Builder
     {

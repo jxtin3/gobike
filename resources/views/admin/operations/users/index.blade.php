@@ -12,7 +12,7 @@
         'all' => 'All users',
         'pending' => 'Pending approval',
         'GoBiker' => 'GoBikers',
-        'User' => 'Users',
+        'User' => 'Residents',
     ];
     $searching = filled(request('search'));
     $hasQuery = $searching || $filter !== 'all';
@@ -106,7 +106,7 @@
                             </div>
                         </td>
                         <td>
-                            <span class="pill {{ $role === 'GoBiker' ? 'pill-info' : 'pill-neutral' }}">{{ $role }}</span>
+                            <span class="pill {{ $role === 'GoBiker' ? 'pill-info' : 'pill-neutral' }}">{{ \App\Models\User::roleLabelFor($role) }}</span>
                             @if ($pending)
                                 <span class="pill pill-warn"><i class="dot"></i> Pending approval</span>
                             @endif

@@ -63,7 +63,7 @@
             <label for="role">Role</label>
             <select class="input @error('role') is-invalid @enderror" id="role" name="role" aria-describedby="role-error">
                 @foreach ($roles as $r)
-                    <option value="{{ $r }}" @selected($role === $r)>{{ $r }}</option>
+                    <option value="{{ $r }}" @selected($role === $r)>{{ \App\Models\User::roleLabelFor($r) }}</option>
                 @endforeach
             </select>
             <x-admin.field-error name="role" />

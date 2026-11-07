@@ -151,7 +151,7 @@ class UserController extends Controller
         $patientCount = $user->patients()->count();
 
         if ($patientCount > 0) {
-            return back()->with('error', "{$user->name} has recorded ".trans_choice('{1} 1 patient record|[2,*] :count patient records', $patientCount).'. Change the role to User instead of deleting the account.');
+            return back()->with('error', "{$user->name} has recorded ".trans_choice('{1} 1 patient record|[2,*] :count patient records', $patientCount).'. Change the role to Resident instead of deleting the account.');
         }
 
         $user->tokens()->delete();
