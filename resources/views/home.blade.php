@@ -125,10 +125,13 @@
             {{-- aspect-video matches the 16:9 video, so the whole picture shows at every screen size --}}
             <div class="w-full md:w-[72%] relative aspect-video md:self-center overflow-hidden flex-shrink-0 group cursor-pointer bg-black"
                  @click="playing ? $refs.video.pause() : $refs.video.play(); playing = !playing">
+                {{-- poster: phones (and in-app browsers like Messenger) show nothing until play without it; preload none saves their data --}}
                 <video
                     x-ref="video"
                     loop
                     playsinline
+                    preload="none"
+                    poster="{{ asset('images/homepage/video-poster-1.jpg') }}"
                     class="absolute inset-0 w-full h-full object-cover"
                 >
                     <source src="{{ asset('videos/First-Video.mp4') }}" type="video/mp4">
@@ -171,6 +174,8 @@
                 x-ref="video"
                 loop
                 playsinline
+                preload="none"
+                poster="{{ asset('images/homepage/video-poster-2.jpg') }}"
                 class="absolute inset-0 w-full h-full object-cover"
             >
                 <source src="{{ asset('videos/Second-Video.mp4') }}" type="video/mp4">
