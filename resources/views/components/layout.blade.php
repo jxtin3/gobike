@@ -293,8 +293,6 @@
                     <a href="{{ route('terms') }}" class="hover:text-white/60 transition-colors duration-200">Terms &amp; Conditions</a>
                     <span class="opacity-30">&middot;</span>
                     <a href="{{ route('cookie-policy') }}" class="hover:text-white/60 transition-colors duration-200">Cookie Policy</a>
-                    <span class="opacity-30">&middot;</span>
-                    <button type="button" @click="$dispatch('open-cookie-settings')" class="cursor-pointer hover:text-white/60 transition-colors duration-200">Cookie settings</button>
                 </div>
             </div>
         </div>

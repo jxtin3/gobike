@@ -66,7 +66,7 @@ TXT,
         [
             'title' => '6. Managing Your Choices',
             'content' => <<<'TXT'
-- Use the **Cookie settings** link at the bottom of any page to change your choice at any time.
+- To change your choice, delete the gobike_cookie_consent cookie in your browser settings. The cookie banner will appear again on your next visit.
 - You can also block or delete cookies in your browser settings. If you block strictly necessary cookies, parts of the Site, such as our forms, may not work.
 - Choosing "Essential only" does not turn off strictly necessary cookies, because the Site needs them to function.
 TXT,

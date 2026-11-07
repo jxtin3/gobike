@@ -26,7 +26,6 @@
     x-show="open"
     x-cloak
     x-transition.opacity.duration.200ms
-    @open-cookie-settings.window="open = true"
     class="cookie-banner"
     role="region"
     aria-label="Cookie preferences"

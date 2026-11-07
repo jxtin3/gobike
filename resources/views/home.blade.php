@@ -489,10 +489,10 @@
             <div class="max-w-2xl">
 
                 <h2 id="news-heading" class="font-heading text-4xl font-bold uppercase leading-tight text-[#111827] md:text-5xl">
-                    News &amp; Updates
+                    In the Spotlight
                 </h2>
                 <p class="mt-3 max-w-xl text-sm leading-relaxed text-[#64748B] md:text-base">
-                    Our stories, activities, and updates from the OneGoBike community.
+                    Awards, features, and stages where the Go Bike Project has been recognized, in the Philippines and abroad.
                 </p>
             </div>
             
@@ -531,7 +531,23 @@
                 </div>
             </div>
 
-            {{-- Permanent Story 3 (hidden for now)
+            <!-- Permanent Story 3 -->
+            <div class="news-card reveal reveal-delay-3">
+                <div class="news-card-image-wrap">
+                    <img src="{{ asset('images/homepage/ronda_kalusugan.jpg') }}" alt="A Go Bike volunteer checking an older resident's blood pressure during a Ronda Kalusugan home visit" class="news-card-image" loading="lazy">
+                </div>
+                <div class="news-card-content">
+                    <h3 class="news-card-title">Go Bike Co-founder Edren Llanillo Speaks at the Prince Mahidol Award Conference 2026</h3>
+                    <p class="news-card-excerpt">The founder of Padyarescue Inc. joined PMAC 2026 as a speaker in the session "Advancing Intergenerational Solidarity and Equity in an Unsettling World."</p>
+
+                    <a href="https://pmac-2026.com/speaker/detail/80" target="_blank" rel="noopener" class="news-card-link mt-auto group" aria-label="Read story: Go Bike Co-founder Edren Llanillo Speaks at the Prince Mahidol Award Conference 2026 (opens in a new tab)">
+                        Read story
+                        <svg class="h-5 w-5 shrink-0 transition-transform duration-200 group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14m-7-7 7 7-7 7"/></svg>
+                    </a>
+                </div>
+            </div>
+
+            {{-- Old Story 3 (hidden)
             <div class="news-card reveal reveal-delay-3">
                 <div class="news-card-image-wrap">
                     <img src="{{ asset('images/reachus/story-3.jpg') }}" alt="Strengthening Community Disaster Response with LGUs" class="news-card-image" loading="lazy">

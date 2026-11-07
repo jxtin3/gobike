@@ -71,7 +71,7 @@ it('shows the cookie banner on public pages', function () {
         ->assertSee('class="cookie-banner"', false)
         ->assertSee('Accept all')
         ->assertSee('Essential only')
-        ->assertSee('Cookie settings');
+        ->assertDontSee('Cookie settings');
 });
 
 it('loads the google map on the contact page only after consent', function () {

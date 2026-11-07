@@ -36,7 +36,7 @@ MENUS
   • Reach Us
   • Donate button
 - Footer (bottom of every page): Navigate (About Us, What We Do, Community, Contact) and Get Involved (Get Training, Donate, News & Updates, Gallery), plus Privacy Policy, Terms and Cookie Policy.
-- Home page: the first screen has two buttons, "Volunteer with us" or "Get Trained". Further down: the programs slider, quick-access cards, impact numbers, latest news, and at the very end "How to Replicate Go Bike Project in Your Community".
+- Home page: the first screen has two buttons, "Volunteer with us" or "Get Trained". Further down: the programs slider, quick-access cards, impact numbers, "In the Spotlight" (awards and features about Go Bike), and at the very end "How to Replicate Go Bike Project in Your Community".
 
 PAGES
 - About Us: Go Bike's story, mission and people. "Be part of the story" at the bottom has a Get Training button.
