@@ -1,3 +1,8 @@
 User-agent: *
 Disallow: /admin
 Disallow: /login
+# Personal pages for one donor or one inquiry
+Disallow: /donate/
+Disallow: /replicate-go-bike/inquiry/
+
+Sitemap: https://gobikeproject.org/sitemap.xml

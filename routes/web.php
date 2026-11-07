@@ -31,6 +31,7 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\LegalDocumentController;
 use App\Http\Controllers\NewsController;
 use App\Http\Controllers\ReplicationRequestController;
+use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\TrainingRequestController;
 use App\Http\Controllers\VolunteerController;
 use App\Http\Controllers\Webhook\PayMongoWebhookController;
@@ -38,6 +39,9 @@ use App\Http\Controllers\Webhook\PayPalWebhookController;
 use App\Http\Middleware\EnsureAdmin;
 use Illuminate\Session\Middleware\AuthenticateSession;
 use Illuminate\Support\Facades\Route;
+
+// for search engines
+Route::get('/sitemap.xml', SitemapController::class)->name('sitemap');
 
 // pages
 Route::get('/', [HomeController::class, 'index']);

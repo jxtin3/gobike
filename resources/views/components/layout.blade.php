@@ -10,6 +10,41 @@
     <title>{{ $title ?? 'Go Bike — Youth-Led Community Health Responders' }}</title>
     <meta name="description" content="{{ $description ?? 'Go Bike mobilizes youth volunteers, cyclists, and responders to improve health, resilience, disaster preparedness, and community engagement throughout Pangasinan.' }}" />
     <meta name="keywords" content="OneGoBike,Go Bike Project, Pangasinan, youth volunteers, community responders, Go Bikers, disaster preparedness, health outreach" />
+    {{-- The one address Google should list for this page (without ?query extras) --}}
+    <link rel="canonical" href="{{ url()->current() }}" />
+
+    @if (request()->is('/'))
+        {{-- Who Go Bike is, for Google's search results. Facts match Org Structure & History. --}}
+        <script type="application/ld+json">
+        {!! json_encode([
+            '@context' => 'https://schema.org',
+            '@type' => 'NGO',
+            'name' => 'Go Bike Project',
+            'alternateName' => 'OneGoBike',
+            'url' => url('/'),
+            'logo' => asset('images/gobike-logo.png'),
+            'image' => asset('images/og-share.jpg'),
+            'description' => 'Youth-led community responders in Pangasinan: young volunteers trained in first aid and disaster response who serve their communities by bicycle.',
+            'foundingDate' => '2019-03-16',
+            'founder' => [
+                ['@type' => 'Person', 'name' => 'Edren M. Llanillo'],
+                ['@type' => 'Person', 'name' => 'Sheena Mae Quiles'],
+                ['@type' => 'Person', 'name' => 'Nikko De Mesa'],
+            ],
+            'parentOrganization' => ['@type' => 'NGO', 'name' => 'Padyarescue Incorporated'],
+            'address' => [
+                '@type' => 'PostalAddress',
+                'addressLocality' => 'Bugallon',
+                'addressRegion' => 'Pangasinan',
+                'addressCountry' => 'PH',
+            ],
+            'areaServed' => 'Pangasinan, Philippines',
+            'email' => 'gobike@pydn.org',
+            'telephone' => '+63 976 429 0145',
+            'sameAs' => ['https://www.facebook.com/gobikeprojectofficial'],
+        ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG) !!}
+        </script>
+    @endif
 
      <!-- Open Graph for sharing in socmed -->
     <meta property="og:type"        content="website" />
