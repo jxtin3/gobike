@@ -534,7 +534,7 @@
             <!-- Permanent Story 3 -->
             <div class="news-card reveal reveal-delay-3">
                 <div class="news-card-image-wrap">
-                    <img src="{{ asset('images/homepage/ronda_kalusugan.jpg') }}" alt="A Go Bike volunteer checking an older resident's blood pressure during a Ronda Kalusugan home visit" class="news-card-image" loading="lazy">
+                    <img src="{{ asset('images/homepage/edrenllanillo.jpg') }}" alt="Go Bike Co-founder Edren Llanillo" class="news-card-image" loading="lazy">
                 </div>
                 <div class="news-card-content">
                     <h3 class="news-card-title">Go Bike Co-founder Edren Llanillo Speaks at the Prince Mahidol Award Conference 2026</h3>
@@ -547,26 +547,8 @@
                 </div>
             </div>
 
-            {{-- Old Story 3 (hidden)
-            <div class="news-card reveal reveal-delay-3">
-                <div class="news-card-image-wrap">
-                    <img src="{{ asset('images/reachus/story-3.jpg') }}" alt="Strengthening Community Disaster Response with LGUs" class="news-card-image" loading="lazy">
-                </div>
-                <div class="news-card-content">
-                    <div class="news-card-date">
-                        <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25m10.5-2.25v2.25M3.75 8.25h16.5M5.25 4.5h13.5A1.5 1.5 0 0 1 20.25 6v14.25H3.75V6a1.5 1.5 0 0 1 1.5-1.5Z"/></svg>
-                        <time datetime="2026-09-29">September 29, 2026</time>
-                    </div>
-                    <h3 class="news-card-title">Daily Tribune Recognizes Go Bike Project's Commitment to Youth-Led Disaster Preparedness</h3>
-                    <p class="news-card-excerpt">Working alongside local government units and disaster response teams to establish faster alert systems and rapid bicycle mobility during emergencies.</p>
-                    
-                    <a href="{{ url('/news') }}" class="news-card-link mt-auto group" aria-label="Read more news: Strengthening Community Disaster Response with LGUs">
-                        Read story
-                        <svg class="h-5 w-5 shrink-0 transition-transform duration-200 group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14m-7-7 7 7-7 7"/></svg>
-                    </a>
-                </div>
-            </div>
-            --}}
+
+
         </div>
     </div>
 </section>
