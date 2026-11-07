@@ -29,6 +29,11 @@ class DonationController extends Controller
         PayMongoDonationService $paymongo,
         ExchangeRateService $rates,
     ): JsonResponse {
+        // Online payments are off until PayPal / PayMongo are set up (config/payments.php).
+        if (! config('payments.online')) {
+            return response()->json(['message' => 'Online donations are not open yet. Please contact us to give.'], 503);
+        }
+
         $validated = $request->validated();
         $currency = $validated['currency'];
         $amount = Currency::round((float) $validated['amount'], $currency);
@@ -223,6 +228,10 @@ class DonationController extends Controller
         Donation $donation,
         PayMongoDonationService $paymongo,
     ): RedirectResponse {
+        if (! config('payments.online')) {
+            return redirect()->route('donate');
+        }
+
         // Only allow retry for pending PayMongo donations
         if (! in_array($donation->status, ['pending', 'cancelled'], true) || ! $donation->paymongo_session_id) {
             return redirect()->route('donate')->with('error', 'This donation cannot be retried.');

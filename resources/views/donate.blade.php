@@ -68,7 +68,24 @@
     <div class="donate-card-wrap">
         <div class="donate-card">
 
-            @if(!isset($paidDonation))
+            @if (! isset($paidDonation) && ! config('payments.online'))
+                {{-- Online payments are switched off until PayPal / PayMongo are set up (config/payments.php) --}}
+                <div class="donate-thankyou">
+                    <div class="donate-thankyou__icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z"/></svg>
+                    </div>
+                    <h2 class="donate-thankyou__title">Online donations are opening soon</h2>
+                    <p class="donate-thankyou__sub">
+                        We're finishing the setup with our payment partners, so you can't give online just yet.
+                        Thank you for wanting to support our Go Bikers.
+                    </p>
+                    <p class="donate-thankyou__details">
+                        To give now, or to be told when online donations open, contact us:<br>
+                        <a href="mailto:gobike@pydn.org">gobike@pydn.org</a> &middot; <a href="tel:+639764290145">0976 429 0145</a>
+                    </p>
+                    <a href="{{ url('/contact') }}" class="donate-cta donate-cta--center">Contact Us</a>
+                </div>
+            @elseif (! isset($paidDonation))
 
                 {{-- PayMongo session-expired retry banner --}}
                 @if(isset($cancelledDonation) && !empty($cancelledDonation->paymongo_session_id))

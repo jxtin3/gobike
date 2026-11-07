@@ -66,7 +66,7 @@ class ReplicationRequestController extends Controller
      */
     public function pay(ReplicationRequest $replicationRequest, PayMongoDonationService $paymongo): RedirectResponse
     {
-        if (! $replicationRequest->canPayOnline()) {
+        if (! config('payments.online') || ! $replicationRequest->canPayOnline()) {
             return redirect()->route('replicate.inquiry.show', $replicationRequest);
         }
 

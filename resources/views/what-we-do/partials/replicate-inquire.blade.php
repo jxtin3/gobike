@@ -136,9 +136,10 @@
                                 <input type="radio" name="payment" value="later" x-model="payment" @checked(old('payment', 'later') === 'later')>
                                 <span>
                                     <b>Send inquiry only</b>
-                                    <small>We'll contact you to confirm your schedule. Pay later online, or by check at least 3 days before the training.</small>
+                                    <small>We'll contact you to confirm your schedule. Pay {{ config('payments.online') ? 'later online, or ' : '' }}by check at least 3 days before the training.</small>
                                 </span>
                             </label>
+                            @if (config('payments.online'))
                             <label class="gbp-pay-option" :class="payment === 'online' && 'is-selected'">
                                 <input type="radio" name="payment" value="online" x-model="payment" @checked(old('payment') === 'online')>
                                 <span>
@@ -146,6 +147,7 @@
                                     <small>Pay the full training fee securely through PayMongo with GCash or online banking.</small>
                                 </span>
                             </label>
+                            @endif
                         </div>
                     </fieldset>
 
@@ -198,7 +200,11 @@
                 <div class="gbp-card">
                     <p class="gbp-label">Payment &amp; refunds</p>
                     <ul class="gbp-bullets is-small">
-                        <li>Pay online now with GCash or online banking, or by check to PRI at least 3 days before the training.</li>
+                        @if (config('payments.online'))
+                            <li>Pay online now with GCash or online banking, or by check to PRI at least 3 days before the training.</li>
+                        @else
+                            <li>Pay by check to PRI at least 3 days before the training.</li>
+                        @endif
                         <li>PRI issues an Official Receipt for your payment.</li>
                         <li>Full refund if we can't schedule your training, or if you cancel at least {{ $refundDays }} days before it. Later cancellations can be moved to a new date.</li>
                     </ul>

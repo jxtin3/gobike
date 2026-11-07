@@ -26,6 +26,22 @@ class ChatbotSiteGuide
         $chapterMax = (int) config('replication.max_trainees');
         $minAge = VolunteerApplication::MIN_AGE;
 
+        // Online payments can be switched off (config/payments.php); then GoBot must not send people to pay online.
+        if (config('payments.online')) {
+            $donatePage = 'give once or every month.';
+            $donateSteps = <<<'STEPS'
+1. Open Donate with the Donate button at the top.
+2. Choose once or monthly and an amount (USD presets or your own); choose Individual or Organization.
+3. Fill in Your Details, then Payment Details: PayPal, GCash or Online Banking. Monthly donations use PayPal.
+4. Finish on the payment page; a thank-you page confirms the donation. For questions about a donation, use Reach Us.
+STEPS;
+            $chapterPayment = 'The training fee can be paid early online (GCash or online banking) or at the training.';
+        } else {
+            $donatePage = 'online donations are opening soon; the page says how to give in the meantime.';
+            $donateSteps = 'Online donations are not open yet: the Donate page says they are opening soon. To give now, or to be told when online donations open, contact Go Bike through Reach Us (email or phone). Do not describe an online donation form or payment steps.';
+            $chapterPayment = 'The training fee is paid by check to PRI at least 3 days before the training (online payment is not available yet).';
+        }
+
         return <<<GUIDE
 WEBSITE GUIDE (the OneGoBike website)
 Guide visitors by menu, page, section and button names only. Never give web addresses or links.
@@ -53,7 +69,7 @@ PAGES
   • Hatake Farm: community farming and food security.
 - Volunteer: become a Go Biker. Sections: What You'll Do, What You Get, Requirements, How It Works, the sign-up form, and Volunteer FAQ.
 - Replicate Go Bike: bring Go Bike to your own community (start a chapter); the training, fees and an inquiry form. It is not in the top menu: open it from the last section of the home page ("How to Replicate Go Bike Project in Your Community", button "Access the Program Now").
-- Donate: give once or every month.
+- Donate: {$donatePage}
 - News & Updates: news articles; tap one to read it. Our Story tells how Go Bike started.
 - Gallery Showcase: photos and videos.
 - Reach Us: contact form, email, phone, map and Facebook.
@@ -75,15 +91,12 @@ Get individual first aid training (paid, starts on the date you choose, one-on-o
 4. Tap "Submit Request". A thank-you note confirms it; the team calls within 24–48 hours to confirm. Training happens at your home, school, office or barangay hall in Pangasinan.
 
 Donate:
-1. Open Donate with the Donate button at the top.
-2. Choose once or monthly and an amount (USD presets or your own); choose Individual or Organization.
-3. Fill in Your Details, then Payment Details: PayPal, GCash or Online Banking. Monthly donations use PayPal.
-4. Finish on the payment page; a thank-you page confirms the donation. For questions about a donation, use Reach Us.
+{$donateSteps}
 
 Start a Go Bike chapter in your community:
 1. Open the home page, scroll to the last section "How to Replicate Go Bike Project in Your Community" and tap "Access the Program Now" (or open /replicate-go-bike).
 2. Read the setup, training and operations sections.
-3. Fill in the inquiry form (organization, type, contact person, municipality and province, number of trainees, preferred training date) and send it. The training fee can be paid early online (GCash or online banking) or at the training.
+3. Fill in the inquiry form (organization, type, contact person, municipality and province, number of trainees, preferred training date) and send it. {$chapterPayment}
 - Go Biker's Training fee: ₱{$chapterFee} for a class of up to {$chapterSize} trainees, plus ₱{$extraTrainee} for each additional trainee (up to {$chapterMax} trainees).
 
 Contact Go Bike:

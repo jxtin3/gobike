@@ -30,7 +30,8 @@ class StoreReplicationRequest extends FormRequest
             'trainees' => ['required', 'integer', 'min:1', 'max:'.config('replication.max_trainees')],
             'preferred_date' => ['nullable', 'date', 'after:today'],
             'message' => ['nullable', 'string', 'max:1000'],
-            'payment' => ['required', Rule::in(['later', 'online'])],
+            // "Pay now" is offered only while online payments are on (config/payments.php).
+            'payment' => ['required', Rule::in(config('payments.online') ? ['later', 'online'] : ['later'])],
             'agree' => ['accepted'],
         ];
     }

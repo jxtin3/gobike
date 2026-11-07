@@ -58,6 +58,16 @@
                 <span class="gbi-badge">Refunded</span>
                 <h1 class="gbi-title">Your payment was refunded</h1>
                 <p class="gbi-text">Your training payment for this inquiry has been refunded. If you have questions, please contact us.</p>
+            @elseif (! config('payments.online') && $inquiry->canPayOnline())
+                <span class="gbi-badge">Inquiry received</span>
+                <h1 class="gbi-title">Your inquiry is saved</h1>
+                <p class="gbi-text">
+                    Our team will contact you to confirm your training schedule. Please pay the training fee by check
+                    to PRI at least 3 days before the training.
+                </p>
+                <div class="gbi-actions">
+                    <a href="{{ route('replicate') }}" class="gbi-link">Back to Replicate Go Bike</a>
+                </div>
             @elseif (! $inquiry->canPayOnline())
                 <span class="gbi-badge">{{ ucfirst($inquiry->status) }}</span>
                 <h1 class="gbi-title">This inquiry is {{ $inquiry->status }}</h1>

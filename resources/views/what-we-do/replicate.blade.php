@@ -279,7 +279,7 @@
                 <div><span>Each additional trainee</span><strong>₱{{ number_format(config('replication.additional_trainee_fee')) }}</strong></div>
                 <p class="gbp-price-note">
                     Complete payment via check should be made to PRI 3 days before the conduct of the
-                    training, or pay early online through GCash or online banking. Official Receipt will be
+                    training{{ config('payments.online') ? ', or pay early online through GCash or online banking' : '' }}. Official Receipt will be
                     issued by PRI as a donation.
                 </p>
             </div>
