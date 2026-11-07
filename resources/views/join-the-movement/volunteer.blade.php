@@ -3,8 +3,10 @@
     description="Sign up as a Go Biker volunteer and join youth cyclist-responders delivering health outreach, disaster preparedness, and first response across Pangasinan."
 >
 @php
+    $minAge = \App\Models\VolunteerApplication::MIN_AGE;
+
     $facts = [
-        ['13-25', 'Age range'],
+        [$minAge.'+', 'Minimum age'],
         ['2 Days', 'DRRM-CCAM, FA & BLS training'],
         ['Pangasinan', 'Community-based chapters'],
         [$classMin.'–'.$classMax, 'Volunteers per class'],
@@ -26,8 +28,7 @@
     ];
 
     $whoCanJoin = [
-        'Aged 13 to 25',
-        'Written parent or guardian consent if you are 13 to 17',
+        $minAge.' years old or above',
         'Physically fit and with no current illness',
         'Willing to complete the basic training before field activities',
     ];
@@ -36,7 +37,6 @@
         'The barangay and municipality where you live',
         'A photo or scan of your school ID (preferred if you are a student), another valid ID, or a barangay clearance, indigency or residency certificate',
         'An emergency contact (name and mobile number)',
-        'Parent or guardian details, if you are under 18',
     ];
 
     $steps = [ // EDIT: confirm the real process with PadyaRescue
@@ -48,7 +48,7 @@
 
     $faqs = [
         ['What is the minimum age to volunteer?',
-         'Our youth responder program accepts volunteers aged 13 to 25. Minors aged 13-17 need written parental consent to take part in active field training and dispatch activities.'],
+         'Volunteers must be at least '.$minAge.' years old. There is no upper age limit.'],
         ['Do I need training before I sign up?',
          'No. You do not need any knowledge of basic first aid or any other skill before you sign up. Basic DRRM-CCAM with First Aid & BLS training is part of the program, so you will be trained before going into the field. What we do ask is that you are physically fit and have no current illness.'],
         ['What ID do I need to upload?',
@@ -206,8 +206,7 @@
                         <p class="vol-class__alt">Want to start sooner? <a href="{{ url('/what-we-do#training-plan') }}">See individual training plans</a>, paid and on your own date.</p>
                     </div>
                     <ul>
-                        <li>Open to youth aged 13 to 25</li>
-                        <li>Parent or guardian consent needed if under 18</li>
+                        <li>Open to anyone {{ $minAge }} years old or above</li>
                         <li>No prior experience required</li>
                         <li>Physically fit, with no current illness</li>
                     </ul>
@@ -216,7 +215,7 @@
                     </p>
                 </aside>
 
-                <div class="vol-form-card reveal" x-data="volunteerForm()">
+                <div class="vol-form-card reveal" x-data="volunteerForm({{ $minAge }})">
 
                     {{-- Success --}}
                     <div x-show="submitted" x-cloak class="vol-success">
@@ -267,7 +266,7 @@
                             <div class="vol-row">
                                 <div class="vol-field">
                                     <label class="vol-label" for="v-age">Age <i>*</i></label>
-                                    <input id="v-age" class="vol-input" type="number" inputmode="numeric" x-model="form.age" required placeholder="e.g. 17">
+                                    <input id="v-age" class="vol-input" type="number" inputmode="numeric" x-model="form.age" required min="{{ $minAge }}" placeholder="e.g. 21">
                                 </div>
                                 <div class="vol-field">
                                     <label class="vol-label" for="v-status">I am currently <i>*</i></label>
@@ -287,10 +286,10 @@
                             </div>
 
                             {{-- Age notices --}}
-                            <div x-show="ageState === 'young' || ageState === 'old'" x-cloak x-collapse>
+                            <div x-show="ageState === 'young'" x-cloak x-collapse>
                                 <div class="vol-alert is-warn" style="margin-top:1rem;">
                                     <span>
-                                        Our youth responder program accepts volunteers aged 13 to 25.
+                                        Volunteers must be at least {{ $minAge }} years old.
                                         Please <a href="{{ url('/contact') }}">contact us</a> to ask about other ways to help.
                                     </span>
                                 </div>
@@ -433,30 +432,6 @@
                             </div>
                         </fieldset>
 
-                        {{-- Guardian (only for 13–17) --}}
-                        <div x-show="isMinor" x-cloak x-collapse>
-                            <fieldset class="vol-fieldset">
-                                <legend class="vol-legend">Parent / Guardian</legend>
-                                <div class="vol-alert is-info">
-                                    <span>Because you are under 18, a parent or guardian must consent to your participation in field training and dispatch activities.</span>
-                                </div>
-                                <div class="vol-row">
-                                    <div class="vol-field">
-                                        <label class="vol-label" for="v-g-name">Guardian Name <i>*</i></label>
-                                        <input id="v-g-name" class="vol-input" type="text" x-model="form.guardianName" :required="isMinor">
-                                    </div>
-                                    <div class="vol-field">
-                                        <label class="vol-label" for="v-g-phone">Guardian Number <i>*</i></label>
-                                        <input id="v-g-phone" class="vol-input" type="tel" x-model="form.guardianPhone" :required="isMinor" placeholder="+63 9XX XXX XXXX">
-                                    </div>
-                                </div>
-                                <label class="vol-check">
-                                    <input type="checkbox" x-model="form.guardianConsent" :required="isMinor">
-                                    <span>My parent or guardian is aware of and consents to my volunteering with the Go Bike Project.</span>
-                                </label>
-                            </fieldset>
-                        </div>
-
                         {{-- Consent + submit --}}
                         <label class="vol-check" style="margin-bottom:1.25rem;">
                             <input type="checkbox" x-model="form.agree" required>
@@ -525,7 +500,7 @@
 </div>
 
 <x-slot:scripts>
-    <script src="{{ asset('js/volunteer.js') }}"></script>
+    <script src="{{ asset('js/volunteer.js') }}?v={{ filemtime(public_path('js/volunteer.js')) }}"></script>
 </x-slot:scripts>
 
 </x-layout>

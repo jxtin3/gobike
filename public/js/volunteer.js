@@ -21,7 +21,8 @@ async function shrinkImage(file) {
 }
 
 document.addEventListener('alpine:init', () => {
-    Alpine.data('volunteerForm', () => {
+    // minAge comes from VolunteerApplication::MIN_AGE, so the page and the server agree.
+    Alpine.data('volunteerForm', (minAge = 18) => {
         const blank = () => ({
             firstName: '',
             lastName: '',
@@ -38,9 +39,6 @@ document.addEventListener('alpine:init', () => {
             motivation: '',
             emergencyName: '',
             emergencyPhone: '',
-            guardianName: '',
-            guardianPhone: '',
-            guardianConsent: false,
             agree: false,
         });
 
@@ -140,22 +138,17 @@ document.addEventListener('alpine:init', () => {
                 return kb >= 1024 ? (kb / 1024).toFixed(1) + ' MB' : Math.max(1, Math.round(kb)) + ' KB';
             },
 
-            // 'empty' | 'young' (<13) | 'minor' (13-17) | 'ok' (18-25) | 'old' (>25)
+            minAge,
+
+            // 'empty' | 'young' (under minAge) | 'ok'. There is no upper age limit.
             get ageState() {
                 const n = parseInt(this.form.age, 10);
                 if (Number.isNaN(n)) return 'empty';
-                if (n < 13) return 'young';
-                if (n < 18) return 'minor';
-                if (n <= 25) return 'ok';
-                return 'old';
-            },
-
-            get isMinor() {
-                return this.ageState === 'minor';
+                return n < minAge ? 'young' : 'ok';
             },
 
             get canSubmit() {
-                return this.ageState === 'minor' || this.ageState === 'ok';
+                return this.ageState === 'ok';
             },
 
             async submitForm() {

@@ -25,7 +25,7 @@ TXT,
             'content' => <<<'TXT'
 - You must be at least **13 years old** to submit forms on the Site or to create an App account.
 - If you are under 18, you confirm that your parent or guardian has read these Terms and agrees to them on your behalf.
-- Volunteer applicants must be **13 to 25 years old**. Applicants under 18 need the consent of a parent or guardian.
+- Volunteer applicants must be **at least 18 years old**. There is no upper age limit.
 - To donate, you must be at least 18 years old, or have your parent's or guardian's permission, and be authorized to use the payment method you choose.
 TXT,
         ],

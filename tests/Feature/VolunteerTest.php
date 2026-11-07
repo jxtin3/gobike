@@ -63,73 +63,51 @@ it('stores a valid volunteer application', function () {
     ]);
 });
 
-// minor volunteer test
-it('requires guardian information for a minor volunteer', function () {
-    $response = $this->postJson('/volunteer', [
-        'firstName' => 'Minor',
-        'lastName' => 'Volunteer',
-        'email' => 'minor@example.com',
+/** A complete application from someone of the given age. */
+function volunteerOfAge(int $age): array
+{
+    return [
+        'firstName' => 'Age',
+        'lastName' => 'Check',
+        'email' => "age{$age}@example.com",
         'phone' => '09123456789',
-        'age' => 17,
-        'status' => 'student',
-        'school' => 'Test High School',
+        'age' => $age,
+        'status' => 'working',
         'barangay' => 'Test Barangay',
         'municipality' => 'Test Municipality',
         'province' => 'Test Province',
         'availability' => 'weekends',
-        'motivation' => 'I want to help.',
         'emergencyName' => 'Emergency Contact',
         'emergencyPhone' => '09987654321',
         'agree' => true,
-    ] + volunteerIdFields());
+    ] + volunteerIdFields(['idType' => 'barangay-clearance']);
+}
 
-    $response->assertStatus(422)
-        ->assertJsonValidationErrors([
-            'guardianName',
-            'guardianPhone',
-            'guardianConsent',
-        ]);
-});
+it('turns away volunteers under 18', function (int $age) {
+    $this->postJson('/volunteer', volunteerOfAge($age))
+        ->assertStatus(422)
+        ->assertJsonValidationErrors(['age' => 'Volunteers must be at least 18 years old.']);
 
+    expect(VolunteerApplication::count())->toBe(0);
+})->with([13, 17]);
 
-// store guardian information with minor (<18)
-it('stores a valid minor volunteer application with guardian information', function () {
-    $response = $this->postJson('/volunteer', [
-        'firstName' => 'Minor',
-        'lastName' => 'Volunteer',
-        'email' => 'minor@example.com',
-        'phone' => '09123456789',
-        'age' => 17,
-        'status' => 'student',
-        'school' => 'Test High School',
-        'barangay' => 'Test Barangay',
-        'municipality' => 'Test Municipality',
-        'province' => 'Test Province',
-        'availability' => 'weekends',
-        'motivation' => 'I want to help the community.',
-        'emergencyName' => 'Emergency Contact',
-        'emergencyPhone' => '09987654321',
-
-        'guardianName' => 'Parent Guardian',
-        'guardianPhone' => '09876543210',
-        'guardianConsent' => true,
-
-        'agree' => true,
-    ] + volunteerIdFields(['idType' => 'barangay-clearance']));
-
-    $response->assertStatus(200)
-        ->assertJson([
-            'message' => 'Application received.',
-        ]);
+it('accepts volunteers 18 and over, with no upper age limit', function (int $age) {
+    $this->postJson('/volunteer', volunteerOfAge($age))->assertOk();
 
     $this->assertDatabaseHas('volunteer_applications', [
-        'first_name' => 'Minor',
-        'last_name' => 'Volunteer',
-        'age' => 17,
-        'guardian_name' => 'Parent Guardian',
-        'guardian_phone' => '09876543210',
-        'guardian_consent' => true,
+        'age' => $age,
+        'guardian_name' => null,
+        'guardian_consent' => false,
     ]);
+})->with([18, 26, 45, 70]);
+
+it('tells visitors the minimum age and no longer asks for a parent or guardian', function () {
+    $this->get('/volunteer')
+        ->assertOk()
+        ->assertSee('18+')
+        ->assertSee('Open to anyone 18 years old or above')
+        ->assertDontSee('13 to 25')
+        ->assertDontSee('Guardian Name');
 });
 
 // reject a volunteer with no require fields

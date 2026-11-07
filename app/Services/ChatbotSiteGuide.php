@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\News;
 use App\Models\TrainingRequest;
+use App\Models\VolunteerApplication;
 use Illuminate\Support\Facades\Cache;
 use Throwable;
 
@@ -23,6 +24,7 @@ class ChatbotSiteGuide
         $chapterSize = (int) config('replication.class_size');
         $extraTrainee = number_format((int) config('replication.additional_trainee_fee'));
         $chapterMax = (int) config('replication.max_trainees');
+        $minAge = VolunteerApplication::MIN_AGE;
 
         return <<<GUIDE
 WEBSITE GUIDE (the OneGoBike website)
@@ -60,9 +62,9 @@ PAGES
 HOW TO
 Volunteer (free):
 1. Open Volunteer: tap "Volunteer with us" on the home page.
-2. Scroll to "Ready to ride with us?" and fill in the form: About You, Where You Live, Your Volunteering (availability), Verify Your Identity (upload a school ID, which is preferred for students, another valid ID, or a barangay clearance, indigency or residency certificate), Emergency Contact; if under 18, the Parent / Guardian part.
+2. Scroll to "Ready to ride with us?" and fill in the form: About You, Where You Live, Your Volunteering (availability), Verify Your Identity (upload a school ID, which is preferred for students, another valid ID, or a barangay clearance, indigency or residency certificate), Emergency Contact.
 3. Tick the agreement and tap "Submit Application". The page then shows your place in line.
-- Who can join: ages 13 to 25; ages 13–17 need parent or guardian consent; no experience or first aid knowledge needed; volunteers must be physically fit with no current illness.
+- Who can join: anyone {$minAge} years old or above (there is no upper age limit; people under {$minAge} cannot volunteer); no experience or first aid knowledge needed; volunteers must be physically fit with no current illness.
 - Training is free (2-day DRRM-CCAM with First Aid & Basic Life Support) and is given to a whole class: it starts once {$classMin} to {$classMax} volunteers have signed up. The "Next volunteer class" box on the page shows how full the next class is. Go Bike emails (and may call or text) the date and venue when the class is set.
 - Want to train sooner? Book individual training (below).
 

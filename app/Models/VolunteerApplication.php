@@ -31,6 +31,12 @@ class VolunteerApplication extends Model
         'rejected' => 'bad',
     ];
 
+    /**
+     * Volunteers must be at least this old; there is no upper limit. Older applications (when the
+     * program took ages 13 to 25) may still hold a parent's or guardian's details.
+     */
+    public const MIN_AGE = 18;
+
     /** The most files a volunteer can upload as proof (front and back of an ID, a clearance, ...). */
     public const MAX_ID_FILES = 5;
 

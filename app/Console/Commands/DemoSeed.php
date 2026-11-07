@@ -718,8 +718,7 @@ class DemoSeed extends Command
         foreach ($plan as [$status, $class, [$fromDays, $toDays]]) {
             [$first, $last] = $this->nameParts();
             $occupation = $this->pick(['student', 'student', 'working', 'out-of-school', 'other']);
-            $age = $occupation === 'student' ? $this->int(15, 22) : $this->int(18, 25);
-            $minor = $age < 18;
+            $age = $occupation === 'student' ? $this->int(18, 24) : $this->int(18, 55);
             $created = $this->daysAgo($fromDays, $toDays);
             VolunteerApplication::forceCreate([
                 'first_name' => $first, 'last_name' => $last, 'email' => $this->email('volunteer'), 'phone' => $this->mobile(),
@@ -728,9 +727,7 @@ class DemoSeed extends Command
                 'barangay' => $this->pick(Barangays::ALL), 'municipality' => $this->pick(self::TOWNS), 'province' => 'Pangasinan',
                 'availability' => $this->pick(['weekdays', 'weekends', 'both', 'flexible']),
                 'motivation' => $this->pick(['I want to help the seniors in our barangay.', 'I am a nursing student and want real experience.', 'Go Bike helped my lolo before, I want to give back.', 'I love biking and helping people.', null]),
-                'emergency_name' => $this->name(), 'emergency_phone' => $this->mobile(),
-                'guardian_name' => $minor ? $this->name() : null, 'guardian_phone' => $minor ? $this->mobile() : null, 'guardian_consent' => $minor,
-                'application_status' => $status,
+                'emergency_name' => $this->name(), 'emergency_phone' => $this->mobile(),                'application_status' => $status,
                 'volunteer_class_id' => $class?->id,
                 // Demo addresses are not real: mark them emailed so nobody sends to them.
                 'class_emailed_at' => $class ? $class->created_at : null,

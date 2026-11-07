@@ -33,7 +33,7 @@ TXT,
 **Information you give us**
 
 - **Contact form:** your name, email address, phone number (optional), subject and message.
-- **Volunteer applications:** your name, email address, mobile number, age, occupation or school status, school, barangay, municipality and province, availability, whether you have a bicycle, why you want to volunteer, and the name and number of an emergency contact. If you are 13 to 17 years old, we also collect your parent's or guardian's name, contact number and consent.
+- **Volunteer applications:** your name, email address, mobile number, age, occupation or school status, school, barangay, municipality and province, availability, whether you have a bicycle, why you want to volunteer, and the name and number of an emergency contact.
 - **Training requests:** the name, email address, phone number and address of the person or organization making the request, the training package selected, and your message.
 - **Chapter replication inquiries:** your organization's name and type, the contact person's name, position, email address and mobile number, your municipality or city and province, the number of trainees, your preferred training date, your message, and the status of any training payment.
 - **Donations:** your name (and organization name, if you give on behalf of one), email address, phone number (optional), billing address, country, donation amount, frequency (one-time or monthly) and payment method.
@@ -73,7 +73,7 @@ TXT,
 We use personal information only for the purposes it was collected for, namely to:
 
 - respond to your inquiries and messages;
-- review volunteer applications, check eligibility (such as age and guardian consent), contact applicants, and organize trainings, schedules and assignments;
+- review volunteer applications, check eligibility (such as age), contact applicants, and organize trainings, schedules and assignments;
 - coordinate field operations, dispatch help, monitor the safety of GoBikers on duty and respond to emergency alerts;
 - provide basic health monitoring and refer people to health facilities when needed;
 - process donations and training payments, manage monthly donations, prevent fraud and keep the accounting and tax records required by law;
@@ -180,7 +180,7 @@ TXT,
             'content' => <<<'TXT'
 The Site and App are not directed to children under 13, and we do not knowingly collect their personal information. If you believe a child under 13 has given us personal information, please contact us and we will delete it.
 
-Volunteers must be 13 to 25 years old. Applicants aged 13 to 17 need the consent of a parent or guardian, and we collect the parent's or guardian's name and contact number for this purpose.
+Volunteers must be at least 18 years old, so we do not accept volunteer applications from minors.
 
 Health monitoring of minors is done only with the consent of a parent or guardian, except in an emergency.
 TXT,
