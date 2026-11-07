@@ -18,6 +18,13 @@ it('describes every public page by the names visitors see, without any address o
     )->not->toMatch('~https?://|www\.|\.com\b|\(/[a-z]~i');
 });
 
+it('knows who founded Go Bike and how it began', function () {
+    expect(app(ChatbotSiteGuide::class)->text())->toContain(
+        'Edren M. Llanillo', 'Sheena Mae Quiles', 'Nikko De Mesa', 'Founder and Executive Director of Padyarescue Incorporated',
+        'March 16, 2019', 'Barangay Umanday, Bugallon', 'about 70 volunteers', 'Org Structure & History',
+    );
+});
+
 it('reads prices, class sizes and fees from the code, so they stay right', function () {
     config(['volunteer.class_min' => 18, 'volunteer.class_max' => 30, 'replication.class_fee' => 45000]);
 

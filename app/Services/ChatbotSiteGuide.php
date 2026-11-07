@@ -91,6 +91,25 @@ Contact Go Bike:
 News: open Join The Movement → News & Updates.
 Photos: open Join The Movement → Gallery Showcase.
 
+ABOUT GO BIKE: FOUNDERS AND HOW IT BEGAN
+Use only these facts for questions about who founded Go Bike, how it started and its history. Do not add details that are not here (for example personal facts about the founders); for more, point to the pages named below.
+- Founders: Go Bike Project was founded by Edren M. Llanillo, together with Sheena Mae Quiles and Nikko De Mesa. Edren Llanillo is the Founder and Executive Director of Padyarescue Incorporated (PRI), the organization behind Go Bike.
+- How it began: on March 16, 2019, in Barangay Umanday, Bugallon, Pangasinan, with about 70 volunteers in one barangay. The idea: young people could do more than wait for help during emergencies and disasters. Trained and organized as community responders, they could become part of the solution, getting around their communities by bicycle.
+- Why bicycles: they are affordable and easy to use where transportation is hard, so volunteers can reach households, carry basic supplies and share information. But the bicycle was never the main point: the real aim is giving young people the skills and chance to serve their communities.
+- Mantra: "Saving lives, one ride at a time."
+- Milestones:
+  • January 2020: Ronda Kalusugan begins. About 10 Go Bikers start health rounds (blood pressure and blood sugar checks) for senior citizens, which continued when COVID-19 restricted movement that year.
+  • March 25, 2021: Padyarescue Incorporated is registered with the Securities and Exchange Commission, giving Go Bike an institutional home.
+  • 2021: the volunteer network reaches all 24 barangays of Bugallon (documented in a Galing Pook Awards program profile).
+  • 2024: the Go Bike Project–Ronda Kalusugan Program wins the Grand Prize, Community-Based Initiatives category, of the Healthy Aging Prize for Asian Innovation.
+  • December 5, 2024: Edren Llanillo is honored in the youth category of the Philippine Resilience Awards 2024.
+  • January 2026: Edren Llanillo is a speaker at the Prince Mahidol Award Conference (PMAC) 2026, in the session "Advancing Intergenerational Solidarity and Equity in an Unsettling World".
+  • April 9, 2026: Project HATAKE (community farming) launches in Barangay Hacienda, Bugallon.
+  • Goal for 2030: young people in Pangasinan more resilient to man-made and natural disasters and more active in community-based disaster risk reduction and management.
+- Today: from about 70 volunteers in one barangay to a growing network across Pangasinan. PRI runs six programs: Go Bike Project, ALWAR, Ronda Kalusugan, PadyaKaalaman, PadyaKaisipan and HATAKE.
+- PRI's vision: Pangasinan's premier youth-led organization for sustainable and resilient communities. Mission: PRI empowers youth through mobilizing volunteers and bridging partners to provide responsive services for the community.
+- Where to read more: Who We Are → Org Structure & History (the "Our journey" timeline), Who We Are → About Us (vision, mission, values), What We Do → Go Bike → "View Details" (the full founding story), and "In the Spotlight" on the home page (awards and features).
+
 RONDAGO APP
 Go Bike's mobile app for residents (SOS button, home check-up visits, check-up history) and GoBiker volunteers (rondas, patient check-ups). For questions about the app, use Reach Us.
 
