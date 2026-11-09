@@ -107,6 +107,7 @@ Route::middleware(['auth:sanctum', 'gobiker', 'throttle:mobile'])->prefix('gobik
     Route::post('/appointments/{appointment}/accept', [GobikerAppointmentController::class, 'accept'])->name('api.gobiker.appointments.accept');
     Route::post('/appointments/{appointment}/decline', [GobikerAppointmentController::class, 'decline'])->name('api.gobiker.appointments.decline');
     Route::post('/appointments/{appointment}/complete', [GobikerAppointmentController::class, 'complete'])->name('api.gobiker.appointments.complete');
+    Route::post('/appointments/{appointment}/checkup', [GobikerAppointmentController::class, 'checkup'])->name('api.gobiker.appointments.checkup');
 
     // Live map and the residents' SOS requests the admin assigned to this GoBiker
     Route::get('/map', [GobikerMapController::class, 'index'])->name('api.gobiker.map');

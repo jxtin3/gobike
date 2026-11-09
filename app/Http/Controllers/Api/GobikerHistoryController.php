@@ -26,7 +26,7 @@ class GobikerHistoryController extends Controller
         /** @var User $gobiker */
         $gobiker = $request->user();
 
-        $visits = Appointment::with('resident:id,name,mobile', 'gobiker:id,name,barangay')
+        $visits = Appointment::with('resident:id,name,mobile,birthdate', 'gobiker:id,name,barangay')
             ->where('gobiker_id', $gobiker->id)
             ->whereIn('status', ['completed', 'declined', 'cancelled'])
             ->latest('updated_at')

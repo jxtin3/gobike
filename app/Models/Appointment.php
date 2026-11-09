@@ -108,6 +108,8 @@ class Appointment extends Model
         ] + ($forGobiker ? [
             'resident_name' => $this->resident?->name,
             'resident_mobile' => $this->resident?->mobile,
+            // So the check-up form can be filled in from the resident's account; null without a birthdate.
+            'resident_age' => $this->resident?->age,
             'patient_id' => $this->patient_id,
         ] : []);
     }

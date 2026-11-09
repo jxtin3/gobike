@@ -111,20 +111,11 @@ class PatientController extends Controller
             'address' => ['required', 'string', 'max:255'],
             'contact' => ['required', 'digits_between:7,11'],
             'age' => ['required', 'integer', 'between:0,120'],
-            'sys' => ['required', 'integer', 'between:50,300'],
-            'dia' => ['required', 'integer', 'between:30,200'],
-            'pulse' => ['required', 'integer', 'between:20,250'],
-            'resp' => ['required', 'integer', 'between:5,60'],
-            'temp' => ['required', 'numeric', 'between:30,45'],
-            // Optional: not every patient is tested. mg/dL.
-            'blood_sugar' => ['nullable', 'integer', 'between:20,600'],
             'barangay' => ['nullable', 'string', Rule::in(Barangays::ALL)],
-            // Advice for the resident, who can read it in the app. Older app versions don't send it.
-            'remarks' => ['nullable', 'string', 'max:1000'],
-        ]);
+        ] + Patient::vitalRules());
     }
 
-    private function payload(Patient $p, PatientFollowUp|false|null $followUp = false): array
+    public function payload(Patient $p, PatientFollowUp|false|null $followUp = false): array
     {
         // false = not preloaded, look it up
         $followUp = $followUp === false ? $p->followUp() : $followUp;

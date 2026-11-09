@@ -27,6 +27,25 @@ class Patient extends Model
         'sugar_low' => ['label' => 'Low sugar', 'phrase' => 'low blood sugar', 'sql' => 'blood_sugar < 70'],
     ];
 
+    /**
+     * What a GoBiker measures at a check-up: the part of the form that is the same whether they
+     * type the person's details in (New Patient) or the visit supplies them (a home visit).
+     */
+    public static function vitalRules(): array
+    {
+        return [
+            'sys' => ['required', 'integer', 'between:50,300'],
+            'dia' => ['required', 'integer', 'between:30,200'],
+            'pulse' => ['required', 'integer', 'between:20,250'],
+            'resp' => ['required', 'integer', 'between:5,60'],
+            'temp' => ['required', 'numeric', 'between:30,45'],
+            // Optional: not every patient is tested. mg/dL.
+            'blood_sugar' => ['nullable', 'integer', 'between:20,600'],
+            // Advice for the resident, who can read it in the app. Older app versions don't send it.
+            'remarks' => ['nullable', 'string', 'max:1000'],
+        ];
+    }
+
     protected $fillable = [
         'user_id', 'resident_id', 'barangay', 'name', 'address', 'contact', 'age',
         'sys', 'dia', 'pulse', 'resp', 'temp', 'blood_sugar', 'remarks', 'recorded_at',
