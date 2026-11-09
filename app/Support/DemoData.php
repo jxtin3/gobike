@@ -48,6 +48,17 @@ class DemoData
         return User::where('email', 'like', '%@'.self::EMAIL_DOMAIN)->exists();
     }
 
+    /**
+     * Takes the demo GoBikers off the live map and nothing else: their accounts and every other
+     * demo record stay. Returns how many map locations were deleted.
+     */
+    public static function clearMap(): int
+    {
+        $gobikerIds = User::where('email', 'like', '%@'.self::EMAIL_DOMAIN)->where('role', 'GoBiker')->pluck('id');
+
+        return Location::whereIn('user_id', $gobikerIds)->delete();
+    }
+
     /** Deletes all demo records. Returns how many were removed per kind. */
     public static function clear(): array
     {

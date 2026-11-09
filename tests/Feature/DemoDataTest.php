@@ -233,6 +233,29 @@ it('removes only the demo data', function () {
     }
 });
 
+it('can take only the demo GoBikers off the live map', function () {
+    $real = User::factory()->create(['role' => 'GoBiker', 'status' => 'Active']);
+    $realPin = Location::forceCreate(['user_id' => $real->id, 'name' => 'Real GoBiker', 'latitude' => 16.04, 'longitude' => 120.33, 'status' => 'active', 'last_seen_at' => now()]);
+
+    $this->artisan('demo:seed', ['--force' => true])->assertSuccessful();
+    $demoGobikers = User::where('role', 'GoBiker')->where('email', 'like', '%@demo.rondago.test')->count();
+    expect(Location::count())->toBeGreaterThan(1);
+
+    $this->artisan('demo:clear', ['--map-only' => true, '--force' => true])
+        ->expectsOutputToContain('demo GoBikers removed from the live map')
+        ->assertSuccessful();
+
+    // The map shows only the real GoBiker now; the demo accounts and their records are still there.
+    expect(Location::pluck('id')->all())->toBe([$realPin->id])
+        ->and(User::where('role', 'GoBiker')->where('email', 'like', '%@demo.rondago.test')->count())->toBe($demoGobikers)
+        ->and(Patient::count())->toBeGreaterThan(0)
+        ->and(SosRequest::count())->toBeGreaterThan(0)
+        ->and(Appointment::count())->toBeGreaterThan(0);
+
+    // Running it again is harmless.
+    $this->artisan('demo:clear', ['--map-only' => true, '--force' => true])->assertSuccessful();
+});
+
 it('has volunteers in every stage, with enough waiting for the next class', function () {
     $this->artisan('demo:seed', ['--force' => true])->assertSuccessful();
 

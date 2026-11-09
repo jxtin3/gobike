@@ -45,6 +45,9 @@ class EmergencyAlertController extends Controller
                 'name' => $sos->user?->name ?? 'Resident',
                 'mobile' => $sos->user?->mobile,
                 'barangay' => collect([$sos->barangay, $sos->address, $sos->landmark])->filter()->join(' · '),
+                // False when the resident did not share their location (or their phone had none):
+                // there is no pin to show, so the alert says so instead.
+                'has_location' => $sos->latitude !== null && $sos->longitude !== null,
                 'since' => $sos->created_at?->toIso8601String(),
                 'view_url' => route('admin.operations.sos.show', $sos),
                 'respond_url' => route('admin.operations.sos.status', $sos),

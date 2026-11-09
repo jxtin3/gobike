@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Location;
+use App\Models\SosRequest;
 use App\Models\User;
 use Laravel\Sanctum\Sanctum;
 
@@ -103,9 +104,55 @@ it('puts the emergency banner and alarm on every admin page', function () {
         ->assertSee('id="emergency-alert"', false)
         ->assertSee(route('admin.emergencies.index'), false)
         ->assertSee(asset('sounds/emergency-alarm.mp3'), false)
-        ->assertSee('data-alarm-toggle', false);
+        ->assertSee('data-alarm-toggle', false)
+        // A resident's SOS gets a Show details button, and a notice when it has no location.
+        ->assertSee('data-field-href="details"', false)
+        ->assertSee('Show details')
+        ->assertSee('data-emer-no-location', false);
 
     expect(public_path('sounds/emergency-alarm.mp3'))->toBeFile();
+});
+
+function residentSos(array $overrides = []): SosRequest
+{
+    $resident = User::factory()->create(['name' => 'Ana Reyes', 'role' => 'User', 'status' => 'Active', 'barangay' => 'Poblacion']);
+
+    return SosRequest::create($overrides + [
+        'user_id' => $resident->id, 'municipality' => 'Bugallon', 'barangay' => 'Poblacion', 'landmark' => 'Chapel',
+    ]);
+}
+
+it('says whether a resident\'s SOS has a location, and links to its details', function () {
+    $withPin = residentSos(['latitude' => 16.04, 'longitude' => 120.33]);
+    $withoutPin = residentSos();
+
+    $rows = collect(adminEmergencies($this->admin))->keyBy('sos_id');
+
+    expect($rows)->toHaveCount(2)
+        ->and($rows[$withPin->id]['has_location'])->toBeTrue()
+        ->and($rows[$withoutPin->id]['has_location'])->toBeFalse()
+        // The card's Show details button opens the page with everything the resident sent.
+        ->and($rows[$withoutPin->id]['view_url'])->toBe(route('admin.operations.sos.show', $withoutPin))
+        ->and($rows[$withPin->id]['view_url'])->toBe(route('admin.operations.sos.show', $withPin));
+});
+
+it('opens the details of an SOS that has no location, and says it was not shared', function () {
+    $sos = residentSos();
+
+    $this->actingAs($this->admin, 'web')
+        ->get(route('admin.operations.sos.show', $sos))
+        ->assertOk()
+        ->assertSee('Not shared: the resident chose not to share it');
+});
+
+it('leaves a GoBiker\'s emergency without a location flag or a details page', function () {
+    pressEmergency($this->gobiker);
+
+    $row = adminEmergencies($this->admin)[0];
+
+    expect($row['kind'])->toBe('gobiker')
+        ->and($row)->not->toHaveKey('has_location')
+        ->and($row)->not->toHaveKey('view_url');
 });
 
 function emergencyBadge(User $admin): string

@@ -78,6 +78,9 @@
     const ringing = () => (stopped ? [] : emergencies.filter((e) => !silenced.has(e.key)));
     const mapHref = (id) => `${root.dataset.mapUrl}?focus=${encodeURIComponent(id)}`;
     const isResident = (e) => e.kind === 'resident';
+    // A resident can choose not to share their location (or their phone has none): no pin on the map.
+    const lacksLocation = (e) => isResident(e) && e.has_location === false;
+    const NO_LOCATION = 'Location not shared. There is no pin on the map: ask where they are, or use the address and landmark.';
     const sosMapHref = (id) => `${root.dataset.mapUrl}?sos=${encodeURIComponent(id)}`;
     // Both kinds open on the live map, zoomed to the person who needs help.
     const openEmergency = (e) => {
@@ -215,7 +218,7 @@
             try {
                 const n = new Notification(isResident(e) ? `SOS: ${e.name}` : `Emergency: ${e.name}`, {
                     body: isResident(e)
-                        ? `${e.barangay || 'No location given'}. Open the request to respond.`
+                        ? `${e.barangay || 'No location given'}.${lacksLocation(e) ? ' Location not shared.' : ''} Open the request to respond.`
                         : `${e.barangay || 'No barangay assigned'}. Open the live map to respond.`,
                     tag: `gobike-emergency-${e.key}`,
                     requireInteraction: true,
@@ -250,13 +253,25 @@
         }
 
         const map = $('[data-field-href="map"]', li);
+        const details = $('[data-field-href="details"]', li);
         const respond = $('[data-emer-respond]', li);
         if (isResident(e)) {
             // Same as a GoBiker's: the map, zoomed to their pin with its popup open.
             map.href = sosMapHref(e.sos_id);
             map.dataset.sosId = e.sos_id;
             respond.dataset.respondUrl = e.respond_url;
+            // Everything they sent: address, landmark, what happened, photo, who they are.
+            if (e.view_url) details.href = e.view_url;
+            else details.remove();
+            if (lacksLocation(e)) {
+                // Nothing to zoom to: the notice replaces the map button.
+                map.remove();
+                const warning = $('[data-emer-no-location]', li);
+                $('[data-field="no-location"]', warning).textContent = NO_LOCATION;
+                warning.hidden = false;
+            }
         } else {
+            details.remove(); // a GoBiker's emergency has no page of its own
             map.href = mapHref(e.location_id);
             map.dataset.locationId = e.location_id;
             respond.dataset.respondUrl = `${root.dataset.locationsUrl}/${encodeURIComponent(e.location_id)}/status`;
@@ -398,7 +413,7 @@
         const fresh = list.filter((e) => !previous.has(e.key));
         if (fresh.length) {
             els.announce.textContent = fresh.length === 1
-                ? `Emergency: ${fresh[0].name} needs help.`
+                ? `Emergency: ${fresh[0].name} needs help.${lacksLocation(fresh[0]) ? ' Their location is not shared.' : ''}`
                 : `${fresh.length} new emergencies from GoBikers.`;
         }
 

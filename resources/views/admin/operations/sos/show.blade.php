@@ -61,7 +61,7 @@
                     @if ($sos->map_url)
                         <a href="{{ $sos->map_url }}" target="_blank" rel="noopener"><x-admin.icon name="map" /> Open in Google Maps</a>
                     @else
-                        Not shared (the resident's phone did not send a GPS position)
+                        Not shared: the resident chose not to share it, or location was off on their phone. Use the address and landmark.
                     @endif
                 </dd>
             </div>

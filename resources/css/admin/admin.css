@@ -5741,6 +5741,30 @@ tbody tr.is-unread td:first-child { box-shadow: inset 3px 0 0 var(--brand); }
     gap: var(--sp-2);
 }
 
+/* A resident's SOS that has no location: the banner is red, so a darker chip keeps white text readable. */
+.emer-warn {
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    max-width: 48ch;
+    margin: 6px 0 0;
+    padding: 5px 9px;
+    background: rgba(0, 0, 0, .25);
+    border-radius: var(--r-sm);
+    font-size: var(--fs-13);
+    font-weight: 600;
+    line-height: 1.35;
+}
+
+.emer-warn[hidden] { display: none; }
+
+.emer-warn svg {
+    flex: none;
+    width: 16px;
+    height: 16px;
+    margin-top: 1px;
+}
+
 .adm .emer-btn {
     background: #fff;
     color: var(--bad-2);

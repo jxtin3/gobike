@@ -35,9 +35,12 @@
             <div class="emer-who">
                 <b data-field="name"></b>
                 <small><span data-field="barangay"></span> · sent <time data-field="ago"></time></small>
+                {{-- A resident's SOS without a location: there is no pin, so say so right here. --}}
+                <p class="emer-warn" data-emer-no-location hidden><x-admin.icon name="alert-triangle" /> <span data-field="no-location"></span></p>
             </div>
             <div class="emer-actions">
                 <a class="btn btn-sm emer-btn" data-field-href="call"><x-admin.icon name="phone-call" /> <span data-field="mobile"></span></a>
+                <a class="btn btn-sm emer-btn" data-field-href="details"><x-admin.icon name="eye" /> Show details</a>
                 <a class="btn btn-sm emer-btn" data-field-href="map" data-emer-map><x-admin.icon name="map" /> <span data-field="open-label">Show on map</span></a>
                 <button type="button" class="btn btn-sm emer-respond" data-emer-respond>Responding</button>
             </div>
