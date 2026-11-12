@@ -20,6 +20,42 @@ it('publishes the full terms and the donation refund rule', function () {
         ->assertSee('Governing Law and Disputes');
 });
 
+it('describes the current hosting, the RondaGo app and location sharing in the privacy policy', function () {
+    $this->get(route('privacy-policy'))
+        ->assertOk()
+        ->assertSee('Hostinger')
+        ->assertSee('RondaGo')
+        ->assertSee('Location Information')
+        ->assertSee('Firebase Cloud Messaging')
+        ->assertSee('Profile → Delete account')
+        ->assertDontSee('Railway')
+        ->assertDontSee('onegobike@gmail.com');
+});
+
+it('cites the cybercrime law and warns that online payments are paused in the terms', function () {
+    $this->get(route('terms'))
+        ->assertOk()
+        ->assertSee('Cybercrime Prevention Act of 2012')
+        ->assertSee('Emergencies and SOS Requests')
+        ->assertSee('Online donations are not available at the moment.')
+        ->assertSee('Official Channels and Fraud Warning');
+});
+
+it('publishes the revised text over the copy first stored in the database', function () {
+    // As on the live site: the October text was stored when the table was created.
+    \Illuminate\Support\Facades\DB::table('legal_documents')->where('key', 'privacy')->update([
+        'last_updated' => 'October 22, 2026',
+        'sections' => json_encode([['title' => 'Old', 'content' => 'Railway hosts the Site.']]),
+    ]);
+
+    $migration = require database_path('migrations/2026_11_13_000001_publish_revised_legal_documents.php');
+    $migration->up();
+
+    $privacy = LegalDocument::getByKey('privacy');
+    expect($privacy->last_updated)->toBe(LegalDocument::defaults('privacy')['last_updated'])
+        ->and($privacy->sections)->toBe(LegalDocument::defaults('privacy')['sections']);
+});
+
 it('publishes a cookie policy listing the cookies the site sets', function () {
     $this->get(route('cookie-policy'))
         ->assertOk()

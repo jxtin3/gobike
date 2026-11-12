@@ -12,14 +12,14 @@
 
 return [
     'title' => 'Cookie Policy',
-    'last_updated' => 'October 24, 2026',
+    'last_updated' => 'November 13, 2026',
     'sections' => [
         [
             'title' => '1. What Are Cookies?',
             'content' => <<<'TXT'
 Cookies are small text files that a website stores in your browser. They help the website work properly, keep it secure and remember your choices. Similar technologies, such as your browser's local storage, work in a similar way, and in this policy we call them all "cookies".
 
-This Cookie Policy explains which cookies the Go Bike Project website (the "Site") uses and how you can control them. It is part of our [Privacy Policy](/privacy-policy).
+This Cookie Policy explains which cookies the Go Bike Project website (the "Site") uses and how you can control them. It is part of our [Privacy Policy](/privacy-policy). The RondaGo mobile app does not use cookies; how it handles your information is explained in the Privacy Policy.
 TXT,
         ],
         [
@@ -45,6 +45,13 @@ These cookies are needed for the Site to work and cannot be switched off. They a
 - **gobike_admin_rail** and **gobike_admin_closed**: set only in the administrators' area, to remember whether the sidebar is collapsed and which menu groups are closed. They contain no personal information and expire after 6 months.
 
 The exact name of the session cookie may differ slightly depending on our server configuration.
+
+**Your browser's local storage**
+
+- **donate.currency**: remembers the currency you chose on our Donate page.
+- **gobike:alarm-sound**, **gobike:alarm-silenced** and **gobike:alarm-notified**: used only in the administrators' area, to remember the emergency alarm settings.
+
+These items stay in your browser, are not sent to us, and contain no personal information. You can clear them in your browser settings.
 TXT,
         ],
         [
@@ -54,7 +61,7 @@ Some features use content provided by other companies, which may set their own c
 
 - **Google Maps**: the map on our [Contact page](/contact) is provided by Google. When it loads, Google may set cookies and collect information such as your IP address, under Google's Privacy Policy (https://policies.google.com/privacy). If you choose "Essential only", the map is not loaded unless you click "Load map".
 
-When you donate, you are taken to the PayPal or PayMongo website to complete your payment. Those pages are run by the payment providers, which use their own cookies to process payments securely and prevent fraud. Their own cookie and privacy policies apply.
+Online donations are not available at the moment. When they are, you will be taken to the PayPal or PayMongo website to complete your payment. Those pages are run by the payment providers, which use their own cookies to process payments securely and prevent fraud. Their own cookie and privacy policies apply.
 TXT,
         ],
         [

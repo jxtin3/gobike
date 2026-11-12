@@ -212,7 +212,8 @@ it('lets admins review inquiries and record check payments', function () {
 it('publishes the training fee and refund rules in the terms', function () {
     $this->get(route('terms'))
         ->assertOk()
-        ->assertSee('Paying early online')
+        ->assertSee('Paying by check')
+        ->assertSee('Online payment is not available at the moment.')
         ->assertSee('<strong>7 days</strong>', false);
 });
 
