@@ -9,7 +9,6 @@ use App\Support\Barangays;
 use App\Support\Media;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
@@ -78,19 +77,17 @@ class ResidentSosController extends Controller
             'video' => ['required_without:image', 'nullable', 'file', 'mimetypes:video/mp4,video/quicktime,video/3gpp', 'max:51200'],
         ]);
 
-        $disk = Storage::disk(Media::disk());
+        $replaced = [];
         foreach (['image', 'video'] as $field) {
             if (! $request->hasFile($field)) {
                 continue;
             }
-            $old = $sos->{"{$field}_path"};
-            // A long random file name: these URLs are only shown to the resident and the admins.
-            $sos->{"{$field}_path"} = $request->file($field)->store('sos', Media::disk());
-            if ($old) {
-                $disk->delete($old);
-            }
+            $replaced[] = $sos->{"{$field}_path"};
+            // Private: only admins open it, through admin.operations.sos.media.
+            $sos->{"{$field}_path"} = $request->file($field)->store('sos', SosRequest::mediaDisk());
         }
         $sos->save();
+        $sos->deleteMediaFiles($replaced);
 
         return response()->json([
             'message' => 'Media uploaded.',

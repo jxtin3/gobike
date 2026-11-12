@@ -12,6 +12,7 @@ use App\Support\Media;
 use Google\Client as GoogleClient;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -297,6 +298,46 @@ class MobileAuthController extends Controller
         return response()->json([
             'message' => 'Logout successful.',
         ]);
+    }
+
+    /**
+     * "Delete account" in the app (Privacy Policy, Section 14). Removes the account and what
+     * belongs to it: profile photo, location, device tokens, rondas, SOS requests with their
+     * photos and videos, visit requests, ratings and messages (User::booted and the foreign
+     * keys). Check-ups recorded about a resident are kept, no longer linked to the account.
+     *
+     * Someone who recorded check-ups is refused: those are health records of other people, and
+     * deleting the account would delete them too. The admin closes such accounts by hand.
+     */
+    public function destroyAccount(Request $request): JsonResponse
+    {
+        /** @var User $user */
+        $user = $request->user();
+
+        if ($user->is_admin || $user->role === 'Admin') {
+            return response()->json(['message' => 'Admin accounts cannot be deleted from the app.'], 403);
+        }
+
+        if ($user->patients()->exists()) {
+            return response()->json([
+                'message' => 'You recorded check-ups, and those health records must be kept. Email gobike@pydn.org and we will close your account.',
+            ], 409);
+        }
+
+        // Unknown (not loaded) counts as having one: only Google accounts are marked false.
+        $request->validate(($user->has_password ?? true)
+            ? ['password' => ['required', 'string', 'current_password']]
+            : ['confirm' => ['required', 'string', 'in:DELETE']], [
+                'password.current_password' => 'The password is incorrect.',
+                'confirm.in' => 'Type DELETE to confirm.',
+            ]);
+
+        DB::transaction(function () use ($user) {
+            $user->tokens()->delete();
+            $user->delete();
+        });
+
+        return response()->json(['message' => 'Your account has been deleted.']);
     }
 
     // ---------- helpers ----------

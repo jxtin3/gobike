@@ -12,6 +12,7 @@ uses(RefreshDatabase::class);
 
 beforeEach(function () {
     Storage::fake('public');
+    Storage::fake(SosRequest::mediaDisk());
     $this->resident = User::factory()->create([
         'name' => 'Ana Reyes', 'role' => 'User', 'status' => 'Active', 'mobile' => '09170001111',
         'barangay' => 'Poblacion',
@@ -101,10 +102,72 @@ it('attaches a photo and a video to the resident\'s own request', function () {
         'image' => UploadedFile::fake()->image('scene.jpg'),
         'video' => UploadedFile::fake()->create('scene.mp4', 2048, 'video/mp4'),
     ], ['Accept' => 'application/json'])->assertOk()
-        ->assertJsonPath('sos.image_url', fn ($url) => str_contains($url, '/storage/sos/'));
+        ->assertJsonPath('sos.image_url', route('admin.operations.sos.media', [$sos, 'image']))
+        ->assertJsonPath('sos.video_url', route('admin.operations.sos.media', [$sos, 'video']));
 
     $sos->refresh();
-    Storage::disk('public')->assertExists([$sos->image_path, $sos->video_path]);
+    Storage::disk(SosRequest::mediaDisk())->assertExists([$sos->image_path, $sos->video_path]);
+    Storage::disk('public')->assertMissing([$sos->image_path, $sos->video_path]);
+});
+
+it('opens the photo and video for admins only', function () {
+    $sos = sendSos($this->resident);
+    $this->post(route('api.resident.sos.media', $sos), [
+        'image' => UploadedFile::fake()->image('scene.jpg'),
+        'video' => UploadedFile::fake()->create('scene.mp4', 256, 'video/mp4'),
+    ], ['Accept' => 'application/json'])->assertOk();
+
+    // A visitor who is not signed in (Sanctum::actingAs switched the default guard).
+    auth()->shouldUse('web');
+    auth()->forgetGuards();
+    $this->get(route('admin.operations.sos.media', [$sos, 'image']))->assertRedirect();
+    $this->actingAs($this->resident, 'web')->get(route('admin.operations.sos.media', [$sos, 'image']))->assertForbidden();
+
+    $this->actingAs($this->admin, 'web');
+    foreach (['image', 'video'] as $kind) {
+        $response = $this->get(route('admin.operations.sos.media', [$sos, $kind]))->assertOk();
+        expect($response->headers->get('Cache-Control'))->toContain('no-store');
+    }
+
+    $this->get(route('admin.operations.sos.show', $sos))
+        ->assertOk()
+        ->assertSee('src="'.route('admin.operations.sos.media', [$sos, 'image']).'"', false)
+        ->assertDontSee('/storage/sos/');
+});
+
+it('replaces an earlier photo and removes the old file', function () {
+    $sos = sendSos($this->resident);
+    $this->post(route('api.resident.sos.media', $sos), ['image' => UploadedFile::fake()->image('a.jpg')], ['Accept' => 'application/json'])->assertOk();
+    $first = $sos->fresh()->image_path;
+
+    $this->post(route('api.resident.sos.media', $sos), ['image' => UploadedFile::fake()->image('b.jpg')], ['Accept' => 'application/json'])->assertOk();
+
+    Storage::disk(SosRequest::mediaDisk())->assertMissing($first);
+    Storage::disk(SosRequest::mediaDisk())->assertExists($sos->fresh()->image_path);
+});
+
+it('still shows a photo saved on the public disk before media became private', function () {
+    $sos = sendSos($this->resident);
+    Storage::disk('public')->put('sos/old.jpg', 'old photo');
+    $sos->update(['image_path' => 'sos/old.jpg']);
+
+    $this->actingAs($this->admin, 'web')
+        ->get(route('admin.operations.sos.media', [$sos, 'image']))
+        ->assertOk();
+});
+
+it('moves photos and videos from the public disk to the private disk', function () {
+    $sos = sendSos($this->resident);
+    Storage::disk('public')->put('sos/old.jpg', 'old photo');
+    Storage::disk('public')->put('sos/old.mp4', 'old video');
+    $sos->update(['image_path' => 'sos/old.jpg', 'video_path' => 'sos/old.mp4']);
+
+    $migration = require database_path('migrations/2026_11_13_000002_move_sos_media_to_private_disk.php');
+    $migration->up();
+
+    Storage::disk(SosRequest::mediaDisk())->assertExists(['sos/old.jpg', 'sos/old.mp4']);
+    Storage::disk('public')->assertMissing(['sos/old.jpg', 'sos/old.mp4']);
+    expect(Storage::disk(SosRequest::mediaDisk())->get('sos/old.jpg'))->toBe('old photo');
 });
 
 it('rejects media that is not a photo or video, or is too big', function (string $field, UploadedFile $file) {
@@ -210,9 +273,7 @@ it('lets an admin delete a request with its photo and video', function () {
         ->assertRedirect(route('admin.operations.sos.index'));
 
     expect(SosRequest::find($sos->id))->toBeNull();
-    foreach ($files as $file) {
-        Storage::disk('public')->assertMissing($file);
-    }
+    Storage::disk(SosRequest::mediaDisk())->assertMissing($files);
 });
 
 it('opens a request by clicking anywhere on its row', function () {

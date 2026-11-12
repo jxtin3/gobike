@@ -6,6 +6,7 @@ use App\Support\Media;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\Storage;
 
 /** An emergency request a resident sent with the SOS button. */
 class SosRequest extends Model
@@ -114,14 +115,42 @@ class SosRequest extends Model
         return self::STATUSES[$this->status] ?? ucfirst($this->status);
     }
 
+    /**
+     * SOS photos and videos can show a person in distress, so they are kept on the private disk
+     * and opened only by admins, through admin.operations.sos.media. Files uploaded before that
+     * change were on the public media disk; the move migration copied them over.
+     */
+    public static function mediaDisk(): string
+    {
+        return (string) config('filesystems.private_disk');
+    }
+
     public function getImageUrlAttribute(): ?string
     {
-        return Media::url($this->image_path);
+        return $this->image_path ? route('admin.operations.sos.media', [$this, 'image']) : null;
     }
 
     public function getVideoUrlAttribute(): ?string
     {
-        return Media::url($this->video_path);
+        return $this->video_path ? route('admin.operations.sos.media', [$this, 'video']) : null;
+    }
+
+    /**
+     * Removes the photo and video files (by default this request's own), from the public media
+     * disk too in case a file from before the move was left there.
+     *
+     * @param  array<int, string|null>|null  $paths
+     */
+    public function deleteMediaFiles(?array $paths = null): void
+    {
+        $paths = array_values(array_filter($paths ?? [$this->image_path, $this->video_path]));
+        if ($paths === []) {
+            return;
+        }
+
+        foreach (array_unique([self::mediaDisk(), Media::disk()]) as $disk) {
+            Storage::disk($disk)->delete($paths);
+        }
     }
 
     public function getMapUrlAttribute(): ?string

@@ -203,3 +203,19 @@ it('lets the GoBiker withdraw from an accepted visit, which the resident can the
     $done = acceptedVisit($this->resident, $this->gobiker, ['status' => 'completed']);
     $this->postJson(route('api.gobiker.appointments.decline', $done))->assertUnprocessable();
 });
+
+it('records consent with a check-up at a visit, and accepts older apps that do not send it', function () {
+    Sanctum::actingAs($this->gobiker);
+
+    $this->postJson(route('api.gobiker.appointments.checkup', acceptedVisit($this->resident, $this->gobiker)), vitals(['consent' => true]))
+        ->assertCreated()
+        ->assertJsonPath('patient.consent_given', true);
+
+    $this->postJson(route('api.gobiker.appointments.checkup', acceptedVisit($this->resident, $this->gobiker)), vitals())
+        ->assertCreated()
+        ->assertJsonPath('patient.consent_given', null);
+
+    $this->postJson(route('api.gobiker.appointments.checkup', acceptedVisit($this->resident, $this->gobiker)), vitals(['consent' => false]))
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors('consent');
+});

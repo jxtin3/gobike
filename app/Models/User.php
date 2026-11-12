@@ -168,12 +168,22 @@ class User extends Authenticatable
             }
         });
 
-        // Don't leave the profile photo behind in storage, whichever way the account goes
-        // (an admin declining a sign-up, or deleting the user).
+        // Don't leave personal information behind, whichever way the account goes (an admin
+        // declining a sign-up or deleting the user, or the user deleting their own account).
         static::deleting(function (User $user) {
             if ($user->photo_path) {
                 Storage::disk(Media::disk())->delete($user->photo_path);
             }
+
+            // The live-map row is only unlinked by its foreign key, which would keep the name and
+            // last position.
+            Location::where('user_id', $user->id)->delete();
+
+            // The SOS rows go with the user (foreign key cascade); their photos and videos don't.
+            SosRequest::where('user_id', $user->id)
+                ->where(fn ($q) => $q->whereNotNull('image_path')->orWhereNotNull('video_path'))
+                ->get(['id', 'image_path', 'video_path'])
+                ->each(fn (SosRequest $sos) => $sos->deleteMediaFiles());
         });
     }
 

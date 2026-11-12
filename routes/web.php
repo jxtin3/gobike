@@ -205,6 +205,7 @@ Route::middleware([EnsureAdmin::class, AuthenticateSession::class])->prefix('adm
         Route::get('/sos/{sos}', [SosRequestController::class, 'show'])->name('sos.show');
         Route::patch('/sos/{sos}/status', [SosRequestController::class, 'updateStatus'])->name('sos.status');
         Route::get('/sos/{sos}/gobikers', [SosRequestController::class, 'gobikers'])->name('sos.gobikers');
+        Route::get('/sos/{sos}/media/{kind}', [SosRequestController::class, 'media'])->whereIn('kind', ['image', 'video'])->name('sos.media');
         Route::delete('/sos/{sos}', [SosRequestController::class, 'destroy'])->name('sos.destroy');
 
         // patients

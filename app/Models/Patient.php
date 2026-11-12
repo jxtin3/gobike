@@ -46,9 +46,26 @@ class Patient extends Model
         ];
     }
 
+    /**
+     * The GoBiker confirms that the person, or their parent or guardian, agreed to the check-up
+     * (health readings are sensitive personal information). App 1.0.27 and later send it; older
+     * apps don't, so it is not required yet and their check-ups store null ("not recorded").
+     * Make it required once every GoBiker has updated.
+     */
+    public static function consentRules(): array
+    {
+        return ['consent' => ['sometimes', 'accepted']];
+    }
+
+    /** What to store in consent_given for validated check-up data: true, or null when not sent. */
+    public static function consentFrom(array $validated): ?bool
+    {
+        return array_key_exists('consent', $validated) ? true : null;
+    }
+
     protected $fillable = [
         'user_id', 'resident_id', 'barangay', 'name', 'address', 'contact', 'age',
-        'sys', 'dia', 'pulse', 'resp', 'temp', 'blood_sugar', 'remarks', 'recorded_at',
+        'sys', 'dia', 'pulse', 'resp', 'temp', 'blood_sugar', 'remarks', 'consent_given', 'recorded_at',
     ];
 
     protected static function booted(): void
@@ -73,6 +90,7 @@ class Patient extends Model
             'resp' => 'integer',
             'temp' => 'float',
             'blood_sugar' => 'integer',
+            'consent_given' => 'boolean',
         ];
     }
 

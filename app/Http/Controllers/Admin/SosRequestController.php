@@ -12,6 +12,7 @@ use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
+use League\Flysystem\Local\LocalFilesystemAdapter;
 
 /** Residents' SOS requests: list, details, and moving them to "Responding" / "Resolved". */
 class SosRequestController extends Controller
@@ -189,15 +190,38 @@ class SosRequestController extends Controller
         ]);
     }
 
+    /**
+     * Shows the photo or video attached to a request. Private: it is never reachable by a public
+     * URL. Files from before the move to the private disk are still found on the media disk.
+     */
+    public function media(SosRequest $sos, string $kind)
+    {
+        $path = $sos->{"{$kind}_path"};
+        abort_unless($path, 404);
+
+        $headers = ['Cache-Control' => 'private, no-store', 'X-Content-Type-Options' => 'nosniff'];
+
+        foreach (array_unique([SosRequest::mediaDisk(), Media::disk()]) as $name) {
+            $disk = Storage::disk($name);
+            if (! $disk->exists($path)) {
+                continue;
+            }
+
+            // A file on this server is sent with byte-range support, so the video can be seeked.
+            return $disk->getAdapter() instanceof LocalFilesystemAdapter
+                ? response()->file($disk->path($path), $headers)
+                : $disk->response($path, null, $headers);
+        }
+
+        abort(404);
+    }
+
     /** Deletes the request with its photo and video (e.g. a test or a duplicate). */
     public function destroy(SosRequest $sos)
     {
-        $files = array_filter([$sos->image_path, $sos->video_path]);
         $who = $sos->user?->name ?? 'a resident';
         $sos->delete();
-        if ($files) {
-            Storage::disk(Media::disk())->delete($files);
-        }
+        $sos->deleteMediaFiles();
 
         return redirect()->route('admin.operations.sos.index')
             ->with('success', "SOS request from {$who} deleted.");

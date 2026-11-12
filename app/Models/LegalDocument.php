@@ -61,6 +61,35 @@ class LegalDocument extends Model
     }
 
     /**
+     * A section's content in the plain-text format the RondaGo app renders ("- " lists, **bold**,
+     * [text](url), blank line between paragraphs). Content typed in that format is returned as
+     * it is; content typed as HTML is cleaned and converted.
+     */
+    public static function toPlainText(?string $content): string
+    {
+        $content = (string) $content;
+        if (strip_tags($content) === $content) {
+            return trim($content);
+        }
+
+        $html = SafeHtml::clean($content);
+        $html = preg_replace_callback(
+            '/<a\s[^>]*href="([^"]+)"[^>]*>(.*?)<\/a>/is',
+            fn ($m) => '['.trim(strip_tags($m[2])).']('.html_entity_decode($m[1], ENT_QUOTES | ENT_HTML5, 'UTF-8').')',
+            $html,
+        );
+        $html = preg_replace('/<(strong|b)\b[^>]*>(.*?)<\/\1>/is', '**$2**', $html);
+        $html = preg_replace('/<li\b[^>]*>/i', "\n- ", $html);
+        $html = preg_replace('/<br\s*\/?>/i', "\n", $html);
+        $html = preg_replace('/<\/(p|ul|ol|h[1-6]|div|blockquote)>/i', "\n\n", $html);
+
+        $text = html_entity_decode(strip_tags($html), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        $text = preg_replace("/[ \t]+\n/", "\n", $text);
+
+        return trim(preg_replace("/\n{3,}/", "\n\n", $text));
+    }
+
+    /**
      * Turn the plain text typed in the admin legal editor into safe HTML:
      * a blank line starts a new paragraph, lines starting with "- " become a bulleted list,
      * "1. " a numbered list, **text** is bold, [text](/path or https://…) is a link,

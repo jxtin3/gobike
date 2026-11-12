@@ -9,6 +9,7 @@ use App\Services\Push\PushNotifier;
 use App\Support\Barangays;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use Illuminate\Validation\Rule;
 
 class PatientController extends Controller
@@ -34,7 +35,10 @@ class PatientController extends Controller
 
     public function store(Request $request): JsonResponse
     {
-        $patient = Patient::create($this->validated($request) + [
+        $data = $this->validated($request, Patient::consentRules());
+
+        $patient = Patient::create(Arr::except($data, ['consent']) + [
+            'consent_given' => Patient::consentFrom($data),
             'user_id' => $request->user()->id,
             'recorded_at' => now(),
         ]);
@@ -104,7 +108,8 @@ class PatientController extends Controller
         );
     }
 
-    private function validated(Request $request): array
+    /** Consent is asked once, when the check-up is recorded; corrections later keep it as it was. */
+    private function validated(Request $request, array $extraRules = []): array
     {
         return $request->validate([
             'name' => ['required', 'string', 'max:255'],
@@ -112,7 +117,7 @@ class PatientController extends Controller
             'contact' => ['required', 'digits_between:7,11'],
             'age' => ['required', 'integer', 'between:0,120'],
             'barangay' => ['nullable', 'string', Rule::in(Barangays::ALL)],
-        ] + Patient::vitalRules());
+        ] + Patient::vitalRules() + $extraRules);
     }
 
     public function payload(Patient $p, PatientFollowUp|false|null $followUp = false): array
@@ -133,6 +138,8 @@ class PatientController extends Controller
             'temp' => $p->temp,
             'blood_sugar' => $p->blood_sugar,
             'remarks' => $p->remarks,
+            // true, or null for check-ups recorded by app versions that did not ask.
+            'consent_given' => $p->consent_given,
             'barangay' => $p->barangay,
             'recorded_at' => $p->recorded_at?->toIso8601String(),
             // The admin's decision on whether to keep checking this person (for the app to show).

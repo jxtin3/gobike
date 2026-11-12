@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\GobikerHistoryController;
 use App\Http\Controllers\Api\GobikerLocationController;
 use App\Http\Controllers\Api\GobikerMapController;
 use App\Http\Controllers\Api\GobikerProfileController;
+use App\Http\Controllers\Api\LegalDocumentController;
 use App\Http\Controllers\Api\MobileAuthController;
 use App\Http\Controllers\Api\PatientController;
 use App\Http\Controllers\Api\ResidentAppointmentController;
@@ -15,6 +16,12 @@ use App\Http\Controllers\Api\ResidentFeedbackController;
 use App\Http\Controllers\Api\ResidentMapController;
 use App\Http\Controllers\Api\ResidentSosController;
 use Illuminate\Support\Facades\Route;
+
+// Privacy Policy, Terms & Conditions and Cookie Policy for the app (public, read before sign-up)
+Route::get('/legal/{key}', [LegalDocumentController::class, 'show'])
+    ->whereIn('key', ['privacy', 'terms', 'cookies'])
+    ->middleware('throttle:60,1')
+    ->name('api.legal.show');
 
 // Go Biker mobile authentication
 Route::post('/mobile/login', [
@@ -51,6 +58,11 @@ Route::put('/mobile/password', [
     MobileAuthController::class,
     'updatePassword',
 ])->middleware(['auth:sanctum', 'throttle:5,1'])->name('api.mobile.password');
+
+Route::delete('/mobile/account', [
+    MobileAuthController::class,
+    'destroyAccount',
+])->middleware(['auth:sanctum', 'throttle:5,1'])->name('api.mobile.account.destroy');
 
 //
 Route::post('/mobile/logout', [

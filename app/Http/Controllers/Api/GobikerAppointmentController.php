@@ -152,7 +152,7 @@ class GobikerAppointmentController extends Controller
         $data = $request->validate([
             // Only asked for when the resident never gave a birthdate.
             'age' => [$knownAge === null ? 'required' : 'nullable', 'integer', 'between:0,120'],
-        ] + Patient::vitalRules());
+        ] + Patient::vitalRules() + Patient::consentRules());
 
         $patient = DB::transaction(function () use ($appointment, $gobiker, $resident, $data, $knownAge) {
             // Taken first, so two taps at once cannot record two check-ups for one visit.
@@ -172,8 +172,9 @@ class GobikerAppointmentController extends Controller
                 'address' => $appointment->address,
                 'contact' => $resident?->mobile,
                 'age' => $knownAge ?? $data['age'],
+                'consent_given' => Patient::consentFrom($data),
                 'recorded_at' => now(),
-            ] + Arr::except($data, ['age']));
+            ] + Arr::except($data, ['age', 'consent']));
 
             $appointment->update(['patient_id' => $patient->id]);
 

@@ -75,3 +75,44 @@ it('rejects remarks that are too long', function () {
         ->assertUnprocessable()
         ->assertJsonValidationErrors('remarks');
 });
+
+it('records that the person agreed to the check-up', function () {
+    $this->postJson(route('api.gobiker.patients.store'), checkupPayload(['consent' => true]))
+        ->assertCreated()
+        ->assertJsonPath('patient.consent_given', true);
+
+    expect(Patient::sole()->consent_given)->toBeTrue();
+});
+
+it('still saves a check-up from an older app that does not ask for consent', function () {
+    $this->postJson(route('api.gobiker.patients.store'), checkupPayload())
+        ->assertCreated()
+        ->assertJsonPath('patient.consent_given', null);
+
+    expect(Patient::sole()->consent_given)->toBeNull();
+});
+
+it('refuses a check-up the person did not agree to', function () {
+    $this->postJson(route('api.gobiker.patients.store'), checkupPayload(['consent' => false]))
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors('consent');
+
+    expect(Patient::count())->toBe(0);
+});
+
+it('keeps the consent when a check-up is corrected later', function () {
+    $id = $this->postJson(route('api.gobiker.patients.store'), checkupPayload(['consent' => true]))->json('patient.id');
+
+    $this->putJson(route('api.gobiker.patients.update', $id), checkupPayload(['sys' => 130]))->assertOk();
+
+    expect(Patient::find($id)->consent_given)->toBeTrue();
+});
+
+it('shows the consent on the admin check-up page', function () {
+    $id = $this->postJson(route('api.gobiker.patients.store'), checkupPayload(['consent' => true]))->json('patient.id');
+    $older = $this->postJson(route('api.gobiker.patients.store'), checkupPayload(['name' => 'Lolo Ben']))->json('patient.id');
+
+    $this->actingAs(User::factory()->create(['is_admin' => true]), 'web');
+    $this->get(route('admin.operations.patients.show', $id))->assertOk()->assertSee('Given');
+    $this->get(route('admin.operations.patients.show', $older))->assertOk()->assertSee('Not recorded (older app version)');
+});
