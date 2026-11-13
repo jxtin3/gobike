@@ -132,9 +132,7 @@ TXT,
         [
             'title' => '11. Donations',
             'content' => <<<'TXT'
-**Online donations are not available at the moment.** If you would like to support our work in the meantime, please [contact us](/contact).
-
-When online donations become available, these rules apply:
+When online donations are available on the Site, these rules apply. You can also [contact us](/contact) about other ways to give.
 
 - **Payment processing.** Donations are processed by PayPal or PayMongo (GCash and online banking), and your payment is also subject to the provider's own terms. We do not receive or store your full card or e-wallet details.
 - **Currency and fees.** Amounts may be shown in different currencies and converted at the rate shown during checkout. Your bank or payment provider may apply its own exchange rates or fees. Any platform fee is shown before you pay.
@@ -150,8 +148,8 @@ TXT,
 Sending an inquiry to replicate the Go Bike Project, or a request for training, starts a conversation with our team. Schedules, inclusions and partnership details are confirmed with you in writing, for example in a memorandum of understanding, which prevails over these Terms for that engagement.
 
 - **Training fee.** The Go Biker's Training fee is ₱30,000 per class of up to 15 trainees, plus ₱2,000 for each additional trainee, as shown on our [Replicate Go Bike](/replicate-go-bike) page. A class with fewer than 15 trainees is charged the full class fee. Fees may change, but the fee confirmed with you when you pay applies to your payment.
-- **Paying by check.** Pay by check payable to PRI at least 3 days before the training. PRI issues an Official Receipt for every training payment.
-- **Paying online.** Online payment is not available at the moment. When it is, you may pay the full training fee in advance through PayMongo, using GCash or online banking. Your payment will also be subject to PayMongo's terms, and we will not receive or store your full e-wallet or bank details.
+- **Paying by check.** You may pay by check payable to PRI at least 3 days before the training. PRI issues an Official Receipt for every training payment.
+- **Paying online.** When online payment is available, you may pay the full training fee in advance through PayMongo, using GCash or online banking. Your payment is also subject to PayMongo's terms, and we do not receive or store your full e-wallet or bank details.
 - **Refunds for training payments.** If we cannot schedule your training, or if you cancel at least **7 days** before the scheduled training date, we refund your payment in full. Cancellations made less than 7 days before the training are not refundable, but we will work with you to move the training to another date. Refunds are made to the original payment method.
 - **Changes on our side.** If we need to move a scheduled training, for example because of a disaster, severe weather or another emergency, we will agree a new date with you or refund your payment in full.
 - **Home training requests.** Requests for our home first-aid training packages are inquiries until our team confirms them with you. You must upload a valid ID with your request. Prices shown on the Site may change before they are confirmed.

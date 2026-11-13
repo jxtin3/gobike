@@ -61,7 +61,7 @@ Some features use content provided by other companies, which may set their own c
 
 - **Google Maps**: the map on our [Contact page](/contact) is provided by Google. When it loads, Google may set cookies and collect information such as your IP address, under Google's Privacy Policy (https://policies.google.com/privacy). If you choose "Essential only", the map is not loaded unless you click "Load map".
 
-Online donations are not available at the moment. When they are, you will be taken to the PayPal or PayMongo website to complete your payment. Those pages are run by the payment providers, which use their own cookies to process payments securely and prevent fraud. Their own cookie and privacy policies apply.
+When you donate online, you are taken to the PayPal or PayMongo website to complete your payment. Those pages are run by the payment providers, which use their own cookies to process payments securely and prevent fraud. Their own cookie and privacy policies apply.
 TXT,
         ],
         [

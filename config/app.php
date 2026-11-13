@@ -56,6 +56,25 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | One address for search engines
+    |--------------------------------------------------------------------------
+    |
+    | The site's public address, and other addresses that also reach it (the
+    | www. form, the old Railway address). Requests to those are redirected
+    | here, so Google sees one site instead of copies. Only the hosts listed
+    | are redirected, so local and test hosts never are.
+    |
+    */
+
+    'canonical_url' => env('CANONICAL_URL', 'https://gobikeproject.org'),
+
+    'redirect_hosts' => array_values(array_filter(array_map(
+        'trim',
+        explode(',', (string) env('REDIRECT_HOSTS', 'www.gobikeproject.org,gobike.up.railway.app')),
+    ))),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Timezone
     |--------------------------------------------------------------------------
     |

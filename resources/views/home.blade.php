@@ -1,6 +1,6 @@
 <x-layout
-    title="Go Bike"
-    description="Mobilizing volunteers, responders, and community leaders to strengthen health, preparedness, and community resilience."
+    title="OneGoBike | Go Bike Project (GoBike) – Youth Responders in Pangasinan"
+    description="The Go Bike Project (GoBike) trains youth volunteers in Bugallon, Pangasinan to serve their communities by bicycle: first aid, disaster preparedness, health check-ups and community service."
 >
      <!-- SECTION 1 — HERO -->
 <section

@@ -17,6 +17,9 @@ return Application::configure(basePath: dirname(__DIR__))
         // X-Forwarded-* headers (like client IP and HTTPS scheme) are properly resolved.
         $middleware->trustProxies(at: '*');
 
+        // www. and the old Railway address redirect to gobikeproject.org (one site for Google).
+        $middleware->prepend(\App\Http\Middleware\RedirectToCanonicalHost::class);
+
         $middleware->alias([
             'admin' => \App\Http\Middleware\EnsureAdmin::class,
             'gobiker' => \App\Http\Middleware\EnsureGoBiker::class,

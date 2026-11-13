@@ -42,8 +42,10 @@ return [
     ],
 
     'google' => [
-       'client_id' => env('GOOGLE_WEB_CLIENT_ID'),
-   ],
+        'client_id' => env('GOOGLE_WEB_CLIENT_ID'),
+        // Google Search Console, "HTML tag" method: the content="..." value of the meta tag it gives.
+        'site_verification' => env('GOOGLE_SITE_VERIFICATION'),
+    ],
 
     // Push notifications to the RondaGo app (Firebase Cloud Messaging, HTTP v1).
     'fcm' => [

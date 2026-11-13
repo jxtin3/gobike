@@ -2,6 +2,7 @@
 
 use App\Models\LegalDocument;
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
 
 it('publishes the full privacy policy', function () {
     $this->get(route('privacy-policy'))
@@ -32,18 +33,25 @@ it('describes the current hosting, the RondaGo app and location sharing in the p
         ->assertDontSee('onegobike@gmail.com');
 });
 
-it('cites the cybercrime law and warns that online payments are paused in the terms', function () {
+it('cites the cybercrime law and has donation rules that hold whether online payments are on or off', function () {
     $this->get(route('terms'))
         ->assertOk()
         ->assertSee('Cybercrime Prevention Act of 2012')
         ->assertSee('Emergencies and SOS Requests')
-        ->assertSee('Online donations are not available at the moment.')
+        ->assertSee('When online donations are available on the Site, these rules apply.')
         ->assertSee('Official Channels and Fraud Warning');
 });
 
+it('never says online payments are unavailable, so the text stays true when they are switched on', function (string $key) {
+    $text = json_encode(LegalDocument::defaults($key)['sections']);
+
+    expect($text)->not->toContain('not available at the moment')
+        ->not->toContain('not available yet');
+})->with(['privacy', 'terms', 'cookies']);
+
 it('publishes the revised text over the copy first stored in the database', function () {
     // As on the live site: the October text was stored when the table was created.
-    \Illuminate\Support\Facades\DB::table('legal_documents')->where('key', 'privacy')->update([
+    DB::table('legal_documents')->where('key', 'privacy')->update([
         'last_updated' => 'October 22, 2026',
         'sections' => json_encode([['title' => 'Old', 'content' => 'Railway hosts the Site.']]),
     ]);

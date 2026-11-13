@@ -1,5 +1,5 @@
 <x-layout
-    title="Volunteer | Go Bike"
+    title="Volunteer | OneGoBike"
     description="Sign up as a Go Biker volunteer and join youth cyclist-responders delivering health outreach, disaster preparedness, and first response across Pangasinan."
 >
 @php

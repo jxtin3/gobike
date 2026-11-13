@@ -55,7 +55,7 @@ We collect only the personal information we need for the purposes in Section 6.
 - **Volunteer applications:** your first and last name, email address, mobile number, age, occupation or school status, school (optional), barangay, municipality and province, availability, your reasons for volunteering (optional), the name and number of an emergency contact, the type of ID you submit, and copies of the ID or certificate you upload, such as a school ID, a valid ID, a barangay clearance, or a certificate of indigency or residency.
 - **Home training requests:** your name, email address, phone number and address, the training package you choose, your preferred date and time of day, copies of the ID you upload, and your message.
 - **Chapter replication inquiries:** your organization's name and type, the contact person's name, position, email address and mobile number, your municipality or city and province, the number of trainees, your preferred training date, your message, and the payment option and payment status.
-- **Donations:** online donations are not available at the moment. When they are, we will collect the donor's name (and organization name, if giving on behalf of one), email address, phone number (optional), billing address, country, donation amount, currency, frequency (one-time or monthly) and payment method.
+- **Donations:** when you donate online, we collect your name (and organization name, if giving on behalf of one), email address, phone number (optional), billing address, country, donation amount, currency, frequency (one-time or monthly) and payment method.
 
 **Through the RondaGo app**
 
@@ -123,7 +123,7 @@ We use personal information only for the purposes it was collected for, namely t
 - receive emergency requests, send the nearest available GoBiker, and keep volunteers on duty safe;
 - arrange home visits, record check-ups, flag readings that need attention, and refer people to health facilities when needed;
 - send App notifications about emergencies, visits, check-ups and announcements;
-- process donations and training payments when online payments are available, prevent fraud, and keep the accounting and tax records required by law;
+- process donations and training payments, prevent fraud, and keep the accounting and tax records required by law;
 - operate, secure and improve the Site and App, including preventing spam, abuse and unauthorized access;
 - prepare statistics and reports about our programs, such as the number of people served per barangay. Reports we publish or share outside PRI use aggregated or anonymized data that does not identify anyone; and
 - comply with our legal obligations and with lawful requests from authorities.
@@ -180,7 +180,7 @@ We share personal information only when necessary, and never more than is needed
 - **Google** provides GoBot replies (Gemini), App sign-in (Google Sign-In), push notifications (Firebase Cloud Messaging) and the map on our Contact page (Google Maps, loaded only if you allow it). Notifications can include names, addresses and dates, and pass through Google's servers.
 - **Esri** provides the satellite map in the App. Your phone requests the map images from Esri, which receives your IP address and the area of the map you are viewing.
 - **OpenStreetMap** provides the map in our administrators' area.
-- **PayPal and PayMongo** will process card, PayPal, GCash and online banking payments when online payments are available. We never see or store your full card or e-wallet details; the payment provider handles them under its own privacy policy.
+- **PayPal and PayMongo** process card, PayPal, GCash and online banking payments for online donations and training fees. We never see or store your full card or e-wallet details; the payment provider handles them under its own privacy policy.
 
 We require our service providers to protect personal information and to use it only to provide their services to us.
 

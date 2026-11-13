@@ -6,42 +6,69 @@
     <meta name="theme-color" content="#0D1B2A" />
     <meta name="csrf-token" content="{{ csrf_token() }}" />
 
-     <!-- SEO  seacrh engine opti -->
-    <title>{{ $title ?? 'Go Bike — Youth-Led Community Health Responders' }}</title>
-    <meta name="description" content="{{ $description ?? 'Go Bike mobilizes youth volunteers, cyclists, and responders to improve health, resilience, disaster preparedness, and community engagement throughout Pangasinan.' }}" />
-    <meta name="keywords" content="OneGoBike,Go Bike Project, Pangasinan, youth volunteers, community responders, Go Bikers, disaster preparedness, health outreach" />
+    {{--
+        Search engines. Naming: "OneGoBike" is the website's brand (site name, title suffix);
+        "Go Bike Project" is the organization's official name; "GoBike" and "Go Bike" are
+        other names people search for. Page titles end with "| OneGoBike".
+    --}}
+    @php
+        $seoTitle = $title ?? 'OneGoBike | Go Bike Project — Youth-Led Community Responders';
+        $seoDescription = $description ?? 'The Go Bike Project (GoBike) mobilizes youth volunteers, cyclists and responders to improve health, resilience, disaster preparedness and community engagement throughout Pangasinan.';
+    @endphp
+    <title>{{ $seoTitle }}</title>
+    <meta name="description" content="{{ $seoDescription }}" />
+    <meta name="keywords" content="OneGoBike, Go Bike Project, GoBike, Go Bike, Bugallon, Pangasinan, youth volunteers, community responders, Go Bikers, disaster preparedness, health outreach" />
+    @if (config('services.google.site_verification'))
+        <meta name="google-site-verification" content="{{ config('services.google.site_verification') }}" />
+    @endif
     {{-- The one address Google should list for this page (without ?query extras) --}}
     <link rel="canonical" href="{{ url()->current() }}" />
 
     @if (request()->is('/'))
-        {{-- Who Go Bike is, for Google's search results. Facts match Org Structure & History. --}}
+        {{--
+            For Google's search results: the website (its name and the other names it is searched by)
+            and the organization behind it. Facts match Org Structure & History.
+        --}}
         <script type="application/ld+json">
         {!! json_encode([
             '@context' => 'https://schema.org',
-            '@type' => 'NGO',
-            'name' => 'Go Bike Project',
-            'alternateName' => 'OneGoBike',
-            'url' => url('/'),
-            'logo' => asset('images/gobike-logo.png'),
-            'image' => asset('images/og-share.jpg'),
-            'description' => 'Youth-led community responders in Pangasinan: young volunteers trained in first aid and disaster response who serve their communities by bicycle.',
-            'foundingDate' => '2019-03-16',
-            'founder' => [
-                ['@type' => 'Person', 'name' => 'Edren M. Llanillo'],
-                ['@type' => 'Person', 'name' => 'Sheena Mae Quiles'],
-                ['@type' => 'Person', 'name' => 'Nikko De Mesa'],
+            '@graph' => [
+                [
+                    '@type' => 'WebSite',
+                    '@id' => url('/').'#website',
+                    'name' => 'OneGoBike',
+                    'alternateName' => ['Go Bike Project', 'GoBike', 'Go Bike'],
+                    'url' => url('/'),
+                    'publisher' => ['@id' => url('/').'#organization'],
+                ],
+                [
+                    '@type' => 'NGO',
+                    '@id' => url('/').'#organization',
+                    'name' => 'Go Bike Project',
+                    'alternateName' => ['GoBike', 'Go Bike', 'OneGoBike'],
+                    'url' => url('/'),
+                    'logo' => asset('images/gobike-logo.png'),
+                    'image' => asset('images/og-share.jpg'),
+                    'description' => 'The Go Bike Project (GoBike): youth-led community responders in Pangasinan, young volunteers trained in first aid and disaster response who serve their communities by bicycle.',
+                    'foundingDate' => '2019-03-16',
+                    'founder' => [
+                        ['@type' => 'Person', 'name' => 'Edren M. Llanillo'],
+                        ['@type' => 'Person', 'name' => 'Sheena Mae Quiles'],
+                        ['@type' => 'Person', 'name' => 'Nikko De Mesa'],
+                    ],
+                    'parentOrganization' => ['@type' => 'NGO', 'name' => 'Padyarescue Incorporated'],
+                    'address' => [
+                        '@type' => 'PostalAddress',
+                        'addressLocality' => 'Bugallon',
+                        'addressRegion' => 'Pangasinan',
+                        'addressCountry' => 'PH',
+                    ],
+                    'areaServed' => 'Pangasinan, Philippines',
+                    'email' => 'gobike@pydn.org',
+                    'telephone' => '+63 976 429 0145',
+                    'sameAs' => ['https://www.facebook.com/gobikeprojectofficial'],
+                ],
             ],
-            'parentOrganization' => ['@type' => 'NGO', 'name' => 'Padyarescue Incorporated'],
-            'address' => [
-                '@type' => 'PostalAddress',
-                'addressLocality' => 'Bugallon',
-                'addressRegion' => 'Pangasinan',
-                'addressCountry' => 'PH',
-            ],
-            'areaServed' => 'Pangasinan, Philippines',
-            'email' => 'gobike@pydn.org',
-            'telephone' => '+63 976 429 0145',
-            'sameAs' => ['https://www.facebook.com/gobikeprojectofficial'],
         ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG) !!}
         </script>
     @endif
@@ -49,8 +76,8 @@
      <!-- Open Graph for sharing in socmed -->
     <meta property="og:type"        content="website" />
     <meta property="og:url"         content="{{ url()->current() }}" />
-    <meta property="og:title"       content="{{ $title ?? 'Go Bike — Youth-Led Community Health Responders' }}" />
-    <meta property="og:description" content="{{ $description ?? 'Promotes community engagement and educational initiatives, empowering communities to build a healthier, greener, and sustainable future' }}" />
+    <meta property="og:title"       content="{{ $seoTitle }}" />
+    <meta property="og:description" content="{{ $seoDescription }}" />
     <meta property="og:site_name"   content="OneGoBike" />
     <meta property="og:image"       content="{{ $image ?? asset('images/og-share.jpg') }}" />
     @unless (isset($image))
@@ -62,8 +89,8 @@
 
     <!-- Twitter / X, WhatsApp and others: large banner preview -->
     <meta name="twitter:card"        content="summary_large_image" />
-    <meta name="twitter:title"       content="{{ $title ?? 'Go Bike — Youth-Led Community Health Responders' }}" />
-    <meta name="twitter:description" content="{{ $description ?? 'Promotes community engagement and educational initiatives, empowering communities to build a healthier, greener, and sustainable future' }}" />
+    <meta name="twitter:title"       content="{{ $seoTitle }}" />
+    <meta name="twitter:description" content="{{ $seoDescription }}" />
     <meta name="twitter:image"       content="{{ $image ?? asset('images/og-share.jpg') }}" />
 
     <!-- Favicon -->
@@ -272,7 +299,8 @@
                         </div>
                     </a>
                     <p class="text-sm text-white/55 leading-relaxed max-w-sm">
-                        Empowering communities through health initiatives, disaster preparedness, volunteer engagement, and community-driven services that create lasting impact.                    </p>
+                        The Go Bike Project (GoBike) empowers communities through health initiatives, disaster preparedness, volunteer engagement, and community-driven services that create lasting impact.
+                    </p>
                 </div>
 
                 <!-- Column 2 - Quick Links -->
@@ -321,7 +349,7 @@
          <!-- Bottom bar -->
         <div class="border-t border-white/[0.07] relative z-10">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 flex flex-col sm:flex-row items-center justify-between gap-3 text-[11px] text-white/30">
-                <p>&copy; {{ date('Y') }} OneGoBike. All rights reserved. &middot; Pangasinan, Philippines</p>
+                <p>&copy; {{ date('Y') }} Go Bike Project. All rights reserved. &middot; Pangasinan, Philippines</p>
                 <div class="flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
                     <a href="{{ route('privacy-policy') }}" class="hover:text-white/60 transition-colors duration-200">Privacy Policy</a>
                     <span class="opacity-30">&middot;</span>
