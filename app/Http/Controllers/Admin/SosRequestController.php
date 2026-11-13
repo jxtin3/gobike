@@ -143,7 +143,8 @@ class SosRequestController extends Controller
         $pins = SosRequest::with('user:id,name,mobile,photo_path', 'assignedGobiker:id,name,barangay,photo_path')
             ->select([
                 'id', 'user_id', 'status', 'barangay', 'address', 'landmark', 'description',
-                'latitude', 'longitude', 'assigned_gobiker_id', 'created_at',
+                'latitude', 'longitude', 'location_accuracy', 'location_recorded_at',
+                'assigned_gobiker_id', 'created_at',
             ])
             ->whereNotNull('latitude')
             ->whereNotNull('longitude')
@@ -163,6 +164,8 @@ class SosRequestController extends Controller
                 'description' => $sos->description,
                 'latitude' => $sos->latitude,
                 'longitude' => $sos->longitude,
+                'accuracy' => $sos->location_accuracy,
+                'position_at' => $sos->location_recorded_at?->toIso8601String(),
                 'assigned_gobiker' => $sos->assignedGobiker?->name,
                 'assigned_gobiker_barangay' => $sos->assignedGobiker?->barangay,
                 'assigned_gobiker_photo' => Media::url($sos->assignedGobiker?->photo_path),

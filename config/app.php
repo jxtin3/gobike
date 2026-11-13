@@ -86,7 +86,16 @@ return [
 
     'timezone' => env('APP_TIMEZONE', 'Asia/Manila'),
 
-    'location_stale_after_seconds' => (int) env('LOCATION_STALE_AFTER_SECONDS', 30),
+    // A GoBiker counts as offline after this long without a word from their app. The app reports
+    // at least every 15 seconds, so 45 survives one lost request on a weak signal.
+    'location_stale_after_seconds' => (int) env('LOCATION_STALE_AFTER_SECONDS', 45),
+
+    // A position the phone itself says is rougher than this many metres (a cell-tower guess)
+    // does not move the GoBiker's dot on the live map.
+    'location_max_accuracy_m' => (int) env('LOCATION_MAX_ACCURACY_M', 100),
+
+    // Nor does one the phone measured longer ago than this (its "last known" position).
+    'location_max_fix_age_seconds' => (int) env('LOCATION_MAX_FIX_AGE_SECONDS', 120),
 
     /*
     |--------------------------------------------------------------------------

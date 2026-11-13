@@ -29,7 +29,7 @@ class SosRequest extends Model
 
     protected $fillable = [
         'user_id', 'municipality', 'barangay', 'address', 'landmark', 'description',
-        'latitude', 'longitude', 'image_path', 'video_path',
+        'latitude', 'longitude', 'location_accuracy', 'location_recorded_at', 'image_path', 'video_path',
         'status', 'handled_by', 'assigned_gobiker_id', 'resolved_by_gobiker_id',
         'responded_at', 'resolved_at', 'resolved_by_resident',
     ];
@@ -39,6 +39,8 @@ class SosRequest extends Model
         return [
             'latitude' => 'float',
             'longitude' => 'float',
+            'location_accuracy' => 'float',
+            'location_recorded_at' => 'datetime',
             // Cast: only the assigned GoBiker may see and resolve the request, and that check is a
             // strict comparison against the signed-in id.
             'assigned_gobiker_id' => 'integer',

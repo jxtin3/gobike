@@ -15,28 +15,41 @@ use Illuminate\Validation\Rule;
  */
 class GobikerLocationController extends Controller
 {
+    /**
+     * A position from the phone. Only the coordinates are required: the rest says how good the
+     * fix is (see Location::fixFrom) and is loosely checked on purpose, because a phone reporting
+     * an odd number must never be refused its place on the map.
+     */
+    private const FIX_RULES = [
+        'latitude' => ['required', 'numeric', 'between:-90,90'],
+        'longitude' => ['required', 'numeric', 'between:-180,180'],
+        'accuracy' => ['nullable', 'numeric'],
+        'heading' => ['nullable', 'numeric'],
+        'speed' => ['nullable', 'numeric'],
+        'age_seconds' => ['nullable', 'numeric'],
+    ];
+
     public function updateLocation(Request $request): JsonResponse
     {
-        $data = $request->validate([
-            'latitude' => ['required', 'numeric', 'between:-90,90'],
-            'longitude' => ['required', 'numeric', 'between:-180,180'],
-        ]);
+        $data = $request->validate(self::FIX_RULES);
 
         $current = Location::where('user_id', $request->user()->id)->first();
+        $fix = Location::fixFrom($data);
+        // A rough or old fix still proves the app is on, so the GoBiker stays online; it just
+        // does not move their dot.
+        $moved = ! $current || $current->acceptsFix($fix);
 
         $location = Location::updateOrCreate(
             ['user_id' => $request->user()->id],
-            [
+            ($moved ? $fix : []) + [
                 'name' => $request->user()->name,
-                'latitude' => $data['latitude'],
-                'longitude' => $data['longitude'],
                 // keep an open emergency/responding status until an admin resolves it
                 'status' => Location::isAlertStatus($current?->status) ? strtolower($current->status) : 'active',
                 'last_seen_at' => now(),
             ],
         );
 
-        return response()->json(['message' => 'Location updated.', 'location' => $location]);
+        return response()->json(['message' => 'Location updated.', 'moved' => $moved, 'location' => $location]);
     }
 
     public function startActiveSession(Request $request): JsonResponse
@@ -121,12 +134,10 @@ class GobikerLocationController extends Controller
 
     public function sendEmergency(Request $request): JsonResponse
     {
-        $data = $request->validate([
-            'latitude' => ['required', 'numeric', 'between:-90,90'],
-            'longitude' => ['required', 'numeric', 'between:-180,180'],
-        ]);
+        $data = $request->validate(self::FIX_RULES);
 
         $current = Location::where('user_id', $request->user()->id)->first();
+        $fix = Location::fixFrom($data);
 
         // Pressing the button again while still waiting keeps the original time; anything else
         // (first alert, or a new one after the admin was already responding) is a new emergency
@@ -135,10 +146,9 @@ class GobikerLocationController extends Controller
 
         Location::updateOrCreate(
             ['user_id' => $request->user()->id],
-            [
+            // A rough guess must not replace a good position the map already has.
+            (! $current || $current->acceptsFix($fix) ? $fix : []) + [
                 'name' => $request->user()->name,
-                'latitude' => $data['latitude'],
-                'longitude' => $data['longitude'],
                 'status' => 'emergency',
                 'emergency_at' => $stillWaiting ? $current->emergency_at : now(),
                 'last_seen_at' => now(),

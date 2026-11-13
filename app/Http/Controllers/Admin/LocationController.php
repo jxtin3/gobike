@@ -22,7 +22,8 @@ class LocationController extends Controller
             ->with('user:id,name,mobile,photo_path')
             ->select([
                 'id', 'user_id', 'name', 'designated_barangay', 'status',
-                'latitude', 'longitude', 'last_seen_at', 'active_start_time',
+                'latitude', 'longitude', 'accuracy', 'speed', 'position_at',
+                'last_seen_at', 'active_start_time',
                 'active_end_time', 'updated_at',
             ])
             ->orderByDesc('updated_at')
@@ -42,6 +43,11 @@ class LocationController extends Controller
                     'designated_barangay' => $location->designated_barangay,
                     'latitude' => $location->latitude,
                     'longitude' => $location->longitude,
+                    // How far out the dot may be (metres), and when the phone measured it: the
+                    // app can be alive (last_seen_at) while its last good position is older.
+                    'accuracy' => $location->accuracy,
+                    'speed' => $location->speed,
+                    'position_at' => ($location->position_at ?? $location->last_seen_at)?->toIso8601String(),
                     'status' => $status,
                     'active_since' => $activeSince?->toIso8601String(),
                     'time_active' => $activeSince && $status !== 'offline'

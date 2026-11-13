@@ -59,6 +59,8 @@ class LiveMap
                 'name' => $location->user?->name ?? $location->name,
                 'latitude' => $location->latitude,
                 'longitude' => $location->longitude,
+                'accuracy' => $location->accuracy,
+                'position_at' => ($location->position_at ?? $location->last_seen_at)?->toIso8601String(),
                 'status' => Location::isAlertStatus($location->status) ? strtolower($location->status) : 'active',
             ])
             ->values();

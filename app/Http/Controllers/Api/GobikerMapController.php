@@ -98,6 +98,9 @@ class GobikerMapController extends Controller
             'description' => $sos->description,
             'latitude' => $sos->latitude,
             'longitude' => $sos->longitude,
+            // How far out the pin may be, so the GoBiker knows when to trust the address instead.
+            'accuracy' => $sos->location_accuracy,
+            'position_at' => $sos->location_recorded_at?->toIso8601String(),
             'created_at' => $sos->created_at?->toIso8601String(),
             'responded_at' => $sos->responded_at?->toIso8601String(),
             'resolved_at' => $sos->resolved_at?->toIso8601String(),

@@ -61,6 +61,133 @@ it('never plots residents for a GoBiker, only the GoBikers of their barangay', f
         ->and(collect($map['gobikers'])->pluck('name')->all())->toBe(['Jose Lim']);
 });
 
+// ---------------------------------------------------------------- how good a position is
+
+it('keeps how accurate a position is, and when the phone measured it', function () {
+    $this->freezeSecond();
+    Sanctum::actingAs($this->gobiker);
+
+    $this->postJson(route('api.gobiker.location'), [
+        'latitude' => 15.9566, 'longitude' => 120.1866, 'accuracy' => 8.5, 'speed' => 3.2, 'heading' => 90, 'age_seconds' => 4,
+    ])->assertOk()->assertJsonPath('moved', true);
+
+    $location = $this->gobiker->location;
+    expect($location->accuracy)->toBe(8.5)
+        ->and($location->speed)->toBe(3.2)
+        // Measured four seconds before the server heard of it, by the server's own clock.
+        ->and($location->position_at->equalTo(now()->subSeconds(4)))->toBeTrue()
+        ->and($location->last_seen_at->equalTo(now()))->toBeTrue();
+
+    $this->actingAs($this->admin, 'web')->getJson(route('admin.locations.index'))
+        ->assertOk()
+        ->assertJsonPath('0.accuracy', 8.5)
+        ->assertJsonPath('0.position_at', now()->subSeconds(4)->toIso8601String());
+});
+
+it('does not move the dot for a rough or an old position, but keeps the GoBiker online', function (array $bad) {
+    $this->freezeSecond();
+    Sanctum::actingAs($this->gobiker);
+    $this->postJson(route('api.gobiker.location'), ['latitude' => 15.9566, 'longitude' => 120.1866, 'accuracy' => 6])->assertOk();
+
+    $this->travel(20)->seconds();
+    // Indoors the phone falls back to a cell-tower guess, or to where it last knew it was.
+    $this->postJson(route('api.gobiker.location'), $bad + ['latitude' => 15.99, 'longitude' => 120.25])
+        ->assertOk()
+        ->assertJsonPath('moved', false);
+
+    $location = $this->gobiker->location;
+    expect($location->latitude)->toBe(15.9566)
+        ->and($location->accuracy)->toBe(6.0)
+        // Still heard from: on the map, and still someone the admin can send.
+        ->and($location->last_seen_at->equalTo(now()))->toBeTrue();
+})->with([
+    'a cell-tower guess' => [['accuracy' => 900]],
+    'a last-known position from an hour ago' => [['accuracy' => 10, 'age_seconds' => 3600]],
+]);
+
+it('takes a rough first position, because a rough dot beats no dot', function () {
+    Sanctum::actingAs($this->gobiker);
+
+    $this->postJson(route('api.gobiker.location'), ['latitude' => 15.99, 'longitude' => 120.25, 'accuracy' => 900])
+        ->assertOk()
+        ->assertJsonPath('moved', true);
+
+    expect($this->gobiker->location)->latitude->toBe(15.99)->accuracy->toBe(900.0);
+});
+
+it('never steps back to a position measured before the one on the map', function () {
+    Sanctum::actingAs($this->gobiker);
+    $this->postJson(route('api.gobiker.location'), ['latitude' => 15.9566, 'longitude' => 120.1866, 'accuracy' => 6, 'age_seconds' => 1])->assertOk();
+
+    $this->travel(5)->seconds();
+    // An older reading that arrived late.
+    $this->postJson(route('api.gobiker.location'), ['latitude' => 15.9500, 'longitude' => 120.1800, 'accuracy' => 6, 'age_seconds' => 30])
+        ->assertOk()
+        ->assertJsonPath('moved', false);
+
+    expect($this->gobiker->location->latitude)->toBe(15.9566);
+});
+
+it('still tracks an app from before it reported accuracy, and survives odd numbers', function () {
+    Sanctum::actingAs($this->gobiker);
+    $this->postJson(route('api.gobiker.location'), ['latitude' => 15.9566, 'longitude' => 120.1866])->assertOk();
+
+    $this->travel(10)->seconds();
+    // Phones report -1 for "no reading"; none of it may cost the GoBiker their place on the map.
+    $this->postJson(route('api.gobiker.location'), [
+        'latitude' => 15.9570, 'longitude' => 120.1870, 'accuracy' => -1, 'speed' => -1, 'heading' => -1, 'age_seconds' => -5,
+    ])->assertOk()->assertJsonPath('moved', true);
+
+    expect($this->gobiker->location)
+        ->latitude->toBe(15.9570)
+        ->accuracy->toBeNull()
+        ->speed->toBeNull();
+});
+
+it('does not let a rough emergency position replace a good one', function () {
+    Sanctum::actingAs($this->gobiker);
+    $this->postJson(route('api.gobiker.location'), ['latitude' => 15.9566, 'longitude' => 120.1866, 'accuracy' => 6])->assertOk();
+
+    $this->postJson(route('api.gobiker.emergency'), ['latitude' => 15.99, 'longitude' => 120.25, 'accuracy' => 1500])->assertOk();
+
+    expect($this->gobiker->location)->status->toBe('emergency')->latitude->toBe(15.9566);
+});
+
+it('tells the admin and the GoBiker who was sent how far out an SOS pin may be', function () {
+    $this->freezeSecond();
+    onlineGobiker($this->gobiker);
+    Sanctum::actingAs($this->resident);
+    $id = $this->postJson(route('api.resident.sos.store'), [
+        'address' => '12 Rizal St.', 'landmark' => 'Chapel',
+        'latitude' => 15.95, 'longitude' => 120.18, 'accuracy' => 65.5, 'age_seconds' => 40,
+    ])->assertCreated()->json('sos.id');
+
+    $this->actingAs($this->admin, 'web')->getJson(route('admin.sos-pins.index'))
+        ->assertOk()
+        ->assertJsonPath('0.accuracy', 65.5)
+        ->assertJsonPath('0.position_at', now()->subSeconds(40)->toIso8601String());
+
+    SosRequest::findOrFail($id)->update(['status' => 'responding', 'assigned_gobiker_id' => $this->gobiker->id]);
+    Sanctum::actingAs($this->gobiker);
+    $this->getJson(route('api.gobiker.map'))->assertOk()->assertJsonPath('sos.0.accuracy', 65.5);
+});
+
+it('takes an SOS from an app that says nothing about how good its pin is', function () {
+    Sanctum::actingAs($this->resident);
+    $id = $this->postJson(route('api.resident.sos.store'), [
+        'address' => '12 Rizal St.', 'landmark' => 'Chapel', 'latitude' => 15.95, 'longitude' => 120.18,
+    ])->assertCreated()->json('sos.id');
+
+    expect(SosRequest::findOrFail($id))->latitude->toBe(15.95)->location_accuracy->toBeNull();
+
+    // No position at all: nothing is made up about one.
+    $id = $this->postJson(route('api.resident.sos.store'), [
+        'address' => '12 Rizal St.', 'landmark' => 'Chapel', 'accuracy' => 12,
+    ])->assertCreated()->json('sos.id');
+
+    expect(SosRequest::findOrFail($id))->latitude->toBeNull()->location_accuracy->toBeNull()->location_recorded_at->toBeNull();
+});
+
 // ---------------------------------------------------------------- SOS assignment
 
 it('lets the admin send a GoBiker to an SOS', function () {

@@ -45,7 +45,20 @@ class ResidentSosController extends Controller
             'description' => ['nullable', 'string', 'max:1000'],
             'latitude' => ['nullable', 'numeric', 'between:-90,90', 'required_with:longitude'],
             'longitude' => ['nullable', 'numeric', 'between:-180,180', 'required_with:latitude'],
+            // How good the pin is: the phone's error in metres, and how old the fix was when sent.
+            // Loosely checked on purpose: an odd number must never stop an SOS going out.
+            'accuracy' => ['nullable', 'numeric'],
+            'age_seconds' => ['nullable', 'numeric'],
         ]);
+
+        $accuracy = $data['accuracy'] ?? null;
+        $age = $data['age_seconds'] ?? null;
+        unset($data['accuracy'], $data['age_seconds']);
+        if (isset($data['latitude'])) {
+            $data['location_accuracy'] = $accuracy !== null && $accuracy >= 0 ? (float) $accuracy : null;
+            // Worked out on the server's clock, so a phone with the wrong time cannot skew it.
+            $data['location_recorded_at'] = now()->subSeconds((int) min(max($age ?? 0, 0), 7 * 86400));
+        }
 
         $data['barangay'] ??= $request->user()->barangay;
         if ($data['barangay'] === null) {
