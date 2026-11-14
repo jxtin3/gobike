@@ -3820,6 +3820,68 @@ html:has(dialog:modal) { overflow: hidden; }
 
 .sos-legend { margin-top: 6px; }
 
+/* How sure the map is of a position. The same two marks are drawn on the map itself. */
+.legend-ring {
+    width: 12px;
+    height: 12px;
+    flex: none;
+    border-radius: 50%;
+    border: 1px solid color-mix(in srgb, var(--live) 60%, transparent);
+    background: color-mix(in srgb, var(--live) 14%, transparent);
+}
+
+.status-dot.is-old {
+    width: 8px;
+    height: 8px;
+    margin: 1px;
+    background: color-mix(in srgb, var(--c) 35%, transparent);
+    outline: 1px dashed var(--c);
+    outline-offset: 0;
+}
+
+.gb-pop dd.is-old { color: var(--warn); }
+
+/* Streets or Satellite, on the map's top right corner. */
+.map-switch {
+    display: flex;
+    padding: 3px;
+    gap: 2px;
+    border: 1px solid var(--line-2);
+    border-radius: var(--r-sm);
+    background: var(--card);
+    box-shadow: var(--shadow-1);
+}
+
+.map-switch button {
+    min-height: 30px;
+    padding: 0 var(--sp-3);
+    border: 0;
+    border-radius: 6px;
+    background: none;
+    font: inherit;
+    font-size: var(--fs-13);
+    font-weight: 600;
+    color: var(--ink-2);
+    cursor: pointer;
+    transition: background-color .15s ease, color .15s ease;
+}
+
+.map-switch button:hover { background: var(--hover); }
+
+.map-switch button[aria-pressed="true"] {
+    background: var(--brand);
+    color: #fff;
+}
+
+.map-switch button:focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: 1px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .map-switch button { transition: none; }
+}
+
 /* The pin on the map. It beats like a signal until someone has resolved the emergency. */
 .sos-pin-wrap { background: none; border: 0; }
 

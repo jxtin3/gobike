@@ -79,6 +79,11 @@
                 <span><i class="sos-ring s-sent"></i>SOS waiting</span>
                 <span><i class="sos-ring s-sos-responding"></i>SOS answered</span>
             </div>
+            {{-- How sure the map is of a position: said in words too, in each popup and list row. --}}
+            <div class="legend rider-legend sos-legend" aria-label="How sure a position is">
+                <span><i class="legend-ring"></i>Somewhere in the circle</span>
+                <span><i class="status-dot s-active is-old"></i>Position not updating</span>
+            </div>
             {{-- Two dropdowns: residents who need help come first, and the long GoBiker list can be folded away. --}}
             <details class="rider-section" open>
                 <summary><h2>Residents</h2><span class="count" id="sos-count">–</span><x-admin.icon name="chevron-down" class="rider-chevron" /></summary>

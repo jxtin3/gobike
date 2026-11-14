@@ -2,7 +2,18 @@
     const mapEl = document.getElementById('map');
     if (!mapEl || typeof L === 'undefined') return;
 
-    const REFRESH_MS = 5000;
+    // How often the GoBiker dots are fetched. The app reports within 5 seconds of a real move,
+    // so every 2 seconds keeps a dot at most a few seconds behind the bike.
+    const REFRESH_MS = 2000;
+    // A position rougher than this (metres) is drawn with a circle showing how far out it may be.
+    const ROUGH_M = 30;
+    // An SOS pin rougher than this is called approximate: the address is then the better guide.
+    const APPROX_M = 50;
+    // An online GoBiker whose position is older than this is drawn faded: the app is alive but
+    // has had no good reading since (indoors, usually), so they may have moved.
+    const OLD_POSITION_S = 20;
+    // Shown until there is someone to show: Bugallon, Pangasinan.
+    const HOME = [15.9566, 120.1866];
     const LOCATIONS_URL = mapEl.closest('[data-locations-url]')?.dataset.locationsUrl ?? '/admin/locations';
     const COLORS = { active: '#16a34a', responding: '#eab308', emergency: '#dc2626', offline: '#94a3b8' };
     const LABELS = { active: 'Active', responding: 'Responding', emergency: 'Emergency', offline: 'Offline' };
@@ -10,9 +21,9 @@
     /*
      * Residents' SOS requests: red while nobody has answered, yellow once an admin has. Resolved
      * ones are not sent to the map at all, so the pin disappears when the emergency is over.
-     * Checked about once a second, far more often than the GoBiker dots.
+     * Checked on its own timer, which keeps its pace even in a background tab.
      */
-    const SOS_POLL_MS = 1000;
+    const SOS_POLL_MS = 2000;
     const section = mapEl.closest('[data-sos-url]');
     const SOS_URL = section?.dataset.sosUrl;
     const SOS_STATUS_URL = section?.dataset.sosStatusUrl;
@@ -29,6 +40,7 @@
         assignBarangay: '<path d="M4 21V5l8-2v18M12 8h8v13M8 8h.01M8 12h.01M8 16h.01M16 12h.01M16 16h.01M3 21h18"/>',
         assignGobiker: '<path d="M8 8a4 4 0 0 1 8 0v1H8zM12 4V2M5 21v-2a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v2M12 14v3"/>',
         send: '<path d="m21 3-9.5 18-2.5-7.5L1.5 11zM9 13.5 21 3"/>',
+        pin: '<circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="1.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>',
     };
     // "Responding" only when a GoBiker was actually sent: an admin can take a request on without
     // assigning anyone yet, and the map must not claim somebody is on the way.
@@ -45,14 +57,88 @@
     };
 
     // Canvas draws hundreds of GoBiker dots much faster than one SVG element each.
-    const map = L.map(mapEl, { preferCanvas: true }).setView([16.05, 120.3], 9);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; OpenStreetMap contributors',
-        maxZoom: 19,
-    }).addTo(map);
+    const map = L.map(mapEl, { preferCanvas: true }).setView(HOME, 13);
+
+    /*
+     * Two pictures of the same place. Streets has the road and place names; Satellite shows the
+     * roofs and paths a GoBiker actually rides by, and is what the app shows them, so the admin
+     * can describe the way in the same terms. The imagery stops at zoom 18 over Bugallon: past
+     * that the tiles say "Map data not yet available", so zoom 19 enlarges the zoom-18 picture.
+     */
+    const esri = (service) => `https://server.arcgisonline.com/ArcGIS/rest/services/${service}/MapServer/tile/{z}/{y}/{x}`;
+    const BASEMAPS = {
+        streets: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors',
+            maxZoom: 19,
+        }),
+        satellite: L.layerGroup([
+            L.tileLayer(esri('World_Imagery'), {
+                attribution: 'Imagery &copy; Esri, Maxar, Earthstar Geographics',
+                maxNativeZoom: 18,
+                maxZoom: 19,
+            }),
+            L.tileLayer(esri('Reference/World_Transportation'), { maxNativeZoom: 18, maxZoom: 19 }),
+            L.tileLayer(esri('Reference/World_Boundaries_and_Places'), { maxNativeZoom: 18, maxZoom: 19 }),
+        ]),
+    };
+    const BASEMAP_LABELS = { streets: 'Streets', satellite: 'Satellite' };
+    const BASEMAP_KEY = 'gobike.live-map.basemap';
+
+    let basemap = 'streets';
+
+    /* The circle around a rough position. Over the satellite picture a faint tint is lost, so it is drawn stronger there. */
+    const ringLook = (radius, color) => ({
+        radius,
+        color,
+        weight: basemap === 'satellite' ? 2 : 1,
+        opacity: basemap === 'satellite' ? 0.95 : 0.55,
+        fillColor: color,
+        fillOpacity: basemap === 'satellite' ? 0.22 : 0.1,
+        interactive: false,
+    });
+
+    function setBasemap(name, switcher) {
+        basemap = name;
+        Object.entries(BASEMAPS).forEach(([key, layer]) => {
+            if (key === name) layer.addTo(map);
+            else map.removeLayer(layer);
+        });
+        switcher?.querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.base === name)));
+        try { localStorage.setItem(BASEMAP_KEY, name); } catch { /* private window: just not remembered */ }
+    }
+
+    const BasemapSwitch = L.Control.extend({
+        options: { position: 'topright' },
+        onAdd() {
+            const el = L.DomUtil.create('div', 'map-switch');
+            el.setAttribute('role', 'group');
+            el.setAttribute('aria-label', 'Map style');
+            el.innerHTML = Object.entries(BASEMAP_LABELS)
+                .map(([key, label]) => `<button type="button" data-base="${key}" aria-pressed="false">${label}</button>`).join('');
+            L.DomEvent.disableClickPropagation(el);
+            el.addEventListener('click', (e) => {
+                const btn = e.target.closest('[data-base]');
+                if (btn) setBasemap(btn.dataset.base, el);
+            });
+            let saved = null;
+            try { saved = localStorage.getItem(BASEMAP_KEY); } catch { /* as above */ }
+            setBasemap(saved in BASEMAPS ? saved : 'streets', el);
+
+            return el;
+        },
+    });
+    map.addControl(new BasemapSwitch());
 
     const markers = new Map();
+    const rings = new Map(); // id -> the circle showing how far out a rough position may be
     const sosMarkers = new Map();
+    const sosRings = new Map();
+    const glides = new Map(); // marker -> a move in progress
+    let gliding = null;
+    let clockSkew = 0; // server time minus this computer's, in ms
+    let fitted = false;
+    let popupBusyUntil = 0;
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
     let riders = [];
     let loaded = false;
     let timer = null;
@@ -74,9 +160,23 @@
 
     const hasPos = (r) => Number.isFinite(r.latitude) && Number.isFinite(r.longitude);
 
+    /*
+     * "Now" by the server's clock. The times in the data are the server's, and an office computer
+     * whose clock is a minute out would otherwise show every GoBiker as a minute stale.
+     */
+    const now = () => Date.now() + clockSkew;
+
+    function syncClock(res) {
+        const sent = Date.parse(res.headers.get('Date') ?? '');
+        if (Number.isFinite(sent)) clockSkew = sent - Date.now();
+    }
+
+    /* Seconds since a time in the data, or null when there is none. */
+    const secondsSince = (iso) => (iso ? Math.max(0, Math.round((now() - new Date(iso).getTime()) / 1000)) : null);
+
     const ago = (iso) => {
         if (!iso) return 'Never seen';
-        const s = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 1000));
+        const s = secondsSince(iso);
         if (s < 10) return 'Just now';
         if (s < 60) return `${s}s ago`;
         if (s < 3600) return `${Math.floor(s / 60)}m ago`;
@@ -98,8 +198,29 @@
         noteTimer = setTimeout(() => { els.note.hidden = true; }, ms);
     }
 
+    /* Online, but the position on the map is from a while ago: they may have moved since. */
+    const positionIsOld = (r) => r.status !== 'offline' && (secondsSince(r.position_at) ?? 0) > OLD_POSITION_S;
+
+    const isRough = (accuracy) => Number.isFinite(accuracy) && accuracy > ROUGH_M;
+
+    /* "Within 8 m", "Within 1.2 km": how far from the dot the phone says it may really be. */
+    function within(accuracy) {
+        if (!Number.isFinite(accuracy)) return null;
+
+        return accuracy < 1000 ? `Within ${Math.max(1, Math.round(accuracy))} m` : `Within ${(accuracy / 1000).toFixed(1)} km`;
+    }
+
+    /* Only for a position that is current: an old speed says nothing about now. */
+    function speedText(r) {
+        if (!Number.isFinite(r.speed) || r.status === 'offline' || positionIsOld(r)) return null;
+
+        return r.speed < 0.5 ? 'Standing still' : `${Math.round(r.speed * 3.6)} km/h`;
+    }
+
     function popup(r) {
         const status = LABELS[r.status] || 'Unknown';
+        const accuracy = within(r.accuracy);
+        const speed = speedText(r);
         const mobile = r.mobile
             ? `<a href="tel:${esc(r.mobile)}">${esc(r.mobile)}</a>`
             : 'Not provided';
@@ -118,6 +239,9 @@
                 <dt>Mobile</dt><dd>${mobile}</dd>
                 <dt>Barangay</dt><dd>${esc(r.designated_barangay || 'Not assigned')}</dd>
                 <dt>Location</dt><dd>${hasPos(r) ? `${r.latitude.toFixed(5)}, ${r.longitude.toFixed(5)}` : 'Unavailable'}</dd>
+                ${hasPos(r) && accuracy ? `<dt>Accuracy</dt><dd>${esc(accuracy)}</dd>` : ''}
+                ${hasPos(r) && positionIsOld(r) ? `<dt>Position from</dt><dd class="is-old">${esc(ago(r.position_at))}: may have moved</dd>` : ''}
+                ${speed ? `<dt>Speed</dt><dd>${esc(speed)}</dd>` : ''}
                 <dt>Active since</dt><dd>${esc(time(r.active_since, { hour: '2-digit', minute: '2-digit' }) || 'Not active')}</dd>
                 <dt>Time active</dt><dd>${esc(r.time_active)}</dd>
                 <dt>Last seen</dt><dd>${esc(ago(r.last_seen_at))}</dd>
@@ -153,11 +277,71 @@
             <li><button type="button" class="rider" data-id="${esc(r.id)}">
                 <span class="status-dot s-${esc(r.status)}"></span>
                 <span class="rider-main"><b>${esc(r.name)}</b><small>${esc(r.designated_barangay || 'No barangay assigned')}</small></span>
-                <span class="rider-meta"><em class="s-text s-${esc(r.status)}">${esc(LABELS[r.status] || 'Unknown')}</em><small>${esc(ago(r.last_seen_at))}</small></span>
+                <span class="rider-meta"><em class="s-text s-${esc(r.status)}">${esc(LABELS[r.status] || 'Unknown')}</em><small>${esc(hasPos(r) && positionIsOld(r) ? `Position ${ago(r.position_at).toLowerCase()}` : ago(r.last_seen_at))}</small></span>
             </button></li>`).join('');
 
         els.list.scrollTop = top;
         if (focusedId) els.list.querySelector(`[data-id="${CSS.escape(focusedId)}"]`)?.focus({ preventScroll: true });
+    }
+
+    /*
+     * Moves a dot to its new position over about one refresh, so a GoBiker is seen riding along
+     * the road and not hopping from point to point. A jump too big to be a ride (a first position
+     * after a long gap) is not animated, nor is anything off screen, nor when the admin's computer
+     * asks for reduced motion.
+     */
+    function glide(marker, to, ring) {
+        const from = marker.getLatLng();
+        const metres = from.distanceTo(to);
+        const place = (latlng) => {
+            marker.setLatLng(latlng);
+            ring?.setLatLng(latlng);
+        };
+        if (metres < 0.5) {
+            // Not moving: let a glide already under way finish, and keep a new ring on the dot.
+            if (!glides.has(marker)) ring?.setLatLng(from);
+            else glides.get(marker).ring = ring;
+
+            return;
+        }
+        if (metres > 400 || reducedMotion.matches || document.hidden || !map.getBounds().pad(0.2).contains(to)) {
+            glides.delete(marker);
+            place(to);
+
+            return;
+        }
+        glides.set(marker, { from, to, ring, start: performance.now(), ms: REFRESH_MS });
+        gliding ??= requestAnimationFrame(stepGlides);
+    }
+
+    function stepGlides(time) {
+        gliding = null;
+        glides.forEach((g, marker) => {
+            const t = Math.min(1, (time - g.start) / g.ms);
+            // Constant speed: this is a vehicle moving, and the next leg starts where this ends.
+            const at = L.latLng(g.from.lat + (g.to.lat - g.from.lat) * t, g.from.lng + (g.to.lng - g.from.lng) * t);
+            marker.setLatLng(at);
+            g.ring?.setLatLng(at);
+            if (t >= 1) glides.delete(marker);
+        });
+        if (glides.size) gliding = requestAnimationFrame(stepGlides);
+    }
+
+    /*
+     * The first view: everyone who is out (and every open SOS), close enough to tell them apart.
+     * Only once, and not when a link asked to see one GoBiker or SOS: after that the map is the
+     * admin's to move, and must never jump on its own.
+     */
+    function fitToActivity() {
+        if (fitted) return;
+        fitted = true;
+        if (pendingFocus !== null || pendingSosFocus !== null) return;
+        const online = riders.filter((r) => hasPos(r) && r.status !== 'offline');
+        const points = [
+            ...(online.length ? online : riders.filter(hasPos)).map((r) => [r.latitude, r.longitude]),
+            ...sosPins.map((p) => [p.latitude, p.longitude]),
+        ];
+        if (points.length) map.fitBounds(L.latLngBounds(points).pad(0.15), { maxZoom: 16, animate: false });
     }
 
     function render() {
@@ -169,23 +353,63 @@
         visible.filter(hasPos).forEach((r) => {
             const id = String(r.id);
             const color = COLORS[r.status] || COLORS.offline;
-            const style = { radius: r.status === 'emergency' ? 11 : 9, color: '#fff', weight: 2, fillColor: color, fillOpacity: 1 };
+            const old = positionIsOld(r);
+            // A ghost of the dot when the position is old (faded, broken outline in its own
+            // colour): still where they were last really seen, no longer a claim about now.
+            const style = {
+                radius: r.status === 'emergency' ? 11 : 9,
+                // Over the dark satellite picture the ghost keeps a white outline, or it is lost.
+                color: old && basemap !== 'satellite' ? color : '#fff',
+                weight: 2,
+                fillColor: color,
+                fillOpacity: old ? (basemap === 'satellite' ? 0.6 : 0.35) : 1,
+                dashArray: old ? '3 3' : null,
+            };
+            const to = L.latLng(r.latitude, r.longitude);
             let marker = markers.get(id);
             if (!marker) {
-                marker = L.circleMarker([r.latitude, r.longitude], style).addTo(map);
+                marker = L.circleMarker(to, style).addTo(map);
                 marker.bindPopup(popup(r));
                 markers.set(id, marker);
             } else {
-                marker.setLatLng([r.latitude, r.longitude]);
                 marker.setStyle(style);
-                marker.setPopupContent(popup(r));
+                // Not while a button in it is being pressed: rebuilding would swallow the click.
+                if (!marker.isPopupOpen() || Date.now() > popupBusyUntil) marker.setPopupContent(popup(r));
                 if (!map.hasLayer(marker)) marker.addTo(map);
             }
+
+            let ring = rings.get(id);
+            if (isRough(r.accuracy)) {
+                const ringStyle = ringLook(r.accuracy, color);
+                if (!ring) {
+                    ring = L.circle(marker.getLatLng(), ringStyle).addTo(map);
+                    rings.set(id, ring);
+                } else {
+                    ring.setStyle(ringStyle);
+                    ring.setRadius(r.accuracy);
+                    if (!map.hasLayer(ring)) ring.addTo(map);
+                }
+                ring.bringToBack();
+            } else if (ring) {
+                map.removeLayer(ring);
+                rings.delete(id);
+                ring = null;
+            }
+
+            glide(marker, to, ring);
         });
 
         markers.forEach((marker, id) => {
-            if (!visibleIds.has(id) && map.hasLayer(marker)) map.removeLayer(marker);
-            if (!allIds.has(id)) markers.delete(id);
+            const ring = rings.get(id);
+            if (!visibleIds.has(id)) {
+                if (map.hasLayer(marker)) map.removeLayer(marker);
+                if (ring && map.hasLayer(ring)) map.removeLayer(ring);
+            }
+            if (!allIds.has(id)) {
+                glides.delete(marker);
+                markers.delete(id);
+                rings.delete(id);
+            }
         });
 
         const counts = { total: riders.length, active: 0, responding: 0, emergency: 0, offline: 0 };
@@ -257,6 +481,9 @@
         return `<dt>${icon(name, 'sos-fact-icon')}${esc(label)}</dt><dd>${esc(value)}</dd>`;
     }
 
+    /* The pin is only roughly where the resident is: the address and landmark are the better guide. */
+    const sosIsApprox = (p) => Number.isFinite(p.accuracy) && p.accuracy > APPROX_M;
+
     function sosPopup(p) {
         const mobile = p.mobile
             ? `<a class="sos-pop-mobile" href="tel:${esc(p.mobile)}">${icon('phone', 'sos-mobile-icon')}${esc(p.mobile)}</a>`
@@ -281,6 +508,7 @@
                 ${fact('barangay', 'Barangay', p.barangay || 'Not given')}
                 ${fact('address', 'Address', p.address || 'Not given')}
                 ${fact('landmark', 'Landmark', p.landmark || 'Not given')}
+                ${within(p.accuracy) ? fact('pin', 'Pin', sosIsApprox(p) ? `Approximate. ${within(p.accuracy)}: go by the address.` : within(p.accuracy)) : ''}
                 ${p.description ? fact('details', 'Details', p.description) : ''}
                 ${fact('sent', 'Sent', ago(p.created_at))}
             </dl>
@@ -316,7 +544,7 @@
             <li><button type="button" class="rider" data-sos-id="${esc(p.id)}">
                 <i class="sos-ring ${esc(SOS_CLASS[p.status] || SOS_CLASS.sent)}"></i>
                 <span class="rider-main"><b>${esc(p.resident)}</b><small>${esc(p.barangay || 'No barangay')} · ${esc(ago(p.created_at))}</small></span>
-                <span class="rider-meta"><em class="s-text sos-state ${esc(SOS_STATE_CLASS[p.status] || SOS_STATE_CLASS.sent)}">${esc(sosHeadline(p))}</em></span>
+                <span class="rider-meta"><em class="s-text sos-state ${esc(SOS_STATE_CLASS[p.status] || SOS_STATE_CLASS.sent)}">${esc(sosHeadline(p))}</em>${sosIsApprox(p) ? '<small>Approximate pin</small>' : ''}</span>
             </button></li>`).join('');
         // Polled every second: only touch the page when something on it changed.
         if (html === sosListHtml) return;
@@ -367,9 +595,22 @@
             }
             marker.sosStatus = p.status;
             marker.sosKey = key;
+
+            // How far out the pin may be, so nobody rides to the exact dot of a rough reading.
+            if (isRough(p.accuracy)) {
+                const color = p.status === 'sent' ? COLORS.emergency : COLORS.responding;
+                const ringStyle = ringLook(p.accuracy, color);
+                const ring = sosRings.get(id);
+                if (ring) ring.setStyle(ringStyle); // red while waiting, yellow once answered
+                else sosRings.set(id, L.circle([p.latitude, p.longitude], ringStyle).addTo(map).bringToBack());
+            }
         });
         sosMarkers.forEach((marker, id) => {
-            if (!ids.has(id)) { map.removeLayer(marker); sosMarkers.delete(id); }
+            if (ids.has(id)) return;
+            map.removeLayer(marker);
+            sosMarkers.delete(id);
+            const ring = sosRings.get(id);
+            if (ring) { map.removeLayer(ring); sosRings.delete(id); }
         });
         sosPins = pins;
         renderSosList();
@@ -490,6 +731,7 @@
             if (res.status === 401 || res.status === 419) { window.location.reload(); return; }
             if (!res.ok) throw new Error(String(res.status));
 
+            syncClock(res);
             riders = await res.json();
             loaded = true;
             els.error.hidden = true;
@@ -497,7 +739,9 @@
             els.updated.textContent = `Updated ${time(new Date().toISOString(), { hour: '2-digit', minute: '2-digit', second: '2-digit' })}`;
             syncBarangays();
             render();
-            await loadSos();
+            // The SOS pins run on their own timer; here they are only needed for the first view.
+            if (!fitted) await loadSos();
+            fitToActivity();
             if (pendingFocus !== null) {
                 focusLocation(pendingFocus);
                 pendingFocus = null;
@@ -512,7 +756,7 @@
             els.chip.dataset.state = 'error';
             els.updated.textContent = 'Connection lost';
             els.errorText.textContent = loaded
-                ? 'Live updates are paused. Retrying every 5 seconds.'
+                ? 'Live updates are paused. Retrying every few seconds.'
                 : 'Unable to load GoBiker locations.';
             els.error.hidden = false;
             if (!loaded) {
@@ -597,6 +841,11 @@
     document.addEventListener('gobike:emergencies-changed', (e) => {
         if (e.detail?.source !== 'map') load();
     });
+
+    // A press inside a popup: hold off rebuilding it for a moment, or the click lands on nothing.
+    document.addEventListener('pointerdown', (e) => {
+        if (e.target.closest?.('.gb-pop')) popupBusyUntil = Date.now() + 800;
+    }, true);
 
     /* The admin picked another barangay: reload the GoBikers from there. */
     document.addEventListener('change', (e) => {

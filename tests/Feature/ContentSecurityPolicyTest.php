@@ -73,7 +73,7 @@ it('allows media bucket origin in img-src and media-src when MEDIA_CSP_ORIGIN is
     $policy = $this->get('/')->headers->get('Content-Security-Policy');
 
     expect($policy)
-        ->toContain("img-src 'self' data: blob: https://*.tile.openstreetmap.org https://tile.openstreetmap.org https://bucket.example.com")
+        ->toContain("img-src 'self' data: blob: https://*.tile.openstreetmap.org https://tile.openstreetmap.org https://server.arcgisonline.com https://bucket.example.com")
         ->toContain("media-src 'self' https://bucket.example.com blob: data:");
 });
 

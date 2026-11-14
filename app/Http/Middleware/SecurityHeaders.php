@@ -40,7 +40,8 @@ class SecurityHeaders
 
         $mediaOrigin = trim((string) config('security.media_origin', ''));
 
-        $imgSrc = "img-src 'self' data: blob: https://*.tile.openstreetmap.org https://tile.openstreetmap.org";
+        // Map tiles: OpenStreetMap streets, and Esri satellite imagery on the admin live map.
+        $imgSrc = "img-src 'self' data: blob: https://*.tile.openstreetmap.org https://tile.openstreetmap.org https://server.arcgisonline.com";
         if ($mediaOrigin !== '') {
             $imgSrc .= ' '.$mediaOrigin;
         }
