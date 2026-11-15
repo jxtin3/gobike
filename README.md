@@ -73,7 +73,7 @@ php artisan test
 
 **PayPal**
 1. In developer.paypal.com switch to **Live**, create an app (needs a verified Business account) and set `PAYPAL_MODE=live`, `PAYPAL_LIVE_CLIENT_ID`, `PAYPAL_LIVE_CLIENT_SECRET`.
-2. Monthly donation plans are created automatically, one per currency, the first time someone donates monthly in it, and kept separately for sandbox and live. To create them all up front, run `php artisan paypal:setup-donation-plan`. If you set `PAYPAL_DONATION_PRODUCT_ID`, it must be a product from the same mode (live or sandbox).
+2. Monthly donation plans are created automatically, one per currency, the first time someone donates monthly in it, and kept separately for sandbox and live. To create them all up front, run `php artisan paypal:setup-donation-plan`. If you set `PAYPAL_DONATION_PRODUCT_ID`, it must be a product from the same mode (live or sandbox). After switching to a different PayPal account or app, clear `PAYPAL_DONATION_PRODUCT_ID` and run `php artisan paypal:setup-donation-plan --fresh` to replace the saved plans.
 3. Add a live webhook to `https://your-domain/webhooks/paypal` with these events, and save its ID in `PAYPAL_WEBHOOK_ID`:
    `PAYMENT.CAPTURE.COMPLETED`, `CHECKOUT.ORDER.APPROVED`, `PAYMENT.SALE.COMPLETED`, `BILLING.SUBSCRIPTION.ACTIVATED`, `BILLING.SUBSCRIPTION.RE-ACTIVATED`, `BILLING.SUBSCRIPTION.SUSPENDED`, `BILLING.SUBSCRIPTION.CANCELLED`, `BILLING.SUBSCRIPTION.EXPIRED`, `BILLING.SUBSCRIPTION.PAYMENT.FAILED`.
 

@@ -233,3 +233,18 @@ it('shows admins the original currency next to the USD equivalent', function () 
         ->assertSee('€46.00')
         ->assertSee('≈ $50.00');
 });
+
+it('replaces the saved plans for the current mode when the setup command runs with --fresh', function () {
+    config(['donation.currencies' => ['EUR' => config('donation.currencies.EUR')]]);
+    PaypalDonationPlan::create(['mode' => 'sandbox', 'currency' => 'EUR', 'product_id' => 'PROD-OLD', 'plan_id' => 'P-OLD']);
+    PaypalDonationPlan::create(['mode' => 'live', 'currency' => 'EUR', 'product_id' => 'PROD-LIVE', 'plan_id' => 'P-LIVE']);
+    fakePaypalApi(); // sandbox
+
+    $this->artisan('paypal:setup-donation-plan', ['--fresh' => true])
+        ->expectsOutputToContain('EUR: P-FIRST')
+        ->expectsOutputToContain('Product: PROD-1')
+        ->assertSuccessful();
+
+    expect(PaypalDonationPlan::where('mode', 'sandbox')->pluck('plan_id')->all())->toBe(['P-FIRST'])
+        ->and(PaypalDonationPlan::where('mode', 'live')->value('plan_id'))->toBe('P-LIVE');
+});
