@@ -54,7 +54,7 @@ it('emails the GoBiker when an admin approves them', function () {
 
 it('still approves a GoBiker whose email cannot be sent, and says so', function () {
     Mail::fake();
-    $biker = User::factory()->create(['role' => 'GoBiker', 'status' => 'Inactive', 'email' => 'gobiker1@demo.rondago.test']);
+    $biker = User::factory()->create(['role' => 'GoBiker', 'status' => 'Inactive', 'email' => 'gobiker1@demo.gobike.test']);
 
     $this->actingAs(approvalAdmin())->patch(route('admin.operations.users.approve', $biker))
         ->assertSessionHas('error');
@@ -81,7 +81,7 @@ it('emails only approved GoBikers who have not had the email, never older accoun
     $waiting = User::factory()->create(['role' => 'GoBiker', 'status' => 'Active', 'approved_at' => now()]);
     $alreadyEmailed = User::factory()->create(['role' => 'GoBiker', 'status' => 'Active', 'approved_at' => now(), 'approval_emailed_at' => now()]);
     $approvedBefore = User::factory()->create(['role' => 'GoBiker', 'status' => 'Active']);
-    $demo = User::factory()->create(['role' => 'GoBiker', 'status' => 'Active', 'approved_at' => now(), 'email' => 'x@demo.rondago.test']);
+    $demo = User::factory()->create(['role' => 'GoBiker', 'status' => 'Active', 'approved_at' => now(), 'email' => 'x@demo.gobike.test']);
 
     $this->actingAs(approvalAdmin())->post(route('admin.operations.users.email-approved'))
         ->assertSessionHas('success');

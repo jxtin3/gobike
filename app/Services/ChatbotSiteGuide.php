@@ -125,7 +125,7 @@ Use only these facts for questions about who founded Go Bike, how it started and
 - PRI's vision: Pangasinan's premier youth-led organization for sustainable and resilient communities. Mission: PRI empowers youth through mobilizing volunteers and bridging partners to provide responsive services for the community.
 - Where to read more: Who We Are → Org Structure & History (the "Our journey" timeline), Who We Are → About Us (vision, mission, values), What We Do → Go Bike → "View Details" (the full founding story), and "In the Spotlight" on the home page (awards and features).
 
-RONDAGO APP
+GO BIKE APP
 Go Bike's mobile app for residents (SOS button, home check-up visits, check-up history) and GoBiker volunteers (rondas, patient check-ups). For questions about the app, use Reach Us.
 
 EMERGENCIES

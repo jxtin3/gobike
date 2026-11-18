@@ -224,10 +224,10 @@ class PushNotifier
 
         // The app made one Android channel per sound/vibration choice.
         $channel = match (true) {
-            $prefs['sound'] && $prefs['vibration'] => 'rondago_alerts',
-            $prefs['sound'] => 'rondago_sound',
-            $prefs['vibration'] => 'rondago_vibrate',
-            default => 'rondago_quiet',
+            $prefs['sound'] && $prefs['vibration'] => 'gobike_alerts',
+            $prefs['sound'] => 'gobike_sound',
+            $prefs['vibration'] => 'gobike_vibrate',
+            default => 'gobike_quiet',
         };
 
         defer(function () use ($tokens, $title, $body, $data, $channel) {

@@ -117,7 +117,7 @@ it('tells the resident when the admin answers their SOS', function () {
     // Nobody was assigned, so the title must not claim a person is on the way.
     expect(titlesFor($this->push, 'resident-phone'))->toBe(['Admin is handling it', 'SOS resolved'])
         ->and($this->push->sent[0]['data'])->toBe(['type' => 'sos', 'id' => (string) $sos->id])
-        ->and($this->push->sent[0]['channel'])->toBe('rondago_alerts');
+        ->and($this->push->sent[0]['channel'])->toBe('gobike_alerts');
 });
 
 it('respects the resident\'s switches, including sound and vibration', function () {
@@ -141,7 +141,7 @@ it('respects the resident\'s switches, including sound and vibration', function 
     $sent = collect($this->push->sent)->firstWhere('token', 'resident-phone');
     expect($sent['title'])->toBe('Home visit accepted')
         ->and($sent['body'])->toContain('Maria Santos will visit you')
-        ->and($sent['channel'])->toBe('rondago_vibrate');
+        ->and($sent['channel'])->toBe('gobike_vibrate');
 });
 
 it('tells the resident when a GoBiker records their check-up', function () {

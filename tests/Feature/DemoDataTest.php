@@ -238,7 +238,7 @@ it('can take only the demo GoBikers off the live map', function () {
     $realPin = Location::forceCreate(['user_id' => $real->id, 'name' => 'Real GoBiker', 'latitude' => 16.04, 'longitude' => 120.33, 'status' => 'active', 'last_seen_at' => now()]);
 
     $this->artisan('demo:seed', ['--force' => true])->assertSuccessful();
-    $demoGobikers = User::where('role', 'GoBiker')->where('email', 'like', '%@demo.rondago.test')->count();
+    $demoGobikers = User::where('role', 'GoBiker')->where('email', 'like', '%@demo.gobike.test')->count();
     expect(Location::count())->toBeGreaterThan(1);
 
     $this->artisan('demo:clear', ['--map-only' => true, '--force' => true])
@@ -247,7 +247,7 @@ it('can take only the demo GoBikers off the live map', function () {
 
     // The map shows only the real GoBiker now; the demo accounts and their records are still there.
     expect(Location::pluck('id')->all())->toBe([$realPin->id])
-        ->and(User::where('role', 'GoBiker')->where('email', 'like', '%@demo.rondago.test')->count())->toBe($demoGobikers)
+        ->and(User::where('role', 'GoBiker')->where('email', 'like', '%@demo.gobike.test')->count())->toBe($demoGobikers)
         ->and(Patient::count())->toBeGreaterThan(0)
         ->and(SosRequest::count())->toBeGreaterThan(0)
         ->and(Appointment::count())->toBeGreaterThan(0);

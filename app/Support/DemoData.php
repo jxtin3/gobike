@@ -26,7 +26,7 @@ use Illuminate\Support\Facades\DB;
  */
 class DemoData
 {
-    public const EMAIL_DOMAIN = 'demo.rondago.test';
+    public const EMAIL_DOMAIN = 'demo.gobike.test';
 
     /** No real Philippine mobile number starts with 0900, so fake people never match real ones. */
     public const MOBILE_PREFIX = '0900';
