@@ -1,7 +1,7 @@
 @extends('admin.operations.layout')
 @section('title', 'Resident SOS')
 @section('heading', 'Resident SOS')
-@section('subheading', 'Emergency requests residents send with the SOS button in the RondaGo app.')
+@section('subheading', 'Emergency requests residents send with the SOS button in the Go Bike app.')
 
 @section('content')
 @php

@@ -19,7 +19,7 @@ return [
             'content' => <<<'TXT'
 Cookies are small text files that a website stores in your browser. They help the website work properly, keep it secure and remember your choices. Similar technologies, such as your browser's local storage, work in a similar way, and in this policy we call them all "cookies".
 
-This Cookie Policy explains which cookies the Go Bike Project website (the "Site") uses and how you can control them. It is part of our [Privacy Policy](/privacy-policy). The RondaGo mobile app does not use cookies; how it handles your information is explained in the Privacy Policy.
+This Cookie Policy explains which cookies the Go Bike Project website (the "Site") uses and how you can control them. It is part of our [Privacy Policy](/privacy-policy). The Go Bike mobile app does not use cookies; how it handles your information is explained in the Privacy Policy.
 TXT,
         ],
         [

@@ -47,7 +47,7 @@ return [
         'site_verification' => env('GOOGLE_SITE_VERIFICATION'),
     ],
 
-    // Push notifications to the RondaGo app (Firebase Cloud Messaging, HTTP v1).
+    // Push notifications to the Go Bike app (Firebase Cloud Messaging, HTTP v1).
     'fcm' => [
         'project_id' => env('FIREBASE_PROJECT_ID'),
         // The service-account JSON from Firebase > Project settings > Service accounts (plain or base64).

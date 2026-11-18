@@ -53,7 +53,7 @@ it('refuses someone whose 13th birthday is tomorrow, or who is younger', functio
     ]))
         ->assertUnprocessable()
         ->assertJsonValidationErrors('birthdate')
-        ->assertJsonPath('errors.birthdate.0', 'You must be at least 13 years old to use RondaGo.');
+        ->assertJsonPath('errors.birthdate.0', 'You must be at least 13 years old to use Go Bike.');
 
     expect(User::count())->toBe(0);
 })->with([

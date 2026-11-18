@@ -7,7 +7,7 @@ use App\Models\LegalDocument;
 use Illuminate\Http\JsonResponse;
 
 /**
- * The Privacy Policy, Terms & Conditions and Cookie Policy for the RondaGo app, so the app shows
+ * The Privacy Policy, Terms & Conditions and Cookie Policy for the Go Bike app, so the app shows
  * the same text admins publish in Admin → Legal instead of a copy of its own. Public: people read
  * the terms before they have an account.
  */

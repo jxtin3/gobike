@@ -15,7 +15,7 @@ return [
         [
             'title' => '1. Acceptance of These Terms',
             'content' => <<<'TXT'
-These Terms & Conditions ("Terms") govern your use of the Go Bike Project website at https://gobikeproject.org (the "Site"), the RondaGo mobile app (the "App") and GoBot, our website assistant, and your participation in programs run by **Padyarescue Incorporated** ("PRI", "we", "us" or "our").
+These Terms & Conditions ("Terms") govern your use of the Go Bike Project website at https://gobikeproject.org (the "Site"), the Go Bike mobile app (the "App") and GoBot, our website assistant, and your participation in programs run by **Padyarescue Incorporated** ("PRI", "we", "us" or "our").
 
 By using the Site or App, creating an account, or submitting a form, application, request or donation, you agree to these Terms, our [Privacy Policy](/privacy-policy) and our [Cookie Policy](/cookie-policy). If you do not agree, please do not use the Site or App.
 TXT,
@@ -26,7 +26,7 @@ TXT,
 In these Terms:
 
 - **Site** means the Go Bike Project website at https://gobikeproject.org.
-- **App** or **RondaGo** means the RondaGo mobile app and the server that supports it.
+- **App** or **Go Bike** means the Go Bike mobile app and the server that supports it.
 - **GoBot** means the artificial intelligence assistant on the Site.
 - **Resident** means a person with a resident account in the App, who can send emergency (SOS) requests, request home visits and view their check-ups.
 - **GoBiker** means a trained volunteer cyclist responder whose App account PRI has approved.
@@ -44,7 +44,7 @@ TXT,
 TXT,
         ],
         [
-            'title' => '4. Your RondaGo Account',
+            'title' => '4. Your Go Bike Account',
             'content' => <<<'TXT'
 If you create an App account:
 
@@ -187,7 +187,7 @@ PRI communicates only through these official channels:
 - this website, https://gobikeproject.org;
 - email from addresses ending in @pydn.org or @gobikeproject.org;
 - our Facebook page, https://www.facebook.com/gobikeprojectofficial; and
-- the RondaGo app, which we share only through official links from PRI.
+- the Go Bike app, which we share only through official links from PRI.
 
 **We will never ask for your password or one-time PIN (OTP), and we never ask you to send donations or payments to a personal bank or e-wallet account.** If someone claiming to represent the Go Bike Project or PRI asks you for these, do not respond, and report it to gobike@pydn.org.
 TXT,

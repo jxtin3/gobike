@@ -61,7 +61,7 @@ class LegalDocument extends Model
     }
 
     /**
-     * A section's content in the plain-text format the RondaGo app renders ("- " lists, **bold**,
+     * A section's content in the plain-text format the Go Bike app renders ("- " lists, **bold**,
      * [text](url), blank line between paragraphs). Content typed in that format is returned as
      * it is; content typed as HTML is cleaned and converted.
      */

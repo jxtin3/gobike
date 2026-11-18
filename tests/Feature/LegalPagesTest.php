@@ -21,11 +21,11 @@ it('publishes the full terms and the donation refund rule', function () {
         ->assertSee('Governing Law and Disputes');
 });
 
-it('describes the current hosting, the RondaGo app and location sharing in the privacy policy', function () {
+it('describes the current hosting, the Go Bike app and location sharing in the privacy policy', function () {
     $this->get(route('privacy-policy'))
         ->assertOk()
         ->assertSee('Hostinger')
-        ->assertSee('RondaGo')
+        ->assertSee('Go Bike')
         ->assertSee('Location Information')
         ->assertSee('Firebase Cloud Messaging')
         ->assertSee('Profile → Delete account')

@@ -46,7 +46,7 @@ final class Age
         $minimum = self::minimumFor($role);
 
         return [
-            'birthdate.before_or_equal' => "You must be at least {$minimum} years old to use RondaGo.",
+            'birthdate.before_or_equal' => "You must be at least {$minimum} years old to use Go Bike.",
             'birthdate.after' => 'Enter your real date of birth.',
             'birthdate.date' => 'Enter your date of birth.',
         ];

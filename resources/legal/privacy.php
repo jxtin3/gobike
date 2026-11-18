@@ -4,7 +4,7 @@
  * Default Privacy Policy. Published to the legal_documents table by migration and used as the
  * fallback when no database copy exists. After that, edit it in Admin → Legal.
  *
- * Keep it true to what the Site and the RondaGo app actually do: when a feature starts or stops
+ * Keep it true to what the Site and the Go Bike app actually do: when a feature starts or stops
  * collecting or sharing personal information, update this text (and publish it with a migration).
  *
  * Formatting: blank line = new paragraph, "- " = bullet, **bold**, [text](/path or https://…).
@@ -23,7 +23,7 @@ return [
 We respect your privacy and are committed to protecting the personal information you entrust to us. This Privacy Policy explains what personal information we collect, why we collect it, how we use, share, protect and dispose of it, and what rights you have. It applies to:
 
 - the Go Bike Project website at https://gobikeproject.org (the "Site"), including GoBot, our website assistant;
-- the RondaGo mobile app used by residents and GoBiker volunteers (the "App"); and
+- the Go Bike mobile app used by residents and GoBiker volunteers (the "App"); and
 - our forms, programs, trainings, field activities and community health monitoring.
 
 PRI is the **personal information controller** for the information described in this policy. We process personal information in accordance with the **Data Privacy Act of 2012 (Republic Act No. 10173)**, its Implementing Rules and Regulations, and the issuances of the National Privacy Commission (NPC), and we follow the general privacy principles of transparency, legitimate purpose and proportionality.
@@ -57,7 +57,7 @@ We collect only the personal information we need for the purposes in Section 6.
 - **Chapter replication inquiries:** your organization's name and type, the contact person's name, position, email address and mobile number, your municipality or city and province, the number of trainees, your preferred training date, your message, and the payment option and payment status.
 - **Donations:** when you donate online, we collect your name (and organization name, if giving on behalf of one), email address, phone number (optional), billing address, country, donation amount, currency, frequency (one-time or monthly) and payment method.
 
-**Through the RondaGo app**
+**Through the Go Bike app**
 
 - **Account details:** your name, email address, mobile number, barangay, birthdate, profile photo, account type (resident or GoBiker) and password, which we store only in hashed form. If you sign in with Google, we also receive your Google account ID, name and email address from Google.
 - **GoBiker activity:** the start time, end time and barangay of each ronda (duty round), your location as explained in Section 8, the emergency alerts you send, and the messages you send to our administrators.

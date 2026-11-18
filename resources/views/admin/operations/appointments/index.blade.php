@@ -1,7 +1,7 @@
 @extends('admin.operations.layout')
 @section('title', 'Appointments')
 @section('heading', 'Appointments')
-@section('subheading', 'Home check-up visits residents request in the RondaGo app. The resident chooses a GoBiker, who accepts or declines in the app.')
+@section('subheading', 'Home check-up visits residents request in the Go Bike app. The resident chooses a GoBiker, who accepts or declines in the app.')
 
 @section('content')
 @php

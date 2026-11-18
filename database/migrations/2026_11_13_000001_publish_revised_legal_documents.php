@@ -5,7 +5,7 @@ use Illuminate\Support\Facades\DB;
 
 /*
  * Publishes version 2.0 of the Privacy Policy and Terms & Conditions, and the updated Cookie
- * Policy, from resources/legal/*.php. They describe the RondaGo app, the move to Hostinger and
+ * Policy, from resources/legal/*.php. They describe the Go Bike app, the move to Hostinger and
  * the paused online payments. This replaces the copies in the database; the earlier text stays
  * in git history.
  */
