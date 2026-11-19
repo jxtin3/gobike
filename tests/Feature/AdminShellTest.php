@@ -14,7 +14,7 @@ function shellAdmin(): User
     return User::factory()->create(['is_admin' => true]);
 }
 
-it('shows Dashboard and Messages, then three open groups by default', function () {
+it('shows Dashboard, Live map and Messages, then three open groups by default', function () {
     $html = $this->actingAs(shellAdmin())->get(route('admin.dashboard'))->assertOk()->getContent();
 
     expect($html)
@@ -24,18 +24,22 @@ it('shows Dashboard and Messages, then three open groups by default', function (
         ->not->toContain('aria-expanded="false" aria-controls="side-items-')
         ->not->toContain('class="adm-main sk-active"');
 
+    // Live map sits right under Dashboard, outside any group that can be closed.
+    preg_match('/<ul class="side-list side-main">.*?<\/ul>/s', $html, $main);
+    expect($main[0] ?? '')->toMatch('/>Dashboard<.*>Live map<.*>Messages</s');
+
     foreach (['Dashboard', 'Live map', 'Messages', 'GoBiker messages'] as $label) {
         expect($html)->toContain('<span class="side-label">'.$label.'</span>');
     }
 });
 
-it('keeps everything from the mobile app together under Go Bike', function () {
+it('keeps everything else from the mobile app together under Go Bike', function () {
     $html = $this->actingAs(shellAdmin())->get(route('admin.dashboard'))->getContent();
 
     preg_match('/<div class="side-section" data-group="gobike">.*?<\/ul>/s', $html, $group);
 
-    expect($group[0] ?? '')->toContain('Go Bike');
-    foreach (['Live map', 'Resident SOS', 'GoBiker messages', 'Appointments', 'Users', 'Patients', 'GoBiker reports', 'Feedback', 'Announcements'] as $label) {
+    expect($group[0] ?? '')->toContain('Go Bike')->not->toContain('<span class="side-label">Live map</span>');
+    foreach (['Resident SOS', 'GoBiker messages', 'Appointments', 'Users', 'Patients', 'GoBiker reports', 'Feedback', 'Announcements'] as $label) {
         expect($group[0] ?? '')->toContain('<span class="side-label">'.$label.'</span>');
     }
     expect($group[0] ?? '')->not->toContain('<span class="side-label">Volunteers</span>')->not->toContain('<span class="side-label">News</span>');

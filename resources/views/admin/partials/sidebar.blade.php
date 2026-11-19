@@ -1,11 +1,11 @@
 {{--
-    Admin sidebar: Dashboard and the website inbox, then three groups that open and close:
-    "Go Bike" (everything from the mobile app: GoBikers, residents, emergencies), website requests, and website content.
+    Admin sidebar: Dashboard, Live map and the website inbox, then three groups that open and close:
+    "Go Bike" (everything else from the mobile app: GoBikers, residents, SOS), website requests, and website content.
     Whether the sidebar is collapsed to icons and which groups are closed is remembered in two cookies (written by
     resources/js/admin/sidebar.js, read in AppServiceProvider), so the page arrives already in the right shape.
     Tests pin: the badge markup (<x-admin.nav-badge>), the emergencies badge always being rendered, and data-alarm-*.
     Every badge is rendered even at zero (then hidden): live-updates.js and emergency-alert.js keep the counts current.
-    A closed group shows the sum of its badges, in red while an emergency or SOS inside it is waiting.
+    A closed group shows the sum of its badges, in red while an SOS inside it is waiting.
 --}}
 @php
     $me = auth()->user();
@@ -17,8 +17,6 @@
             'label' => 'Go Bike',
             'hint' => 'Mobile app',
             'items' => [
-                ['route' => 'admin.live-map.index', 'match' => ['admin.live-map.*'], 'icon' => 'map', 'label' => 'Live map', 'skeleton' => 'map',
-                    'badge' => ['count' => $navEmergencies ?? 0, 'tone' => 'bad', 'label' => 'emergencies waiting for a response', 'name' => 'emergencies']],
                 ['route' => 'admin.operations.sos.index', 'match' => ['admin.operations.sos.*'], 'icon' => 'alert-triangle', 'label' => 'Resident SOS', 'skeleton' => 'rows',
                     'badge' => ['count' => $navSos ?? 0, 'tone' => 'bad', 'label' => 'SOS requests waiting for a response', 'name' => 'sos']],
                 ['route' => 'admin.operations.gobiker-messages.index', 'match' => ['admin.operations.gobiker-messages.*'], 'icon' => 'message-square', 'label' => 'GoBiker messages', 'skeleton' => 'table',
@@ -75,6 +73,12 @@
         <ul class="side-list side-main">
             <li>
                 <x-admin.side-link :href="route('admin.dashboard')" icon="bar-chart" label="Dashboard" :match="['admin.dashboard']" skeleton="dashboard" />
+            </li>
+            <li>
+                {{-- Kept at the top, never inside a group that can be closed: its badge counts emergencies waiting. --}}
+                <x-admin.side-link :href="route('admin.live-map.index')" icon="map" label="Live map" :match="['admin.live-map.*']" skeleton="map">
+                    <x-admin.nav-badge :count="$navEmergencies ?? 0" tone="bad" label="emergencies waiting for a response" name="emergencies" />
+                </x-admin.side-link>
             </li>
             <li>
                 {{-- The website's contact form. Messages from GoBikers in the app are under Go Bike. --}}
