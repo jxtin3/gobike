@@ -2931,15 +2931,113 @@ html:has(dialog:modal) { overflow: hidden; }
 .toast[data-tone="error"] .toast-icon-error,
 .toast[data-tone="info"] .toast-icon-info { display: block; }
 
-.toast-text {
+.toast-body {
     flex: 1;
     min-width: 0;
-    margin: 0;
+    display: grid;
+    gap: 2px;
     padding-top: 1px;
-    word-break: break-word;
+}
+
+.toast-text {
+    min-width: 0;
+    margin: 0;
+    overflow-wrap: anywhere;
 }
 
 .toast-close { flex: none; margin: -4px 0 0; }
+
+/* Something that just came in (live-updates.js): what it is, who, and a link to open it. */
+.toast[data-tone="new"] { border-left-color: var(--brand); }
+
+.toast[data-tone="new"] .toast-icon { color: var(--brand); }
+
+.toast[data-tone="new"] .toast-icon-new { display: block; }
+
+.toast-title {
+    font-size: var(--fs-14);
+    font-weight: 700;
+    color: var(--ink);
+}
+
+.toast-title + .toast-text {
+    font-size: var(--fs-13);
+    color: var(--ink-2);
+}
+
+.toast-link {
+    justify-self: start;
+    display: inline-flex;
+    align-items: center;
+    min-height: 24px;
+    margin-top: 2px;
+    font-size: var(--fs-13);
+    font-weight: 700;
+    color: var(--brand);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+.toast-link:hover { color: var(--brand-2); }
+
+/* ---------- Live updates: "N new — show" on a list page, and a nudge when a sidebar count goes up ---------- */
+
+/* Takes no room in the page: the pill floats over the top of the content while it scrolls. */
+.live-new-dock {
+    position: sticky;
+    top: var(--sp-3);
+    z-index: var(--z-sticky);
+    display: flex;
+    justify-content: center;
+    height: 0;
+    pointer-events: none;
+}
+
+.live-new {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-2);
+    min-height: 36px;
+    padding: 0 var(--sp-4);
+    border: 0;
+    border-radius: 999px;
+    background: var(--brand);
+    color: #fff;
+    font: inherit;
+    font-size: var(--fs-13);
+    font-weight: 700;
+    box-shadow: var(--shadow-2);
+    cursor: pointer;
+    pointer-events: auto;
+    animation: live-drop 240ms var(--ease);
+    transition: background var(--t);
+}
+
+.live-new:hover { background: var(--brand-2); }
+
+.live-new .i { width: 16px; height: 16px; }
+
+.live-new:disabled { cursor: progress; opacity: .8; }
+
+@keyframes live-drop {
+    from { opacity: 0; transform: translateY(-8px); }
+}
+
+.badge.is-bumped { animation: live-bump 600ms var(--ease); }
+
+@keyframes live-bump {
+    30% { transform: scale(1.35); }
+}
+
+@media (max-width: 1023px) {
+    /* Below the mobile top bar */
+    .live-new-dock { top: calc(52px + var(--sp-2)); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .live-new,
+    .badge.is-bumped { animation: none; }
+}
 
 @media (max-width: 640px) {
     .toasts {
@@ -5481,6 +5579,7 @@ tbody tr.is-unread td:first-child { box-shadow: inset 3px 0 0 var(--brand); }
     .toolbar,
     .filters,
     .toasts,
+    .live-new-dock,
     .side-tip,
     .sk-layer,
     .side-pop,

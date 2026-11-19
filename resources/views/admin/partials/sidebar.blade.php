@@ -3,6 +3,7 @@
     which groups are closed is remembered in two cookies (written by resources/js/admin/sidebar.js, read in
     AppServiceProvider), so the page arrives already in the right shape.
     Tests pin: the badge markup (<x-admin.nav-badge>), the emergencies badge always being rendered, and data-alarm-*.
+    Every badge is rendered even at zero (then hidden): resources/js/admin/live-updates.js keeps the counts current.
 --}}
 @php
     $me = auth()->user();
@@ -100,10 +101,9 @@
                 <button type="button" class="side-group-toggle" data-group-toggle="{{ $key }}"
                         aria-expanded="{{ $open ? 'true' : 'false' }}" aria-controls="side-items-{{ $key }}">
                     <span class="side-group-label">{{ $group['label'] }}</span>
-                    {{-- Shown only while the group is closed, so waiting items are never hidden from view. --}}
-                    @if ($waiting > 0)
-                        <span class="badge badge-warn side-group-sum" data-group-badge="{{ $key }}"><span class="count-num">{{ number_format($waiting) }}</span><span class="sr-only"> waiting</span></span>
-                    @endif
+                    {{-- Shown only while the group is closed, so waiting items are never hidden from view.
+                         Always rendered (hidden at zero) so live-updates.js can keep the sum current. --}}
+                    <span class="badge badge-warn side-group-sum"@if ($waiting <= 0) hidden @endif data-group-badge="{{ $key }}"><span class="count-num">{{ number_format($waiting) }}</span><span class="sr-only"> waiting</span></span>
                     <x-admin.icon name="chevron-down" class="side-chevron" />
                 </button>
                 <div class="side-group-items" id="side-items-{{ $key }}">

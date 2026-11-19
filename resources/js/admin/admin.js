@@ -4,6 +4,7 @@ import './emergency-alert.js';
 import './sidebar.js';
 import './toast.js';
 import './skeleton.js';
+import './live-updates.js';
 
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
@@ -190,12 +191,10 @@ $$('select[data-autosubmit]').forEach((select) => {
 function decrementCounter(element) {
     if (!element) return;
     const next = Math.max(0, Number(element.textContent.replace(/[^\d]/g, '')) - 1);
-    if (element.matches('.badge') && next === 0) {
-        element.remove();
-        return;
-    }
     const label = element.querySelector('.count-num');
     (label || element).textContent = new Intl.NumberFormat().format(next);
+    // Sidebar badges stay in the page (hidden) so live-updates.js can show them again.
+    if (element.matches('.badge') && next === 0) element.hidden = true;
 }
 
 /*

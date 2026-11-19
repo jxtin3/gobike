@@ -28,6 +28,18 @@
             @include('admin.partials.emergency-alert')
 
             <main id="main" class="adm-main">
+                {{--
+                    Live updates (resources/js/admin/live-updates.js): keeps the sidebar counts current and toasts what
+                    comes in. On a list page, new rows are offered with this pill instead of reloading under the admin.
+                --}}
+                @php($livePage = array_search(request()->route()?->getName(), \App\Support\AdminLiveFeed::indexRoutes(), true))
+                <div class="live-new-dock" data-live-updates data-url="{{ route('admin.live-updates.index') }}" data-page="{{ $livePage ?: '' }}">
+                    <button type="button" class="live-new" data-live-new hidden>
+                        <x-admin.icon name="arrow-up" />
+                        <span data-live-new-text></span>
+                    </button>
+                </div>
+
                 @unless (request()->routeIs('admin.live-map.*'))
                 <header class="page-head">
                     <div>

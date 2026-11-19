@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\GobikerMessageController;
 use App\Http\Controllers\Admin\GobikerReportController;
 use App\Http\Controllers\Admin\HomepageDataController;
 use App\Http\Controllers\Admin\LegalDocumentController as AdminLegalDocumentController;
+use App\Http\Controllers\Admin\LiveUpdatesController;
 use App\Http\Controllers\Admin\LocationController;
 use App\Http\Controllers\Admin\NewsController as AdminNewsController;
 use App\Http\Controllers\Admin\PatientController as AdminPatientController;
@@ -155,6 +156,7 @@ Route::middleware([EnsureAdmin::class, AuthenticateSession::class])->prefix('adm
     Route::get('/locations', [LocationController::class, 'index'])->name('locations.index');
     Route::patch('/locations/{location}/status', [LocationController::class, 'updateStatus'])->name('locations.status');
     Route::get('/emergencies', [EmergencyAlertController::class, 'index'])->name('emergencies.index');
+    Route::get('/live-updates', [LiveUpdatesController::class, 'index'])->name('live-updates.index');
     Route::get('/sos-pins', [SosRequestController::class, 'mapPins'])->name('sos-pins.index');
 
     // profile

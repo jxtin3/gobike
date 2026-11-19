@@ -2,11 +2,14 @@
  * Toasts: short confirmations that go away on their own and never move the page.
  * A success message from the server arrives as <template data-flash="success"> (see the layout); scripts call
  * window.adminToast({ text, tone }). Errors stay in the page: they have to be read and acted on.
+ * Something that just came in (live-updates.js) uses tone "new" with a title and a link to open it:
+ * window.adminToast({ tone: 'new', title, text, href, linkText }). Those stay a little longer, since there is a choice to make.
  */
 const region = document.getElementById('toasts');
 const template = document.getElementById('toast-template');
 
 const SHOW_MS = 5000;
+const SHOW_WITH_LINK_MS = 8000;
 const active = new Set();
 
 function dismiss(node) {
@@ -15,17 +18,30 @@ function dismiss(node) {
     setTimeout(() => node.remove(), 200);
 }
 
-/** tone: success | info | error. Errors stay until dismissed. */
-function show({ text, tone = 'success' }) {
-    if (!region || !template || !text) return null;
+/** tone: success | info | error | new. Errors stay until dismissed. */
+function show({ text, tone = 'success', title = '', href = '', linkText = 'Open', duration = 0 }) {
+    if (!region || !template || !(text || title)) return null;
 
     const node = template.content.firstElementChild.cloneNode(true);
     node.dataset.tone = tone;
-    node.querySelector('[data-toast-text]').textContent = text;
+    node.querySelector('[data-toast-text]').textContent = text || '';
+    node.querySelector('[data-toast-text]').hidden = !text;
+
+    const heading = node.querySelector('[data-toast-title]');
+    if (heading && title) {
+        heading.textContent = title;
+        heading.hidden = false;
+    }
+    const link = node.querySelector('[data-toast-link]');
+    if (link && href) {
+        link.href = href;
+        link.textContent = linkText;
+        link.hidden = false;
+    }
     node.querySelector('.toast-close').addEventListener('click', () => dismiss(node));
 
     // Paused while the pointer or keyboard focus is on it, and while the tab is in the background.
-    let remaining = SHOW_MS;
+    let remaining = duration || (href ? SHOW_WITH_LINK_MS : SHOW_MS);
     let startedAt = 0;
     let timer = null;
     let holds = 0;

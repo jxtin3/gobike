@@ -2,15 +2,9 @@
 
 namespace App\Providers;
 
-use App\Models\Appointment;
-use App\Models\ContactMessage;
-use App\Models\GobikerMessage;
 use App\Models\Location;
-use App\Models\ReplicationRequest;
 use App\Models\SosRequest;
-use App\Models\TrainingRequest;
-use App\Models\User;
-use App\Models\VolunteerApplication;
+use App\Support\AdminLiveFeed;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
@@ -55,17 +49,20 @@ class AppServiceProvider extends ServiceProvider
         });
 
         // Runs only when the admin sidebar renders, so public pages are unaffected.
+        // The same counts are polled by resources/js/admin/live-updates.js (see App\Support\AdminLiveFeed).
         View::composer('admin.partials.sidebar', function ($view) {
+            $counts = AdminLiveFeed::counts();
+
             $view->with([
                 'navEmergencies' => Location::unansweredEmergencies()->count(),
                 'navSos' => SosRequest::unanswered()->count(),
-                'navAppointmentsPending' => Appointment::where('status', 'pending')->count(),
-                'navPending' => User::pendingApproval()->count(),
-                'navUnread' => ContactMessage::where('is_read', false)->count(),
-                'navGobikerUnread' => GobikerMessage::where('is_read', false)->count(),
-                'navVolunteersPending' => VolunteerApplication::where('application_status', 'pending')->count(),
-                'navTrainingPending' => TrainingRequest::where('status', 'pending')->count(),
-                'navChaptersPending' => ReplicationRequest::where('status', 'pending')->count(),
+                'navAppointmentsPending' => $counts['appointments'],
+                'navPending' => $counts['users'],
+                'navUnread' => $counts['messages'],
+                'navGobikerUnread' => $counts['gobiker-messages'],
+                'navVolunteersPending' => $counts['volunteers'],
+                'navTrainingPending' => $counts['training'],
+                'navChaptersPending' => $counts['chapters'],
             ]);
         });
     }
