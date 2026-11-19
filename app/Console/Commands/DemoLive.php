@@ -24,7 +24,7 @@ class DemoLive extends Command
 
     public function handle(): int
     {
-        $ids = User::where('email', 'like', '%@'.DemoData::EMAIL_DOMAIN)->where('role', 'GoBiker')->pluck('id');
+        $ids = DemoData::withDemoEmail(User::query())->where('role', 'GoBiker')->pluck('id');
         if ($ids->isEmpty()) {
             $this->error('No demo GoBikers. Run demo:seed first.');
 

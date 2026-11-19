@@ -233,6 +233,20 @@ it('removes only the demo data', function () {
     }
 });
 
+it('also removes demo data seeded under the old RondaGo email domain', function () {
+    $real = User::factory()->create(['role' => 'User', 'email' => 'real@example.com']);
+    $oldUser = User::factory()->create(['role' => 'GoBiker', 'email' => 'gobiker1@demo.rondago.test']);
+    ContactMessage::create(['name' => 'Old Demo', 'email' => 'contact1@demo.rondago.test', 'message' => 'Hi']);
+
+    expect(\App\Support\DemoData::exists())->toBeTrue();
+
+    $this->artisan('demo:clear', ['--force' => true])->assertSuccessful();
+
+    expect(User::pluck('id')->all())->toBe([$real->id])
+        ->and(ContactMessage::count())->toBe(0)
+        ->and(User::find($oldUser->id))->toBeNull();
+});
+
 it('can take only the demo GoBikers off the live map', function () {
     $real = User::factory()->create(['role' => 'GoBiker', 'status' => 'Active']);
     $realPin = Location::forceCreate(['user_id' => $real->id, 'name' => 'Real GoBiker', 'latitude' => 16.04, 'longitude' => 120.33, 'status' => 'active', 'last_seen_at' => now()]);

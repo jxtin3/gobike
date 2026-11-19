@@ -17,6 +17,7 @@ use App\Models\TrainingRequest;
 use App\Models\User;
 use App\Models\VolunteerApplication;
 use App\Models\VolunteerClass;
+use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -27,6 +28,9 @@ use Illuminate\Support\Facades\DB;
 class DemoData
 {
     public const EMAIL_DOMAIN = 'demo.gobike.test';
+
+    /** Demo data seeded before the app was renamed to Go Bike used these domains; clear() still finds it. */
+    public const OLD_EMAIL_DOMAINS = ['demo.rondago.test'];
 
     /** No real Philippine mobile number starts with 0900, so fake people never match real ones. */
     public const MOBILE_PREFIX = '0900';
@@ -43,9 +47,19 @@ class DemoData
         'New Ronda Routes for December (draft)',
     ];
 
+    /** Narrows a query to rows whose email is a demo address, old or new domain. */
+    public static function withDemoEmail(Builder $query, string $column = 'email'): Builder
+    {
+        return $query->where(function (Builder $q) use ($column) {
+            foreach ([self::EMAIL_DOMAIN, ...self::OLD_EMAIL_DOMAINS] as $domain) {
+                $q->orWhere($column, 'like', '%@'.$domain);
+            }
+        });
+    }
+
     public static function exists(): bool
     {
-        return User::where('email', 'like', '%@'.self::EMAIL_DOMAIN)->exists();
+        return self::withDemoEmail(User::query())->exists();
     }
 
     /**
@@ -54,7 +68,7 @@ class DemoData
      */
     public static function clearMap(): int
     {
-        $gobikerIds = User::where('email', 'like', '%@'.self::EMAIL_DOMAIN)->where('role', 'GoBiker')->pluck('id');
+        $gobikerIds = self::withDemoEmail(User::query())->where('role', 'GoBiker')->pluck('id');
 
         return Location::whereIn('user_id', $gobikerIds)->delete();
     }
@@ -63,9 +77,8 @@ class DemoData
     public static function clear(): array
     {
         return DB::transaction(function () {
-            $email = '%@'.self::EMAIL_DOMAIN;
             $mobile = self::MOBILE_PREFIX.'%';
-            $userIds = User::where('email', 'like', $email)->pluck('id');
+            $userIds = self::withDemoEmail(User::query())->pluck('id');
 
             return array_filter([
                 // Decisions are keyed by name and contact, not linked to a user.
@@ -78,13 +91,13 @@ class DemoData
                 'rondas' => Ronda::whereIn('user_id', $userIds)->delete(),
                 'GoBiker messages' => GobikerMessage::whereIn('user_id', $userIds)->delete(),
                 'users' => User::whereIn('id', $userIds)->delete(),
-                'donations' => Donation::where('email', 'like', $email)->delete(), // payments cascade
-                'contact messages' => ContactMessage::where('email', 'like', $email)->delete(),
-                'training requests' => TrainingRequest::where('email', 'like', $email)->delete(),
+                'donations' => self::withDemoEmail(Donation::query())->delete(), // payments cascade
+                'contact messages' => self::withDemoEmail(ContactMessage::query())->delete(),
+                'training requests' => self::withDemoEmail(TrainingRequest::query())->delete(),
                 // The classes the demo volunteers are in (before the volunteers themselves).
-                'volunteer classes' => VolunteerClass::whereHas('applications', fn ($q) => $q->where('email', 'like', $email))->delete(),
-                'volunteer applications' => VolunteerApplication::where('email', 'like', $email)->delete(),
-                'chapter inquiries' => ReplicationRequest::where('email', 'like', $email)->delete(),
+                'volunteer classes' => VolunteerClass::whereHas('applications', fn ($q) => self::withDemoEmail($q))->delete(),
+                'volunteer applications' => self::withDemoEmail(VolunteerApplication::query())->delete(),
+                'chapter inquiries' => self::withDemoEmail(ReplicationRequest::query())->delete(),
                 'announcements' => Announcement::whereIn('title', self::ANNOUNCEMENT_TITLES)->delete(),
             ]);
         });
