@@ -1,9 +1,11 @@
 {{--
-    Admin sidebar: four main items, then three groups that open and close. Whether the sidebar is collapsed to icons and
-    which groups are closed is remembered in two cookies (written by resources/js/admin/sidebar.js, read in
-    AppServiceProvider), so the page arrives already in the right shape.
+    Admin sidebar: Dashboard and the website inbox, then three groups that open and close:
+    "Go Bike" (everything from the mobile app: GoBikers, residents, emergencies), website requests, and website content.
+    Whether the sidebar is collapsed to icons and which groups are closed is remembered in two cookies (written by
+    resources/js/admin/sidebar.js, read in AppServiceProvider), so the page arrives already in the right shape.
     Tests pin: the badge markup (<x-admin.nav-badge>), the emergencies badge always being rendered, and data-alarm-*.
-    Every badge is rendered even at zero (then hidden): resources/js/admin/live-updates.js keeps the counts current.
+    Every badge is rendered even at zero (then hidden): live-updates.js and emergency-alert.js keep the counts current.
+    A closed group shows the sum of its badges, in red while an emergency or SOS inside it is waiting.
 --}}
 @php
     $me = auth()->user();
@@ -11,23 +13,31 @@
     $sideClosed = $sideClosed ?? [];
 
     $groups = [
-        'people' => [
-            'label' => 'People',
+        'gobike' => [
+            'label' => 'Go Bike',
+            'hint' => 'Mobile app',
             'items' => [
-                ['route' => 'admin.operations.users.index', 'match' => ['admin.operations.users.*'], 'icon' => 'users', 'label' => 'Users', 'skeleton' => 'table',
-                    'badge' => ['count' => $navPending ?? 0, 'tone' => 'warn', 'label' => 'waiting for approval', 'name' => 'users']],
-                ['route' => 'admin.operations.volunteers.index', 'match' => ['admin.operations.volunteers.*'], 'icon' => 'user-plus', 'label' => 'Volunteers', 'skeleton' => 'table',
-                    'badge' => ['count' => $navVolunteersPending ?? 0, 'tone' => 'warn', 'label' => 'pending review', 'name' => 'volunteers']],
-                ['route' => 'admin.operations.patients.index', 'match' => ['admin.operations.patients.*'], 'icon' => 'activity', 'label' => 'Patients', 'skeleton' => 'table'],
+                ['route' => 'admin.live-map.index', 'match' => ['admin.live-map.*'], 'icon' => 'map', 'label' => 'Live map', 'skeleton' => 'map',
+                    'badge' => ['count' => $navEmergencies ?? 0, 'tone' => 'bad', 'label' => 'emergencies waiting for a response', 'name' => 'emergencies']],
+                ['route' => 'admin.operations.sos.index', 'match' => ['admin.operations.sos.*'], 'icon' => 'alert-triangle', 'label' => 'Resident SOS', 'skeleton' => 'rows',
+                    'badge' => ['count' => $navSos ?? 0, 'tone' => 'bad', 'label' => 'SOS requests waiting for a response', 'name' => 'sos']],
+                ['route' => 'admin.operations.gobiker-messages.index', 'match' => ['admin.operations.gobiker-messages.*'], 'icon' => 'message-square', 'label' => 'GoBiker messages', 'skeleton' => 'table',
+                    'badge' => ['count' => $navGobikerUnread ?? 0, 'tone' => 'brand', 'label' => 'unread', 'name' => 'gobiker-messages']],
                 ['route' => 'admin.operations.appointments.index', 'match' => ['admin.operations.appointments.*'], 'icon' => 'clock', 'label' => 'Appointments', 'skeleton' => 'table',
                     'badge' => ['count' => $navAppointmentsPending ?? 0, 'tone' => 'warn', 'label' => 'waiting for a GoBiker', 'name' => 'appointments']],
+                ['route' => 'admin.operations.users.index', 'match' => ['admin.operations.users.*'], 'icon' => 'users', 'label' => 'Users', 'skeleton' => 'table',
+                    'badge' => ['count' => $navPending ?? 0, 'tone' => 'warn', 'label' => 'waiting for approval', 'name' => 'users']],
+                ['route' => 'admin.operations.patients.index', 'match' => ['admin.operations.patients.*'], 'icon' => 'activity', 'label' => 'Patients', 'skeleton' => 'table'],
                 ['route' => 'admin.operations.gobiker-reports.index', 'match' => ['admin.operations.gobiker-reports.*'], 'icon' => 'trending-up', 'label' => 'GoBiker reports', 'skeleton' => 'table'],
                 ['route' => 'admin.operations.feedback.index', 'match' => ['admin.operations.feedback.*'], 'icon' => 'star', 'label' => 'Feedback', 'skeleton' => 'table'],
+                ['route' => 'admin.operations.announcements.index', 'match' => ['admin.operations.announcements.*'], 'icon' => 'megaphone', 'label' => 'Announcements', 'skeleton' => 'table'],
             ],
         ],
         'requests' => [
             'label' => 'Requests & donations',
             'items' => [
+                ['route' => 'admin.operations.volunteers.index', 'match' => ['admin.operations.volunteers.*'], 'icon' => 'user-plus', 'label' => 'Volunteers', 'skeleton' => 'table',
+                    'badge' => ['count' => $navVolunteersPending ?? 0, 'tone' => 'warn', 'label' => 'pending review', 'name' => 'volunteers']],
                 ['route' => 'admin.operations.training-requests.index', 'match' => ['admin.operations.training-requests.*'], 'icon' => 'clipboard', 'label' => 'Training requests', 'skeleton' => 'table',
                     'badge' => ['count' => $navTrainingPending ?? 0, 'tone' => 'warn', 'label' => 'pending', 'name' => 'training']],
                 ['route' => 'admin.operations.chapter-inquiries.index', 'match' => ['admin.operations.chapter-inquiries.*'], 'icon' => 'navigation', 'label' => 'Chapter inquiries', 'skeleton' => 'table',
@@ -36,9 +46,8 @@
             ],
         ],
         'content' => [
-            'label' => 'Content',
+            'label' => 'Website content',
             'items' => [
-                ['route' => 'admin.operations.announcements.index', 'match' => ['admin.operations.announcements.*'], 'icon' => 'megaphone', 'label' => 'Announcements', 'skeleton' => 'table'],
                 ['route' => 'admin.operations.news.index', 'match' => ['admin.operations.news.*'], 'icon' => 'file-text', 'label' => 'News', 'skeleton' => 'table'],
                 ['route' => 'admin.operations.pictures.index', 'match' => ['admin.operations.pictures.*'], 'icon' => 'image', 'label' => 'Pictures', 'skeleton' => 'grid'],
                 ['route' => 'admin.operations.homepage-data.index', 'match' => ['admin.operations.homepage-data.*'], 'icon' => 'edit', 'label' => 'Homepage content', 'skeleton' => 'form'],
@@ -68,25 +77,9 @@
                 <x-admin.side-link :href="route('admin.dashboard')" icon="bar-chart" label="Dashboard" :match="['admin.dashboard']" skeleton="dashboard" />
             </li>
             <li>
-                <x-admin.side-link :href="route('admin.live-map.index')" icon="map" label="Live map" :match="['admin.live-map.*']" skeleton="map">
-                    {{-- Always rendered so resources/js/admin/emergency-alert.js can show it as emergencies come in. --}}
-                    <span class="badge badge-bad" data-nav-badge="emergencies"@if (! ($navEmergencies ?? 0)) hidden @endif><span class="count-num">{{ number_format($navEmergencies ?? 0) }}</span><span class="sr-only"> emergencies waiting for a response</span></span>
-                </x-admin.side-link>
-            </li>
-            <li>
-                <x-admin.side-link :href="route('admin.operations.sos.index')" icon="alert-triangle" label="Resident SOS" :match="['admin.operations.sos.*']" skeleton="rows">
-                    {{-- Always rendered: resources/js/admin/emergency-alert.js updates it as requests come in. --}}
-                    <span class="badge badge-bad" data-nav-badge="sos"@if (! ($navSos ?? 0)) hidden @endif><span class="count-num">{{ number_format($navSos ?? 0) }}</span><span class="sr-only"> SOS requests waiting for a response</span></span>
-                </x-admin.side-link>
-            </li>
-            <li>
+                {{-- The website's contact form. Messages from GoBikers in the app are under Go Bike. --}}
                 <x-admin.side-link :href="route('admin.operations.messages.index')" icon="mail" label="Messages" :match="['admin.operations.messages.*']">
                     <x-admin.nav-badge :count="$navUnread ?? 0" tone="brand" label="unread" name="messages" />
-                </x-admin.side-link>
-            </li>
-            <li>
-                <x-admin.side-link :href="route('admin.operations.gobiker-messages.index')" icon="message-square" label="GoBiker messages" :match="['admin.operations.gobiker-messages.*']">
-                    <x-admin.nav-badge :count="$navGobikerUnread ?? 0" tone="brand" label="unread" name="gobiker-messages" />
                 </x-admin.side-link>
             </li>
         </ul>
@@ -96,14 +89,15 @@
                 $here = collect($group['items'])->contains(fn ($item) => request()->routeIs(...$item['match']));
                 $open = $here || ! in_array($key, $sideClosed, true);
                 $waiting = collect($group['items'])->sum(fn ($item) => $item['badge']['count'] ?? 0);
+                $urgent = collect($group['items'])->contains(fn ($item) => ($item['badge']['tone'] ?? '') === 'bad' && ($item['badge']['count'] ?? 0) > 0);
             @endphp
             <div class="side-section" data-group="{{ $key }}">
                 <button type="button" class="side-group-toggle" data-group-toggle="{{ $key }}"
                         aria-expanded="{{ $open ? 'true' : 'false' }}" aria-controls="side-items-{{ $key }}">
-                    <span class="side-group-label">{{ $group['label'] }}</span>
+                    <span class="side-group-label">{{ $group['label'] }}@isset($group['hint'])<span class="side-group-hint"> · {{ $group['hint'] }}</span>@endisset</span>
                     {{-- Shown only while the group is closed, so waiting items are never hidden from view.
-                         Always rendered (hidden at zero) so live-updates.js can keep the sum current. --}}
-                    <span class="badge badge-warn side-group-sum"@if ($waiting <= 0) hidden @endif data-group-badge="{{ $key }}"><span class="count-num">{{ number_format($waiting) }}</span><span class="sr-only"> waiting</span></span>
+                         Always rendered (hidden at zero) so live-updates.js can keep the sum (and its colour) current. --}}
+                    <span class="badge {{ $urgent ? 'badge-bad' : 'badge-warn' }} side-group-sum"@if ($waiting <= 0) hidden @endif data-group-badge="{{ $key }}"><span class="count-num">{{ number_format($waiting) }}</span><span class="sr-only"> waiting</span></span>
                     <x-admin.icon name="chevron-down" class="side-chevron" />
                 </button>
                 <div class="side-group-items" id="side-items-{{ $key }}">

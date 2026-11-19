@@ -39,7 +39,7 @@ class AppServiceProvider extends ServiceProvider
         // Admin sidebar state, remembered in two plain cookies, so the first byte is already right (no flash).
         // This sits on the layout because <body> is written before the sidebar is included.
         View::composer('admin.operations.layout', function ($view) {
-            $groups = ['people', 'requests', 'content'];
+            $groups = ['gobike', 'requests', 'content'];
             $closed = explode('.', (string) request()->cookie('gobike_admin_closed', ''));
 
             $view->with([

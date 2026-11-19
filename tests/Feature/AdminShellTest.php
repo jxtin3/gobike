@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\ContactMessage;
+use App\Models\SosRequest;
 use App\Models\TrainingRequest;
 use App\Models\User;
 use App\Models\VolunteerApplication;
@@ -13,11 +14,11 @@ function shellAdmin(): User
     return User::factory()->create(['is_admin' => true]);
 }
 
-it('shows four main items and three open groups by default', function () {
+it('shows Dashboard and Messages, then three open groups by default', function () {
     $html = $this->actingAs(shellAdmin())->get(route('admin.dashboard'))->assertOk()->getContent();
 
     expect($html)
-        ->toContain('data-group-toggle="people"')
+        ->toContain('data-group-toggle="gobike"')
         ->toContain('data-group-toggle="requests"')
         ->toContain('data-group-toggle="content"')
         ->not->toContain('aria-expanded="false" aria-controls="side-items-')
@@ -28,22 +29,34 @@ it('shows four main items and three open groups by default', function () {
     }
 });
 
+it('keeps everything from the mobile app together under Go Bike', function () {
+    $html = $this->actingAs(shellAdmin())->get(route('admin.dashboard'))->getContent();
+
+    preg_match('/<div class="side-section" data-group="gobike">.*?<\/ul>/s', $html, $group);
+
+    expect($group[0] ?? '')->toContain('Go Bike');
+    foreach (['Live map', 'Resident SOS', 'GoBiker messages', 'Appointments', 'Users', 'Patients', 'GoBiker reports', 'Feedback', 'Announcements'] as $label) {
+        expect($group[0] ?? '')->toContain('<span class="side-label">'.$label.'</span>');
+    }
+    expect($group[0] ?? '')->not->toContain('<span class="side-label">Volunteers</span>')->not->toContain('<span class="side-label">News</span>');
+});
+
 it('renders a group closed when its cookie says so, unless the current page is inside it', function () {
     $admin = shellAdmin();
 
-    $closed = $this->actingAs($admin)->withUnencryptedCookie('gobike_admin_closed', 'people.content')
+    $closed = $this->actingAs($admin)->withUnencryptedCookie('gobike_admin_closed', 'gobike.content')
         ->get(route('admin.operations.training-requests.index'))->getContent();
 
     expect($closed)
-        ->toContain('aria-expanded="false" aria-controls="side-items-people"')
+        ->toContain('aria-expanded="false" aria-controls="side-items-gobike"')
         ->toContain('aria-expanded="false" aria-controls="side-items-content"')
         ->toContain('aria-expanded="true" aria-controls="side-items-requests"');
 
-    // Users lives in People, so People opens even though the cookie closed it.
-    $current = $this->actingAs($admin)->withUnencryptedCookie('gobike_admin_closed', 'people')
+    // Users lives in Go Bike, so Go Bike opens even though the cookie closed it.
+    $current = $this->actingAs($admin)->withUnencryptedCookie('gobike_admin_closed', 'gobike')
         ->get(route('admin.operations.users.index'))->getContent();
 
-    expect($current)->toContain('aria-expanded="true" aria-controls="side-items-people"');
+    expect($current)->toContain('aria-expanded="true" aria-controls="side-items-gobike"');
 });
 
 it('ignores group names it does not know', function () {
@@ -74,8 +87,19 @@ it('adds up what is waiting in a group so a closed group still shows it', functi
 
     $html = $this->actingAs(shellAdmin())->get(route('admin.dashboard'))->getContent();
 
-    // 2 sign-ups + 1 application; the badge never reuses data-nav-badge (tests and scripts look that up by name).
-    expect($html)->toContain('data-group-badge="people"><span class="count-num">3</span>');
+    // 2 sign-ups in Go Bike, 1 application in Requests; the badge never reuses data-nav-badge (scripts look that up by name).
+    expect($html)
+        ->toContain('class="badge badge-warn side-group-sum" data-group-badge="gobike"><span class="count-num">2</span>')
+        ->toContain('data-group-badge="requests"><span class="count-num">1</span>');
+});
+
+it('shows the Go Bike total in red while an SOS is waiting', function () {
+    $resident = User::factory()->create(['role' => 'User']);
+    SosRequest::create(['user_id' => $resident->id, 'municipality' => 'Bugallon', 'barangay' => 'Poblacion', 'landmark' => 'Chapel', 'status' => 'sent']);
+
+    $html = $this->actingAs(shellAdmin())->get(route('admin.dashboard'))->getContent();
+
+    expect($html)->toContain('class="badge badge-bad side-group-sum" data-group-badge="gobike"><span class="count-num">1</span>');
 });
 
 it('always says how many there are, and shows page links only when there is more than one page', function () {

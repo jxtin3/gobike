@@ -312,6 +312,9 @@ body.adm.nav-open { overflow: hidden; }
     min-width: 0;
 }
 
+/* "· Mobile app" after Go Bike: says where those pages come from without competing with the group name. */
+.side-group-hint { font-weight: 400; }
+
 .side-chevron {
     width: 16px;
     height: 16px;

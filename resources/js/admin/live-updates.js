@@ -51,21 +51,40 @@
         }
     }
 
+    // A closed group shows what is waiting inside it, in red while an emergency or SOS in it is waiting.
+    function updateGroupSums() {
+        document.querySelectorAll('[data-group]').forEach((group) => {
+            const sum = group.querySelector('[data-group-badge]');
+            if (!sum) return;
+            const shown = [...group.querySelectorAll('[data-nav-badge]')].filter((badge) => !badge.hidden);
+            const urgent = shown.some((badge) => badge.classList.contains('badge-bad') && readCount(badge) > 0);
+            sum.classList.toggle('badge-bad', urgent);
+            sum.classList.toggle('badge-warn', !urgent);
+            setCount(sum, shown.reduce((all, badge) => all + readCount(badge), 0));
+        });
+    }
+
     function updateBadges(counts) {
         Object.entries(counts || {}).forEach(([name, value]) => {
             const badge = document.querySelector(`[data-nav-badge="${CSS.escape(name)}"]`);
             if (badge) setCount(badge, Math.max(0, Number(value) || 0));
         });
-
-        // A closed group shows what is waiting inside it.
-        document.querySelectorAll('[data-group]').forEach((group) => {
-            const sum = group.querySelector('[data-group-badge]');
-            if (!sum) return;
-            const total = [...group.querySelectorAll('[data-nav-badge]')]
-                .reduce((all, badge) => all + (badge.hidden ? 0 : readCount(badge)), 0);
-            setCount(sum, total);
-        });
+        updateGroupSums();
     }
+
+    // Other scripts change badges too (emergency-alert.js, messages marked read): keep the group sums in step.
+    let sumsQueued = false;
+    const watcher = new MutationObserver(() => {
+        if (sumsQueued) return;
+        sumsQueued = true;
+        requestAnimationFrame(() => {
+            sumsQueued = false;
+            updateGroupSums();
+        });
+    });
+    document.querySelectorAll('[data-group] [data-nav-badge]').forEach((badge) => {
+        watcher.observe(badge, { attributes: true, attributeFilter: ['hidden'], childList: true, characterData: true, subtree: true });
+    });
 
     /* What came in */
 
