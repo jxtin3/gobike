@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 /** An announcement from the admin to every GoBiker. */
 class Announcement extends Model
 {
-    protected $fillable = ['title', 'body', 'is_active', 'expires_at', 'created_by'];
+    protected $fillable = ['title', 'body', 'content', 'is_active', 'expires_at', 'created_by'];
 
     protected function casts(): array
     {

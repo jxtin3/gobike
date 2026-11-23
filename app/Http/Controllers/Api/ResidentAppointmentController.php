@@ -42,7 +42,7 @@ class ResidentAppointmentController extends Controller
             ->when($barangay, fn ($q) => $q->where('barangay', $barangay))
             ->withCount(['gobikerAppointments as visits_done' => fn ($q) => $q->where('status', 'completed')])
             ->orderBy('name')
-            ->get(['id', 'name', 'barangay']);
+            ->get(['id', 'name', 'barangay', 'photo_path']);
 
         return response()->json([
             'barangay' => $barangay,
@@ -50,6 +50,7 @@ class ResidentAppointmentController extends Controller
                 'id' => $g->id,
                 'name' => $g->name,
                 'barangay' => $g->barangay,
+                'photo_url' => $g->photo_path ? \App\Support\Media::url($g->photo_path) : null,
                 'visits_done' => $g->visits_done,
             ])->values(),
         ]);

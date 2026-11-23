@@ -10,11 +10,14 @@
     "license": "MIT",
     "require": {
         "php": "^8.4",
+        "bacon/bacon-qr-code": "*",
         "google/apiclient": "^2.20",
         "laravel/framework": "^13.8",
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^3.0",
         "league/flysystem-aws-s3-v3": "^3.0",
+        "pragmarx/google2fa": "*",
+        "pragmarx/google2fa-qrcode": "^4.0",
         "srmklive/paypal": "^3.1"
     },
     "require-dev": {

@@ -7,9 +7,11 @@ use App\Jobs\EmailApprovedGoBikers;
 use App\Mail\GoBikerApproved;
 use App\Models\User;
 use App\Support\Barangays;
+use App\Support\Media;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
 use Throwable;
@@ -69,7 +71,14 @@ class UserController extends Controller
             'barangay' => ['nullable', 'string', Rule::in(Barangays::ALL)],
             'password' => ['required', 'confirmed', Password::min(12)->letters()->numbers()],
             'role' => ['required', Rule::in($this->roles)],
+            'photo' => ['nullable', 'image', 'mimes:jpg,jpeg,png', 'max:5120'],
+        ], [
+            'photo.uploaded' => 'The photo could not be uploaded. Please try a smaller one.',
         ]);
+
+        if ($request->hasFile('photo')) {
+            $data['photo_path'] = $request->file('photo')->store('profile-photos', Media::disk());
+        }
 
         $data['status'] = 'Active'; // accounts created by an admin no need for approval
         User::create($data);
@@ -118,6 +127,10 @@ class UserController extends Controller
             'barangay' => ['nullable', 'string', Rule::in(Barangays::ALL)],
             'password' => ['nullable', 'confirmed', Password::min(12)->letters()->numbers()],
             'role' => ['required', Rule::in($this->roles)],
+            'photo' => ['nullable', 'image', 'mimes:jpg,jpeg,png', 'max:5120'],
+            'remove_photo' => ['nullable', 'boolean'],
+        ], [
+            'photo.uploaded' => 'The photo could not be uploaded. Please try a smaller one.',
         ]);
 
         $passwordChanged = filled($data['password'] ?? null);
@@ -131,7 +144,19 @@ class UserController extends Controller
             $data['status'] = 'Active';
         }
 
+        // A new photo replaces the old file, so nothing is left behind.
+        if ($request->hasFile('photo')) {
+            $data['photo_path'] = $request->file('photo')->store('profile-photos', Media::disk());
+        } elseif ($request->boolean('remove_photo')) {
+            $data['photo_path'] = null;
+        }
+
+        $oldPhoto = $user->photo_path;
         $user->update($data);
+
+        if ($oldPhoto && (($data['photo_path'] ?? null) !== null || $request->boolean('remove_photo'))) {
+            Storage::disk(Media::disk())->delete($oldPhoto);
+        }
 
         // A new password signs the user out of the mobile app everywhere.
         if ($passwordChanged) {

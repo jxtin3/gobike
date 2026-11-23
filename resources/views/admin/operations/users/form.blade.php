@@ -1,7 +1,7 @@
 @php
     $role = old('role', $user?->role ?? ($user?->is_admin ? 'Admin' : 'User'));
 @endphp
-<form class="form-card" action="{{ $action }}" method="POST">
+<form class="form-card" action="{{ $action }}" method="POST" enctype="multipart/form-data">
     @csrf
     @if ($method !== 'POST') @method($method) @endif
 
@@ -38,6 +38,26 @@
                 <x-admin.field-error name="barangay" />
             </div>
         </div>
+    </fieldset>
+
+    <fieldset class="form-section">
+        <legend>Photo</legend>
+        <div class="field">
+            <label for="photo">{{ $user?->photo_path ? 'Replace photo' : 'Profile photo' }} <span class="muted">(optional)</span></label>
+            <input class="input @error('photo') is-invalid @enderror" id="photo" type="file" name="photo" accept="image/jpeg,image/png"
+                   aria-describedby="photo-hint photo-error">
+            <span class="hint" id="photo-hint">JPG or PNG, up to 5 MB.{{ $user?->photo_path ? ' Leave empty to keep the current photo.' : ' The photo also shows in the mobile app.' }}</span>
+            <x-admin.field-error name="photo" />
+            @if ($user?->photo_path)
+                <img class="form-preview" src="{{ \App\Support\Media::url($user->photo_path) }}" alt="Current photo of {{ $user->name }}">
+            @endif
+        </div>
+        @if ($user?->photo_path)
+            <label class="check-row">
+                <input type="checkbox" name="remove_photo" value="1">
+                Remove the current photo
+            </label>
+        @endif
     </fieldset>
 
     <fieldset class="form-section">

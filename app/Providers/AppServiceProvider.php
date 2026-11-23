@@ -11,12 +11,15 @@ use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
+use PragmaRX\Google2FA\Google2FA;
 
 class AppServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
         $this->app->bind(\App\Services\Push\FcmSender::class, \App\Services\Push\GoogleFcmSender::class);
+        // The QR-capable subclass: its getQRCodeInline() needs bacon/bacon-qr-code autoloadable.
+        $this->app->singleton(Google2FA::class, fn () => new \PragmaRX\Google2FAQRCode\Google2FA());
     }
 
     public function boot(): void

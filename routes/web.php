@@ -24,6 +24,7 @@ use App\Http\Controllers\Admin\TrainingRequestController as AdminTrainingRequest
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Admin\VolunteerApplicationController as AdminVolunteerController;
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\Auth\MfaController;
 use App\Http\Controllers\ChatbotController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\DonationController;
@@ -148,7 +149,19 @@ Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
 
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
-Route::middleware([EnsureAdmin::class, AuthenticateSession::class])->prefix('admin')->name('admin.')->group(function () {
+// MFA routes (password-authenticated, before admin middleware)
+Route::get('/mfa/verify', [LoginController::class, 'showMfaVerify'])->name('mfa.verify');
+Route::post('/mfa/verify', [LoginController::class, 'verifyMfa'])->name('mfa.verify.submit');
+
+// MFA setup/disable (requires admin session + MFA verified)
+Route::middleware([EnsureAdmin::class, AuthenticateSession::class, \App\Http\Middleware\EnsureMfaVerified::class])
+    ->prefix('admin')->name('admin.')->group(function () {
+        Route::get('/mfa/setup', [MfaController::class, 'setup'])->name('mfa.setup');
+        Route::post('/mfa/verify', [MfaController::class, 'verify'])->name('mfa.verify');
+        Route::post('/mfa/disable', [MfaController::class, 'disable'])->name('mfa.disable');
+    });
+
+Route::middleware([EnsureAdmin::class, AuthenticateSession::class, \App\Http\Middleware\EnsureMfaVerified::class])->prefix('admin')->name('admin.')->group(function () {
 
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
     Route::view('/live-map', 'admin.live-map')->name('live-map.index');
@@ -195,12 +208,14 @@ Route::middleware([EnsureAdmin::class, AuthenticateSession::class])->prefix('adm
         // GoBiker -> admin messages
         Route::get('/gobiker-messages', [GobikerMessageController::class, 'index'])->name('gobiker-messages.index');
         Route::patch('/gobiker-messages/{message}/read', [GobikerMessageController::class, 'markRead'])->name('gobiker-messages.read');
+        Route::post('/gobiker-messages/{message}/reply', [GobikerMessageController::class, 'reply'])->name('gobiker-messages.reply');
         Route::delete('/gobiker-messages/{message}', [GobikerMessageController::class, 'destroy'])->name('gobiker-messages.destroy');
 
         // residents' home-visit requests
         Route::get('/appointments', [AppointmentController::class, 'index'])->name('appointments.index');
         Route::get('/appointments/{appointment}', [AppointmentController::class, 'show'])->name('appointments.show');
         Route::patch('/appointments/{appointment}/decline', [AppointmentController::class, 'decline'])->name('appointments.decline');
+        Route::delete('/appointments/{appointment}', [AppointmentController::class, 'destroy'])->name('appointments.destroy');
 
         // residents' SOS requests
         Route::get('/sos', [SosRequestController::class, 'index'])->name('sos.index');

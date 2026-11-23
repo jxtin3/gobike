@@ -42,6 +42,9 @@
 
 <section class="detail-card detail-narrow">
     <h2 class="detail-card-title">Account</h2>
+    <div class="detail-photo">
+        <x-admin.avatar :name="$user->name" :src="$user->photo_path ? \App\Support\Media::url($user->photo_path) : null" style="--avatar-size: 80px; font-size: 28px;" />
+    </div>
     <dl class="detail-dl">
         <div><dt>Role</dt><dd><span class="pill {{ $role === 'GoBiker' ? 'pill-info' : 'pill-neutral' }}">{{ \App\Models\User::roleLabelFor($role) }}</span></dd></div>
         <div><dt>Status</dt><dd>

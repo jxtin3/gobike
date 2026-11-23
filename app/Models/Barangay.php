@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
@@ -11,7 +12,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  */
 class Barangay extends Model
 {
-    protected $fillable = ['name', 'municipality', 'sort_order'];
+    protected $fillable = ['name', 'municipality', 'sort_order', 'municipality_id', 'city_id', 'province_id'];
 
     public function users(): HasMany
     {
@@ -31,5 +32,20 @@ class Barangay extends Model
     public function sosRequests(): HasMany
     {
         return $this->hasMany(SosRequest::class, 'barangay', 'name');
+    }
+
+    public function municipality(): BelongsTo
+    {
+        return $this->belongsTo(Municipality::class);
+    }
+
+    public function city(): BelongsTo
+    {
+        return $this->belongsTo(City::class);
+    }
+
+    public function province(): BelongsTo
+    {
+        return $this->belongsTo(Province::class);
     }
 }

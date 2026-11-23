@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Appointment;
 use App\Services\Push\PushNotifier;
 use Illuminate\Http\Request;
+use Illuminate\Http\RedirectResponse;
 
 /**
  * Residents' home-visit requests. The resident chooses a GoBiker in the app, who accepts or
@@ -72,5 +73,17 @@ class AppointmentController extends Controller
         }
 
         return back()->with('success', 'Request declined. The resident will see your note in the app.');
+    }
+
+    public function destroy(Appointment $appointment): RedirectResponse
+    {
+        if ($appointment->isOpen()) {
+            return back()->with('error', 'Cannot delete an open request. Decline it first.');
+        }
+
+        $appointment->delete(); // Soft delete
+
+        return redirect()->route('admin.operations.appointments.index')
+            ->with('success', 'Appointment deleted.');
     }
 }

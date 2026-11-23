@@ -46,7 +46,7 @@ class LiveMap
         }
 
         return Location::query()
-            ->with('user:id,name,barangay')
+            ->with('user:id,name,barangay,photo_path')
             ->whereHas('user', fn ($user) => $user->where('role', 'GoBiker')->where('status', 'Active'))
             ->where('last_seen_at', '>=', self::staleBefore())
             ->whereNotNull('latitude')
@@ -57,6 +57,7 @@ class LiveMap
             ->map(fn (Location $location) => [
                 'id' => $location->user_id,
                 'name' => $location->user?->name ?? $location->name,
+                'photo_url' => $location->user?->photo_path ? \App\Support\Media::url($location->user->photo_path) : null,
                 'latitude' => $location->latitude,
                 'longitude' => $location->longitude,
                 'accuracy' => $location->accuracy,

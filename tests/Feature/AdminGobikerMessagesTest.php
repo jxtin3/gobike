@@ -78,3 +78,47 @@ it('filters read and unread messages from their inbox summary cards', function (
         ->assertSee('Read message shown in the read filter.')
         ->assertSee('Unread message shown in the unread filter.');
 });
+
+it('allows admin to reply to a GoBiker message', function () {
+    $admin = User::factory()->create(['is_admin' => true]);
+    $sender = User::factory()->create([
+        'role' => 'GoBiker',
+        'name' => 'Test GoBiker',
+    ]);
+
+    $message = GobikerMessage::create([
+        'user_id' => $sender->id,
+        'message' => 'Need medical supplies for our next community ride.',
+    ]);
+
+    $this->actingAs($admin)
+        ->postJson(route('admin.operations.gobiker-messages.reply', $message), [
+            'reply_message' => 'We have the supplies you need at the health center.',
+        ])
+        ->assertOk()
+        ->assertJson([
+            'success' => true,
+            'reply_message' => 'We have the supplies you need at the health center.',
+        ])
+        ->assertJsonPath('replied_by', $admin->name);
+
+    // Verify message was updated
+    expect($message->fresh()->reply_message)->toBe('We have the supplies you need at the health center.')
+        ->and($message->fresh()->is_read)->toBeTrue()
+        ->and($message->fresh()->replied_at)->not->toBeNull();
+});
+
+it('requires reply message content', function () {
+    $admin = User::factory()->create(['is_admin' => true]);
+    $sender = User::factory()->create();
+    $message = GobikerMessage::create([
+        'user_id' => $sender->id,
+        'message' => 'Hello',
+    ]);
+
+    $this->actingAs($admin)
+        ->postJson(route('admin.operations.gobiker-messages.reply', $message), [
+            'reply_message' => '   ', // blank after trim
+        ])
+        ->assertUnprocessable();
+});

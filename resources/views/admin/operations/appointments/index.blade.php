@@ -56,6 +56,15 @@
                     <td>
                         <div class="row-actions">
                             <a class="icon-btn" href="{{ route('admin.operations.appointments.show', $a) }}" title="Open" aria-label="Open visit request from {{ $who }}"><x-admin.icon name="eye" /></a>
+                            @if (in_array($a->status, ['declined', 'cancelled']))
+                                <form method="POST" action="{{ route('admin.operations.appointments.destroy', $a) }}"
+                                      data-confirm-title="Delete this appointment?"
+                                      data-confirm-text="This permanently removes the record from the system."
+                                      data-confirm-ok="Delete">
+                                    @csrf @method('DELETE')
+                                    <button type="submit" class="icon-btn danger" title="Delete" aria-label="Delete appointment for {{ $who }}"><x-admin.icon name="trash" /></button>
+                                </form>
+                            @endif
                         </div>
                     </td>
                 </tr>

@@ -4351,6 +4351,17 @@ html:has(dialog:modal) { overflow: hidden; }
     gap: var(--sp-2);
 }
 
+/* The user's photo at the top of the account card on the detail page. */
+.detail-photo {
+    display: flex;
+    justify-content: center;
+    margin-bottom: var(--sp-4);
+}
+
+.detail-photo .avatar {
+    box-shadow: var(--shadow-1);
+}
+
 /* One card for the whole applicant: sections separated by a line instead of separate cards. */
 .detail-section + .detail-section {
     margin-top: var(--sp-6);

@@ -98,7 +98,7 @@
                     <tr @class(['is-pending' => $pending]) data-href="{{ route('admin.operations.users.show', $user) }}">
                         <td>
                             <div class="cell-user">
-                                <x-admin.avatar :name="$user->name" />
+                                <x-admin.avatar :name="$user->name" :src="$user->photo_path ? \App\Support\Media::url($user->photo_path) : null" />
                                 <div>
                                     <b><a class="cell-link" href="{{ route('admin.operations.users.show', $user) }}" data-skeleton="detail">{{ $user->name }}</a></b>
                                     <small>{{ $user->email }}</small>

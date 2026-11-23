@@ -44,6 +44,35 @@ class GobikerMessageController extends Controller
         return response()->json(['is_read' => true]);
     }
 
+    public function reply(Request $request, GobikerMessage $message)
+    {
+        $data = $request->validate([
+            'reply_message' => ['required', 'string', 'max:1000'],
+        ]);
+
+        $message->update([
+            'is_read' => true,
+            'reply_from_admin_id' => $request->user()->id,
+            'reply_message' => $data['reply_message'],
+            'replied_at' => now(),
+        ]);
+
+        $message = $message->fresh(['sender', 'adminReply']);
+        app(\App\Services\Push\PushNotifier::class)->gobikerMessageReply($message);
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Reply sent.',
+                'reply_message' => $message->reply_message,
+                'replied_at' => $message->replied_at?->format('M j, Y g:i A'),
+                'replied_by' => $message->adminReply?->name,
+            ]);
+        }
+
+        return back()->with('success', 'Reply sent to GoBiker.');
+    }
+
     public function destroy(GobikerMessage $message)
     {
         $message->delete();

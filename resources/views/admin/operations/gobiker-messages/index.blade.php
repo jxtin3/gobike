@@ -55,7 +55,11 @@
                     data-status-pill="{{ $msg->is_read ? 'neutral' : 'brand' }}"
                     data-is-read="{{ $msg->is_read ? '1' : '0' }}"
                     data-badge="gobiker-messages"
-                    data-read-url="{{ route('admin.operations.gobiker-messages.read', $msg) }}">
+                    data-read-url="{{ route('admin.operations.gobiker-messages.read', $msg) }}"
+                    data-reply-url="{{ route('admin.operations.gobiker-messages.reply', $msg) }}"
+                    data-reply="{{ $msg->reply_message }}"
+                    data-replied-at="{{ $msg->replied_at?->format('M j, Y g:i A') }}"
+                    data-replied-by="{{ $msg->adminReply?->name }}">
                     <td>
                         <b>{{ $sender }}</b>
                         <small class="sub-line">{{ $msg->sender?->barangay ?: 'No barangay' }}</small>
@@ -120,10 +124,63 @@
         <p class="dlg-text" data-field="message"></p>
     </section>
 
+    <section data-show-field="reply">
+        <h3 class="dlg-label">Your reply (sent to their app)</h3>
+        <p class="dlg-text" data-field="reply"></p>
+        <small class="sub-line" data-field="repliedAt"></small>
+    </section>
+
+    <form method="POST" class="reply-form" id="gobikerReplyForm" data-action-field="replyUrl" style="margin-top: 1rem; border-top: 1px solid var(--line); padding-top: 1rem;">
+        @csrf
+        <div class="field">
+            <label for="reply_message" style="font-weight: 600; font-size: 0.875rem;">Reply to GoBiker</label>
+            <textarea class="input" id="reply_message" name="reply_message" rows="3" maxlength="1000" required placeholder="Type your reply to send to their mobile app…"></textarea>
+        </div>
+        <div style="display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 0.5rem;">
+            <button type="submit" class="btn btn-ok btn-sm"><x-admin.icon name="mail" /> Send Reply</button>
+        </div>
+    </form>
+
     <x-slot:foot>
         <div class="dlg-foot-main">
             <button type="button" class="btn btn-secondary" data-dialog-close>Close</button>
         </div>
     </x-slot:foot>
+
+    <script>
+    // Handle Send Reply submit via XHR (same pattern as other admin dialogs)
+    const replyForm = document.getElementById('gobikerReplyForm');
+    if (replyForm) {
+        const replyBtn = replyForm.querySelector('button[type="submit"]');
+        replyForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            if (replyBtn.disabled) return;
+            replyBtn.disabled = true;
+            const formData = new FormData(replyForm);
+            // admin.js sets replyForm.action from the row's data-reply-url via data-action-field="replyUrl"
+            fetch(replyForm.action, {
+                method: 'POST',
+                body: formData,
+                headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content },
+                credentials: 'same-origin'
+            })
+            .then(r => r.json().then(d => ({ ok: r.ok, data: d }), () => ({ ok: r.ok, data: null })))
+            .then(({ ok, data }) => {
+                if (ok && data?.success) {
+                    document.getElementById('gobikerMessageDialog').close();
+                    if (window.adminToast) window.adminToast({ text: 'Reply sent to GoBiker!' });
+                    window.location.reload();
+                } else {
+                    replyBtn.disabled = false;
+                    if (window.adminToast) window.adminToast({ text: data?.message || 'Failed to send reply. Please try again.', tone: 'error' });
+                }
+            })
+            .catch(() => {
+                replyBtn.disabled = false;
+                if (window.adminToast) window.adminToast({ text: 'Failed to send reply. Please try again.', tone: 'error' });
+            });
+        });
+    }
+    </script>
 </x-admin.dialog>
 @endsection

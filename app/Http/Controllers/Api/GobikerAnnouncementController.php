@@ -18,6 +18,7 @@ class GobikerAnnouncementController extends Controller
                 'id' => $announcement->id,
                 'title' => $announcement->title,
                 'body' => $announcement->body,
+                'content' => $announcement->content, // full text for the expanded card view
                 'posted_at' => $announcement->created_at->toIso8601String(),
                 'expires_at' => $announcement->expires_at?->toIso8601String(),
             ])->values(),

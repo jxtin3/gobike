@@ -75,5 +75,19 @@
             </div>
         </form>
     </div>
+@else
+    <div class="no-print">
+        <form class="detail-card" method="POST" action="{{ route('admin.operations.appointments.destroy', $appointment) }}"
+              data-confirm-title="Delete this appointment?"
+              data-confirm-text="This permanently removes the record from the system."
+              data-confirm-ok="Delete">
+            @csrf
+            @method('DELETE')
+            <h2 class="detail-card-title">Delete</h2>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-danger"><x-admin.icon name="trash" /> Delete appointment</button>
+            </div>
+        </form>
+    </div>
 @endif
 @endsection

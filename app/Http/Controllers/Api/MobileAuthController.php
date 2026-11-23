@@ -19,6 +19,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
+use PragmaRX\Google2FA\Google2FA;
 
 class MobileAuthController extends Controller
 {
@@ -27,6 +28,7 @@ class MobileAuthController extends Controller
         $credentials = $request->validate([
             'email' => ['required', 'email'],
             'password' => ['required', 'string'],
+            'mfa_code' => ['nullable', 'string', 'size:6'],
         ]);
 
         $user = User::where('email', strtolower(trim($credentials['email'])))->first();
@@ -39,6 +41,37 @@ class MobileAuthController extends Controller
 
         if (! $this->isActive($user)) {
             return $this->inactiveResponse();
+        }
+
+        // If MFA is enabled, require a code
+        if ($user->hasMfaEnabled()) {
+            $mfaCode = $credentials['mfa_code'] ?? null;
+            if (! $mfaCode) {
+                return response()->json([
+                    'message' => 'MFA code required.',
+                    'mfa_required' => true,
+                ], 422);
+            }
+
+            $google2fa = app(Google2FA::class);
+            $valid = $google2fa->verifyKey($user->mfa_secret, $mfaCode);
+
+            // Also check backup codes
+            if (! $valid && $user->mfa_backup_codes) {
+                foreach ($user->mfa_backup_codes as $hashedCode) {
+                    if (Hash::check($mfaCode, $hashedCode)) {
+                        $valid = true;
+                        // Remove used backup code
+                        $user->mfa_backup_codes = array_values(array_filter($user->mfa_backup_codes, fn ($c) => $c !== $hashedCode));
+                        $user->save();
+                        break;
+                    }
+                }
+            }
+
+            if (! $valid) {
+                return response()->json(['message' => 'Invalid MFA code.'], 422);
+            }
         }
 
         return $this->tokenResponse($user, 'Login successful.');
@@ -340,6 +373,140 @@ class MobileAuthController extends Controller
         return response()->json(['message' => 'Your account has been deleted.']);
     }
 
+    // ---------- MFA (TOTP) ----------
+
+    /**
+     * Generate a TOTP secret and QR code for the user to scan.
+     */
+    public function mfaSetup(Request $request): JsonResponse
+    {
+        /** @var User $user */
+        $user = $request->user();
+
+        if ($user->hasMfaEnabled()) {
+            return response()->json(['message' => 'MFA is already enabled.'], 422);
+        }
+
+        $google2fa = app(Google2FA::class);
+        $secret = $google2fa->generateSecretKey();
+
+        // Store the secret temporarily (will be confirmed on verify)
+        $user->mfa_secret = $secret;
+        $user->save();
+
+        $qrCodeUrl = $google2fa->getQRCodeInline(
+            config('app.name'),
+            $user->email,
+            $secret,
+            200,
+            200,
+        );
+
+        return response()->json([
+            'message' => 'Scan the QR code with your authenticator app.',
+            'secret' => $secret,
+            'qr_code_url' => $qrCodeUrl,
+        ]);
+    }
+
+    /**
+     * Verify a TOTP code and enable MFA.
+     */
+    public function mfaVerify(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'code' => ['required', 'string', 'size:6'],
+        ]);
+
+        /** @var User $user */
+        $user = $request->user();
+
+        if (! $user->mfa_secret) {
+            return response()->json(['message' => 'No MFA setup in progress.'], 422);
+        }
+
+        $google2fa = app(Google2FA::class);
+        $valid = $google2fa->verifyKey($user->mfa_secret, $data['code']);
+
+        if (! $valid) {
+            return response()->json(['message' => 'Invalid code.'], 422);
+        }
+
+        // Generate backup codes
+        $backupCodes = collect(range(1, 10))->map(fn () => Str::random(8))->all();
+        $hashedCodes = array_map(fn ($code) => Hash::make($code), $backupCodes);
+
+        $user->forceFill([
+            'mfa_enabled_at' => now(),
+            'mfa_backup_codes' => $hashedCodes,
+        ])->save();
+
+        return response()->json([
+            'message' => 'MFA enabled successfully.',
+            'backup_codes' => $backupCodes, // Only shown once!
+        ]);
+    }
+
+    /**
+     * Disable MFA for the user.
+     */
+    public function mfaDisable(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'code' => ['required', 'string', 'size:6'],
+        ]);
+
+        /** @var User $user */
+        $user = $request->user();
+
+        if (! $user->hasMfaEnabled()) {
+            return response()->json(['message' => 'MFA is not enabled.'], 422);
+        }
+
+        $google2fa = app(Google2FA::class);
+        $valid = $google2fa->verifyKey($user->mfa_secret, $data['code']);
+
+        if (! $valid) {
+            return response()->json(['message' => 'Invalid code.'], 422);
+        }
+
+        $user->forceFill([
+            'mfa_secret' => null,
+            'mfa_enabled_at' => null,
+            'mfa_backup_codes' => null,
+        ])->save();
+
+        return response()->json(['message' => 'MFA disabled.']);
+    }
+
+    /**
+     * Get backup codes (requires current MFA code to verify).
+     */
+    public function mfaBackupCodes(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'code' => ['required', 'string', 'size:6'],
+        ]);
+
+        /** @var User $user */
+        $user = $request->user();
+
+        if (! $user->hasMfaEnabled()) {
+            return response()->json(['message' => 'MFA is not enabled.'], 422);
+        }
+
+        $google2fa = app(Google2FA::class);
+        $valid = $google2fa->verifyKey($user->mfa_secret, $data['code']);
+
+        if (! $valid) {
+            return response()->json(['message' => 'Invalid code.'], 422);
+        }
+
+        return response()->json([
+            'backup_codes' => $user->mfa_backup_codes,
+        ]);
+    }
+
     // ---------- helpers ----------
 
     private function isActive(User $user): bool
@@ -372,6 +539,9 @@ class MobileAuthController extends Controller
             'email' => $user->email,
             'mobile' => $user->mobile,
             'barangay' => $user->barangay,
+            'municipality_id' => $user->municipality_id,
+            'city_id' => $user->city_id,
+            'province_id' => $user->province_id,
             'birthdate' => $user->birthdate?->toDateString(),
             'age' => $user->age,
             'photo_url' => Media::url($user->photo_path),
@@ -380,6 +550,7 @@ class MobileAuthController extends Controller
             // False for Google sign-in accounts: the app offers "Set a password" instead of "Change".
             'has_password' => (bool) ($user->has_password ?? true),
             'notification_prefs' => $user->notificationPrefs(),
+            'mfa_enabled' => $user->hasMfaEnabled(),
         ];
     }
 }

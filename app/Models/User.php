@@ -20,12 +20,39 @@ use Illuminate\Support\Facades\Storage;
 use Laravel\Sanctum\HasApiTokens;
 use Laravel\Sanctum\PersonalAccessToken;
 
-#[Fillable(['name', 'email', 'password', 'role', 'status', 'mobile', 'barangay', 'birthdate', 'photo_path', 'google_id', 'has_password', 'notification_prefs'])]
-#[Hidden(['password', 'remember_token'])]
+#[Fillable(['name', 'email', 'password', 'role', 'status', 'mobile', 'barangay', 'birthdate', 'photo_path', 'google_id', 'has_password', 'notification_prefs', 'municipality_id', 'city_id', 'province_id', 'mfa_secret', 'mfa_enabled_at', 'mfa_backup_codes'])]
+#[Hidden(['password', 'remember_token', 'mfa_secret', 'mfa_backup_codes'])]
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
     use HasApiTokens, HasFactory, Notifiable;
+
+    /**
+     * Get the MFA secret (decrypted).
+     */
+    public function getMfaSecretAttribute(): ?string
+    {
+        if (! $this->attributes['mfa_secret']) {
+            return null;
+        }
+        return decrypt($this->attributes['mfa_secret']);
+    }
+
+    /**
+     * Set the MFA secret (encrypted).
+     */
+    public function setMfaSecretAttribute(?string $value): void
+    {
+        $this->attributes['mfa_secret'] = $value ? encrypt($value) : null;
+    }
+
+    /**
+     * Check if MFA is enabled for this user.
+     */
+    public function hasMfaEnabled(): bool
+    {
+        return ! is_null($this->mfa_enabled_at);
+    }
 
     /** Whole years old today, from the birthdate; null when they have not given one. */
     public function getAgeAttribute(): ?int
@@ -53,6 +80,21 @@ class User extends Authenticatable
     public function barangayRecord(): BelongsTo
     {
         return $this->belongsTo(Barangay::class, 'barangay', 'name');
+    }
+
+    public function municipality(): BelongsTo
+    {
+        return $this->belongsTo(Municipality::class);
+    }
+
+    public function city(): BelongsTo
+    {
+        return $this->belongsTo(City::class);
+    }
+
+    public function province(): BelongsTo
+    {
+        return $this->belongsTo(Province::class);
     }
 
     public function deviceTokens(): HasMany
@@ -199,6 +241,8 @@ class User extends Authenticatable
             'birthdate' => 'date',
             'approved_at' => 'datetime',
             'approval_emailed_at' => 'datetime',
+            'mfa_enabled_at' => 'datetime',
+            'mfa_backup_codes' => 'array',
             'password' => 'hashed',
             'is_admin' => 'boolean',
             'has_password' => 'boolean',

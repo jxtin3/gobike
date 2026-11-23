@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\GobikerLocationController;
 use App\Http\Controllers\Api\GobikerMapController;
 use App\Http\Controllers\Api\GobikerProfileController;
 use App\Http\Controllers\Api\LegalDocumentController;
+use App\Http\Controllers\Api\LocationController;
 use App\Http\Controllers\Api\MobileAuthController;
 use App\Http\Controllers\Api\PatientController;
 use App\Http\Controllers\Api\ResidentAppointmentController;
@@ -23,6 +24,14 @@ Route::get('/legal/{key}', [LegalDocumentController::class, 'show'])
     ->middleware('throttle:60,1')
     ->name('api.legal.show');
 
+// Location hierarchy for multi-municipality support
+Route::prefix('locations')->middleware('throttle:60,1')->group(function () {
+    Route::get('/provinces', [LocationController::class, 'provinces'])->name('api.locations.provinces');
+    Route::get('/cities', [LocationController::class, 'cities'])->name('api.locations.cities');
+    Route::get('/municipalities', [LocationController::class, 'municipalities'])->name('api.locations.municipalities');
+    Route::get('/barangays', [LocationController::class, 'barangays'])->name('api.locations.barangays');
+});
+
 // Go Biker mobile authentication
 Route::post('/mobile/login', [
     MobileAuthController::class,
@@ -33,6 +42,14 @@ Route::post('/mobile/register', [
     MobileAuthController::class,
     'register',
 ])->middleware('throttle:5,1');
+
+// MFA (TOTP) for mobile app
+Route::middleware(['auth:sanctum', 'throttle:mobile'])->prefix('mobile/mfa')->group(function () {
+    Route::post('/setup', [MobileAuthController::class, 'mfaSetup'])->name('api.mobile.mfa.setup');
+    Route::post('/verify', [MobileAuthController::class, 'mfaVerify'])->name('api.mobile.mfa.verify');
+    Route::post('/disable', [MobileAuthController::class, 'mfaDisable'])->name('api.mobile.mfa.disable');
+    Route::get('/backup-codes', [MobileAuthController::class, 'mfaBackupCodes'])->name('api.mobile.mfa.backup-codes');
+});
 
 // goggle
 Route::post('/mobile/google', [
@@ -106,6 +123,7 @@ Route::middleware(['auth:sanctum', 'gobiker', 'throttle:mobile'])->prefix('gobik
     ])->name('api.gobiker.active.current');
 
     Route::post('message', [GobikerController::class, 'sendMessage']);
+    Route::get('messages', [GobikerController::class, 'messages'])->name('api.gobiker.messages.index');
 
     Route::get('/patients', [PatientController::class, 'index'])->name('api.gobiker.patients.index');
     Route::post('/patients', [PatientController::class, 'store'])->name('api.gobiker.patients.store');

@@ -20,6 +20,17 @@
     <dl class="detail-dl">
         <div><dt>Joined</dt><dd>{{ $user->created_at->format('F j, Y') }}</dd></div>
         <div><dt>Last updated</dt><dd>{{ $user->updated_at->format('F j, Y') }}</dd></div>
+        <div>
+            <dt>Two-factor authentication</dt>
+            <dd>
+                @if ($user->hasMfaEnabled())
+                    <span class="pill pill-ok"><i class="dot"></i> Enabled</span>
+                @else
+                    <span class="pill pill-neutral"><i class="dot"></i> Off</span>
+                    <small class="sub-line">Turn it on from <a href="{{ route('admin.profile.edit') }}">Edit profile</a></small>
+                @endif
+            </dd>
+        </div>
     </dl>
 </article>
 @endsection

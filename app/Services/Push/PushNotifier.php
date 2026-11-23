@@ -199,6 +199,22 @@ class PushNotifier
         $this->toUser($appointment->gobiker, null, $title, $body, ['type' => 'appointment_request', 'id' => (string) $appointment->id]);
     }
 
+    /** The admin replied to a GoBiker's message: tell the GoBiker. */
+    public function gobikerMessageReply(\App\Models\GobikerMessage $message): void
+    {
+        if (! $message->sender || ! $message->reply_message) {
+            return;
+        }
+
+        $this->toUser(
+            $message->sender,
+            null,
+            'Admin replied to your message',
+            Str::limit($message->reply_message, 150),
+            ['type' => 'gobiker_message_reply', 'id' => (string) $message->id],
+        );
+    }
+
     // ------------------------------------------------------------ internals
 
     /**

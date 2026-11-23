@@ -5,10 +5,13 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 /** A home check-up visit a resident requested; a GoBiker in their barangay takes it. */
 class Appointment extends Model
 {
+    use SoftDeletes;
+
     public const STATUSES = [
         'pending' => 'Waiting for the GoBiker to accept',
         'accepted' => 'GoBiker assigned',

@@ -22,7 +22,7 @@ class ResidentMapController extends Controller
 
         return response()->json([
             'barangay' => $barangay,
-            'gobikers' => LiveMap::onlineGobikers($barangay),
+            'gobikers' => LiveMap::onlineGobikers($barangay, $request->user()->id),
         ]);
     }
 }
