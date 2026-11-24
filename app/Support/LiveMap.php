@@ -37,6 +37,10 @@ class LiveMap
     /**
      * GoBikers whose app sent a position recently, in a barangay.
      *
+     * Only GoBikers who are currently on an active ronda (active_start_time set,
+     * active_end_time null) appear, so residents and other GoBikers only see
+     * riders who are actually patrolling right now.
+     *
      * @return Collection<int, array<string, mixed>>
      */
     public static function onlineGobikers(?string $barangay, ?int $exceptUserId = null): Collection
@@ -51,6 +55,8 @@ class LiveMap
             ->where('last_seen_at', '>=', self::staleBefore())
             ->whereNotNull('latitude')
             ->whereNotNull('longitude')
+            ->whereNotNull('active_start_time')
+            ->whereNull('active_end_time')
             ->when($exceptUserId, fn ($q) => $q->where('user_id', '!=', $exceptUserId))
             ->get()
             ->filter(fn (Location $location) => ($location->designated_barangay ?? $location->user?->barangay) === $barangay)

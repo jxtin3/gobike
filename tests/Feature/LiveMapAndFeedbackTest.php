@@ -24,6 +24,8 @@ function onlineGobiker(User $gobiker, float $latitude = 15.95, float $longitude 
     Location::create([
         'user_id' => $gobiker->id, 'name' => $gobiker->name, 'latitude' => $latitude, 'longitude' => $longitude,
         'status' => 'active', 'last_seen_at' => now(),
+        'active_start_time' => now(),
+        'active_end_time' => null,
     ]);
 }
 

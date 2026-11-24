@@ -157,11 +157,14 @@
             if (replyBtn.disabled) return;
             replyBtn.disabled = true;
             const formData = new FormData(replyForm);
-            // admin.js sets replyForm.action from the row's data-reply-url via data-action-field="replyUrl"
-            fetch(replyForm.action, {
+            const actionUrl = replyForm.getAttribute('action') || replyForm.action;
+            fetch(actionUrl, {
                 method: 'POST',
                 body: formData,
-                headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content },
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'Accept': 'application/json'
+                },
                 credentials: 'same-origin'
             })
             .then(r => r.json().then(d => ({ ok: r.ok, data: d }), () => ({ ok: r.ok, data: null })))
