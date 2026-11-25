@@ -4,8 +4,8 @@
 
 .DESCRIPTION
   1. Checks that the work is committed, then pushes main to GitHub.
-  2. Builds the CSS/JS (Vite) on this PC, because the Premium plan has no Node.js.
-  3. Uploads the build to the server.
+  2. Builds the CSS/JS (Vite) on the server since Hostinger Premium has no Node.js.
+  3. Downloads the build to the server.
   4. On the server: pulls the code from GitHub, installs PHP packages, runs new
      migrations and rebuilds Laravel's caches.
 
@@ -48,25 +48,10 @@ Step 'pushing main to GitHub'
 git push -q origin main
 if ($LASTEXITCODE -ne 0) { Fail 'git push failed.' }
 
-# ---- 2. build the front end -----------------------------------------------
-Step 'building CSS/JS (npm run build)'
-npm run build | Out-Null
-if ($LASTEXITCODE -ne 0) { Fail 'npm run build failed. Run it by hand to see the error.' }
-
-# ---- 3. upload the build ----------------------------------------------------
-Step 'uploading the build'
-$archive = Join-Path $env:TEMP 'gobike-build.tgz'
-# Use Git Bash tar with Unix-style path to avoid Windows path issues
-$archiveUnix = $archive -replace '\\', '/'
-bash -c "tar -czf '$archiveUnix' -C public build"
-if ($LASTEXITCODE -ne 0) { Fail 'could not pack public/build.' }
-scp -q $archive "${SshHost}:gobike-build.tgz"
-if ($LASTEXITCODE -ne 0) { Fail 'upload failed. Check that "ssh gobike-hostinger" works.' }
-Remove-Item $archive
-
-# ---- 4. update the server ---------------------------------------------------
+# ---- 2. update the server -------------------------------------------------
 # Hostinger disables proc_open, so Composer runs without its scripts and
-# package:discover is run on its own.
+# package:discover is run on its own. The Premium plan has no Node.js, so
+# we need to build it on the server with npm ci && npm run build.
 Step 'updating the server'
 $remote = @"
 set -e
@@ -74,7 +59,9 @@ cd $AppDir
 git pull -q --ff-only
 composer install --no-dev --optimize-autoloader --no-interaction --no-scripts -q
 php artisan package:discover -q
-rm -rf public/build && tar -xzf ~/gobike-build.tgz -C public && rm ~/gobike-build.tgz
+rm -rf public/build
+npm ci --prefer-dist 2>/dev/null || npm install --prefer-dist
+npm run build
 php artisan migrate --force
 php artisan config:cache -q
 php artisan route:cache -q
@@ -86,7 +73,7 @@ git log --oneline -1
 ssh $SshHost ($remote -replace "`r", '')
 if ($LASTEXITCODE -ne 0) { Fail 'a server step failed (see the output above). The site may be half-updated: fix it and deploy again.' }
 
-# ---- 5. check the site --------------------------------------------------------
+# ---- 3. check the site --------------------------------------------------------
 try {
     $status = (Invoke-WebRequest -Uri "$SiteUrl/up" -UseBasicParsing -TimeoutSec 30).StatusCode
 } catch {
