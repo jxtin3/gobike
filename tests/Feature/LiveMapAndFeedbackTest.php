@@ -1,8 +1,12 @@
 <?php
 
+use App\Models\Barangay;
+use App\Models\City;
 use App\Models\Feedback;
 use App\Models\Location;
+use App\Models\Municipality;
 use App\Models\Patient;
+use App\Models\Province;
 use App\Models\SosRequest;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -328,6 +332,36 @@ it('lists the GoBikers who can respond, nearest first, and the SOS pins for the 
         ->assertJsonPath('gobikers.0.name', 'Rico Dela');
 
     $this->getJson(route('admin.sos-pins.index'))->assertOk()->assertJsonCount(1)->assertJsonPath('0.status', 'sent');
+});
+
+it('offers every barangay with its town for the picker, the request\'s own town first', function () {
+    // A neighbouring town linked through the location tables, and one row only carrying the
+    // old text column: both must say which town they are in.
+    $province = Province::create(['name' => 'Pangasinan', 'region' => 'Region I']);
+    $city = City::create(['province_id' => $province->id, 'name' => 'Pangasinan']);
+    $aguilar = Municipality::create(['city_id' => $city->id, 'name' => 'Aguilar']);
+    Barangay::create(['name' => 'Poblacion (Aguilar)', 'municipality' => 'Bugallon', 'municipality_id' => $aguilar->id]);
+    Barangay::create(['name' => 'Bayaoas', 'municipality' => 'Aguilar', 'municipality_id' => $aguilar->id]);
+    Barangay::create(['name' => 'Alos', 'municipality' => 'Alaminos']);
+
+    $sos = liveSos($this->resident);
+    $choices = $this->actingAs($this->admin)->getJson(route('admin.operations.sos.gobikers', $sos))
+        ->assertOk()
+        ->assertJsonPath('barangay', 'Poblacion')
+        ->json('barangays');
+
+    $own = collect($choices)->takeWhile(fn (array $b) => $b['town'] === 'Bugallon');
+
+    expect($choices[0])->toHaveKeys(['name', 'town'])
+        // The linked town wins over the stale text column.
+        ->and(collect($choices)->firstWhere('name', 'Poblacion (Aguilar)')['town'])->toBe('Aguilar')
+        // Every Bugallon barangay comes first, A to Z, and nothing else is among them.
+        ->and($own->count())->toBe(Barangay::whereNull('municipality_id')->where('municipality', 'Bugallon')->count())
+        ->and($own->pluck('name')->all())->toBe($own->pluck('name')->sortBy(fn ($n) => mb_strtolower($n))->values()->all())
+        ->and($own->pluck('name'))->toContain('Poblacion', 'Hacienda')
+        // Then the other towns A to Z, each A to Z within.
+        ->and(collect($choices)->slice($own->count())->map(fn (array $b) => "{$b['town']}/{$b['name']}")->values()->all())
+        ->toBe(['Aguilar/Bayaoas', 'Aguilar/Poblacion (Aguilar)', 'Alaminos/Alos']);
 });
 
 it('sends the face of whoever asked for help with their pin, and nothing at all when they have no photo', function () {

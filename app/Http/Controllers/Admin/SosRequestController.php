@@ -198,9 +198,33 @@ class SosRequestController extends Controller
 
         return response()->json([
             'barangay' => $sos->barangay,
-            'barangays' => Barangay::orderBy('name')->pluck('name'),
+            'barangays' => $this->barangayChoices($sos),
             'gobikers' => LiveMap::gobikersForAssignment($sos->latitude, $sos->longitude, $barangay),
         ]);
+    }
+
+    /**
+     * Every barangay as {name, town}, for the picker's search. Many names repeat from town to town
+     * ("Poblacion"), so the town is what tells them apart. The request's own town comes first,
+     * since the nearest help is almost always there; the rest follow by town, then by name.
+     *
+     * @return list<array{name: string, town: string|null}>
+     */
+    private function barangayChoices(SosRequest $sos): array
+    {
+        $own = mb_strtolower(trim((string) $sos->municipality));
+
+        return Barangay::with('municipality:id,name')
+            ->get(['id', 'name', 'municipality', 'municipality_id'])
+            ->map(fn (Barangay $b) => [
+                'name' => $b->name,
+                // The old text column covers rows not yet linked to a municipality.
+                'town' => $b->getRelation('municipality')?->name ?? $b->getAttribute('municipality'),
+            ])
+            ->sort(fn (array $a, array $b) => [mb_strtolower((string) $a['town']) !== $own, mb_strtolower((string) $a['town']), mb_strtolower($a['name'])]
+                <=> [mb_strtolower((string) $b['town']) !== $own, mb_strtolower((string) $b['town']), mb_strtolower($b['name'])])
+            ->values()
+            ->all();
     }
 
     /**

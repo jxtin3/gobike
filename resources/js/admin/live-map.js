@@ -31,11 +31,9 @@
     const SOS_STATE_CLASS = { sent: 'is-waiting', declined: 'is-waiting', responding: 'is-responding' };
     // Decorative line icons for the report rows; the label beside each one carries the meaning.
     const SOS_ICONS = {
-        barangay: '<path d="M3 10.5 12 3l9 7.5V21a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z"/>',
         address: '<path d="M12 21s7-5.6 7-11a7 7 0 1 0-14 0c0 5.4 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/>',
         landmark: '<path d="M4 21h16M6 21V8l6-4 6 4v13M10 21v-4h4v4"/>',
         details: '<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 7.6h.01"/>',
-        sent: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
         phone: '<path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/>',
         assignBarangay: '<path d="M4 21V5l8-2v18M12 8h8v13M8 8h.01M8 12h.01M8 16h.01M16 12h.01M16 16h.01M3 21h18"/>',
         assignGobiker: '<path d="M8 8a4 4 0 0 1 8 0v1H8zM12 4V2M5 21v-2a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v2M12 14v3"/>',
@@ -456,14 +454,26 @@
         return `<svg class="${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">${SOS_ICONS[name]}</svg>`;
     }
 
-    /* The barangay filter and the GoBiker list; both are filled in once the popup opens. */
+    /*
+     * The barangay search and the GoBiker list; both are filled in once the popup opens. There are
+     * over a thousand barangays, many sharing a name, so the barangay is a search box with a short
+     * list under it (a combobox) rather than a dropdown nobody can scroll through.
+     */
     function assignBlock(p, action, label) {
+        const key = `sos-brgy-${esc(p.id)}`;
+
         return `<div class="sos-assign">
-            <label>
-                <span class="sos-assign-label">${icon('assignBarangay', 'sos-fact-icon')}Barangay</span>
-                <select class="sos-barangay" data-sos-barangay="${esc(p.id)}"><option value="">Loading…</option></select>
-            </label>
-            <label>
+            <div class="sos-field sos-combo">
+                <label class="sos-assign-label" for="${key}">${icon('assignBarangay', 'sos-fact-icon')}Barangay</label>
+                <input id="${key}" class="sos-barangay" type="text" role="combobox" aria-autocomplete="list"
+                    aria-expanded="false" aria-controls="${key}-list" autocomplete="off" spellcheck="false"
+                    placeholder="Loading barangays…" data-sos-barangay="${esc(p.id)}">
+                <div class="sos-combo-pop" hidden>
+                    <ul id="${key}-list" class="sos-combo-list" role="listbox" aria-label="Barangays"></ul>
+                    <p class="sos-combo-more" aria-live="polite"></p>
+                </div>
+            </div>
+            <label class="sos-field">
                 <span class="sos-assign-label">${icon('assignGobiker', 'sos-fact-icon')}Send a GoBiker</span>
                 <select class="sos-gobiker" data-sos-gobikers="${esc(p.id)}"><option value="">Loading GoBikers…</option></select>
             </label>
@@ -480,8 +490,11 @@
     }
 
     /* One line of the report: its icon, the muted label, then what the resident told us. */
-    function fact(name, label, value) {
-        return `<dt>${icon(name, 'sos-fact-icon')}${esc(label)}</dt><dd>${esc(value)}</dd>`;
+    function fact(name, label, value, clamp = false) {
+        // A long description is cut to three lines; hovering shows all of it.
+        const dd = clamp ? `<dd class="sos-clamp" title="${esc(value)}">` : '<dd>';
+
+        return `<dt>${icon(name, 'sos-fact-icon')}${esc(label)}</dt>${dd}${esc(value)}</dd>`;
     }
 
     /* The pin is only roughly where the resident is: the address and landmark are the better guide. */
@@ -499,26 +512,29 @@
                 // Already being answered: the admin can still send someone, or someone nearer.
                 : assignBlock(p, 'responding', p.assigned_gobiker ? 'Send another GoBiker' : 'Send a GoBiker');
 
+        // The street and the barangay read as one place; a row the resident left empty is left out.
+        const where = [p.address, p.barangay].filter(Boolean).join(', ');
+        const facts = [
+            where ? fact('address', 'Where', where) : '',
+            p.landmark ? fact('landmark', 'Landmark', p.landmark) : '',
+            within(p.accuracy) ? fact('pin', 'Pin', sosIsApprox(p) ? `Approximate. ${within(p.accuracy)}: go by the address.` : within(p.accuracy)) : '',
+            p.description ? fact('details', 'Details', p.description, true) : '',
+            p.status === 'declined' ? fact('details', 'Declined', `${p.declined_by || 'The GoBiker'}: ${p.decline_reason || 'no reason given'}`) : '',
+        ].join('');
+
         return `<div class="gb-pop sos-pop">
             <div class="sos-pop-head">
-                ${face(p.resident, p.resident_photo, 44)}
+                ${face(p.resident, p.resident_photo, 32)}
                 <div class="sos-pop-who">
-                    <p class="sos-pop-name">
-                        <b>${esc(p.resident)}</b>
+                    <p class="sos-pop-name"><b>${esc(p.resident)}</b></p>
+                    <p class="sos-pop-status">
                         <em class="s-text sos-state ${esc(SOS_STATE_CLASS[p.status] || SOS_STATE_CLASS.sent)}">${esc(sosHeadline(p))}</em>
+                        ${p.created_at ? `<time class="sos-pop-sent" datetime="${esc(p.created_at)}">Sent ${esc(ago(p.created_at).toLowerCase())}</time>` : ''}
                     </p>
                     ${mobile}
                 </div>
             </div>
-            <dl class="sos-facts">
-                ${fact('barangay', 'Barangay', p.barangay || 'Not given')}
-                ${fact('address', 'Address', p.address || 'Not given')}
-                ${fact('landmark', 'Landmark', p.landmark || 'Not given')}
-                ${within(p.accuracy) ? fact('pin', 'Pin', sosIsApprox(p) ? `Approximate. ${within(p.accuracy)}: go by the address.` : within(p.accuracy)) : ''}
-                ${p.description ? fact('details', 'Details', p.description) : ''}
-                ${fact('sent', 'Sent', ago(p.created_at))}
-                ${p.status === 'declined' ? fact('details', 'Declined', `${p.declined_by || 'The GoBiker'}: ${p.decline_reason || 'no reason given'}`) : ''}
-            </dl>
+            ${facts ? `<dl class="sos-facts">${facts}</dl>` : ''}
             ${responderChip(p)}
             ${actions}
         </div>`;
@@ -579,6 +595,7 @@
             const id = String(p.id);
             // Rebuild the popup only when something changed, so a half-picked GoBiker isn't lost.
             const key = `${p.status}|${p.assigned_gobiker}|${p.decline_reason ?? ''}`;
+            let rebuilt = true;
             let marker = sosMarkers.get(id);
             if (!marker) {
                 marker = L.marker([p.latitude, p.longitude], {
@@ -588,20 +605,32 @@
                     keyboard: true,
                     title: `${p.resident}: ${sosHeadline(p)}`,
                 }).addTo(map);
-                marker.bindPopup(sosPopup(p), { minWidth: 300, maxWidth: 340 });
-                marker.on('popupopen', () => fillGobikers(id));
+                marker.bindPopup(sosPopup(p), { minWidth: 260, maxWidth: 290 });
+                marker.on('popupopen', () => {
+                    resetCombo(id);
+                    fillGobikers(id);
+                });
                 sosMarkers.set(id, marker);
             } else {
                 marker.setLatLng([p.latitude, p.longitude]);
                 if (marker.sosStatus !== p.status) marker.setIcon(sosIcon(p.status));
                 if (marker.sosKey !== key) {
-                    marker.setPopupContent(sosPopup(p));
-                    // Rebuilding threw away the dropdowns: fill the new ones.
-                    if (marker.isPopupOpen()) fillGobikers(id);
+                    // Never while the admin is typing in, or choosing from, the popup: what they
+                    // typed would be wiped. The next poll tries again once they are done.
+                    if (marker.isPopupOpen() && popupInUse(marker)) {
+                        rebuilt = false;
+                    } else {
+                        marker.setPopupContent(sosPopup(p));
+                        // Rebuilding threw away the pickers: fill the new ones, keeping the barangay.
+                        if (marker.isPopupOpen()) {
+                            resetCombo(id);
+                            fillGobikers(id);
+                        }
+                    }
                 }
             }
             marker.sosStatus = p.status;
-            marker.sosKey = key;
+            if (rebuilt) marker.sosKey = key;
 
             // How far out the pin may be, so nobody rides to the exact dot of a rough reading.
             if (isRough(p.accuracy)) {
@@ -686,25 +715,156 @@
         return `${g.name} · ${bits.filter(Boolean).join(' · ')}`;
     }
 
+    /* ---------- The barangay search (a combobox) ---------- */
+
+    // At most this many barangays are listed at once; typing more narrows it down.
+    const BARANGAY_LIMIT = 40;
+    // Per SOS: the barangays, the one chosen, what is being typed, and the list's state.
+    const combos = new Map();
+
+    /* Lower case, accents dropped: "banaga" finds "Bañaga". */
+    const fold = (text) => String(text ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
+
+    function comboFor(id) {
+        if (!combos.has(id)) combos.set(id, { list: [], chosen: null, query: null, open: false, active: 0, shown: [], req: 0 });
+
+        return combos.get(id);
+    }
+
+    const comboInput = (id) => document.querySelector(`.gb-pop input[data-sos-barangay="${CSS.escape(id)}"]`);
+
+    /* "Poblacion (Agno)" shows as "Poblacion" with Agno beside it: the town is already there. */
+    function placeName(b) {
+        const suffix = b.town ? ` (${b.town})` : '';
+
+        return suffix && b.name.endsWith(suffix) ? b.name.slice(0, -suffix.length) : b.name;
+    }
+
+    /* What the search box shows when nobody is typing in it: the barangay chosen, and its town. */
+    function chosenLabel(state) {
+        if (state.chosen === 'all') return 'All barangays';
+        if (!state.chosen) return '';
+        const b = state.list.find((x) => x.name === state.chosen);
+
+        return b ? `${placeName(b)}${b.town ? `, ${b.town}` : ''}` : state.chosen;
+    }
+
+    /* Draws the list under the search box, or hides it. */
+    function drawCombo(id) {
+        const input = comboInput(id);
+        if (!input) return;
+        const state = comboFor(id);
+        const list = document.getElementById(input.getAttribute('aria-controls'));
+        const box = list?.parentElement;
+        if (!box) return;
+        input.setAttribute('aria-expanded', String(state.open));
+        box.hidden = !state.open;
+        if (!state.open) {
+            input.removeAttribute('aria-activedescendant');
+
+            return;
+        }
+
+        // Every word typed must appear in the barangay's name or its town.
+        const words = fold(state.query).split(/\s+/).filter(Boolean);
+        const hits = words.length ? state.list.filter((b) => words.every((w) => b.key.includes(w))) : state.list;
+        state.shown = [{ value: 'all', label: 'All barangays', town: '' },
+            ...hits.slice(0, BARANGAY_LIMIT).map((b) => ({ value: b.name, label: placeName(b), town: b.town }))];
+        state.active = Math.max(0, Math.min(state.active, state.shown.length - 1));
+
+        list.innerHTML = state.shown.map((o, i) => `<li id="${esc(list.id)}-${i}" role="option"
+            class="sos-combo-option${i === state.active ? ' is-active' : ''}"
+            aria-selected="${String(o.value === (state.chosen ?? 'all'))}" data-barangay-option data-value="${esc(o.value)}">
+            <span>${esc(o.label)}</span>${o.town ? `<small>${esc(o.town)}</small>` : ''}</li>`).join('');
+        input.setAttribute('aria-activedescendant', `${list.id}-${state.active}`);
+
+        const more = box.querySelector('.sos-combo-more');
+        more.textContent = !state.list.length
+            ? 'Loading barangays…'
+            : !hits.length
+                ? 'No barangay or town matches that.'
+                : hits.length > BARANGAY_LIMIT ? `${hits.length - BARANGAY_LIMIT} more. Keep typing to narrow it down.` : '';
+        more.hidden = !more.textContent;
+
+        // Keep the highlighted row in view without scrolling anything outside the list.
+        const row = list.children[state.active];
+        if (row) {
+            if (row.offsetTop < list.scrollTop) list.scrollTop = row.offsetTop;
+            else if (row.offsetTop + row.offsetHeight > list.scrollTop + list.clientHeight) {
+                list.scrollTop = row.offsetTop + row.offsetHeight - list.clientHeight;
+            }
+        }
+    }
+
+    /* Closes the list and puts the chosen barangay back in the box, dropping half-typed text. */
+    function closeCombo(id) {
+        const state = comboFor(id);
+        state.open = false;
+        state.query = null;
+        const input = comboInput(id);
+        if (input) input.value = chosenLabel(state);
+        drawCombo(id);
+    }
+
+    /* A fresh popup (opened again, or rebuilt): show the barangay already chosen, list closed. */
+    function resetCombo(id) {
+        const state = comboFor(id);
+        state.open = false;
+        state.query = null;
+        const input = comboInput(id);
+        if (!input) return;
+        input.value = chosenLabel(state);
+        if (state.list.length) input.placeholder = 'Search barangay or town';
+    }
+
+    /* The admin chose a barangay: reload the GoBikers from there, as the old dropdown did. */
+    function pickBarangay(id, value) {
+        const state = comboFor(id);
+        const changed = value !== (state.chosen ?? 'all');
+        state.chosen = value;
+        closeCombo(id);
+        if (changed) fillGobikers(id, value);
+    }
+
+    /* The admin is typing in, or choosing from, this popup: it must not be rebuilt under them. */
+    function popupInUse(marker) {
+        const el = marker.getPopup()?.getElement();
+        const focused = document.activeElement;
+
+        return Date.now() < popupBusyUntil
+            || Boolean(el && focused && el.contains(focused) && focused.matches('input, select'));
+    }
+
+    /* Stores the barangays for the search, and shows the one the GoBikers are listed for. */
     function fillBarangays(id, data, chosen) {
-        const select = document.querySelector(`[data-sos-barangay="${CSS.escape(id)}"]`);
-        if (!select) return;
-        const selected = chosen ?? data.barangay ?? 'all';
-        select.innerHTML = '<option value="all">All barangays</option>'
-            + (data.barangays ?? []).map((n) => `<option value="${esc(n)}">${esc(n)}</option>`).join('');
-        select.value = [...select.options].some((o) => o.value === selected) ? selected : 'all';
+        const state = comboFor(id);
+        if (Array.isArray(data.barangays)) {
+            state.list = data.barangays.map((b) => ({ name: b.name, town: b.town ?? '', key: fold(`${b.name} ${b.town ?? ''}`) }));
+        }
+        state.chosen = chosen ?? state.chosen ?? data.barangay ?? 'all';
+        if (state.chosen !== 'all' && !state.list.some((b) => b.name === state.chosen)) state.chosen = 'all';
+        const input = comboInput(id);
+        if (!input) return;
+        input.placeholder = 'Search barangay or town';
+        // Never over what the admin is typing.
+        if (state.query === null) input.value = chosenLabel(state);
+        if (state.open) drawCombo(id);
     }
 
     /**
-     * The GoBikers the admin may send. Called when the popup opens (no barangay: the server
-     * defaults to the emergency's own) and again whenever the admin changes the barangay.
+     * The GoBikers the admin may send. Called when the popup opens (no barangay: the one already
+     * chosen, or else the server's default, the emergency's own) and whenever the admin picks one.
      */
     async function fillGobikers(id, barangay) {
         const select = document.querySelector(`[data-sos-gobikers="${CSS.escape(id)}"]`);
         if (!select || (barangay === undefined && select.dataset.loaded)) return;
+        const state = comboFor(id);
+        const wanted = barangay ?? state.chosen ?? undefined;
+        // Only the answer to the latest pick counts, whatever order the replies arrive in.
+        const req = ++state.req;
         select.innerHTML = '<option value="">Loading GoBikers…</option>';
         const base = SOS_GOBIKERS_URL.replace('__ID__', encodeURIComponent(id));
-        const url = barangay === undefined ? base : `${base}?barangay=${encodeURIComponent(barangay)}`;
+        const url = wanted === undefined ? base : `${base}?barangay=${encodeURIComponent(wanted)}`;
         try {
             const res = await fetch(url, {
                 headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
@@ -712,17 +872,24 @@
             });
             if (!res.ok) throw new Error(String(res.status));
             const data = await res.json();
-            fillBarangays(id, data, barangay);
+            if (req !== state.req) return;
+            fillBarangays(id, data, wanted);
+            // The popup may have been rebuilt while this loaded: fill the one on screen.
+            const current = document.querySelector(`[data-sos-gobikers="${CSS.escape(id)}"]`);
+            if (!current) return;
             // Offline GoBikers are not in this list at all: their app is shut and would never
             // hear about the emergency. Say so plainly when that leaves nobody to send.
-            const where = esc(barangay === 'all' ? 'the town' : (barangay ?? data.barangay ?? 'this barangay'));
-            select.innerHTML = data.gobikers.length
+            const where = esc(state.chosen === 'all' ? 'the town' : (chosenLabel(state) || 'this barangay'));
+            current.innerHTML = data.gobikers.length
                 ? '<option value="">Choose a GoBiker</option>' + data.gobikers.map((g) => `<option value="${esc(g.id)}">${esc(gobikerLabel(g))}</option>`).join('')
                 : `<option value="">No GoBiker is online in ${where}</option>`;
-            select.dataset.none = data.gobikers.length ? '' : '1';
-            select.dataset.loaded = '1';
+            current.dataset.none = data.gobikers.length ? '' : '1';
+            current.dataset.loaded = '1';
         } catch {
-            select.innerHTML = '<option value="">Could not load GoBikers</option>';
+            if (req === state.req) {
+                const current = document.querySelector(`[data-sos-gobikers="${CSS.escape(id)}"]`);
+                if (current) current.innerHTML = '<option value="">Could not load GoBikers</option>';
+            }
         }
     }
 
@@ -854,11 +1021,77 @@
         if (e.target.closest?.('.gb-pop')) popupBusyUntil = Date.now() + 800;
     }, true);
 
-    /* The admin picked another barangay: reload the GoBikers from there. */
-    document.addEventListener('change', (e) => {
-        const select = e.target.closest('.gb-pop [data-sos-barangay]');
-        if (select) fillGobikers(select.dataset.sosBarangay, select.value);
+    /* The barangay search: typing filters the list; arrows, Enter, Escape and the mouse pick. */
+    const comboOf = (el) => el?.closest?.('.gb-pop input[data-sos-barangay]');
+
+    document.addEventListener('focusin', (e) => {
+        const input = comboOf(e.target);
+        if (!input) return;
+        const state = comboFor(input.dataset.sosBarangay);
+        state.open = true;
+        state.active = 0;
+        drawCombo(input.dataset.sosBarangay);
+        input.select();
     });
+
+    document.addEventListener('focusout', (e) => {
+        const input = comboOf(e.target);
+        if (input && !input.closest('.sos-combo')?.contains(e.relatedTarget)) closeCombo(input.dataset.sosBarangay);
+    });
+
+    document.addEventListener('input', (e) => {
+        const input = comboOf(e.target);
+        if (!input) return;
+        popupBusyUntil = Date.now() + 1500;
+        const state = comboFor(input.dataset.sosBarangay);
+        state.query = input.value;
+        state.open = true;
+        // Typing highlights the first match, so Enter takes it; "All barangays" stays on top.
+        state.active = fold(input.value) ? 1 : 0;
+        drawCombo(input.dataset.sosBarangay);
+    });
+
+    // Capture, so these keys are handled here before Leaflet can pan the map or close the popup.
+    document.addEventListener('keydown', (e) => {
+        const input = comboOf(e.target);
+        if (!input) return;
+        const id = input.dataset.sosBarangay;
+        const state = comboFor(id);
+        popupBusyUntil = Date.now() + 1500;
+        if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+            e.preventDefault();
+            e.stopPropagation();
+            if (!state.open) state.open = true;
+            else state.active += e.key === 'ArrowDown' ? 1 : -1;
+            drawCombo(id);
+        } else if (e.key === 'Enter' && state.open && state.shown[state.active]) {
+            e.preventDefault();
+            e.stopPropagation();
+            pickBarangay(id, state.shown[state.active].value);
+        } else if (e.key === 'Escape' && state.open) {
+            e.preventDefault();
+            e.stopPropagation();
+            closeCombo(id);
+            // Back to the barangay already chosen, selected, so the next letter starts a new search.
+            input.select();
+        }
+    }, true);
+
+    document.addEventListener('click', (e) => {
+        const input = comboOf(e.target);
+        if (input && !comboFor(input.dataset.sosBarangay).open) {
+            comboFor(input.dataset.sosBarangay).open = true;
+            drawCombo(input.dataset.sosBarangay);
+        }
+        const option = e.target.closest?.('.gb-pop [data-barangay-option]');
+        const box = option?.closest('.sos-combo')?.querySelector('input[data-sos-barangay]');
+        if (box) pickBarangay(box.dataset.sosBarangay, option.dataset.value);
+    });
+
+    // A press on the list must not take the focus from the search box, which would close it.
+    document.addEventListener('mousedown', (e) => {
+        if (e.target.closest?.('.gb-pop .sos-combo-pop')) e.preventDefault();
+    }, true);
 
     /* Resident SOS popup: send a GoBiker and mark it as responding. Only that GoBiker resolves it. */
     document.addEventListener('click', async (e) => {
