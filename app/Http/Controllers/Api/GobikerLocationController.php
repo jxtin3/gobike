@@ -150,7 +150,7 @@ class GobikerLocationController extends Controller
         ]);
         GobikerEmergency::syncLocation($sos);
         if ($helperWasComing) {
-            app(PushNotifier::class)->sosCancelled($sos->load('user', 'assignedGobiker'));
+            app(PushNotifier::class)->sosCancelled($sos->load('user'));
         }
 
         return response()->json([

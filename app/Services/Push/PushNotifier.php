@@ -9,7 +9,10 @@ use App\Models\GobikerMessage;
 use App\Models\Patient;
 use App\Models\PatientFollowUp;
 use App\Models\SosRequest;
+use App\Models\SosResponder;
 use App\Models\User;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
@@ -42,8 +45,8 @@ class PushNotifier
 
         [$title, $body] = match ($sos->status) {
             // Only say a person is coming once one has actually been sent.
-            'responding' => $sos->assignedGobiker
-                ? ['Someone is Responding', "{$sos->assignedGobiker->name} is on the way to help you."]
+            'responding' => ($onTheWay = $this->onTheWay($sos))
+                ? ['Someone is Responding', $onTheWay]
                 : ['Admin is handling it', 'The Go Bike admin is handling your SOS request.'],
             'resolved' => $sos->resolved_by_gobiker_id
                 ? ['SOS resolved', ($sos->resolvedBy?->name ?? 'The GoBiker').' marked your SOS request as resolved. Tap to rate the response.']
@@ -117,36 +120,59 @@ class PushNotifier
 
     // ------------------------------------------------------------- GoBikers
 
-    /** The admin sent a GoBiker to answer a resident's SOS. */
-    public function sosAssigned(SosRequest $sos): void
+    /**
+     * The admin sent a GoBiker to answer an SOS. assigned_at tells the app this is a new alert
+     * even for an SOS it alerted before (the GoBiker declined and was sent again).
+     */
+    public function sosAssigned(SosRequest $sos, User $gobiker): void
     {
         $where = $sos->address ?: $sos->landmark;
+        $assignedAt = $sos->responders()->where('gobiker_id', $gobiker->id)->value('assigned_at');
 
         $this->toUser(
-            $sos->assignedGobiker,
+            $gobiker,
             null,
             'SOS: you are assigned',
             ($sos->user?->name ?? 'A resident').' needs help'.($where ? " at {$where}" : '').'. Tap to see the map.',
-            ['type' => 'sos_assigned', 'id' => (string) $sos->id],
+            [
+                'type' => 'sos_assigned',
+                'id' => (string) $sos->id,
+                'assigned_at' => $assignedAt ? Carbon::parse($assignedAt)->toIso8601String() : '',
+            ],
         );
     }
 
-    /** The resident cancelled an SOS: tell the GoBiker who was sent that they need not go. */
+    /** The resident cancelled an SOS: tell every GoBiker on the way that they need not go. */
     public function sosCancelled(SosRequest $sos): void
     {
-        if (! $sos->assignedGobiker) {
-            return;
-        }
+        $body = $sos->fromGobiker()
+            ? ($sos->user?->name ?? 'The GoBiker').' cancelled their emergency. You do not need to go.'
+            : ($sos->user?->name ?? 'The resident').' cancelled their request. You do not need to go.';
 
-        $this->toUser(
-            $sos->assignedGobiker,
-            null,
-            'SOS cancelled',
-            $sos->fromGobiker()
-                ? ($sos->user?->name ?? 'The GoBiker').' cancelled their emergency. You do not need to go.'
-                : ($sos->user?->name ?? 'The resident').' cancelled their request. You do not need to go.',
-            ['type' => 'sos_cancelled', 'id' => (string) $sos->id],
-        );
+        foreach ($this->activeGobikers($sos) as $gobiker) {
+            $this->toUser($gobiker, null, 'SOS cancelled', $body, ['type' => 'sos_cancelled', 'id' => (string) $sos->id]);
+        }
+    }
+
+    /**
+     * One of several GoBikers resolved the SOS: tell the others they can stand down. Sent as
+     * 'sos_cancelled', which apps already refresh their SOS card on.
+     */
+    public function sosResolvedForResponders(SosRequest $sos, User $resolvedBy): void
+    {
+        foreach ($this->activeGobikers($sos) as $gobiker) {
+            if ($gobiker->id === $resolvedBy->id) {
+                continue;
+            }
+
+            $this->toUser(
+                $gobiker,
+                null,
+                'SOS resolved',
+                "{$resolvedBy->name} resolved the SOS. You can stand down.",
+                ['type' => 'sos_cancelled', 'id' => (string) $sos->id],
+            );
+        }
     }
 
     /** A resident asked for a home visit: tell the GoBiker they chose. */
@@ -188,8 +214,8 @@ class PushNotifier
     private function gobikerEmergencyChanged(SosRequest $sos): void
     {
         [$title, $body] = match ($sos->status) {
-            'responding' => $sos->assignedGobiker
-                ? ['Help is on the way', "{$sos->assignedGobiker->name} is on the way to help you."]
+            'responding' => ($onTheWay = $this->onTheWay($sos))
+                ? ['Help is on the way', $onTheWay]
                 : ['The admin saw your alert', 'The Go Bike admin is handling your emergency.'],
             'resolved' => ['Emergency resolved', $sos->resolved_by_gobiker_id
                 ? ($sos->resolvedBy?->name ?? 'The GoBiker').' marked your emergency as resolved.'
@@ -272,7 +298,48 @@ class PushNotifier
         );
     }
 
+    /** The admin started a message to a GoBiker. Same type as a reply: the app opens Messages. */
+    public function gobikerMessageFromAdmin(GobikerMessage $message): void
+    {
+        if (! $message->sender || ! $message->from_admin) {
+            return;
+        }
+
+        $this->toUser(
+            $message->sender,
+            null,
+            'Message from admin',
+            Str::limit($message->message, 150),
+            ['type' => 'gobiker_message_reply', 'id' => (string) $message->id],
+        );
+    }
+
     // ------------------------------------------------------------ internals
+
+    /** The GoBikers still on the way to this SOS, the most recently sent first. */
+    private function activeGobikers(SosRequest $sos): Collection
+    {
+        return $sos->activeResponders()->with('gobiker')->get()
+            ->map(fn (SosResponder $r) => $r->gobiker)
+            ->filter()
+            ->values();
+    }
+
+    /**
+     * "{A} is on the way to help you." / "{A} and {B} are …" / "{A} and {n} other GoBikers are …",
+     * {A} being the one sent last; null when nobody is on the way.
+     */
+    private function onTheWay(SosRequest $sos): ?string
+    {
+        $names = $this->activeGobikers($sos)->pluck('name');
+
+        return match ($names->count()) {
+            0 => null,
+            1 => "{$names[0]} is on the way to help you.",
+            2 => "{$names[0]} and {$names[1]} are on the way to help you.",
+            default => "{$names[0]} and ".($names->count() - 1).' other GoBikers are on the way to help you.',
+        };
+    }
 
     /**
      * @param  string|null  $kind  the resident's switch for this kind (null: always send)

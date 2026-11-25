@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Location;
 use App\Services\Push\PushNotifier;
 use App\Support\GobikerEmergency;
+use App\Support\LiveMap;
 use App\Support\Media;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -20,7 +21,7 @@ class LocationController extends Controller
     {
         $locations = Location::query()
             ->whereHas('user', fn ($user) => $user->where('role', 'GoBiker'))
-            ->with('user:id,name,mobile,photo_path')
+            ->with('user:id,name,mobile,photo_path,barangay,municipality_id', 'user.municipality:id,name')
             ->select([
                 'id', 'user_id', 'name', 'designated_barangay', 'status',
                 'latitude', 'longitude', 'accuracy', 'speed', 'position_at',
@@ -33,6 +34,8 @@ class LocationController extends Controller
                 $status = $this->currentStatus($location);
                 $activeSince = $location->active_start_time;
                 $activeUntil = $location->active_end_time ?? now();
+                // The ronda's barangay when one was started, else the one in the profile.
+                $barangay = $location->designated_barangay ?: $location->user?->barangay;
 
                 return [
                     'id' => $location->user_id,
@@ -41,7 +44,8 @@ class LocationController extends Controller
                     'mobile' => $location->user?->mobile,
                     // So the admin sees who is on the pin, not just a dot and a name.
                     'photo_url' => Media::url($location->user?->photo_path),
-                    'designated_barangay' => $location->designated_barangay,
+                    'designated_barangay' => $barangay,
+                    'municipality' => $location->user?->municipality?->name ?? LiveMap::townOf($barangay),
                     'latitude' => $location->latitude,
                     'longitude' => $location->longitude,
                     // How far out the dot may be (metres), and when the phone measured it: the

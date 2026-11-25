@@ -208,6 +208,7 @@ Route::middleware([EnsureAdmin::class, AuthenticateSession::class, \App\Http\Mid
         // GoBiker -> admin messages
         Route::get('/gobiker-messages', [GobikerMessageController::class, 'index'])->name('gobiker-messages.index');
         Route::patch('/gobiker-messages/{message}/read', [GobikerMessageController::class, 'markRead'])->name('gobiker-messages.read');
+        Route::post('/gobiker-messages', [GobikerMessageController::class, 'store'])->name('gobiker-messages.store');
         Route::post('/gobiker-messages/{message}/reply', [GobikerMessageController::class, 'reply'])->name('gobiker-messages.reply');
         Route::delete('/gobiker-messages/{message}', [GobikerMessageController::class, 'destroy'])->name('gobiker-messages.destroy');
 

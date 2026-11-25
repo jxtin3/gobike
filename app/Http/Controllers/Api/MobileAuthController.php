@@ -541,6 +541,11 @@ class MobileAuthController extends Controller
             'municipality_id' => $user->municipality_id,
             'city_id' => $user->city_id,
             'province_id' => $user->province_id,
+            // The names too, so Edit profile can show the saved place again (the ids alone
+            // left the province and town pickers empty).
+            'province' => $user->province?->name,
+            'city' => $user->city?->name,
+            'municipality' => $user->municipality?->name,
             'birthdate' => $user->birthdate?->toDateString(),
             'age' => $user->age,
             'photo_url' => Media::url($user->photo_path),

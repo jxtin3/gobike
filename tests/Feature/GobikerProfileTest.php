@@ -48,6 +48,9 @@ it('updates the authenticated GoBiker profile', function () {
                 'municipality_id' => null,
                 'city_id' => null,
                 'province_id' => null,
+                'province' => null,
+                'city' => null,
+                'municipality' => null,
                 'notification_prefs' => ['sos_updates' => true, 'appointments' => true, 'checkups' => true, 'sound' => true, 'vibration' => true],
             ],
         ]);

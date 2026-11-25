@@ -21,7 +21,7 @@ class ResidentSosController extends Controller
     public function index(Request $request): JsonResponse
     {
         $requests = SosRequest::where('user_id', $request->user()->id)
-            ->with('assignedGobiker:id,name,barangay,photo_path', 'resolvedBy:id,name,barangay,photo_path')
+            ->with('assignedGobiker:id,name,barangay,photo_path', 'resolvedBy:id,name,barangay,photo_path', 'responders.gobiker:id,name,barangay,photo_path')
             ->whereNull('resident_hidden_at') // cleared from the resident's history
             ->latest()
             ->latest('id')
@@ -142,7 +142,7 @@ class ResidentSosController extends Controller
             'resolved_at' => now(),
             'resolved_by_resident' => true,
         ]);
-        app(PushNotifier::class)->sosCancelled($sos->load('user', 'assignedGobiker'));
+        app(PushNotifier::class)->sosCancelled($sos->load('user'));
 
         return response()->json([
             'message' => 'SOS cancelled.',

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Appointment;
 use App\Models\SosRequest;
+use App\Models\SosResponder;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -34,8 +35,9 @@ class GobikerHistoryController extends Controller
             ->limit(self::LIMIT)
             ->get();
 
+        // The SOS this GoBiker was sent to and stayed on (one they declined is not theirs).
         $sos = SosRequest::with('user:id,name')
-            ->where('assigned_gobiker_id', $gobiker->id)
+            ->whereHas('responders', fn ($q) => $q->where('gobiker_id', $gobiker->id)->where('status', SosResponder::RESPONDING))
             ->whereIn('status', ['resolved', 'cancelled'])
             ->latest('resolved_at')
             ->latest('id')

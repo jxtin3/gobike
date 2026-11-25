@@ -322,7 +322,7 @@ it('lets the admin send a GoBiker from another barangay, who then sees the reque
     $this->getJson(route('api.gobiker.map'))->assertOk()->assertJsonPath('sos.0.id', $sos->id);
 });
 
-it('shows the GoBiker who was sent that the resident cancelled, as a closed request', function () {
+it('takes an SOS the resident cancelled off the map of the GoBiker who was sent', function () {
     onlineGobiker($this->gobiker);
     $sos = liveSos($this->resident, ['status' => 'responding', 'assigned_gobiker_id' => $this->gobiker->id]);
 
@@ -330,13 +330,10 @@ it('shows the GoBiker who was sent that the resident cancelled, as a closed requ
     $this->postJson(route('api.resident.sos.cancel', $sos))->assertOk();
 
     Sanctum::actingAs($this->gobiker);
-    // Gone from the list of emergencies they must answer...
+    // Gone from the list of emergencies they must answer, and from the map: nobody helped, so a
+    // green "resolved" pin would mislead.
     $this->getJson(route('api.gobiker.sos.index'))->assertOk()->assertJsonCount(0, 'sos');
-    // ...and on the map it reads as closed, never as open (older apps know no "cancelled").
-    $this->getJson(route('api.gobiker.map'))->assertOk()
-        ->assertJsonPath('sos.0.id', $sos->id)
-        ->assertJsonPath('sos.0.status', 'resolved')
-        ->assertJsonPath('sos.0.cancelled', true);
+    $this->getJson(route('api.gobiker.map'))->assertOk()->assertJsonCount(0, 'sos');
 });
 
 it('does not let the admin send anyone but an active GoBiker', function () {
@@ -385,21 +382,24 @@ it('offers nobody when every GoBiker is offline, and the stale ones drop out', f
     $this->getJson(route('admin.operations.sos.gobikers', $sos))->assertOk()->assertJsonCount(0, 'gobikers');
 });
 
-it('lets the admin hand a responding SOS to another GoBiker', function () {
+it('lets the admin send another GoBiker to a responding SOS, keeping the first one on it', function () {
     onlineGobiker($this->colleague);
     $sos = liveSos($this->resident, ['status' => 'responding', 'assigned_gobiker_id' => $this->gobiker->id, 'responded_at' => now()]);
 
     $this->actingAs($this->admin)
         ->patchJson(route('admin.operations.sos.status', $sos), ['status' => 'responding', 'gobiker_id' => $this->colleague->id])
         ->assertOk()
-        ->assertJsonPath('assigned_gobiker', 'Jose Lim');
+        ->assertJsonPath('assigned_gobiker', 'Jose Lim')
+        ->assertJsonPath('message', 'Jose Lim is now also responding.');
 
+    // assigned_gobiker_id is the one sent last, for older apps.
     expect($sos->fresh())->assigned_gobiker_id->toBe($this->colleague->id);
 
-    // The request moves with the assignment: the GoBiker taken off it loses access.
-    Sanctum::actingAs($this->gobiker);
-    $this->getJson(route('api.gobiker.sos.index'))->assertJsonCount(0, 'sos');
-    $this->postJson(route('api.gobiker.sos.resolve', $sos))->assertForbidden();
+    // Both GoBikers are on it now.
+    foreach ([$this->gobiker, $this->colleague] as $gobiker) {
+        Sanctum::actingAs($gobiker);
+        $this->getJson(route('api.gobiker.sos.index'))->assertJsonCount(1, 'sos')->assertJsonPath('sos.0.id', $sos->id);
+    }
 });
 
 it('lists the GoBikers who can respond, nearest first, and the SOS pins for the admin map', function () {

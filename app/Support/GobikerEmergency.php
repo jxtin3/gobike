@@ -50,7 +50,7 @@ class GobikerEmergency
             $changes = self::position($location);
             // The admin had only pressed "Responding" and sent nobody: pressing again rings the
             // alarm again. With a GoBiker on the way it just shows them the new position.
-            if ($sos->status === 'responding' && ! $sos->assigned_gobiker_id) {
+            if ($sos->status === 'responding' && ! $sos->activeResponders()->exists()) {
                 $changes['status'] = 'sent';
             }
             $sos->update($changes);

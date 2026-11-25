@@ -81,6 +81,30 @@
     </article>
 </div>
 
+@if ($sos->responders->isNotEmpty())
+    <article class="detail-card">
+        <h2 class="detail-card-title">GoBikers sent</h2>
+        <dl class="detail-dl">
+            @foreach ($sos->responders as $responder)
+                <div>
+                    <dt>{{ $responder->gobiker?->name ?? 'A removed GoBiker' }}</dt>
+                    <dd>
+                        @if ($responder->isResponding())
+                            <span class="pill pill-warn">Responding</span>
+                        @else
+                            <span class="pill pill-bad">Declined</span>
+                            @if ($responder->decline_reason)
+                                <span class="muted">“{{ $responder->decline_reason }}”</span>
+                            @endif
+                        @endif
+                        <span class="muted">· sent {{ $responder->assigned_at?->diffForHumans() }}</span>
+                    </dd>
+                </div>
+            @endforeach
+        </dl>
+    </article>
+@endif
+
 @if ($sos->decline_reason)
     <article class="detail-card">
         <h2 class="detail-card-title">Why the GoBiker declined</h2>

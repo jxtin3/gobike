@@ -10,7 +10,7 @@
     @endfor
 </div>
 <div class="sk-map">
-    <div class="sk-card"><span class="sk sk-block" style="--h: 460px; border-radius: 8px"></span></div>
+    <div class="sk-card"><span class="sk sk-block sk-map-canvas" style="border-radius: 8px"></span></div>
     <div class="sk-card">
         @for ($i = 0; $i < 6; $i++)
             <div class="sk-cell-user" style="padding: 8px 0">

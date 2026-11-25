@@ -155,14 +155,16 @@ class LiveMap
      * worked out from the names. Where both the SOS and the GoBiker's app have sent a position,
      * the real distance is used instead; GoBikers with no position sort last.
      *
-     * $exceptUserId leaves someone out: a GoBiker in trouble is never offered as their own helper.
+     * $exceptUserIds leaves people out: a GoBiker in trouble is never offered as their own helper,
+     * and GoBikers already on the way to this SOS are not offered again.
      *
+     * @param  list<int>  $exceptUserIds
      * @return Collection<int, array<string, mixed>>
      */
-    public static function gobikersForAssignment(?float $latitude, ?float $longitude, ?string $barangay, ?int $exceptUserId = null): Collection
+    public static function gobikersForAssignment(?float $latitude, ?float $longitude, ?string $barangay, array $exceptUserIds = []): Collection
     {
         return self::gobikersFor($barangay)
-            ->reject(fn (array $gobiker) => $exceptUserId !== null && $gobiker['id'] === $exceptUserId)
+            ->reject(fn (array $gobiker) => in_array($gobiker['id'], $exceptUserIds, true))
             // Only GoBikers who are actually online: someone whose app is closed cannot be told
             // an emergency is waiting, so the admin must not be offered them in the first place.
             ->filter(fn (array $gobiker) => $gobiker['online'])

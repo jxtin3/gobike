@@ -36,6 +36,8 @@ class GobikerController extends Controller
             'messages' => $messages->map(fn (GobikerMessage $m) => [
                 'id' => $m->id,
                 'message' => $m->message,
+                // The admin started this one: 'message' is the admin's text, shown as theirs.
+                'from_admin' => (bool) $m->from_admin,
                 'sent_at' => $m->created_at?->toIso8601String(),
                 'reply' => $m->reply_message,
                 'replied_at' => $m->replied_at?->toIso8601String(),

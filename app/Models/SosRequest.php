@@ -6,6 +6,7 @@ use App\Support\Media;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Storage;
 
 /** An emergency request a resident sent with the SOS button, or a GoBiker's own emergency. */
@@ -58,6 +59,33 @@ class SosRequest extends Model
         ];
     }
 
+    /**
+     * Keeps the GoBikers-sent list in step with assigned_gobiker_id when code (older paths, test
+     * fixtures) sets that column directly: the GoBiker set there gets their row.
+     */
+    protected static function booted(): void
+    {
+        static::saved(function (SosRequest $sos) {
+            $gobikerId = $sos->assigned_gobiker_id;
+            if (! $gobikerId || ! ($sos->wasRecentlyCreated || $sos->wasChanged('assigned_gobiker_id'))) {
+                return;
+            }
+
+            $declined = $sos->status === 'declined' && $sos->declined_by_gobiker_id === $gobikerId;
+
+            SosResponder::firstOrCreate(
+                ['sos_request_id' => $sos->id, 'gobiker_id' => $gobikerId],
+                [
+                    'status' => $declined ? SosResponder::DECLINED : SosResponder::RESPONDING,
+                    'assigned_by' => $sos->handled_by,
+                    'assigned_at' => $sos->responded_at ?? now(),
+                    'declined_at' => $declined ? $sos->declined_at : null,
+                    'decline_reason' => $declined ? $sos->decline_reason : null,
+                ],
+            );
+        });
+    }
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
@@ -84,6 +112,39 @@ class SosRequest extends Model
     public function declinedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'declined_by_gobiker_id');
+    }
+
+    /** Every GoBiker the admin sent, including those who declined. */
+    public function responders(): HasMany
+    {
+        return $this->hasMany(SosResponder::class, 'sos_request_id');
+    }
+
+    /** The GoBikers still on the way, the most recently sent first. */
+    public function activeResponders(): HasMany
+    {
+        return $this->responders()
+            ->where('status', SosResponder::RESPONDING)
+            ->latest('assigned_at')
+            ->latest('id');
+    }
+
+    /** This GoBiker was sent and is still on the way. */
+    public function isRespondedBy(int $userId): bool
+    {
+        return $this->activeResponders()->where('gobiker_id', $userId)->exists();
+    }
+
+    /**
+     * assigned_gobiker_id is "the newest GoBiker still on the way", for app versions and pages
+     * that know only one. Left as it is when nobody is (it then names who declined last).
+     */
+    public function syncAssignedGobiker(): void
+    {
+        $newest = $this->activeResponders()->value('gobiker_id');
+        if ($newest) {
+            $this->assigned_gobiker_id = (int) $newest;
+        }
     }
 
     /** Requests no admin has answered yet: these ring the alarm. */

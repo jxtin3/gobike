@@ -58,6 +58,14 @@
     // Canvas draws hundreds of GoBiker dots much faster than one SVG element each.
     const map = L.map(mapEl, { preferCanvas: true }).setView(HOME, 13);
 
+    // The map's height follows the window (see body.adm-live-map #map): when the box changes
+    // size, Leaflet has to measure again or it leaves grey bands where no tiles were drawn.
+    if ('ResizeObserver' in window) {
+        new ResizeObserver(() => map.invalidateSize({ pan: false })).observe(mapEl);
+    } else {
+        window.addEventListener('resize', () => map.invalidateSize({ pan: false }));
+    }
+
     /*
      * Two pictures of the same place. Streets has the road and place names; Satellite shows the
      * roofs and paths a GoBiker actually rides by, and is what the app shows them, so the admin
@@ -236,7 +244,7 @@
             <strong>${face(r.name, r.photo_url, 32)}<span>${esc(r.name)} <em class="s-text s-${esc(r.status)}">${esc(status)}</em></span></strong>
             <dl>
                 <dt>Mobile</dt><dd>${mobile}</dd>
-                <dt>Barangay</dt><dd>${esc(r.designated_barangay || 'Not assigned')}</dd>
+                <dt>Barangay</dt><dd>${esc(placeOf(r) || 'Not assigned')}</dd>
                 <dt>Location</dt><dd>${hasPos(r) ? `${r.latitude.toFixed(5)}, ${r.longitude.toFixed(5)}` : 'Unavailable'}</dd>
                 ${hasPos(r) && accuracy ? `<dt>Accuracy</dt><dd>${esc(accuracy)}</dd>` : ''}
                 ${hasPos(r) && positionIsOld(r) ? `<dt>Position from</dt><dd class="is-old">${esc(ago(r.position_at))}: may have moved</dd>` : ''}
@@ -248,6 +256,9 @@
             ${actions}
         </div>`;
     }
+
+    /* "Salasa, Bugallon": the barangay from the ronda or the profile, then its town. */
+    const placeOf = (r) => [r.designated_barangay, r.municipality].filter(Boolean).join(', ');
 
     function matches(r) {
         const q = els.search.value.trim().toLowerCase();
@@ -275,7 +286,7 @@
         els.list.innerHTML = visible.map((r) => `
             <li><button type="button" class="rider" data-id="${esc(r.id)}">
                 <span class="status-dot s-${esc(r.status)}"></span>
-                <span class="rider-main"><b>${esc(r.name)}</b><small>${esc(r.designated_barangay || 'No barangay assigned')}</small></span>
+                <span class="rider-main"><b>${esc(r.name)}</b><small>${esc(placeOf(r) || 'No barangay assigned')}</small></span>
                 <span class="rider-meta"><em class="s-text s-${esc(r.status)}">${esc(LABELS[r.status] || 'Unknown')}</em><small>${esc(hasPos(r) && positionIsOld(r) ? `Position ${ago(r.position_at).toLowerCase()}` : ago(r.last_seen_at))}</small></span>
             </button></li>`).join('');
 
@@ -434,19 +445,38 @@
             : `<span class="avatar" aria-hidden="true"${style}>${esc(initials(name))}</span>`;
     }
 
-    /* Who is on their way, so the admin can see at a glance that someone is actually going. */
-    function responderChip(p) {
-        // Nobody is on their way after a decline: the Declined row in the facts says who it was.
-        if (!p.assigned_gobiker || p.status === 'declined') return '';
-        const where = p.assigned_gobiker_barangay ? ` · ${esc(p.assigned_gobiker_barangay)}` : '';
+    /* The GoBikers still on their way (a server older than several responders sends one name). */
+    const activeResponders = (p) => (Array.isArray(p.responders)
+        ? p.responders.filter((r) => r.status === 'responding')
+        : (p.assigned_gobiker && p.status !== 'declined' ? [{ name: p.assigned_gobiker }] : []));
 
-        return `<div class="sos-responder">
-            ${face(p.assigned_gobiker, p.assigned_gobiker_photo)}
-            <span class="sos-responder-main">
-                <b>${esc(p.assigned_gobiker)}</b>
-                <small><em class="s-text s-sos-responding">Responding</em>${where}</small>
-            </span>
-        </div>`;
+    /*
+     * Everyone sent, so the admin sees at a glance who is actually going. Those who declined stay,
+     * greyed, with their reason, so nobody sends them again by mistake.
+     */
+    function responderChip(p) {
+        const list = Array.isArray(p.responders)
+            ? p.responders
+            : activeResponders(p).map((r) => ({
+                ...r, status: 'responding', barangay: p.assigned_gobiker_barangay, photo: p.assigned_gobiker_photo,
+            }));
+        if (!list.length) return '';
+
+        return list.map((r) => {
+            const declined = r.status === 'declined';
+            const where = r.barangay ? ` · ${esc(r.barangay)}` : '';
+            const why = declined && r.decline_reason ? ` · “${esc(r.decline_reason)}”` : '';
+
+            return `<div class="sos-responder${declined ? ' is-declined' : ''}">
+                ${face(r.name || 'GoBiker', r.photo)}
+                <span class="sos-responder-main">
+                    <b>${esc(r.name || 'A removed GoBiker')}</b>
+                    <small>${declined
+                        ? `<em class="s-text s-sos-declined">Declined</em>${why}`
+                        : `<em class="s-text s-sos-responding">Responding</em>${where}`}</small>
+                </span>
+            </div>`;
+        }).join('');
     }
 
     /* A decorative line icon; the text beside it always carries the meaning. */
@@ -486,7 +516,7 @@
         if (p.status === 'sent') return SOS_LABELS.sent;
         if (p.status === 'declined') return SOS_LABELS.declined;
 
-        return p.assigned_gobiker ? SOS_LABELS.assigned : SOS_LABELS.handled;
+        return activeResponders(p).length ? SOS_LABELS.assigned : SOS_LABELS.handled;
     }
 
     /* One line of the report: its icon, the muted label, then what the resident told us. */
@@ -509,8 +539,8 @@
             : p.status === 'declined'
                 // The last GoBiker turned it down: the admin must send someone else.
                 ? assignBlock(p, 'responding', 'Send another GoBiker')
-                // Already being answered: the admin can still send someone, or someone nearer.
-                : assignBlock(p, 'responding', p.assigned_gobiker ? 'Send another GoBiker' : 'Send a GoBiker');
+                // Already being answered: the admin can add someone, and the first keeps going.
+                : assignBlock(p, 'responding', activeResponders(p).length ? 'Send another GoBiker' : 'Send a GoBiker');
 
         // The street and the barangay read as one place; a row the resident left empty is left out.
         const where = [p.address, p.barangay].filter(Boolean).join(', ');
@@ -555,13 +585,14 @@
     function renderSosList() {
         const q = els.search.value.trim().toLowerCase();
         const rank = { sent: 0, declined: 1 };
-        const visible = sosPins
+        const residents = sosPins.filter((p) => p.from !== 'gobiker');
+        const visible = residents
             .filter((p) => !q || String(p.resident).toLowerCase().includes(q))
             .sort((a, b) => (rank[a.status] ?? 1) - (rank[b.status] ?? 1)
                 || new Date(b.created_at) - new Date(a.created_at));
         els.sosCount.textContent = visible.length;
         els.sosEmpty.hidden = visible.length > 0;
-        els.sosEmpty.textContent = sosPins.length ? 'No resident matches this search.' : 'No resident needs help right now.';
+        els.sosEmpty.textContent = residents.length ? 'No resident matches this search.' : 'No resident needs help right now.';
         const focusedId = document.activeElement?.dataset?.sosId;
         const html = visible.map((p) => `
             <li><button type="button" class="rider" data-sos-id="${esc(p.id)}">
@@ -594,7 +625,10 @@
         pins.forEach((p) => {
             const id = String(p.id);
             // Rebuild the popup only when something changed, so a half-picked GoBiker isn't lost.
-            const key = `${p.status}|${p.assigned_gobiker}|${p.decline_reason ?? ''}`;
+            const who = Array.isArray(p.responders)
+                ? p.responders.map((r) => `${r.id}:${r.status}`).join(',')
+                : p.assigned_gobiker;
+            const key = `${p.status}|${who}|${p.decline_reason ?? ''}`;
             let rebuilt = true;
             let marker = sosMarkers.get(id);
             if (!marker) {
@@ -603,7 +637,7 @@
                     // Always above the GoBiker dots: an emergency must never end up underneath one.
                     zIndexOffset: 1000,
                     keyboard: true,
-                    title: `${p.resident}: ${sosHeadline(p)}`,
+                    title: `${p.resident}: ${sosHeadline(p)}${p.from === 'gobiker' ? ' · GoBiker emergency' : ''}`,
                 }).addTo(map);
                 marker.bindPopup(sosPopup(p), { minWidth: 260, maxWidth: 290 });
                 marker.on('popupopen', () => {
@@ -997,6 +1031,9 @@
     });
     els.list.addEventListener('click', (e) => {
         const item = e.target.closest('[data-id]');
+        // A GoBiker who asked for help: open their SOS, where the admin can send someone.
+        const ownSos = item && sosPins.find((p) => p.from === 'gobiker' && String(p.user_id) === item.dataset.id);
+        if (ownSos && focusSos(ownSos.id)) return;
         const marker = item && markers.get(item.dataset.id);
         if (!marker) { if (item) notice('This GoBiker has not shared a location yet.'); return; }
         flyToMarker(marker);
@@ -1127,7 +1164,7 @@
                 btn.disabled = false;
                 return;
             }
-            window.adminToast?.({ text: `Marked as responding. ${body.assigned_gobiker || 'The GoBiker'} was notified.` });
+            window.adminToast?.({ text: body.message || `Marked as responding. ${body.assigned_gobiker || 'The GoBiker'} was notified.` });
             document.dispatchEvent(new CustomEvent('gobike:emergencies-changed', { detail: { source: 'map' } }));
             await loadSos();
         } catch {

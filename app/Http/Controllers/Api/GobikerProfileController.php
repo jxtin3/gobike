@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Location;
 use App\Models\User;
 use App\Support\Age;
 use Illuminate\Http\JsonResponse;
@@ -32,6 +33,7 @@ class GobikerProfileController extends Controller
             'password_confirmation' => ['required_with:password', 'string', 'same:password'],
         ], Age::messages($user->role));
 
+        $oldBarangay = $user->barangay;
         $user->mobile = $data['mobile'];
         $user->barangay = $data['barangay'];
         if (! empty($data['birthdate'])) {
@@ -45,6 +47,14 @@ class GobikerProfileController extends Controller
 
         $user->save();
         $user->refresh();
+
+        // The live map shows a GoBiker's barangay from their location row. Move it with the
+        // profile, unless a ronda set it to some other barangay.
+        if ($user->barangay !== $oldBarangay) {
+            Location::where('user_id', $user->id)
+                ->where(fn ($q) => $q->whereNull('designated_barangay')->orWhere('designated_barangay', $oldBarangay))
+                ->update(['designated_barangay' => $user->barangay]);
+        }
 
         return response()->json([
             'message' => 'Profile updated successfully.',

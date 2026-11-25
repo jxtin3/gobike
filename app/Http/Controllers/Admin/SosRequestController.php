@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Barangay;
 use App\Models\SosRequest;
+use App\Models\SosResponder;
+use App\Models\User;
 use App\Services\Push\PushNotifier;
 use App\Support\GobikerEmergency;
 use App\Support\LiveMap;
@@ -13,6 +15,7 @@ use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use League\Flysystem\Local\LocalFilesystemAdapter;
 
 /** Residents' SOS requests: list, details, and moving them to "Responding" / "Resolved". */
@@ -59,7 +62,7 @@ class SosRequestController extends Controller
 
     public function show(SosRequest $sos)
     {
-        $sos->load('user', 'handler:id,name', 'declinedBy:id,name');
+        $sos->load(['user', 'handler:id,name', 'declinedBy:id,name', 'responders' => fn ($q) => $q->latest('assigned_at')->latest('id'), 'responders.gobiker:id,name,barangay']);
 
         return view('admin.operations.sos.show', [
             'sos' => $sos,
@@ -92,15 +95,16 @@ class SosRequestController extends Controller
             ],
         ]);
 
-        $newGobikerId = $data['gobiker_id'] ?? null;
-        // Sending a different GoBiker to a request already being answered, or to one the last
-        // GoBiker turned down: hand it over to them.
-        $reassigning = in_array($sos->status, ['responding', 'declined'], true)
-            && $newGobikerId !== null
-            && $newGobikerId !== $sos->assigned_gobiker_id;
+        $gobiker = isset($data['gobiker_id']) ? User::find((int) $data['gobiker_id']) : null;
+
+        // Sending a GoBiker adds them to whoever is already on the way (or to a request the last
+        // one turned down), so it may go to "responding" from any status that is still open.
+        $sending = $gobiker !== null
+            && $data['status'] === 'responding'
+            && in_array($sos->status, ['sent', 'responding', 'declined'], true);
 
         // Another admin may have answered first: tell this one instead of going backwards.
-        if (! $reassigning && ! $sos->canMoveTo($data['status'])) {
+        if (! $sending && ! $sos->canMoveTo($data['status'])) {
             $message = "This request is already marked \"{$sos->status_label}\".";
 
             return $request->expectsJson()
@@ -108,33 +112,60 @@ class SosRequestController extends Controller
                 : back()->with('error', $message);
         }
 
+        if ($sending && $sos->isRespondedBy($gobiker->id)) {
+            throw ValidationException::withMessages([
+                'gobiker_id' => "{$gobiker->name} is already responding to this request.",
+            ]);
+        }
+
+        $othersOnTheWay = $sos->activeResponders()->exists();
+
         $sos->status = $data['status'];
         $sos->handled_by = $request->user()->id;
-        if ($data['status'] === 'responding') {
-            $sos->responded_at ??= now();
-            // Leaving the picker empty must never drop the GoBiker already on their way.
-            $sos->assigned_gobiker_id = $newGobikerId ?? $sos->assigned_gobiker_id;
-        } else {
-            $sos->responded_at ??= now();
+        $sos->responded_at ??= now();
+        if ($data['status'] === 'resolved') {
             $sos->resolved_at = now();
         }
-        $assignmentChanged = $sos->isDirty('assigned_gobiker_id');
+
+        if ($sending) {
+            // A GoBiker who declined before is sent again: same row, back on the way, and alerted
+            // again (assigned_at is new, which is how the app tells a new alert apart).
+            SosResponder::updateOrCreate(
+                ['sos_request_id' => $sos->id, 'gobiker_id' => $gobiker->id],
+                [
+                    'status' => SosResponder::RESPONDING,
+                    'assigned_by' => $request->user()->id,
+                    'assigned_at' => now(),
+                    'declined_at' => null,
+                    'decline_reason' => null,
+                ],
+            );
+            $sos->syncAssignedGobiker();
+        }
         $sos->save();
+
         GobikerEmergency::syncLocation($sos);
         $push = app(PushNotifier::class);
         $push->sosStatusChanged($sos->load('user', 'assignedGobiker'));
-        if ($sos->status === 'responding' && $sos->assignedGobiker && $assignmentChanged) {
-            $push->sosAssigned($sos);
+        if ($sending) {
+            $push->sosAssigned($sos, $gobiker);
         }
 
         $success = match (true) {
             $data['status'] === 'resolved' => 'SOS request resolved.',
-            $reassigning => ($sos->assignedGobiker?->name ?? 'The GoBiker').' is now responding to this request.',
+            $sending && $othersOnTheWay => "{$gobiker->name} is now also responding.",
+            $sending => "Marked as responding. {$gobiker->name} was notified.",
             default => 'Marked as responding. The resident can see this in the app.',
         };
 
         return $request->expectsJson()
-            ? response()->json(['status' => $sos->status, 'assigned_gobiker' => $sos->assignedGobiker?->name])
+            ? response()->json([
+                'message' => $success,
+                'status' => $sos->status,
+                'assigned_gobiker' => $sos->assignedGobiker?->name,
+                'responders' => $sos->activeResponders()->with('gobiker:id,name')->get()
+                    ->map(fn (SosResponder $r) => $r->gobiker?->name)->filter()->values(),
+            ])
             : back()->with('success', $success);
     }
 
@@ -152,6 +183,8 @@ class SosRequestController extends Controller
             'user:id,name,mobile,photo_path,role',
             'assignedGobiker:id,name,barangay,photo_path',
             'declinedBy:id,name',
+            'responders' => fn ($q) => $q->latest('assigned_at')->latest('id'),
+            'responders.gobiker:id,name,barangay,photo_path',
         ])
             ->select([
                 'id', 'user_id', 'status', 'barangay', 'address', 'landmark', 'description',
@@ -166,6 +199,7 @@ class SosRequestController extends Controller
             ->get()
             ->map(fn (SosRequest $sos) => [
                 'id' => $sos->id,
+                'user_id' => $sos->user_id,
                 'status' => $sos->status,
                 // A GoBiker's own emergency (GobikerEmergency) is drawn and answered the same way.
                 'from' => $sos->user?->role === 'GoBiker' ? 'gobiker' : 'resident',
@@ -187,6 +221,15 @@ class SosRequestController extends Controller
                 // someone else, so the pin says who declined and why.
                 'declined_by' => $sos->status === 'declined' ? $sos->declinedBy?->name : null,
                 'decline_reason' => $sos->status === 'declined' ? $sos->decline_reason : null,
+                // Every GoBiker sent, newest first; those who declined keep their reason.
+                'responders' => $sos->responders->map(fn (SosResponder $r) => [
+                    'id' => $r->gobiker_id,
+                    'name' => $r->gobiker?->name,
+                    'barangay' => $r->gobiker?->barangay,
+                    'photo' => Media::url($r->gobiker?->photo_path),
+                    'status' => $r->status,
+                    'decline_reason' => $r->status === SosResponder::DECLINED ? $r->decline_reason : null,
+                ])->values(),
                 'created_at' => $sos->created_at?->toIso8601String(),
             ]);
 
@@ -207,8 +250,14 @@ class SosRequestController extends Controller
         return response()->json([
             'barangay' => $sos->barangay,
             'barangays' => $this->barangayChoices($sos),
-            // A GoBiker's own emergency: they cannot be sent to help themselves.
-            'gobikers' => LiveMap::gobikersForAssignment($sos->latitude, $sos->longitude, $barangay, $sos->user_id),
+            // A GoBiker's own emergency: they cannot be sent to help themselves. Those already on
+            // the way are left out too: sending them again would change nothing.
+            'gobikers' => LiveMap::gobikersForAssignment(
+                $sos->latitude,
+                $sos->longitude,
+                $barangay,
+                array_map('intval', [$sos->user_id, ...$sos->activeResponders()->pluck('gobiker_id')->all()]),
+            ),
         ]);
     }
 

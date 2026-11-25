@@ -6134,3 +6134,74 @@ img.detail-image:not(.is-loaded) {
     justify-content: flex-end;
     gap: var(--sp-2);
 }
+
+/* ---------- Live map page: the map gets the screen ---------- */
+
+/* Less padding and a wider page: the map is the reason the admin is here. */
+body.adm-live-map .adm-main {
+    max-width: 1600px;
+    padding: 12px clamp(12px, 2vw, 24px) 16px;
+}
+
+body.adm-live-map .dashboard-map-heading { margin-bottom: var(--sp-2); }
+
+body.adm-live-map .dashboard-map-heading .analytics-eyebrow,
+body.adm-live-map .dashboard-map-heading p { display: none; }
+
+/* The counts stay readable, in a row a third the height. */
+body.adm-live-map .dashboard-map-section > .stat-grid {
+    gap: var(--sp-2);
+    margin-bottom: var(--sp-3);
+}
+
+body.adm-live-map .stat-card {
+    gap: 10px;
+    padding: 6px 10px;
+}
+
+body.adm-live-map .stat-icon {
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+}
+
+body.adm-live-map .stat-icon svg {
+    width: 14px;
+    height: 14px;
+}
+
+body.adm-live-map .stat-card .label { font-size: var(--fs-12); }
+
+body.adm-live-map .stat-card .value { font-size: 16px; }
+
+body.adm-live-map .map-layout { align-items: stretch; }
+
+body.adm-live-map #map {
+    height: calc(100dvh - 216px);
+    min-height: 420px;
+}
+
+/* The side panel is as tall as the map, and its two lists share that height. */
+body.adm-live-map .rider-panel { max-height: calc(100dvh - 150px); }
+
+body.adm-live-map .rider-panel .rider-section ul { max-height: calc((100dvh - 330px) / 2); min-height: 120px; }
+
+/* A GoBiker who turned the SOS down stays listed, greyed, so nobody sends them again. */
+.sos-responder.is-declined { opacity: .6; }
+
+.s-sos-declined { --c: var(--bad); color: var(--bad); }
+
+@media (max-width: 1180px) {
+    body.adm-live-map #map { height: 70vh; }
+
+    body.adm-live-map .rider-panel { max-height: 420px; }
+
+    body.adm-live-map .rider-panel .rider-section ul { max-height: 300px; }
+
+    body.adm-live-map .dashboard-map-section > .stat-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+/* The loading placeholder is the size the map will be, so nothing jumps when it appears. */
+.sk-map-canvas { --h: 460px; }
+
+body.adm-live-map .sk-map-canvas { --h: max(420px, calc(100dvh - 216px)); }
