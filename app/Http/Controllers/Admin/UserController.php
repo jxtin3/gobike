@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Jobs\EmailApprovedGoBikers;
 use App\Mail\GoBikerApproved;
 use App\Models\User;
-use App\Support\Barangays;
 use App\Support\Media;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -68,7 +67,7 @@ class UserController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
             'mobile' => ['nullable', 'string', 'regex:/^09[0-9]{9}$/', 'unique:users,mobile'],
-            'barangay' => ['nullable', 'string', Rule::in(Barangays::ALL)],
+            'barangay' => ['nullable', 'string', Rule::exists('barangays', 'name')],
             'password' => ['required', 'confirmed', Password::min(12)->letters()->numbers()],
             'role' => ['required', Rule::in($this->roles)],
             'photo' => ['nullable', 'image', 'mimes:jpg,jpeg,png', 'max:5120'],
@@ -124,7 +123,7 @@ class UserController extends Controller
                 'regex:/^09[0-9]{9}$/',
                 Rule::unique('users', 'mobile')->ignore($user),
             ],
-            'barangay' => ['nullable', 'string', Rule::in(Barangays::ALL)],
+            'barangay' => ['nullable', 'string', Rule::exists('barangays', 'name')],
             'password' => ['nullable', 'confirmed', Password::min(12)->letters()->numbers()],
             'role' => ['required', Rule::in($this->roles)],
             'photo' => ['nullable', 'image', 'mimes:jpg,jpeg,png', 'max:5120'],

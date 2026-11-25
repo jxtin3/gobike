@@ -39,7 +39,7 @@ class ResidentSosController extends Controller
             // The app sends a typed address and uses the resident's own barangay.
             // App versions up to 1.0.9 still pick a municipality and barangay instead.
             'municipality' => ['nullable', 'string', 'max:100'],
-            'barangay' => ['nullable', 'string', Rule::in(Barangays::ALL)],
+            'barangay' => ['nullable', 'string', Rule::exists('barangays', 'name')],
             'address' => ['required_without:barangay', 'nullable', 'string', 'max:255'],
             'landmark' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string', 'max:1000'],

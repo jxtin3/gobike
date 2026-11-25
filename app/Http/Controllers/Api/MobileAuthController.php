@@ -7,7 +7,6 @@ use App\Models\DeviceToken;
 use App\Models\User;
 use App\Services\Push\PushNotifier;
 use App\Support\Age;
-use App\Support\Barangays;
 use App\Support\Media;
 use Google\Client as GoogleClient;
 use Illuminate\Http\JsonResponse;
@@ -83,7 +82,7 @@ class MobileAuthController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
             'mobile' => ['required', 'string', 'max:30'],
-            'barangay' => ['required', 'string', Rule::in(Barangays::ALL)],
+            'barangay' => ['required', 'string', Rule::exists('barangays', 'name')],
             'role' => ['required', Rule::in(['Resident', 'GoBiker', 'User'])],
             'password' => ['required', 'string', 'min:8', 'max:100'],
             // Old enough to use the app (see App\Support\Age). The sign-up screen will not submit

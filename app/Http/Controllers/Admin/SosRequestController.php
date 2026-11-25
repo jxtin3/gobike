@@ -3,9 +3,9 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Barangay;
 use App\Models\SosRequest;
 use App\Services\Push\PushNotifier;
-use App\Support\Barangays;
 use App\Support\LiveMap;
 use App\Support\Media;
 use Closure;
@@ -188,7 +188,7 @@ class SosRequestController extends Controller
 
         return response()->json([
             'barangay' => $sos->barangay,
-            'barangays' => Barangays::ALL,
+            'barangays' => Barangay::orderBy('name')->pluck('name'),
             'gobikers' => LiveMap::gobikersForAssignment($sos->latitude, $sos->longitude, $barangay),
         ]);
     }

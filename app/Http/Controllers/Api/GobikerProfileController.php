@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Support\Age;
-use App\Support\Barangays;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -25,7 +24,7 @@ class GobikerProfileController extends Controller
                 'regex:/^09[0-9]{9}$/',
                 Rule::unique('users', 'mobile')->ignore($user->id),
             ],
-            'barangay' => ['required', 'string', Rule::in(Barangays::ALL)],
+            'barangay' => ['required', 'string', Rule::exists('barangays', 'name')],
             // Optional: an account made before the birthdate was asked can add it here.
             'birthdate' => Age::rules($user->role),
             'current_password' => ['required_with:password', 'string', 'current_password'],

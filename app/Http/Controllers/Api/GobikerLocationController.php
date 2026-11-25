@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Location;
 use App\Models\Ronda;
-use App\Support\Barangays;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -55,7 +54,7 @@ class GobikerLocationController extends Controller
     public function startActiveSession(Request $request): JsonResponse
     {
         $data = $request->validate([
-            'designated_barangay' => ['nullable', 'string', Rule::in(Barangays::ALL)],
+            'designated_barangay' => ['nullable', 'string', Rule::exists('barangays', 'name')],
         ]);
 
         $current = Location::where('user_id', $request->user()->id)->first();

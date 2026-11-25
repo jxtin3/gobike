@@ -8,7 +8,6 @@ use App\Models\Patient;
 use App\Models\SosRequest;
 use App\Models\User;
 use App\Support\Age;
-use App\Support\Barangays;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -25,7 +24,7 @@ class ResidentController extends Controller
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'mobile' => ['required', 'string', 'regex:/^09[0-9]{9}$/'],
-            'barangay' => ['required', 'string', Rule::in(Barangays::ALL)],
+            'barangay' => ['required', 'string', Rule::exists('barangays', 'name')],
             // Optional: an account made before the birthdate was asked can add it here.
             'birthdate' => Age::rules($user->role),
         ], Age::messages($user->role));

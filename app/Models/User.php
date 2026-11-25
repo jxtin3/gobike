@@ -82,6 +82,22 @@ class User extends Authenticatable
         return $this->belongsTo(Barangay::class, 'barangay', 'name');
     }
 
+    /**
+     * Fill municipality_id, city_id and province_id from the barangay string, so the
+     * hierarchy columns stay in step with it wherever the barangay is set or changed.
+     * A barangay not in the seeded list (possible on legacy rows) clears them.
+     */
+    public function syncLocationHierarchy(): void
+    {
+        $barangay = Barangay::where('name', $this->barangay)->first();
+
+        $this->forceFill([
+            'municipality_id' => $barangay?->municipality_id,
+            'city_id' => $barangay?->city_id,
+            'province_id' => $barangay?->province_id,
+        ])->saveQuietly();
+    }
+
     public function municipality(): BelongsTo
     {
         return $this->belongsTo(Municipality::class);
@@ -207,6 +223,12 @@ class User extends Authenticatable
         static::saved(function (User $user) {
             if ($user->wasRecentlyCreated || $user->wasChanged(['name', 'mobile', 'role'])) {
                 $user->claimCheckups();
+            }
+
+            // Keep municipality_id / city_id / province_id in step with the barangay,
+            // wherever the barangay was set (sign-up, profiles, admin forms).
+            if ($user->wasRecentlyCreated || $user->wasChanged('barangay')) {
+                $user->syncLocationHierarchy();
             }
         });
 

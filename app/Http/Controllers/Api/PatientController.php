@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\Patient;
 use App\Models\PatientFollowUp;
 use App\Services\Push\PushNotifier;
-use App\Support\Barangays;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
@@ -116,7 +115,7 @@ class PatientController extends Controller
             'address' => ['required', 'string', 'max:255'],
             'contact' => ['required', 'digits_between:7,11'],
             'age' => ['required', 'integer', 'between:0,120'],
-            'barangay' => ['nullable', 'string', Rule::in(Barangays::ALL)],
+            'barangay' => ['nullable', 'string', Rule::exists('barangays', 'name')],
         ] + Patient::vitalRules() + $extraRules);
     }
 

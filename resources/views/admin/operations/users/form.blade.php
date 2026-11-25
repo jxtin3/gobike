@@ -31,7 +31,7 @@
                 @endphp
                 <select class="input @error('barangay') is-invalid @enderror" id="barangay" name="barangay" aria-describedby="barangay-error">
                     <option value="" @selected(blank($barangay))>Not set</option>
-                    @foreach (\App\Support\Barangays::ALL as $name)
+                    @foreach (\App\Models\Barangay::orderBy('name')->pluck('name') as $name)
                         <option value="{{ $name }}" @selected($barangay === $name)>{{ $name }}</option>
                     @endforeach
                 </select>

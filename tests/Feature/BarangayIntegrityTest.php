@@ -10,7 +10,9 @@ use Laravel\Sanctum\Sanctum;
 uses(RefreshDatabase::class);
 
 it('seeds every barangay of Bugallon', function () {
-    expect(Barangay::orderBy('sort_order')->pluck('name')->all())->toBe(Barangays::ALL);
+    $bugallon = Barangay::where('municipality', 'Bugallon')->orderBy('sort_order')->pluck('name')->all();
+
+    expect($bugallon)->toBe(Barangays::ALL);
 });
 
 it('refuses a barangay that is not on the list at the database level', function () {
@@ -22,6 +24,28 @@ it('rejects an unknown barangay when signing up in the app', function () {
         'name' => 'Lola Nena', 'email' => 'nena@example.com', 'mobile' => '09181112222',
         'barangay' => 'Atlantis', 'role' => 'Resident', 'password' => 'secret-pass-1',
     ])->assertUnprocessable()->assertJsonValidationErrors('barangay');
+});
+
+it('accepts a barangay from another Pangasinan town when signing up', function () {
+    // Seed one other town the way the PhilippineLocationsSeeder does: city →
+    // municipality → barangay, with the hierarchy ids on the barangay row.
+    $province = \App\Models\Province::firstOrCreate(['name' => 'Pangasinan']);
+    $city = \App\Models\City::firstOrCreate(['province_id' => $province->id, 'name' => 'Calasiao']);
+    $municipality = \App\Models\Municipality::firstOrCreate(['city_id' => $city->id, 'name' => 'Calasiao']);
+    Barangay::firstOrCreate(
+        ['name' => 'Talibaew (Calasiao)'],
+        ['municipality' => 'Calasiao', 'sort_order' => 0, 'province_id' => $province->id, 'city_id' => $city->id, 'municipality_id' => $municipality->id],
+    );
+
+    $this->postJson('/api/mobile/register', [
+        'name' => 'Ana Reyes', 'email' => 'ana@example.com', 'mobile' => '09183334444',
+        'barangay' => 'Talibaew (Calasiao)', 'role' => 'Resident', 'password' => 'secret-pass-1',
+    ])->assertCreated();
+
+    $user = User::where('email', 'ana@example.com')->first();
+    expect($user->barangay)->toBe('Talibaew (Calasiao)')
+        ->and($user->municipality_id)->toBe($municipality->id)
+        ->and($user->province_id)->toBe($province->id);
 });
 
 it('rejects an unknown barangay on a check-up', function () {

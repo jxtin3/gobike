@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\Appointment;
 use App\Models\User;
 use App\Services\Push\PushNotifier;
-use App\Support\Barangays;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -33,7 +32,7 @@ class ResidentAppointmentController extends Controller
     public function gobikers(Request $request): JsonResponse
     {
         $data = $request->validate([
-            'barangay' => ['nullable', 'string', Rule::in(Barangays::ALL)],
+            'barangay' => ['nullable', 'string', Rule::exists('barangays', 'name')],
         ]);
         $barangay = $data['barangay'] ?? $request->user()->barangay;
 
@@ -69,7 +68,7 @@ class ResidentAppointmentController extends Controller
         }
 
         $data = $request->validate([
-            'barangay' => ['required', 'string', Rule::in(Barangays::ALL)],
+            'barangay' => ['required', 'string', Rule::exists('barangays', 'name')],
             'address' => ['required', 'string', 'max:255'],
             'preferred_date' => ['required', 'date_format:Y-m-d', 'after_or_equal:today', 'before_or_equal:'.now()->addDays(30)->toDateString()],
             'preferred_window' => ['required', Rule::in(array_keys(Appointment::WINDOWS))],

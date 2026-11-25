@@ -3,10 +3,10 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Barangay;
 use App\Models\Ronda;
 use App\Models\User;
 use App\Services\GobikerActivity;
-use App\Support\Barangays;
 use App\Support\CsvDownload;
 use App\Support\ReportPeriod;
 use Carbon\CarbonImmutable;
@@ -21,7 +21,7 @@ class GobikerReportController extends Controller
         $period = ReportPeriod::fromRequest($request);
         $search = trim((string) $request->query('search', ''));
         $barangay = $request->validate([
-            'barangay' => ['nullable', 'string', Rule::in(Barangays::ALL)],
+            'barangay' => ['nullable', 'string', Rule::exists('barangays', 'name')],
         ])['barangay'] ?? null;
         $rows = $activity->summary($period, $search ?: null, $barangay);
 
@@ -54,7 +54,7 @@ class GobikerReportController extends Controller
 
         return view('admin.operations.gobiker-reports.index', [
             ...compact('period', 'rows', 'totals', 'search', 'barangay'),
-            'barangays' => Barangays::ALL,
+            'barangays' => Barangay::orderBy('name')->pluck('name'),
             'trackingSince' => $this->trackingSince(),
         ]);
     }
