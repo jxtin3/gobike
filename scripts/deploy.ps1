@@ -56,7 +56,9 @@ if ($LASTEXITCODE -ne 0) { Fail 'npm run build failed. Run it by hand to see the
 # ---- 3. upload the build ----------------------------------------------------
 Step 'uploading the build'
 $archive = Join-Path $env:TEMP 'gobike-build.tgz'
-tar -czf $archive -C public build
+# Use Git Bash tar with Unix-style path to avoid Windows path issues
+$archiveUnix = $archive -replace '\\', '/'
+bash -c "tar -czf '$archiveUnix' -C public build"
 if ($LASTEXITCODE -ne 0) { Fail 'could not pack public/build.' }
 scp -q $archive "${SshHost}:gobike-build.tgz"
 if ($LASTEXITCODE -ne 0) { Fail 'upload failed. Check that "ssh gobike-hostinger" works.' }
