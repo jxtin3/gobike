@@ -17,21 +17,25 @@ class SosRequest extends Model
         'resolved' => 'Resolved',
         // The resident no longer needs help. Only they can set it; the admin and the GoBiker resolve.
         'cancelled' => 'Cancelled',
+        // The assigned GoBiker cannot go; they are required to give a reason. The admin then
+        // reassigns or marks resolved.
+        'declined' => 'Declined by GoBiker',
     ];
 
     /** Which statuses an admin may move a request to from each status. */
     public const NEXT = [
         'sent' => ['responding', 'resolved'],
-        'responding' => ['resolved'],
+        'responding' => ['resolved', 'declined'],
         'resolved' => [],
         'cancelled' => [],
+        'declined' => ['responding', 'resolved'], // admin can reassign or close
     ];
 
     protected $fillable = [
         'user_id', 'municipality', 'barangay', 'address', 'landmark', 'description',
         'latitude', 'longitude', 'location_accuracy', 'location_recorded_at', 'image_path', 'video_path',
-        'status', 'handled_by', 'assigned_gobiker_id', 'resolved_by_gobiker_id',
-        'responded_at', 'resolved_at', 'resolved_by_resident',
+        'status', 'handled_by', 'assigned_gobiker_id', 'resolved_by_gobiker_id', 'declined_by_gobiker_id',
+        'responded_at', 'resolved_at', 'resolved_by_resident', 'declined_at', 'decline_reason',
     ];
 
     protected function casts(): array
@@ -45,10 +49,12 @@ class SosRequest extends Model
             // strict comparison against the signed-in id.
             'assigned_gobiker_id' => 'integer',
             'resolved_by_gobiker_id' => 'integer',
+            'declined_by_gobiker_id' => 'integer',
             'responded_at' => 'datetime',
             'resolved_at' => 'datetime',
             'resolved_by_resident' => 'boolean',
             'resident_hidden_at' => 'datetime',
+            'declined_at' => 'datetime',
         ];
     }
 
@@ -74,16 +80,22 @@ class SosRequest extends Model
         return $this->belongsTo(User::class, 'resolved_by_gobiker_id');
     }
 
+    /** The GoBiker who turned the assignment down (with their reason). */
+    public function declinedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'declined_by_gobiker_id');
+    }
+
     /** Requests no admin has answered yet: these ring the alarm. */
     public function scopeUnanswered(Builder $query): Builder
     {
         return $query->where('status', 'sent');
     }
 
-    /** Requests still being handled (not resolved). */
+    /** Requests still needing someone (not resolved, cancelled — or declined and waiting to be reassigned). */
     public function scopeOpen(Builder $query): Builder
     {
-        return $query->whereIn('status', ['sent', 'responding']);
+        return $query->whereIn('status', ['sent', 'responding', 'declined']);
     }
 
     public function canMoveTo(string $status): bool

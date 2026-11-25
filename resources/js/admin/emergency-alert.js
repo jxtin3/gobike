@@ -243,6 +243,17 @@
         $('[data-field="barangay"]', li).textContent = e.barangay || (isResident(e) ? 'No location given' : 'No barangay assigned');
         $('[data-field="ago"]', li).dateTime = e.since ?? '';
 
+        // The GoBiker who was sent turned it down: show who and why, so the admin knows
+        // whom not to send again without opening the request first.
+        const declinedNote = $('[data-emer-declined]', li);
+        if (isResident(e) && e.declined) {
+            $('[data-field="declined"]', declinedNote).textContent =
+                `${e.declined_by ?? 'The GoBiker'} declined: ${e.decline_reason ?? 'no reason given'}`;
+            declinedNote.hidden = false;
+        } else {
+            declinedNote.hidden = true;
+        }
+
         const call = $('[data-field-href="call"]', li);
         if (e.mobile) {
             call.href = `tel:${e.mobile}`;
@@ -413,7 +424,7 @@
         const fresh = list.filter((e) => !previous.has(e.key));
         if (fresh.length) {
             els.announce.textContent = fresh.length === 1
-                ? `Emergency: ${fresh[0].name} needs help.${lacksLocation(fresh[0]) ? ' Their location is not shared.' : ''}`
+                ? `Emergency: ${fresh[0].name} needs help.${fresh[0].declined ? ' The assigned GoBiker declined.' : ''}${lacksLocation(fresh[0]) ? ' Their location is not shared.' : ''}`
                 : `${fresh.length} new emergencies from GoBikers.`;
         }
 

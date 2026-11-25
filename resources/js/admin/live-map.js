@@ -28,7 +28,7 @@
     const SOS_URL = section?.dataset.sosUrl;
     const SOS_STATUS_URL = section?.dataset.sosStatusUrl;
     const SOS_GOBIKERS_URL = section?.dataset.sosGobikersUrl;
-    const SOS_STATE_CLASS = { sent: 'is-waiting', responding: 'is-responding' };
+    const SOS_STATE_CLASS = { sent: 'is-waiting', declined: 'is-waiting', responding: 'is-responding' };
     // Decorative line icons for the report rows; the label beside each one carries the meaning.
     const SOS_ICONS = {
         barangay: '<path d="M3 10.5 12 3l9 7.5V21a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z"/>',
@@ -43,9 +43,10 @@
         pin: '<circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="1.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>',
     };
     // "Responding" only when a GoBiker was actually sent: an admin can take a request on without
-    // assigning anyone yet, and the map must not claim somebody is on the way.
-    const SOS_LABELS = { sent: 'SOS: waiting', assigned: 'SOS: responding', handled: 'SOS: admin handling' };
-    const SOS_CLASS = { sent: 's-sent', responding: 's-sos-responding' };
+    // assigning anyone yet, and the map must not claim somebody is on the way. A declined pin
+    // shows red again: it needs a new GoBiker just as much as a waiting one does.
+    const SOS_LABELS = { sent: 'SOS: waiting', declined: 'SOS: declined', assigned: 'SOS: responding', handled: 'SOS: admin handling' };
+    const SOS_CLASS = { sent: 's-sent', declined: 's-sent', responding: 's-sos-responding' };
 
     const $ = (id) => document.getElementById(id);
     const els = {
@@ -437,7 +438,8 @@
 
     /* Who is on their way, so the admin can see at a glance that someone is actually going. */
     function responderChip(p) {
-        if (!p.assigned_gobiker) return '';
+        // Nobody is on their way after a decline: the Declined row in the facts says who it was.
+        if (!p.assigned_gobiker || p.status === 'declined') return '';
         const where = p.assigned_gobiker_barangay ? ` · ${esc(p.assigned_gobiker_barangay)}` : '';
 
         return `<div class="sos-responder">
@@ -472,6 +474,7 @@
     /* What the pin's headline says: who, if anyone, is actually on the way. */
     function sosHeadline(p) {
         if (p.status === 'sent') return SOS_LABELS.sent;
+        if (p.status === 'declined') return SOS_LABELS.declined;
 
         return p.assigned_gobiker ? SOS_LABELS.assigned : SOS_LABELS.handled;
     }
@@ -490,8 +493,11 @@
             : `<span class="sos-pop-mobile">${icon('phone', 'sos-mobile-icon')}Not provided</span>`;
         const actions = p.status === 'sent'
             ? assignBlock(p, 'responding', 'Responding')
-            // Already being answered: the admin can still send someone, or someone nearer.
-            : assignBlock(p, 'responding', p.assigned_gobiker ? 'Send another GoBiker' : 'Send a GoBiker');
+            : p.status === 'declined'
+                // The last GoBiker turned it down: the admin must send someone else.
+                ? assignBlock(p, 'responding', 'Send another GoBiker')
+                // Already being answered: the admin can still send someone, or someone nearer.
+                : assignBlock(p, 'responding', p.assigned_gobiker ? 'Send another GoBiker' : 'Send a GoBiker');
 
         return `<div class="gb-pop sos-pop">
             <div class="sos-pop-head">
@@ -511,6 +517,7 @@
                 ${within(p.accuracy) ? fact('pin', 'Pin', sosIsApprox(p) ? `Approximate. ${within(p.accuracy)}: go by the address.` : within(p.accuracy)) : ''}
                 ${p.description ? fact('details', 'Details', p.description) : ''}
                 ${fact('sent', 'Sent', ago(p.created_at))}
+                ${p.status === 'declined' ? fact('details', 'Declined', `${p.declined_by || 'The GoBiker'}: ${p.decline_reason || 'no reason given'}`) : ''}
             </dl>
             ${responderChip(p)}
             ${actions}
@@ -531,7 +538,7 @@
     /* Who needs help, in the side panel: waiting ones first, then the newest. */
     function renderSosList() {
         const q = els.search.value.trim().toLowerCase();
-        const rank = { sent: 0 };
+        const rank = { sent: 0, declined: 1 };
         const visible = sosPins
             .filter((p) => !q || String(p.resident).toLowerCase().includes(q))
             .sort((a, b) => (rank[a.status] ?? 1) - (rank[b.status] ?? 1)
@@ -571,7 +578,7 @@
         pins.forEach((p) => {
             const id = String(p.id);
             // Rebuild the popup only when something changed, so a half-picked GoBiker isn't lost.
-            const key = `${p.status}|${p.assigned_gobiker}`;
+            const key = `${p.status}|${p.assigned_gobiker}|${p.decline_reason ?? ''}`;
             let marker = sosMarkers.get(id);
             if (!marker) {
                 marker = L.marker([p.latitude, p.longitude], {
@@ -598,7 +605,7 @@
 
             // How far out the pin may be, so nobody rides to the exact dot of a rough reading.
             if (isRough(p.accuracy)) {
-                const color = p.status === 'sent' ? COLORS.emergency : COLORS.responding;
+                const color = (p.status === 'sent' || p.status === 'declined') ? COLORS.emergency : COLORS.responding;
                 const ringStyle = ringLook(p.accuracy, color);
                 const ring = sosRings.get(id);
                 if (ring) ring.setStyle(ringStyle); // red while waiting, yellow once answered

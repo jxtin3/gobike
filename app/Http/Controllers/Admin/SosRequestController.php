@@ -17,7 +17,7 @@ use League\Flysystem\Local\LocalFilesystemAdapter;
 /** Residents' SOS requests: list, details, and moving them to "Responding" / "Resolved". */
 class SosRequestController extends Controller
 {
-    private const TABS = ['open', 'sent', 'responding', 'resolved', 'cancelled', 'all'];
+    private const TABS = ['open', 'sent', 'responding', 'declined', 'resolved', 'cancelled', 'all'];
 
     public function index(Request $request)
     {
@@ -26,7 +26,7 @@ class SosRequestController extends Controller
 
         $requests = SosRequest::with('user:id,name,mobile')
             ->when($tab === 'open', fn ($q) => $q->open())
-            ->when(in_array($tab, ['sent', 'responding', 'resolved', 'cancelled'], true), fn ($q) => $q->where('status', $tab))
+            ->when(in_array($tab, ['sent', 'responding', 'declined', 'resolved', 'cancelled'], true), fn ($q) => $q->where('status', $tab))
             ->when($search !== '', function ($q) use ($search) {
                 $q->where(function ($query) use ($search) {
                     $query->whereHas('user', fn ($user) => $user->where('name', 'like', "%{$search}%"))
@@ -35,8 +35,8 @@ class SosRequestController extends Controller
                         ->orWhere('landmark', 'like', "%{$search}%");
                 });
             })
-            // Waiting ones first, then newest.
-            ->orderByRaw("CASE status WHEN 'sent' THEN 0 WHEN 'responding' THEN 1 ELSE 2 END")
+            // Waiting ones first, then declined (need reassigning), then the rest; newest within each.
+            ->orderByRaw("CASE status WHEN 'sent' THEN 0 WHEN 'declined' THEN 1 WHEN 'responding' THEN 2 ELSE 3 END")
             ->latest()
             ->paginate(15)
             ->withQueryString();
@@ -48,6 +48,7 @@ class SosRequestController extends Controller
                 'open' => SosRequest::open()->count(),
                 'sent' => SosRequest::where('status', 'sent')->count(),
                 'responding' => SosRequest::where('status', 'responding')->count(),
+                'declined' => SosRequest::where('status', 'declined')->count(),
                 'resolved' => SosRequest::where('status', 'resolved')->count(),
                 'cancelled' => SosRequest::where('status', 'cancelled')->count(),
                 'all' => SosRequest::count(),
@@ -57,7 +58,7 @@ class SosRequestController extends Controller
 
     public function show(SosRequest $sos)
     {
-        $sos->load('user', 'handler:id,name');
+        $sos->load('user', 'handler:id,name', 'declinedBy:id,name');
 
         return view('admin.operations.sos.show', [
             'sos' => $sos,
@@ -87,8 +88,9 @@ class SosRequestController extends Controller
         ]);
 
         $newGobikerId = $data['gobiker_id'] ?? null;
-        // Sending a different GoBiker to a request already being answered: hand it over to them.
-        $reassigning = $sos->status === 'responding'
+        // Sending a different GoBiker to a request already being answered, or to one the last
+        // GoBiker turned down: hand it over to them.
+        $reassigning = in_array($sos->status, ['responding', 'declined'], true)
             && $newGobikerId !== null
             && $newGobikerId !== $sos->assigned_gobiker_id;
 
@@ -140,11 +142,15 @@ class SosRequestController extends Controller
      */
     public function mapPins()
     {
-        $pins = SosRequest::with('user:id,name,mobile,photo_path', 'assignedGobiker:id,name,barangay,photo_path')
+        $pins = SosRequest::with([
+            'user:id,name,mobile,photo_path',
+            'assignedGobiker:id,name,barangay,photo_path',
+            'declinedBy:id,name',
+        ])
             ->select([
                 'id', 'user_id', 'status', 'barangay', 'address', 'landmark', 'description',
                 'latitude', 'longitude', 'location_accuracy', 'location_recorded_at',
-                'assigned_gobiker_id', 'created_at',
+                'assigned_gobiker_id', 'declined_by_gobiker_id', 'decline_reason', 'created_at',
             ])
             ->whereNotNull('latitude')
             ->whereNotNull('longitude')
@@ -169,6 +175,10 @@ class SosRequestController extends Controller
                 'assigned_gobiker' => $sos->assignedGobiker?->name,
                 'assigned_gobiker_barangay' => $sos->assignedGobiker?->barangay,
                 'assigned_gobiker_photo' => Media::url($sos->assignedGobiker?->photo_path),
+                // Set when the assigned GoBiker turned the request down: the admin must send
+                // someone else, so the pin says who declined and why.
+                'declined_by' => $sos->status === 'declined' ? $sos->declinedBy?->name : null,
+                'decline_reason' => $sos->status === 'declined' ? $sos->decline_reason : null,
                 'created_at' => $sos->created_at?->toIso8601String(),
             ]);
 

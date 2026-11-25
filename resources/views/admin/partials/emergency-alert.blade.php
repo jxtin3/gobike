@@ -35,6 +35,8 @@
             <div class="emer-who">
                 <b data-field="name"></b>
                 <small><span data-field="barangay"></span> · sent <time data-field="ago"></time></small>
+                {{-- The assigned GoBiker turned the request down: who, and their reason. --}}
+                <p class="emer-warn" data-emer-declined hidden><x-admin.icon name="alert-triangle" /> <span data-field="declined"></span></p>
                 {{-- A resident's SOS without a location: there is no pin, so say so right here. --}}
                 <p class="emer-warn" data-emer-no-location hidden><x-admin.icon name="alert-triangle" /> <span data-field="no-location"></span></p>
             </div>

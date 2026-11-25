@@ -1,7 +1,7 @@
 @extends('admin.operations.layout')
 @php
     $who = $sos->user?->name ?? 'Deleted resident';
-    $pills = ['sent' => 'bad', 'responding' => 'warn', 'resolved' => 'ok'];
+    $pills = ['sent' => 'bad', 'responding' => 'warn', 'declined' => 'bad', 'resolved' => 'ok'];
 @endphp
 @section('title', 'SOS from '.$who)
 @section('heading', 'SOS from '.$who)
@@ -36,6 +36,8 @@
     <span class="pill pill-{{ $pills[$sos->status] ?? 'neutral' }}">{{ $sos->status_label }}</span>
     @if ($sos->isCancelled())
         <span class="muted">· the resident cancelled it {{ $sos->resolved_at?->diffForHumans() }}</span>
+    @elseif ($sos->status === 'declined')
+        <span class="muted">· {{ $sos->declinedBy?->name ?? 'the GoBiker' }} declined it {{ $sos->declined_at?->diffForHumans() }}</span>
     @elseif ($sos->resolved_by_resident)
         <span class="muted">· the resident marked it resolved {{ $sos->resolved_at?->diffForHumans() }}</span>
     @elseif ($sos->handler)
@@ -78,6 +80,14 @@
         </dl>
     </article>
 </div>
+
+@if ($sos->decline_reason)
+    <article class="detail-card">
+        <h2 class="detail-card-title">Why the GoBiker declined</h2>
+        <p class="emer-warn"><x-admin.icon name="alert-triangle" /> {{ $sos->declinedBy?->name ?? 'The GoBiker' }}: “{{ $sos->decline_reason }}”</p>
+        <p class="muted">Send another GoBiker with “Responding” above, or mark it resolved.</p>
+    </article>
+@endif
 
 <article class="detail-card">
     <h2 class="detail-card-title">What happened</h2>

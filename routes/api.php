@@ -143,6 +143,7 @@ Route::middleware(['auth:sanctum', 'gobiker', 'throttle:mobile'])->prefix('gobik
     Route::get('/map', [GobikerMapController::class, 'index'])->name('api.gobiker.map');
     Route::get('/sos', [GobikerMapController::class, 'sos'])->name('api.gobiker.sos.index');
     Route::post('/sos/{sos}/resolve', [GobikerMapController::class, 'resolve'])->name('api.gobiker.sos.resolve');
+    Route::post('/sos/{sos}/decline', [GobikerMapController::class, 'decline'])->name('api.gobiker.sos.decline');
 
 });
 

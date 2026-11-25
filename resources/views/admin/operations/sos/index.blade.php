@@ -5,8 +5,8 @@
 
 @section('content')
 @php
-    $tabs = ['open' => 'Open', 'sent' => 'Waiting', 'responding' => 'Responding', 'resolved' => 'Resolved', 'cancelled' => 'Cancelled', 'all' => 'All'];
-    $pills = ['sent' => 'bad', 'responding' => 'warn', 'resolved' => 'ok'];
+    $tabs = ['open' => 'Open', 'sent' => 'Waiting', 'responding' => 'Responding', 'declined' => 'Declined', 'resolved' => 'Resolved', 'cancelled' => 'Cancelled', 'all' => 'All'];
+    $pills = ['sent' => 'bad', 'responding' => 'warn', 'declined' => 'bad', 'resolved' => 'ok'];
     $searching = filled(request('search'));
 @endphp
 

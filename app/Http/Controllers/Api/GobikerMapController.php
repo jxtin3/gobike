@@ -71,6 +71,41 @@ class GobikerMapController extends Controller
     }
 
     /**
+     * The GoBiker cannot go to the request they were sent to. A reason is required: the admin
+     * reads it and either sends someone else or closes the request. The assignment is kept
+     * (declined_by_*) alongside it so the admin can see who turned it down.
+     */
+    public function decline(Request $request, SosRequest $sos): JsonResponse
+    {
+        abort_unless($sos->assigned_gobiker_id === $request->user()->id, 403, 'This SOS request is not assigned to you.');
+
+        if (! $sos->canMoveTo('declined')) {
+            return response()->json(['message' => "This request is already marked \"{$sos->status_label}\"."], 422);
+        }
+
+        $data = $request->validate([
+            'reason' => ['required', 'string', 'max:500'],
+        ]);
+
+        $sos->update([
+            'status' => 'declined',
+            'responded_at' => $sos->responded_at ?? now(),
+            'declined_at' => now(),
+            'declined_by_gobiker_id' => $request->user()->id,
+            'decline_reason' => $data['reason'],
+        ]);
+        // The resident is reassured on their phone; the admin learns of it through the emergency
+        // alarm, which counts declined requests (see EmergencyAlertController), so they can send
+        // someone else.
+        app(PushNotifier::class)->sosDeclined($sos->load('user', 'declinedBy'));
+
+        return response()->json([
+            'message' => 'SOS request declined. The admin has been told.',
+            'sos' => $this->payload($sos),
+        ]);
+    }
+
+    /**
      * The SOS requests this GoBiker may see: the ones the admin assigned to them, and no others.
      *
      * Deliberately not filtered by barangay. The admin can send the nearest GoBiker, who may
@@ -90,6 +125,7 @@ class GobikerMapController extends Controller
             // Apps from before "cancelled" existed would read an unknown status as still open.
             'status' => $sos->api_status,
             'cancelled' => $sos->isCancelled(),
+            'status_label' => $sos->status_label,
             'resident_name' => $sos->user?->name,
             'mobile' => $sos->user?->mobile,
             'barangay' => $sos->barangay,

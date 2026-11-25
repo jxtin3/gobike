@@ -35,12 +35,14 @@ class EmergencyAlertController extends Controller
             });
 
         $residents = SosRequest::query()
-            ->unanswered()
+            // Waiting ones, and ones the assigned GoBiker turned down: both still need someone.
+            // Reassigning (below) moves a declined request back to "responding", which stops the alarm.
+            ->whereIn('status', ['sent', 'declined'])
             ->with('user:id,name,mobile')
             ->get()
             ->map(fn (SosRequest $sos) => [
                 'kind' => 'resident',
-                'key' => 'sos-'.$sos->id,
+                'key' => 'sos-'.$sos->id.'-'.$sos->status,
                 'sos_id' => $sos->id,
                 'name' => $sos->user?->name ?? 'Resident',
                 'mobile' => $sos->user?->mobile,
@@ -48,7 +50,11 @@ class EmergencyAlertController extends Controller
                 // False when the resident did not share their location (or their phone had none):
                 // there is no pin to show, so the alert says so instead.
                 'has_location' => $sos->latitude !== null && $sos->longitude !== null,
-                'since' => $sos->created_at?->toIso8601String(),
+                // The GoBiker who was sent turned it down: the admin must send someone else.
+                'declined' => $sos->status === 'declined',
+                'decline_reason' => $sos->decline_reason,
+                'declined_by' => $sos->declinedBy?->name,
+                'since' => ($sos->declined_at ?? $sos->created_at)?->toIso8601String(),
                 'view_url' => route('admin.operations.sos.show', $sos),
                 'respond_url' => route('admin.operations.sos.status', $sos),
             ]);

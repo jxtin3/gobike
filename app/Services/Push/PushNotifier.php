@@ -48,6 +48,22 @@ class PushNotifier
         }
     }
 
+    /**
+     * The GoBiker who was sent turned the request down. The resident is told the admin is still
+     * finding them help (never the GoBiker's reason: that is between them and the admin), and
+     * the admin learns of it through the emergency alarm, which now counts declined requests.
+     */
+    public function sosDeclined(SosRequest $sos): void
+    {
+        $this->toUser(
+            $sos->user,
+            'sos_updates',
+            'Finding you help',
+            'The GoBiker who was sent cannot respond. The Go Bike admin is finding you another one.',
+            ['type' => 'sos', 'id' => (string) $sos->id],
+        );
+    }
+
     public function appointmentChanged(Appointment $appointment): void
     {
         $gobiker = $appointment->gobiker?->name ?? 'A GoBiker';

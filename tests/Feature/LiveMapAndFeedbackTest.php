@@ -388,6 +388,136 @@ it('shows the assigned SOS on that GoBiker\'s map only, and only they can resolv
     $this->getJson(route('api.gobiker.sos.index'))->assertJsonCount(0, 'sos');
 });
 
+// ---------------------------------------------------------------- SOS decline
+
+it('lets the assigned GoBiker decline with the required reason, and alerts the admin', function () {
+    $sos = liveSos($this->resident, ['status' => 'responding', 'assigned_gobiker_id' => $this->gobiker->id]);
+
+    Sanctum::actingAs($this->gobiker);
+    $this->postJson(route('api.gobiker.sos.decline', $sos))->assertUnprocessable()
+        ->assertJsonValidationErrors('reason');
+
+    $this->postJson(route('api.gobiker.sos.decline', $sos), ['reason' => 'My bike has a flat tire'])
+        ->assertOk()
+        ->assertJsonPath('sos.status', 'declined')
+        ->assertJsonPath('sos.status_label', 'Declined by GoBiker');
+
+    expect($sos->fresh())
+        ->status->toBe('declined')
+        ->decline_reason->toBe('My bike has a flat tire')
+        ->declined_by_gobiker_id->toBe($this->gobiker->id)
+        ->declined_at->not->toBeNull()
+        ->responded_at->not->toBeNull();
+
+    // Off the GoBiker's list and map at once, still on the admin map, and the alarm rings
+    // again with the reason in it.
+    $this->getJson(route('api.gobiker.sos.index'))->assertJsonCount(0, 'sos');
+    $this->getJson(route('api.gobiker.map'))->assertJsonCount(0, 'sos');
+
+    $this->actingAs($this->resident)->getJson(route('api.resident.sos.index'))
+        ->assertJsonPath('sos.0.status', 'declined');
+
+    $alarm = $this->actingAs($this->admin, 'web')->getJson(route('admin.emergencies.index'))
+        ->assertOk()->json('emergencies');
+    expect($alarm)->toHaveCount(1)
+        ->and($alarm[0]['declined'])->toBeTrue()
+        ->and($alarm[0]['decline_reason'])->toBe('My bike has a flat tire')
+        ->and($alarm[0]['declined_by'])->toBe('Maria Santos')
+        ->and($alarm[0]['respond_url'])->toBe(route('admin.operations.sos.status', $sos));
+});
+
+it('does not let anyone decline a SOS but the GoBiker it is assigned to', function (string $status) {
+    $sos = liveSos($this->resident, ['status' => $status, 'assigned_gobiker_id' => $this->gobiker->id]);
+
+    Sanctum::actingAs($this->colleague);
+    $this->postJson(route('api.gobiker.sos.decline', $sos), ['reason' => 'Not mine'])
+        ->assertForbidden();
+    expect($sos->fresh())->status->toBe($status)->decline_reason->toBeNull();
+})->with(['sent', 'responding']);
+
+it('refuses to decline a request that is already closed or declined', function (string $status) {
+    $sos = liveSos($this->resident, [
+        'status' => $status, 'assigned_gobiker_id' => $this->gobiker->id,
+        'declined_at' => $status === 'declined' ? now() : null,
+        'declined_by_gobiker_id' => $status === 'declined' ? $this->gobiker->id : null,
+        'decline_reason' => $status === 'declined' ? 'First reason' : null,
+    ]);
+
+    Sanctum::actingAs($this->gobiker);
+    $this->postJson(route('api.gobiker.sos.decline', $sos), ['reason' => 'Again'])
+        ->assertUnprocessable();
+    expect($sos->fresh())->status->toBe($status);
+})->with(['resolved', 'cancelled', 'declined']);
+
+it('lets the admin reassign a declined SOS to another GoBiker, who is then told', function () {
+    $sos = liveSos($this->resident, [
+        'status' => 'declined', 'assigned_gobiker_id' => $this->gobiker->id,
+        'declined_at' => now(), 'declined_by_gobiker_id' => $this->gobiker->id,
+        'decline_reason' => 'I am out of town',
+    ]);
+    onlineGobiker($this->colleague);
+
+    $this->actingAs($this->admin, 'web')
+        ->patchJson(route('admin.operations.sos.status', $sos), [
+            'status' => 'responding', 'gobiker_id' => $this->colleague->id,
+        ])->assertOk();
+
+    expect($sos->fresh())
+        ->status->toBe('responding')
+        ->assigned_gobiker_id->toBe($this->colleague->id)
+        // The old decline stays on the record for the admin's history.
+        ->decline_reason->toBe('I am out of town');
+
+    // The reassignment stopped the alarm, and the new GoBiker now sees it.
+    $this->actingAs($this->admin, 'web')
+        ->getJson(route('admin.emergencies.index'))->assertOk()->assertJsonCount(0, 'emergencies');
+    $this->actingAs($this->colleague)
+        ->getJson(route('api.gobiker.sos.index'))->assertOk()->assertJsonPath('sos.0.id', $sos->id);
+});
+
+it('keeps a declined SOS off the alarm once an admin resolves it', function () {
+    $sos = liveSos($this->resident, [
+        'status' => 'declined', 'assigned_gobiker_id' => $this->gobiker->id,
+        'declined_at' => now(), 'declined_by_gobiker_id' => $this->gobiker->id,
+        'decline_reason' => 'Too far away',
+    ]);
+
+    $this->actingAs($this->admin, 'web')
+        ->patchJson(route('admin.operations.sos.status', $sos), ['status' => 'resolved'])->assertOk();
+
+    expect($sos->fresh())->status->toBe('resolved');
+    $this->actingAs($this->admin, 'web')
+        ->getJson(route('admin.emergencies.index'))->assertOk()->assertJsonCount(0, 'emergencies');
+});
+
+it('shows the decline reason on the admin SOS pages', function () {
+    $sos = liveSos($this->resident, [
+        'status' => 'declined', 'assigned_gobiker_id' => $this->gobiker->id,
+        'declined_at' => now(), 'declined_by_gobiker_id' => $this->gobiker->id,
+        'decline_reason' => 'My bike has a flat tire',
+    ]);
+
+    $this->actingAs($this->admin, 'web')
+        ->get(route('admin.operations.sos.show', $sos))
+        ->assertOk()
+        ->assertSee('Why the GoBiker declined')
+        ->assertSee('Maria Santos')
+        ->assertSee('My bike has a flat tire')
+        ->assertSee('declined it');
+
+    $this->actingAs($this->admin, 'web')
+        ->get(route('admin.operations.sos.index', ['status' => 'declined']))
+        ->assertOk()
+        ->assertSee('Ana Reyes');
+
+    $this->actingAs($this->admin, 'web')
+        ->getJson(route('admin.sos-pins.index'))
+        ->assertOk()
+        ->assertJsonPath('0.status', 'declined')
+        ->assertJsonPath('0.declined_by', 'Maria Santos')
+        ->assertJsonPath('0.decline_reason', 'My bike has a flat tire');
+});
+
 it('tells the resident who is responding to their SOS', function () {
     $sos = liveSos($this->resident);
 
