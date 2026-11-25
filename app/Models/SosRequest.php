@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\Storage;
 
-/** An emergency request a resident sent with the SOS button. */
+/** An emergency request a resident sent with the SOS button, or a GoBiker's own emergency. */
 class SosRequest extends Model
 {
     public const STATUSES = [
@@ -112,6 +112,12 @@ class SosRequest extends Model
     public function isCancelled(): bool
     {
         return $this->status === 'cancelled';
+    }
+
+    /** A GoBiker's own emergency (see GobikerEmergency), not a resident's request. */
+    public function fromGobiker(): bool
+    {
+        return $this->user?->role === 'GoBiker';
     }
 
     /**

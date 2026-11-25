@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\SosRequest;
 use App\Services\Push\PushNotifier;
 use App\Support\Barangays;
-use App\Support\Media;
+use App\Support\SosPayload;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -150,35 +150,22 @@ class ResidentSosController extends Controller
         ]);
     }
 
+    /**
+     * Where the GoBiker sent to help is right now, for the resident's map.
+     *
+     * Only the resident who asked for help sees it, and only while that GoBiker is on the way
+     * (the request is "responding"): once it is resolved, cancelled or declined, the GoBiker's
+     * position is no longer anyone's business. The app polls this every few seconds.
+     */
+    public function tracking(Request $request, SosRequest $sos): JsonResponse
+    {
+        abort_unless($sos->user_id === $request->user()->id, 403, 'You can only track your own request.');
+
+        return response()->json(SosPayload::tracking($sos));
+    }
+
     private function payload(SosRequest $sos): array
     {
-        // Who is coming, or who came. The resident is told this in a push too, but a push can be
-        // missed or switched off, so the name belongs in the request itself.
-        $responder = $sos->resolvedBy ?? $sos->assignedGobiker;
-
-        return [
-            'id' => $sos->id,
-            // Older apps only know sent / responding / resolved: see SosRequest::getApiStatusAttribute.
-            'status' => $sos->api_status,
-            'cancelled' => $sos->isCancelled(),
-            'status_label' => $sos->status_label,
-            'municipality' => $sos->municipality,
-            'barangay' => $sos->barangay,
-            'address' => $sos->address,
-            'landmark' => $sos->landmark,
-            'description' => $sos->description,
-            'has_location' => $sos->latitude !== null,
-            'image_url' => $sos->image_url,
-            'video_url' => $sos->video_url,
-            'created_at' => $sos->created_at?->toIso8601String(),
-            'responded_at' => $sos->responded_at?->toIso8601String(),
-            'resolved_at' => $sos->resolved_at?->toIso8601String(),
-            'resolved_by_resident' => (bool) $sos->resolved_by_resident,
-            'responder' => $responder ? [
-                'name' => $responder->name,
-                'barangay' => $responder->barangay,
-                'photo_url' => Media::url($responder->photo_path),
-            ] : null,
-        ];
+        return SosPayload::forOwner($sos);
     }
 }

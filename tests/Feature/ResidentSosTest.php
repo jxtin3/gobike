@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Appointment;
+use App\Models\Location;
 use App\Models\SosRequest;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -433,4 +434,65 @@ it('clears finished SOS requests and visits from the resident history, keeping o
     expect(SosRequest::count())->toBe(2)
         ->and(Appointment::find($closedVisit->id))->not->toBeNull();
     $this->actingAs($this->admin, 'web')->get(route('admin.operations.sos.show', $done))->assertOk();
+});
+
+// ---------------------------------------------------------------- tracking the GoBiker on the way
+
+function gobikerOnTheWay(array $location = []): User
+{
+    $gobiker = User::factory()->create(['name' => 'Maria Santos', 'role' => 'GoBiker', 'status' => 'Active', 'barangay' => 'Poblacion']);
+    Location::create($location + [
+        'user_id' => $gobiker->id, 'name' => $gobiker->name, 'latitude' => 15.9601, 'longitude' => 120.1902,
+        'accuracy' => 8, 'status' => 'active', 'last_seen_at' => now(), 'position_at' => now(),
+        'active_start_time' => now(),
+    ]);
+
+    return $gobiker;
+}
+
+it('shows the resident where the GoBiker sent to help is', function () {
+    $sos = sendSos($this->resident);
+    $gobiker = gobikerOnTheWay();
+    $sos->update(['status' => 'responding', 'assigned_gobiker_id' => $gobiker->id]);
+
+    $this->getJson(route('api.resident.sos.tracking', $sos))
+        ->assertOk()
+        ->assertJsonPath('tracking', true)
+        ->assertJsonPath('sos.latitude', 15.9566)
+        ->assertJsonPath('responder.name', 'Maria Santos')
+        ->assertJsonPath('responder.online', true)
+        ->assertJsonPath('responder.latitude', 15.9601)
+        ->assertJsonPath('responder.longitude', 120.1902);
+});
+
+it('marks a GoBiker whose app went quiet as offline, keeping their last position', function () {
+    $sos = sendSos($this->resident);
+    $gobiker = gobikerOnTheWay(['last_seen_at' => now()->subMinutes(10), 'position_at' => now()->subMinutes(10)]);
+    $sos->update(['status' => 'responding', 'assigned_gobiker_id' => $gobiker->id]);
+
+    $this->getJson(route('api.resident.sos.tracking', $sos))
+        ->assertOk()
+        ->assertJsonPath('responder.online', false)
+        ->assertJsonPath('responder.latitude', 15.9601);
+});
+
+it('shares no GoBiker position before one is sent or once the SOS is over', function (string $status) {
+    $sos = sendSos($this->resident);
+    $gobiker = gobikerOnTheWay();
+    $sos->update(['status' => $status, 'assigned_gobiker_id' => $status === 'sent' ? null : $gobiker->id]);
+
+    $this->getJson(route('api.resident.sos.tracking', $sos))
+        ->assertOk()
+        ->assertJsonPath('tracking', false)
+        ->assertJsonPath('responder', null);
+})->with(['sent', 'declined', 'resolved', 'cancelled']);
+
+it("does not let a resident track another resident's SOS", function () {
+    $sos = sendSos($this->resident);
+    $gobiker = gobikerOnTheWay();
+    $sos->update(['status' => 'responding', 'assigned_gobiker_id' => $gobiker->id]);
+
+    Sanctum::actingAs(User::factory()->create(['role' => 'User', 'status' => 'Active', 'barangay' => 'Poblacion']));
+
+    $this->getJson(route('api.resident.sos.tracking', $sos))->assertForbidden();
 });

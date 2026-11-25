@@ -526,7 +526,7 @@
             <div class="sos-pop-head">
                 ${face(p.resident, p.resident_photo, 32)}
                 <div class="sos-pop-who">
-                    <p class="sos-pop-name"><b>${esc(p.resident)}</b></p>
+                    <p class="sos-pop-name"><b>${esc(p.resident)}</b>${p.from === 'gobiker' ? ' · GoBiker emergency' : ''}</p>
                     <p class="sos-pop-status">
                         <em class="s-text sos-state ${esc(SOS_STATE_CLASS[p.status] || SOS_STATE_CLASS.sent)}">${esc(sosHeadline(p))}</em>
                         ${p.created_at ? `<time class="sos-pop-sent" datetime="${esc(p.created_at)}">Sent ${esc(ago(p.created_at).toLowerCase())}</time>` : ''}

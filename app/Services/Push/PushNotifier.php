@@ -5,6 +5,7 @@ namespace App\Services\Push;
 use App\Models\Announcement;
 use App\Models\Appointment;
 use App\Models\DeviceToken;
+use App\Models\GobikerMessage;
 use App\Models\Patient;
 use App\Models\PatientFollowUp;
 use App\Models\SosRequest;
@@ -33,6 +34,12 @@ class PushNotifier
 
     public function sosStatusChanged(SosRequest $sos): void
     {
+        if ($sos->fromGobiker()) {
+            $this->gobikerEmergencyChanged($sos);
+
+            return;
+        }
+
         [$title, $body] = match ($sos->status) {
             // Only say a person is coming once one has actually been sent.
             'responding' => $sos->assignedGobiker
@@ -55,6 +62,18 @@ class PushNotifier
      */
     public function sosDeclined(SosRequest $sos): void
     {
+        if ($sos->fromGobiker()) {
+            $this->toUser(
+                $sos->user,
+                null,
+                'Finding you help',
+                'The GoBiker who was sent cannot come. The Go Bike admin is finding you another one.',
+                ['type' => 'emergency', 'id' => (string) $sos->id],
+            );
+
+            return;
+        }
+
         $this->toUser(
             $sos->user,
             'sos_updates',
@@ -123,7 +142,9 @@ class PushNotifier
             $sos->assignedGobiker,
             null,
             'SOS cancelled',
-            ($sos->user?->name ?? 'The resident').' cancelled their request. You do not need to go.',
+            $sos->fromGobiker()
+                ? ($sos->user?->name ?? 'The GoBiker').' cancelled their emergency. You do not need to go.'
+                : ($sos->user?->name ?? 'The resident').' cancelled their request. You do not need to go.',
             ['type' => 'sos_cancelled', 'id' => (string) $sos->id],
         );
     }
@@ -157,6 +178,26 @@ class PushNotifier
                 "A resident in {$appointment->barangay} asked for a check-up on ".$appointment->preferred_date?->format('M j').'.',
                 ['type' => 'appointment_request', 'id' => (string) $appointment->id],
             );
+        }
+    }
+
+    /**
+     * A GoBiker's own emergency (an SOS they own) moved on. Sent as an 'emergency' push: that is
+     * what the GoBiker app refreshes its emergency card on.
+     */
+    private function gobikerEmergencyChanged(SosRequest $sos): void
+    {
+        [$title, $body] = match ($sos->status) {
+            'responding' => $sos->assignedGobiker
+                ? ['Help is on the way', "{$sos->assignedGobiker->name} is on the way to help you."]
+                : ['The admin saw your alert', 'The Go Bike admin is handling your emergency.'],
+            'resolved' => ['Emergency resolved', $sos->resolved_by_gobiker_id
+                ? ($sos->resolvedBy?->name ?? 'The GoBiker').' marked your emergency as resolved.'
+                : 'The admin marked your emergency as resolved.'],
+            default => [null, null],
+        };
+        if ($title) {
+            $this->toUser($sos->user, null, $title, $body, ['type' => 'emergency', 'id' => (string) $sos->id]);
         }
     }
 
@@ -216,7 +257,7 @@ class PushNotifier
     }
 
     /** The admin replied to a GoBiker's message: tell the GoBiker. */
-    public function gobikerMessageReply(\App\Models\GobikerMessage $message): void
+    public function gobikerMessageReply(GobikerMessage $message): void
     {
         if (! $message->sender || ! $message->reply_message) {
             return;

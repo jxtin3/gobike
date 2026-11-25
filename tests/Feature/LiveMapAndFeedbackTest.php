@@ -43,20 +43,50 @@ function liveSos(User $resident, array $attributes = []): SosRequest
 
 // ---------------------------------------------------------------- live map
 
-it('shows a resident only the online GoBikers of their barangay', function () {
+/** The row a GoBiker leaves after stopping their ronda with the app still open. */
+function onlineNotOnRonda(User $gobiker): void
+{
+    Location::create([
+        'user_id' => $gobiker->id, 'name' => $gobiker->name, 'latitude' => 15.95, 'longitude' => 120.18,
+        'status' => 'offline', 'last_seen_at' => now(),
+        'active_start_time' => null,
+        'active_end_time' => now()->subMinutes(5),
+    ]);
+}
+
+/** A neighbouring town linked through the location tables, with its own "Poblacion". */
+function aguilarPoblacion(): void
+{
+    $province = Province::create(['name' => 'Pangasinan', 'region' => 'Region I']);
+    $city = City::create(['province_id' => $province->id, 'name' => 'Pangasinan']);
+    $aguilar = Municipality::create(['city_id' => $city->id, 'name' => 'Aguilar']);
+    // The text column still says Bugallon: the linked town must win.
+    Barangay::create(['name' => 'Poblacion (Aguilar)', 'municipality' => 'Bugallon', 'municipality_id' => $aguilar->id]);
+}
+
+/** @return list<string> */
+function mapNames(array $map): array
+{
+    return collect($map['gobikers'])->pluck('name')->sort()->values()->all();
+}
+
+it('shows a resident every online GoBiker of their town', function () {
     onlineGobiker($this->gobiker);
     onlineGobiker($this->faraway);
 
     Sanctum::actingAs($this->resident);
     $map = $this->getJson(route('api.resident.map'))->assertOk()->json();
 
-    expect(collect($map['gobikers'])->pluck('name')->all())->toBe(['Maria Santos'])
-        ->and($map)->not->toHaveKey('residents');
+    expect(mapNames($map))->toBe(['Maria Santos', 'Rico Dela'])
+        ->and($map)->not->toHaveKey('residents')
+        ->and($map['town'])->toBe('Bugallon')
+        ->and($map['barangay'])->toBe('Poblacion');
 });
 
-it('never plots residents for a GoBiker, only the GoBikers of their barangay', function () {
+it('never plots residents for a GoBiker, but shows every other online GoBiker of the town', function () {
     onlineGobiker($this->colleague);
     onlineGobiker($this->faraway);
+    onlineGobiker($this->gobiker);
 
     Sanctum::actingAs($this->gobiker);
     $map = $this->getJson(route('api.gobiker.map'))->assertOk()->json();
@@ -64,7 +94,76 @@ it('never plots residents for a GoBiker, only the GoBikers of their barangay', f
     // A GoBiker picks their own barangay, so plotting its residents would let anyone
     // watch residents anywhere in the town. Nobody is plotted but fellow GoBikers.
     expect($map)->not->toHaveKey('residents')
-        ->and(collect($map['gobikers'])->pluck('name')->all())->toBe(['Jose Lim']);
+        ->and(mapNames($map))->toBe(['Jose Lim', 'Rico Dela'])
+        ->and(collect($map['gobikers'])->firstWhere('name', 'Rico Dela')['barangay'])->toBe('Hacienda')
+        ->and($map['town'])->toBe('Bugallon');
+});
+
+it('shows a GoBiker whose app is open even when they are not on a ronda', function () {
+    onlineNotOnRonda($this->colleague);
+
+    Sanctum::actingAs($this->gobiker);
+    $gobikers = collect($this->getJson(route('api.gobiker.map'))->assertOk()->json('gobikers'));
+
+    expect($gobikers->pluck('name')->all())->toBe(['Jose Lim'])
+        ->and($gobikers->first()['status'])->toBe('active');
+
+    // An alert is still shown as one.
+    Location::where('user_id', $this->colleague->id)->update(['status' => 'emergency']);
+    expect($this->getJson(route('api.gobiker.map'))->json('gobikers.0.status'))->toBe('emergency');
+});
+
+it('matches towns through the old text column, as seeded Bugallon barangays have no link', function () {
+    expect(Barangay::where('name', 'Hacienda')->value('municipality_id'))->toBeNull();
+    onlineGobiker($this->faraway);
+
+    Sanctum::actingAs($this->resident);
+
+    expect(mapNames($this->getJson(route('api.resident.map'))->assertOk()->json()))->toBe(['Rico Dela']);
+});
+
+it('hides GoBikers of another town, the linked town winning over the text column', function () {
+    aguilarPoblacion();
+    $aguilarGobiker = User::factory()->create(['name' => 'Lito Aguilar', 'role' => 'GoBiker', 'status' => 'Active', 'barangay' => 'Poblacion (Aguilar)']);
+    onlineGobiker($aguilarGobiker);
+    onlineGobiker($this->gobiker);
+
+    Sanctum::actingAs($this->resident);
+
+    expect(mapNames($this->getJson(route('api.resident.map'))->assertOk()->json()))->toBe(['Maria Santos']);
+});
+
+it('drops GoBikers whose app went quiet', function () {
+    onlineGobiker($this->colleague);
+    Location::where('user_id', $this->colleague->id)->update(['last_seen_at' => now()->subMinute()]);
+
+    Sanctum::actingAs($this->resident);
+
+    expect($this->getJson(route('api.resident.map'))->assertOk()->json('gobikers'))->toBe([]);
+});
+
+it('falls back to the exact barangay when the viewer\'s barangay has no town', function () {
+    Barangay::create(['name' => 'Sitio Nowhere', 'municipality' => '']);
+    $this->resident->update(['barangay' => 'Sitio Nowhere']);
+    $this->colleague->update(['barangay' => 'Sitio Nowhere']);
+    onlineGobiker($this->colleague);
+    onlineGobiker($this->gobiker);
+
+    Sanctum::actingAs($this->resident);
+    $map = $this->getJson(route('api.resident.map'))->assertOk()->json();
+
+    expect(mapNames($map))->toBe(['Jose Lim'])
+        ->and($map['town'])->toBeNull();
+});
+
+it('uses the barangay a GoBiker picked for their ronda as their town', function () {
+    aguilarPoblacion();
+    onlineGobiker($this->faraway);
+    Location::where('user_id', $this->faraway->id)->update(['designated_barangay' => 'Poblacion (Aguilar)']);
+
+    Sanctum::actingAs($this->resident);
+
+    expect($this->getJson(route('api.resident.map'))->assertOk()->json('gobikers'))->toBe([]);
 });
 
 // ---------------------------------------------------------------- how good a position is

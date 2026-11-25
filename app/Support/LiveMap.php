@@ -2,12 +2,13 @@
 
 namespace App\Support;
 
+use App\Models\Barangay;
 use App\Models\Location;
 use App\Models\User;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Collection;
 
-/** Who appears on the live map in the mobile app: everyone is limited to their own barangay. */
+/** Who appears on the live map in the mobile app: the online GoBikers of the viewer's town. */
 class LiveMap
 {
     /** The barangay a GoBiker covers: the one picked for the current ronda, else their own. */
@@ -35,35 +36,81 @@ class LiveMap
     }
 
     /**
-     * GoBikers whose app sent a position recently, in a barangay.
+     * The town each barangay is in, both lowercased: its linked municipality, else the old text
+     * column (the seeded Bugallon barangays only have the text). Unknown barangays are left out.
      *
-     * Only GoBikers who are currently on an active ronda (active_start_time set,
-     * active_end_time null) appear, so residents and other GoBikers only see
-     * riders who are actually patrolling right now.
+     * @param  array<int, string|null>  $barangayNames
+     * @return array<string, string>
+     */
+    public static function townsFor(array $barangayNames): array
+    {
+        $names = collect($barangayNames)->filter(fn ($name) => filled($name))->unique()->values();
+        if ($names->isEmpty()) {
+            return [];
+        }
+
+        return Barangay::query()
+            ->with('municipality:id,name')
+            ->whereIn('name', $names->all())
+            ->get(['name', 'municipality', 'municipality_id'])
+            ->mapWithKeys(fn (Barangay $b) => [mb_strtolower(trim($b->name)) => mb_strtolower(trim((string) self::townName($b)))])
+            ->filter(fn (string $town) => $town !== '')
+            ->all();
+    }
+
+    /** The town a barangay is in, as it is written, or null when unknown. */
+    public static function townOf(?string $barangay): ?string
+    {
+        if (blank($barangay)) {
+            return null;
+        }
+
+        $row = Barangay::query()->with('municipality:id,name')->where('name', $barangay)
+            ->first(['name', 'municipality', 'municipality_id']);
+        $town = $row ? trim((string) self::townName($row)) : '';
+
+        return $town === '' ? null : $town;
+    }
+
+    /**
+     * GoBikers whose app is open (it sent a position in the last few seconds), in the same town
+     * as $barangay, whatever barangay they cover in it. They need not be on a ronda.
+     *
+     * When the town of $barangay is unknown, only the GoBikers of that exact barangay appear.
+     * Residents never appear: they never send a position.
      *
      * @return Collection<int, array<string, mixed>>
      */
     public static function onlineGobikers(?string $barangay, ?int $exceptUserId = null): Collection
     {
-        if ($barangay === null) {
+        if (blank($barangay)) {
             return collect();
         }
 
-        return Location::query()
+        $locations = Location::query()
             ->with('user:id,name,barangay,photo_path')
             ->whereHas('user', fn ($user) => $user->where('role', 'GoBiker')->where('status', 'Active'))
             ->where('last_seen_at', '>=', self::staleBefore())
             ->whereNotNull('latitude')
             ->whereNotNull('longitude')
-            ->whereNotNull('active_start_time')
-            ->whereNull('active_end_time')
             ->when($exceptUserId, fn ($q) => $q->where('user_id', '!=', $exceptUserId))
-            ->get()
-            ->filter(fn (Location $location) => ($location->designated_barangay ?? $location->user?->barangay) === $barangay)
+            ->get();
+
+        $covered = fn (Location $location) => $location->designated_barangay ?? $location->user?->barangay;
+        $key = fn (?string $name) => mb_strtolower(trim((string) $name));
+
+        $towns = self::townsFor([$barangay, ...$locations->map($covered)->all()]);
+        $viewerTown = $towns[$key($barangay)] ?? null;
+
+        return $locations
+            ->filter(fn (Location $location) => $viewerTown !== null
+                ? ($towns[$key($covered($location))] ?? null) === $viewerTown
+                : $key($covered($location)) === $key($barangay))
             ->map(fn (Location $location) => [
                 'id' => $location->user_id,
                 'name' => $location->user?->name ?? $location->name,
-                'photo_url' => $location->user?->photo_path ? \App\Support\Media::url($location->user->photo_path) : null,
+                'barangay' => $covered($location),
+                'photo_url' => $location->user?->photo_path ? Media::url($location->user->photo_path) : null,
                 'latitude' => $location->latitude,
                 'longitude' => $location->longitude,
                 'accuracy' => $location->accuracy,
@@ -108,11 +155,14 @@ class LiveMap
      * worked out from the names. Where both the SOS and the GoBiker's app have sent a position,
      * the real distance is used instead; GoBikers with no position sort last.
      *
+     * $exceptUserId leaves someone out: a GoBiker in trouble is never offered as their own helper.
+     *
      * @return Collection<int, array<string, mixed>>
      */
-    public static function gobikersForAssignment(?float $latitude, ?float $longitude, ?string $barangay): Collection
+    public static function gobikersForAssignment(?float $latitude, ?float $longitude, ?string $barangay, ?int $exceptUserId = null): Collection
     {
         return self::gobikersFor($barangay)
+            ->reject(fn (array $gobiker) => $exceptUserId !== null && $gobiker['id'] === $exceptUserId)
             // Only GoBikers who are actually online: someone whose app is closed cannot be told
             // an emergency is waiting, so the admin must not be offered them in the first place.
             ->filter(fn (array $gobiker) => $gobiker['online'])
@@ -136,6 +186,12 @@ class LiveMap
     private static function covers(User $gobiker, string $barangay): bool
     {
         return ($gobiker->location?->designated_barangay ?? $gobiker->barangay) === $barangay;
+    }
+
+    /** The relation and the old text column share the name "municipality": read each explicitly. */
+    private static function townName(Barangay $barangay): ?string
+    {
+        return $barangay->getRelation('municipality')?->name ?? $barangay->getAttribute('municipality');
     }
 
     /** Kilometres between two points (haversine), or null when either one is unknown. */

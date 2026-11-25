@@ -23,31 +23,31 @@ function sendEmergency(User $gobiker): Location
 it('has no emergency before one is sent', function () {
     Sanctum::actingAs($this->gobiker);
 
-    $this->getJson(route('api.gobiker.emergency.status'))->assertOk()->assertExactJson(['status' => null]);
+    $this->getJson(route('api.gobiker.emergency.status'))->assertOk()->assertExactJson(['status' => null, 'sos' => null]);
 });
 
 it('tells the GoBiker when the admin starts responding and when it is resolved', function () {
     $location = sendEmergency($this->gobiker);
 
-    $this->getJson(route('api.gobiker.emergency.status'))->assertExactJson(['status' => 'emergency']);
+    $this->getJson(route('api.gobiker.emergency.status'))->assertExactJson(['status' => 'emergency', 'sos' => null]);
 
     $this->actingAs($this->admin, 'web')
         ->patchJson(route('admin.locations.status', $location), ['status' => 'responding'])
         ->assertOk();
 
     Sanctum::actingAs($this->gobiker);
-    $this->getJson(route('api.gobiker.emergency.status'))->assertExactJson(['status' => 'responding']);
+    $this->getJson(route('api.gobiker.emergency.status'))->assertExactJson(['status' => 'responding', 'sos' => null]);
 
     // A location update during the ronda must not hide the admin's response.
     $this->postJson(route('api.gobiker.location'), ['latitude' => 16.05, 'longitude' => 120.34])->assertOk();
-    $this->getJson(route('api.gobiker.emergency.status'))->assertExactJson(['status' => 'responding']);
+    $this->getJson(route('api.gobiker.emergency.status'))->assertExactJson(['status' => 'responding', 'sos' => null]);
 
     $this->actingAs($this->admin, 'web')
         ->patchJson(route('admin.locations.status', $location), ['status' => 'active'])
         ->assertOk();
 
     Sanctum::actingAs($this->gobiker);
-    $this->getJson(route('api.gobiker.emergency.status'))->assertExactJson(['status' => null]);
+    $this->getJson(route('api.gobiker.emergency.status'))->assertExactJson(['status' => null, 'sos' => null]);
 });
 
 it('only shows a GoBiker their own emergency', function () {
@@ -56,14 +56,14 @@ it('only shows a GoBiker their own emergency', function () {
 
     Sanctum::actingAs($other);
 
-    $this->getJson(route('api.gobiker.emergency.status'))->assertExactJson(['status' => null]);
+    $this->getJson(route('api.gobiker.emergency.status'))->assertExactJson(['status' => null, 'sos' => null]);
 });
 
 it('keeps the emergency open when the ronda is stopped', function () {
     sendEmergency($this->gobiker);
     $this->postJson(route('api.gobiker.active.stop'))->assertOk();
 
-    $this->getJson(route('api.gobiker.emergency.status'))->assertExactJson(['status' => 'emergency']);
+    $this->getJson(route('api.gobiker.emergency.status'))->assertExactJson(['status' => 'emergency', 'sos' => null]);
 });
 
 it('is only for signed-in GoBikers', function () {

@@ -9,7 +9,9 @@ use Illuminate\Http\JsonResponse;
 
 /**
  * Polled by every admin page so an emergency is noticed even when nobody has the live map open.
- * Two kinds ring the alarm: a GoBiker's emergency button and a resident's SOS request.
+ * Two kinds ring the alarm: a GoBiker's emergency button and a resident's SOS request. A GoBiker
+ * whose emergency opened an SOS of their own is listed once, through that SOS (see
+ * Location::scopeUnansweredEmergencies).
  */
 class EmergencyAlertController extends Controller
 {
@@ -38,10 +40,13 @@ class EmergencyAlertController extends Controller
             // Waiting ones, and ones the assigned GoBiker turned down: both still need someone.
             // Reassigning (below) moves a declined request back to "responding", which stops the alarm.
             ->whereIn('status', ['sent', 'declined'])
-            ->with('user:id,name,mobile')
+            ->with('user:id,name,mobile,role', 'declinedBy:id,name')
             ->get()
             ->map(fn (SosRequest $sos) => [
+                // A GoBiker's own emergency is an SOS too (GobikerEmergency): it is answered the
+                // same way, so it keeps this kind and only says who sent it.
                 'kind' => 'resident',
+                'from' => $sos->user?->role === 'GoBiker' ? 'gobiker' : 'resident',
                 'key' => 'sos-'.$sos->id.'-'.$sos->status,
                 'sos_id' => $sos->id,
                 'name' => $sos->user?->name ?? 'Resident',

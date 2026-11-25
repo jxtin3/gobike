@@ -117,6 +117,10 @@ Route::middleware(['auth:sanctum', 'gobiker', 'throttle:mobile'])->prefix('gobik
         'emergencyStatus',
     ])->name('api.gobiker.emergency.status');
 
+    // The GoBiker's emergency is an SOS they own: they can cancel it and follow who is coming.
+    Route::post('/emergency/cancel', [GobikerLocationController::class, 'cancelEmergency'])->name('api.gobiker.emergency.cancel');
+    Route::get('/emergency/{sos}/tracking', [GobikerLocationController::class, 'emergencyTracking'])->name('api.gobiker.emergency.tracking');
+
     Route::get('/active', [
         GobikerLocationController::class,
         'currentSession',
@@ -159,6 +163,8 @@ Route::middleware(['auth:sanctum', 'resident', 'throttle:mobile'])->prefix('resi
     Route::post('/sos/{sos}/media', [ResidentSosController::class, 'media'])->middleware('throttle:10,1')->name('api.resident.sos.media');
     Route::post('/sos/{sos}/resolve', [ResidentSosController::class, 'resolve'])->name('api.resident.sos.resolve');
     Route::post('/sos/{sos}/cancel', [ResidentSosController::class, 'cancel'])->name('api.resident.sos.cancel');
+    // Where the GoBiker sent to help is, while they are on the way (polled by the SOS map).
+    Route::get('/sos/{sos}/tracking', [ResidentSosController::class, 'tracking'])->name('api.resident.sos.tracking');
 
     Route::get('/gobikers', [ResidentAppointmentController::class, 'gobikers'])->name('api.resident.gobikers');
     Route::get('/appointments', [ResidentAppointmentController::class, 'index'])->name('api.resident.appointments.index');

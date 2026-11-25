@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Barangay;
 use App\Models\SosRequest;
 use App\Services\Push\PushNotifier;
+use App\Support\GobikerEmergency;
 use App\Support\LiveMap;
 use App\Support\Media;
 use Closure;
@@ -84,6 +85,10 @@ class SosRequestController extends Controller
                 fn (string $attribute, mixed $value, Closure $fail) => LiveMap::isOnline((int) $value)
                     ? null
                     : $fail('That GoBiker is offline. Send one whose app is on and showing on the map.'),
+                // A GoBiker's own emergency: someone else has to go.
+                fn (string $attribute, mixed $value, Closure $fail) => (int) $value === $sos->user_id
+                    ? $fail('This GoBiker is the one who needs help. Send someone else.')
+                    : null,
             ],
         ]);
 
@@ -115,6 +120,7 @@ class SosRequestController extends Controller
         }
         $assignmentChanged = $sos->isDirty('assigned_gobiker_id');
         $sos->save();
+        GobikerEmergency::syncLocation($sos);
         $push = app(PushNotifier::class);
         $push->sosStatusChanged($sos->load('user', 'assignedGobiker'));
         if ($sos->status === 'responding' && $sos->assignedGobiker && $assignmentChanged) {
@@ -143,7 +149,7 @@ class SosRequestController extends Controller
     public function mapPins()
     {
         $pins = SosRequest::with([
-            'user:id,name,mobile,photo_path',
+            'user:id,name,mobile,photo_path,role',
             'assignedGobiker:id,name,barangay,photo_path',
             'declinedBy:id,name',
         ])
@@ -161,6 +167,8 @@ class SosRequestController extends Controller
             ->map(fn (SosRequest $sos) => [
                 'id' => $sos->id,
                 'status' => $sos->status,
+                // A GoBiker's own emergency (GobikerEmergency) is drawn and answered the same way.
+                'from' => $sos->user?->role === 'GoBiker' ? 'gobiker' : 'resident',
                 'resident' => $sos->user?->name ?? 'Resident',
                 'mobile' => $sos->user?->mobile,
                 'resident_photo' => Media::url($sos->user?->photo_path),
@@ -199,7 +207,8 @@ class SosRequestController extends Controller
         return response()->json([
             'barangay' => $sos->barangay,
             'barangays' => $this->barangayChoices($sos),
-            'gobikers' => LiveMap::gobikersForAssignment($sos->latitude, $sos->longitude, $barangay),
+            // A GoBiker's own emergency: they cannot be sent to help themselves.
+            'gobikers' => LiveMap::gobikersForAssignment($sos->latitude, $sos->longitude, $barangay, $sos->user_id),
         ]);
     }
 

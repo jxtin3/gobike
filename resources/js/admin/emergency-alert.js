@@ -239,7 +239,10 @@
     function buildRow(e) {
         const li = els.row.content.firstElementChild.cloneNode(true);
         li.dataset.key = e.key;
-        $('[data-field="name"]', li).textContent = isResident(e) ? `SOS from ${e.name} (resident)` : e.name;
+        // A GoBiker's own emergency comes as an SOS too (answered the same way); say who sent it.
+        $('[data-field="name"]', li).textContent = isResident(e)
+            ? `SOS from ${e.name} (${e.from === 'gobiker' ? 'GoBiker' : 'resident'})`
+            : e.name;
         $('[data-field="barangay"]', li).textContent = e.barangay || (isResident(e) ? 'No location given' : 'No barangay assigned');
         $('[data-field="ago"]', li).dateTime = e.since ?? '';
 

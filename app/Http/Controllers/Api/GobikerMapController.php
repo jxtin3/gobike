@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\SosRequest;
 use App\Services\Push\PushNotifier;
+use App\Support\GobikerEmergency;
 use App\Support\LiveMap;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
@@ -13,9 +14,9 @@ use Illuminate\Http\Request;
 /**
  * The GoBiker's live map and the SOS requests the admin sent them to.
  *
- * They see the other GoBikers of their own barangay, and the exact location of the SOS requests
- * the admin assigned to them. Residents are never plotted: a GoBiker picks their own barangay,
- * so plotting a barangay's residents would let anyone watch residents anywhere in the town.
+ * They see every other GoBiker of their town whose app is open, and the exact location of the
+ * SOS requests the admin assigned to them. Residents are never plotted: a GoBiker picks their own
+ * barangay, so plotting residents would let anyone watch residents anywhere in the town.
  */
 class GobikerMapController extends Controller
 {
@@ -34,6 +35,7 @@ class GobikerMapController extends Controller
 
         return response()->json([
             'barangay' => $barangay,
+            'town' => LiveMap::townOf($barangay),
             'gobikers' => LiveMap::onlineGobikers($barangay, $gobiker->id),
             'sos' => $sos->map(fn (SosRequest $s) => $this->payload($s))->values(),
         ]);
@@ -62,6 +64,7 @@ class GobikerMapController extends Controller
             'resolved_at' => now(),
             'resolved_by_gobiker_id' => $request->user()->id,
         ]);
+        GobikerEmergency::syncLocation($sos);
         app(PushNotifier::class)->sosStatusChanged($sos->load('user', 'resolvedBy'));
 
         return response()->json([
@@ -94,6 +97,7 @@ class GobikerMapController extends Controller
             'declined_by_gobiker_id' => $request->user()->id,
             'decline_reason' => $data['reason'],
         ]);
+        GobikerEmergency::syncLocation($sos);
         // The resident is reassured on their phone; the admin learns of it through the emergency
         // alarm, which counts declined requests (see EmergencyAlertController), so they can send
         // someone else.
@@ -113,7 +117,7 @@ class GobikerMapController extends Controller
      */
     private function assigned(Request $request): Builder
     {
-        return SosRequest::with('user:id,name,mobile')
+        return SosRequest::with('user:id,name,mobile,role')
             ->where('assigned_gobiker_id', $request->user()->id)
             ->latest();
     }
@@ -127,6 +131,8 @@ class GobikerMapController extends Controller
             'cancelled' => $sos->isCancelled(),
             'status_label' => $sos->status_label,
             'resident_name' => $sos->user?->name,
+            // Another GoBiker's own emergency rather than a resident's request.
+            'from_gobiker' => $sos->fromGobiker(),
             'mobile' => $sos->user?->mobile,
             'barangay' => $sos->barangay,
             'address' => $sos->address,

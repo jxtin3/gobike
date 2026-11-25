@@ -21,7 +21,9 @@ class Location extends Model
     {
         return $query
             ->whereRaw('LOWER(status) = ?', ['emergency'])
-            ->whereHas('user', fn ($user) => $user->where('role', 'GoBiker'));
+            ->whereHas('user', fn ($user) => $user->where('role', 'GoBiker'))
+            // With an SOS of their own (GobikerEmergency) the alarm rings for that instead.
+            ->whereDoesntHave('user.sosRequests', fn ($sos) => $sos->open());
     }
 
     /**

@@ -7,14 +7,14 @@ use App\Support\LiveMap;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
-/** The resident's live map: the GoBikers near them. Their own position never leaves their phone. */
+/** The resident's live map: the GoBikers of their town. Their own position never leaves their phone. */
 class ResidentMapController extends Controller
 {
     /**
-     * Online GoBikers in the resident's barangay.
+     * Every GoBiker of the resident's town whose app is open.
      *
-     * Residents are not plotted for anyone, so the app has nothing to upload: it draws the
-     * resident's own position straight from the phone.
+     * Residents are not plotted for anyone, GoBikers included, so the app has nothing to
+     * upload: it draws the resident's own position straight from the phone.
      */
     public function map(Request $request): JsonResponse
     {
@@ -22,6 +22,7 @@ class ResidentMapController extends Controller
 
         return response()->json([
             'barangay' => $barangay,
+            'town' => LiveMap::townOf($barangay),
             'gobikers' => LiveMap::onlineGobikers($barangay, $request->user()->id),
         ]);
     }

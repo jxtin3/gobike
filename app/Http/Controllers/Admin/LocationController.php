@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Location;
 use App\Services\Push\PushNotifier;
+use App\Support\GobikerEmergency;
 use App\Support\Media;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -78,11 +79,32 @@ class LocationController extends Controller
             // Resolved: the next emergency from this GoBiker starts fresh.
             'emergency_at' => $data['status'] === 'active' ? null : $location->emergency_at,
         ]);
+        $this->moveOpenSos($location, $data['status'], $request->user()->id);
         if ($location->user) {
             app(PushNotifier::class)->emergencyAnswered($location->user, $data['status']);
         }
 
         return response()->json(['message' => 'Status updated.', 'status' => $data['status']]);
+    }
+
+    /**
+     * The GoBiker's emergency is also an SOS they own (GobikerEmergency): the old buttons on their
+     * marker must move it too, or their app would keep saying "Waiting for response".
+     */
+    private function moveOpenSos(Location $location, string $status, int $adminId): void
+    {
+        $sos = $location->user ? GobikerEmergency::open($location->user) : null;
+        $next = $status === 'active' ? 'resolved' : 'responding';
+        if (! $sos || ! $sos->canMoveTo($next)) {
+            return;
+        }
+
+        $sos->update([
+            'status' => $next,
+            'handled_by' => $adminId,
+            'responded_at' => $sos->responded_at ?? now(),
+            'resolved_at' => $next === 'resolved' ? now() : $sos->resolved_at,
+        ]);
     }
 
     private function currentStatus(Location $location): string
