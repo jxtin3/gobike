@@ -172,3 +172,11 @@ it('shows the number of waiting emergencies next to Live map in the sidebar', fu
         ->not->toContain(' hidden')
         ->toContain('<span class="count-num">1</span>');
 });
+
+it('names the barangay and landmark on the alarm, never a house address', function () {
+    $sos = residentSos(['barangay' => 'Salomague Sur', 'landmark' => 'u33y3y', 'address' => '12 Rizal St.']);
+
+    $row = collect(adminEmergencies($this->admin))->firstWhere('sos_id', $sos->id);
+
+    expect($row['barangay'])->toBe('Salomague Sur · u33y3y');
+});

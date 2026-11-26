@@ -106,8 +106,10 @@ it('makes analytics the admin dashboard and places live operations after the cha
         ->assertOk()
         ->assertSee('id="map"', false)
         ->assertSee('data-locations-url="'.route('admin.locations.index').'"', false)
+        ->assertSee('id="sos-card"', false)
         ->assertSeeInOrder([
-            'rider-legend',
+            'id="sos-card"',
+            'legend-grid',
             'Emergency',
             'Responding',
             'GoBikers',

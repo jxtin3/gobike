@@ -116,6 +116,7 @@ class LiveMap
                 'accuracy' => $location->accuracy,
                 'position_at' => ($location->position_at ?? $location->last_seen_at)?->toIso8601String(),
                 'status' => Location::isAlertStatus($location->status) ? strtolower($location->status) : 'active',
+                'on_ronda' => $location->active_start_time !== null && $location->active_end_time === null,
             ])
             ->values();
     }

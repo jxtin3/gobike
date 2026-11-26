@@ -9,6 +9,7 @@ use App\Models\SosRequest;
 use App\Models\User;
 use App\Services\Push\FcmSender;
 use App\Services\Push\GoogleFcmSender;
+use App\Services\Push\PushNotifier;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Laravel\Sanctum\Sanctum;
@@ -292,4 +293,22 @@ it('sends no push when a waiting SOS with nobody assigned is cancelled', functio
     $this->postJson(route('api.resident.sos.cancel', $sos))->assertOk();
 
     expect($this->push->sent)->toBe([]);
+});
+
+it('tells the GoBiker sent to an SOS how serious it is and whether anyone is hurt', function () {
+    $resident = User::factory()->create(['name' => 'Ayaka', 'role' => 'User']);
+    $sos = SosRequest::create([
+        'user_id' => $resident->id, 'municipality' => 'Bugallon', 'barangay' => 'Salomague Sur',
+        'landmark' => 'u33y3y', 'severity' => 'critical', 'injured' => 'yes',
+    ]);
+
+    expect(PushNotifier::sosAssignedBody($sos))
+        ->toBe('Critical: Ayaka needs help near u33y3y. Someone is injured. Tap to see the map.');
+
+    $sos->update(['severity' => null, 'injured' => 'unsure', 'landmark' => '']);
+    expect(PushNotifier::sosAssignedBody($sos->fresh()))
+        ->toBe('Ayaka needs help near Salomague Sur. Someone may be injured. Tap to see the map.');
+
+    $sos->update(['injured' => null]);
+    expect(PushNotifier::sosAssignedBody($sos->fresh()))->toBe('Ayaka needs help near Salomague Sur. Tap to see the map.');
 });

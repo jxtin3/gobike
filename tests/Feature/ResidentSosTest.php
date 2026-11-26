@@ -24,9 +24,10 @@ beforeEach(function () {
 function sosPayload(array $overrides = []): array
 {
     return array_merge([
-        'address' => '12 Rizal St., Purok 2',
         'landmark' => 'Beside the chapel',
         'description' => 'My father fell and cannot stand.',
+        'severity' => 'critical',
+        'injured' => 'yes',
         'latitude' => 15.9566,
         'longitude' => 120.1866,
     ], $overrides);
@@ -56,20 +57,59 @@ it('sends an SOS without a GPS position', function () {
     expect($sos->map_url)->toBeNull();
 });
 
-it('needs the address and landmark of the emergency', function (string $field) {
+it('needs the landmark of the emergency', function () {
     Sanctum::actingAs($this->resident);
 
-    $this->postJson(route('api.resident.sos.store'), sosPayload([$field => '']))
+    $this->postJson(route('api.resident.sos.store'), sosPayload(['landmark' => '']))
         ->assertUnprocessable()
-        ->assertJsonValidationErrors($field);
-})->with(['address', 'landmark']);
+        ->assertJsonValidationErrors('landmark');
+});
 
-it('files the SOS under the resident\'s own barangay', function () {
+it('sends an SOS without a house address: the barangay and the pin say where', function () {
     $sos = sendSos($this->resident);
 
     expect($sos->barangay)->toBe('Poblacion')
         ->and($sos->municipality)->toBe('Bugallon')
-        ->and($sos->address)->toBe('12 Rizal St., Purok 2');
+        ->and($sos->address)->toBeNull()
+        ->and($sos->place)->toBe('Poblacion · Beside the chapel');
+});
+
+it('still stores the address an older app sends', function () {
+    $sos = sendSos($this->resident, ['address' => '12 Rizal St., Purok 2']);
+
+    expect($sos->address)->toBe('12 Rizal St., Purok 2')
+        ->and($sos->place)->toBe('Poblacion · Beside the chapel');
+});
+
+it('stores how serious it is and whether anyone is hurt', function () {
+    Sanctum::actingAs($this->resident);
+
+    $this->postJson(route('api.resident.sos.store'), sosPayload(['severity' => 'high', 'injured' => 'unsure']))
+        ->assertCreated()
+        ->assertJsonPath('sos.severity', 'high')
+        ->assertJsonPath('sos.severity_label', 'High')
+        ->assertJsonPath('sos.injured', 'unsure')
+        ->assertJsonPath('sos.injured_label', 'Not sure');
+});
+
+it('turns away a severity or injured answer it does not know', function (string $field, string $value) {
+    Sanctum::actingAs($this->resident);
+
+    $this->postJson(route('api.resident.sos.store'), sosPayload([$field => $value]))
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors($field);
+})->with([['severity', 'extreme'], ['injured', 'maybe']]);
+
+it('accepts an SOS from an older app that asks neither question', function () {
+    Sanctum::actingAs($this->resident);
+
+    $this->postJson(route('api.resident.sos.store'), sosPayload([
+        'severity' => null, 'injured' => null, 'address' => '12 Rizal St.',
+    ]))
+        ->assertCreated()
+        ->assertJsonPath('sos.severity', null)
+        ->assertJsonPath('sos.severity_label', 'Not given')
+        ->assertJsonPath('sos.injured_label', 'Not given');
 });
 
 it('still accepts an SOS from older app versions that pick a barangay', function () {
@@ -84,7 +124,7 @@ it('asks a resident without a barangay to set one first', function () {
 
     $this->postJson(route('api.resident.sos.store'), sosPayload())
         ->assertUnprocessable()
-        ->assertJsonValidationErrors('address');
+        ->assertJsonValidationErrors(['barangay' => 'Add your barangay to your profile']);
 });
 
 it('limits how many SOS requests a resident can send per minute', function () {
@@ -495,4 +535,29 @@ it("does not let a resident track another resident's SOS", function () {
     Sanctum::actingAs(User::factory()->create(['role' => 'User', 'status' => 'Active', 'barangay' => 'Poblacion']));
 
     $this->getJson(route('api.resident.sos.tracking', $sos))->assertForbidden();
+});
+
+it('shows the admin how serious it is, and an old address only on its own page', function () {
+    $sos = sendSos($this->resident, ['address' => '12 Rizal St., Purok 2']);
+
+    $this->actingAs($this->admin, 'web')
+        ->get(route('admin.operations.sos.show', $sos))
+        ->assertOk()
+        ->assertSee('Critical')
+        ->assertSee('Injured people')
+        ->assertSee('12 Rizal St., Purok 2');
+
+    $this->get(route('admin.operations.sos.index'))
+        ->assertOk()
+        ->assertSee('Beside the chapel')
+        ->assertDontSee('12 Rizal St., Purok 2');
+});
+
+it('says "Not given" on the admin page of an SOS from an older app', function () {
+    $sos = sendSos($this->resident, ['severity' => null, 'injured' => null]);
+
+    $this->actingAs($this->admin, 'web')
+        ->get(route('admin.operations.sos.show', $sos))
+        ->assertOk()
+        ->assertSee('Not given');
 });

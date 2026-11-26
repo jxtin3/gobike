@@ -78,3 +78,14 @@ it('shows the admin a plain "Responding" button on the live map', function () {
         ->toContain('>Responding</button>')
         ->not->toContain("I'm responding");
 });
+
+it('keeps the SOS popup to the basics and puts what the resident sent in the side card', function () {
+    $js = file_get_contents(resource_path('js/admin/live-map.js'));
+
+    expect($js)
+        ->toContain("factHtml('severity', 'Severity'")
+        ->toContain("'Injured people'")
+        ->toContain('go by the landmark')
+        ->not->toContain('sos-facts')
+        ->not->toContain('p.address');
+});

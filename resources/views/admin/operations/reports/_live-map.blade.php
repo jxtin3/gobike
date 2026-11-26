@@ -68,22 +68,22 @@
         </section>
 
         <aside class="card rider-panel" aria-labelledby="rider-panel-title">
-            <div class="legend rider-legend">
-                <span><i class="status-dot s-active"></i>Active on Ronda</span>
-                <span><i class="status-dot s-emergency"></i>Emergency</span>
-                <span><i class="status-dot s-responding"></i>Responding</span>
-                <span><i class="status-dot s-offline"></i>Offline</span>
-            </div>
-            {{-- Resolved emergencies leave the map, so there is no resolved pin to explain. --}}
-            <div class="legend rider-legend sos-legend" aria-label="Resident SOS pins">
-                <span><i class="sos-ring s-sent"></i>SOS waiting</span>
-                <span><i class="sos-ring s-sos-responding"></i>SOS answered</span>
-            </div>
-            {{-- How sure the map is of a position: said in words too, in each popup and list row. --}}
-            <div class="legend rider-legend sos-legend" aria-label="How sure a position is">
-                <span><i class="legend-ring"></i>Somewhere in the circle</span>
-                <span><i class="status-dot s-active is-old"></i>Position not updating</span>
-            </div>
+            {{-- What the resident sent, for the SOS whose popup is open; the popup keeps only who and the buttons. --}}
+            <section class="sos-card" id="sos-card" aria-labelledby="sos-card-title" hidden></section>
+            {{--
+                One compact key: GoBiker dots, then SOS pins (resolved ones leave the map, so there is no
+                resolved pin to explain), then how sure a position is (said in words too, in each popup and row).
+            --}}
+            <ul class="legend-grid" aria-label="Map key">
+                <li><i class="status-dot s-active"></i>Active on Ronda</li>
+                <li><i class="status-dot s-emergency"></i>Emergency</li>
+                <li><i class="status-dot s-responding"></i>Responding</li>
+                <li><i class="status-dot s-offline"></i>Offline</li>
+                <li><i class="sos-ring s-sent"></i>SOS waiting</li>
+                <li><i class="sos-ring s-sos-responding"></i>SOS answered</li>
+                <li><i class="legend-ring"></i>Somewhere in circle</li>
+                <li><i class="status-dot s-active is-old"></i>Position is old</li>
+            </ul>
             {{-- Two dropdowns: residents who need help come first, and the long GoBiker list can be folded away. --}}
             <details class="rider-section" open>
                 <summary><h2>Residents</h2><span class="count" id="sos-count">–</span><x-admin.icon name="chevron-down" class="rider-chevron" /></summary>

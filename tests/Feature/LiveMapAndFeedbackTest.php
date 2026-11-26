@@ -113,6 +113,17 @@ it('shows a GoBiker whose app is open even when they are not on a ronda', functi
     expect($this->getJson(route('api.gobiker.map'))->json('gobikers.0.status'))->toBe('emergency');
 });
 
+it('tells the resident which GoBikers on their map are on a ronda', function () {
+    onlineGobiker($this->gobiker);
+    onlineNotOnRonda($this->colleague);
+
+    Sanctum::actingAs($this->resident);
+    $gobikers = collect($this->getJson(route('api.resident.map'))->assertOk()->json('gobikers'))->keyBy('name');
+
+    expect($gobikers['Maria Santos']['on_ronda'])->toBeTrue()
+        ->and($gobikers['Jose Lim']['on_ronda'])->toBeFalse();
+});
+
 it('matches towns through the old text column, as seeded Bugallon barangays have no link', function () {
     expect(Barangay::where('name', 'Hacienda')->value('municipality_id'))->toBeNull();
     onlineGobiker($this->faraway);
@@ -269,6 +280,10 @@ it('tells the admin and the GoBiker who was sent how far out an SOS pin may be',
 
     $this->actingAs($this->admin, 'web')->getJson(route('admin.sos-pins.index'))
         ->assertOk()
+        ->assertJsonMissingPath('0.address')
+        ->assertJsonPath('0.severity_label', 'Not given')
+        ->assertJsonPath('0.injured_label', 'Not given')
+        ->assertJsonPath('0.view_url', route('admin.operations.sos.show', $id))
         ->assertJsonPath('0.accuracy', 65.5)
         ->assertJsonPath('0.position_at', now()->subSeconds(40)->toIso8601String());
 

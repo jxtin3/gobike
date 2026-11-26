@@ -50,6 +50,14 @@
 
 <div class="detail-columns">
     <article class="detail-card">
+        <h2 class="detail-card-title">How serious</h2>
+        <dl class="detail-dl">
+            <div><dt>Severity</dt><dd><span class="sev sev-{{ $sos->severity ?? 'none' }}">{{ $sos->severity_label }}</span></dd></div>
+            <div><dt>Injured people</dt><dd>{{ $sos->injured_label }}</dd></div>
+        </dl>
+    </article>
+
+    <article class="detail-card">
         <h2 class="detail-card-title">Where</h2>
         <dl class="detail-dl">
             @if ($sos->address)
@@ -63,7 +71,7 @@
                     @if ($sos->map_url)
                         <a href="{{ $sos->map_url }}" target="_blank" rel="noopener"><x-admin.icon name="map" /> Open in Google Maps</a>
                     @else
-                        Not shared: the resident chose not to share it, or location was off on their phone. Use the address and landmark.
+                        Not shared: the resident chose not to share it, or location was off on their phone. Use the barangay and landmark.
                     @endif
                 </dd>
             </div>

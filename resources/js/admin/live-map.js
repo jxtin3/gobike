@@ -39,6 +39,10 @@
         assignGobiker: '<path d="M8 8a4 4 0 0 1 8 0v1H8zM12 4V2M5 21v-2a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v2M12 14v3"/>',
         send: '<path d="m21 3-9.5 18-2.5-7.5L1.5 11zM9 13.5 21 3"/>',
         pin: '<circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="1.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>',
+        severity: '<path d="M12 3 2 20h20zM12 10v4M12 17h.01"/>',
+        injured: '<path d="M10 3h4v7h7v4h-7v7h-4v-7H3v-4h7z"/>',
+        time: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+        media: '<rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="10" r="1.6"/><path d="m21 16-5-5-9 8"/>',
     };
     // "Responding" only when a GoBiker was actually sent: an admin can take a request on without
     // assigning anyone yet, and the map must not claim somebody is on the way. A declined pin
@@ -53,6 +57,7 @@
         overlay: $('map-overlay'), error: $('map-error'), errorText: $('map-error-text'),
         note: $('map-note'), chip: $('live-chip'), updated: $('last-refresh'),
         sosList: $('sos-list'), sosCount: $('sos-count'), sosEmpty: $('sos-empty'),
+        sosCard: $('sos-card'),
     };
 
     // Canvas draws hundreds of GoBiker dots much faster than one SVG element each.
@@ -520,15 +525,84 @@
     }
 
     /* One line of the report: its icon, the muted label, then what the resident told us. */
-    function fact(name, label, value, clamp = false) {
-        // A long description is cut to three lines; hovering shows all of it.
-        const dd = clamp ? `<dd class="sos-clamp" title="${esc(value)}">` : '<dd>';
-
-        return `<dt>${icon(name, 'sos-fact-icon')}${esc(label)}</dt>${dd}${esc(value)}</dd>`;
+    function fact(name, label, value) {
+        return factHtml(name, label, esc(value));
     }
 
-    /* The pin is only roughly where the resident is: the address and landmark are the better guide. */
+    /* The same row, for a value that is already markup (the severity chip). */
+    function factHtml(name, label, html) {
+        return `<dt>${icon(name, 'sos-fact-icon')}${esc(label)}</dt><dd>${html}</dd>`;
+    }
+
+    /* The pin is only roughly where the resident is: the barangay and landmark are the better guide. */
     const sosIsApprox = (p) => Number.isFinite(p.accuracy) && p.accuracy > APPROX_M;
+
+    const SEVERITY_CLASS = { low: 'sev-low', moderate: 'sev-moderate', high: 'sev-high', critical: 'sev-critical' };
+
+    /*
+     * Everything the resident sent, beside the map rather than in the popup, so the popup stays
+     * small enough to leave the pin and the GoBikers around it in view.
+     */
+    function sosCardHtml(p) {
+        const fromGobiker = p.from === 'gobiker';
+        const severity = `<span class="sev ${esc(SEVERITY_CLASS[p.severity] || 'sev-none')}">${esc(p.severity_label || 'Not given')}</span>`;
+        const pin = within(p.accuracy);
+        const sentAt = time(p.created_at, { hour: 'numeric', minute: '2-digit' });
+        const facts = [
+            // A GoBiker's own emergency is one button press: nobody was asked these two questions.
+            fromGobiker ? '' : factHtml('severity', 'Severity', severity),
+            fromGobiker ? '' : fact('injured', 'Injured people', p.injured_label || 'Not given'),
+            fact('address', 'Barangay', p.barangay || 'Not given'),
+            p.landmark ? fact('landmark', 'Landmark', p.landmark) : '',
+            pin ? fact('pin', 'Pin', sosIsApprox(p) ? `Approximate. ${pin}: go by the landmark.` : pin) : '',
+            sentAt ? fact('time', 'Sent', `${sentAt} · ${ago(p.created_at).toLowerCase()}`) : '',
+            p.description ? fact('details', 'What happened', p.description) : '',
+            p.status === 'declined' ? fact('details', 'Declined', `${p.declined_by || 'The GoBiker'}: ${p.decline_reason || 'no reason given'}`) : '',
+        ].join('');
+        const media = [
+            p.image_url ? `<a class="sos-card-photo" href="${esc(p.image_url)}" target="_blank" rel="noopener">
+                <img src="${esc(p.image_url)}" alt="Photo sent with the SOS" loading="lazy"></a>` : '',
+            p.video_url ? `<a class="sos-card-link" href="${esc(p.video_url)}" target="_blank" rel="noopener">${icon('media', 'sos-fact-icon')}Open the video</a>` : '',
+        ].join('');
+
+        return `<header class="sos-card-head">
+                <div class="sos-card-who">
+                    <p class="sos-card-kicker">${fromGobiker ? 'GoBiker emergency' : 'SOS from resident'}</p>
+                    <h2 id="sos-card-title">${esc(p.resident)}</h2>
+                </div>
+                <button type="button" class="sos-card-close" data-sos-card-close aria-label="Close SOS details">&times;</button>
+            </header>
+            <dl class="sos-card-facts">${facts}</dl>
+            ${media ? `<div class="sos-card-media">${media}</div>` : ''}
+            ${p.view_url ? `<a class="btn btn-secondary btn-sm sos-card-more" href="${esc(p.view_url)}">Full details</a>` : ''}`;
+    }
+
+    let openSosId = null;
+    let sosCardHtmlNow = '';
+
+    /* Shows the card for the SOS whose popup is open, and keeps it current while it stays open. */
+    function renderSosCard() {
+        const p = openSosId ? sosPins.find((pin) => String(pin.id) === openSosId) : null;
+        if (!p) {
+            hideSosCard();
+
+            return;
+        }
+        const html = sosCardHtml(p);
+        els.sosCard.hidden = false;
+        // Polled every second: only touch the page when something on it changed.
+        if (html === sosCardHtmlNow) return;
+        sosCardHtmlNow = html;
+        els.sosCard.innerHTML = html;
+    }
+
+    function hideSosCard() {
+        openSosId = null;
+        sosCardHtmlNow = '';
+        if (!els.sosCard) return;
+        els.sosCard.hidden = true;
+        els.sosCard.innerHTML = '';
+    }
 
     function sosPopup(p) {
         const mobile = p.mobile
@@ -542,16 +616,6 @@
                 // Already being answered: the admin can add someone, and the first keeps going.
                 : assignBlock(p, 'responding', activeResponders(p).length ? 'Send another GoBiker' : 'Send a GoBiker');
 
-        // The street and the barangay read as one place; a row the resident left empty is left out.
-        const where = [p.address, p.barangay].filter(Boolean).join(', ');
-        const facts = [
-            where ? fact('address', 'Where', where) : '',
-            p.landmark ? fact('landmark', 'Landmark', p.landmark) : '',
-            within(p.accuracy) ? fact('pin', 'Pin', sosIsApprox(p) ? `Approximate. ${within(p.accuracy)}: go by the address.` : within(p.accuracy)) : '',
-            p.description ? fact('details', 'Details', p.description, true) : '',
-            p.status === 'declined' ? fact('details', 'Declined', `${p.declined_by || 'The GoBiker'}: ${p.decline_reason || 'no reason given'}`) : '',
-        ].join('');
-
         return `<div class="gb-pop sos-pop">
             <div class="sos-pop-head">
                 ${face(p.resident, p.resident_photo, 32)}
@@ -564,7 +628,6 @@
                     ${mobile}
                 </div>
             </div>
-            ${facts ? `<dl class="sos-facts">${facts}</dl>` : ''}
             ${responderChip(p)}
             ${actions}
         </div>`;
@@ -643,6 +706,11 @@
                 marker.on('popupopen', () => {
                     resetCombo(id);
                     fillGobikers(id);
+                    openSosId = id;
+                    renderSosCard();
+                });
+                marker.on('popupclose', () => {
+                    if (openSosId === id) hideSosCard();
                 });
                 sosMarkers.set(id, marker);
             } else {
@@ -684,6 +752,8 @@
         });
         sosPins = pins;
         renderSosList();
+        // A resolved or cancelled SOS has left the list: its card goes with it, never left stale.
+        if (openSosId) renderSosCard();
     }
 
     /*
@@ -1123,6 +1193,11 @@
         const option = e.target.closest?.('.gb-pop [data-barangay-option]');
         const box = option?.closest('.sos-combo')?.querySelector('input[data-sos-barangay]');
         if (box) pickBarangay(box.dataset.sosBarangay, option.dataset.value);
+    });
+
+    // The card's × closes the SOS popup, and closing the popup hides the card.
+    els.sosCard?.addEventListener('click', (e) => {
+        if (e.target.closest('[data-sos-card-close]')) map.closePopup();
     });
 
     // A press on the list must not take the focus from the search box, which would close it.

@@ -1319,6 +1319,28 @@ td > .empty {
 
 .pill-warn { color: var(--warn); }
 
+/* SOS severity, as the resident chose it: green, amber, orange, red; grey when not given. */
+.sev {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    border: 1px solid var(--line-2);
+    border-radius: 999px;
+    background: var(--surface-2);
+    color: var(--ink-2);
+    font-size: var(--fs-12);
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.sev-low { border-color: var(--ok-line); background: var(--ok-bg); color: var(--ok-2); }
+
+.sev-moderate { border-color: #f3dc8c; background: #fefbea; color: #7a5a00; }
+
+.sev-high { border-color: var(--warn-line); background: var(--warn-bg); color: var(--warn); }
+
+.sev-critical { border-color: var(--bad); background: var(--bad); color: #fff; }
+
 .tabs {
     position: relative;
     display: flex;
@@ -2266,7 +2288,7 @@ html:has(dialog:modal) { overflow: hidden; }
 
 .map-layout {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 320px;
+    grid-template-columns: minmax(0, 1fr) 280px;
     gap: var(--sp-4);
     align-items: start;
 }
@@ -4267,63 +4289,6 @@ html:has(dialog:modal) { overflow: hidden; }
     color: var(--brand);
 }
 
-/*
- * The report: icon and muted label, a hairline, then the value, which may run to several lines.
- * The one light panel in the popup; the hairline between the columns keeps the rows aligned.
- */
-.sos-facts {
-    display: grid;
-    grid-template-columns: auto minmax(0, 1fr);
-    gap: 0 var(--sp-3);
-    align-items: stretch;
-    margin: 0;
-    padding: 4px var(--sp-2);
-    border: 1px solid var(--line);
-    border-radius: var(--r-md);
-    background: #f7f9fd;
-    font-size: var(--fs-12);
-    /* A very long address or description scrolls here, so the buttons below never leave the map. */
-    max-height: min(120px, 22vh);
-    overflow-y: auto;
-    overscroll-behavior: contain;
-}
-
-.sos-pop dt {
-    display: flex;
-    gap: 5px;
-    align-items: flex-start;
-    padding: 2px var(--sp-2) 2px 0;
-    border-right: 1px solid var(--line-2);
-    color: var(--ink-3);
-    font-weight: 500;
-}
-
-.sos-fact-icon {
-    width: 14px;
-    height: 14px;
-    flex: none;
-    color: var(--brand);
-}
-
-/* Left aligned, unlike the GoBiker popup: an address or a sentence has to wrap readably. */
-.sos-pop dd {
-    margin: 0;
-    padding: 2px 0;
-    color: var(--ink);
-    font-weight: 600;
-    text-align: left;
-    overflow-wrap: anywhere;
-}
-
-/* The resident's description: three lines at most here, all of it on hover and on its page. */
-.sos-pop dd.sos-clamp {
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 3;
-    line-clamp: 3;
-    overflow: hidden;
-}
-
 /* On a phone the bubble must stay inside the map instead of running off its edge. */
 @media (max-width: 480px) {
     .leaflet-popup-content {
@@ -6185,6 +6150,161 @@ body.adm-live-map #map {
 body.adm-live-map .rider-panel { max-height: calc(100dvh - 150px); }
 
 body.adm-live-map .rider-panel .rider-section ul { max-height: calc((100dvh - 330px) / 2); min-height: 120px; }
+
+/* The map key: eight entries in two short columns instead of three stacked rows. */
+.legend-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 4px 10px;
+    margin: 0;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--line);
+    list-style: none;
+    font-size: var(--fs-12);
+    color: var(--ink-2);
+}
+
+.legend-grid li {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    white-space: nowrap;
+}
+
+.legend-grid .status-dot { width: 8px; height: 8px; flex: none; }
+
+.legend-grid .sos-ring,
+.legend-grid .legend-ring { flex: none; }
+
+/* Tighter rows in the side column, so more residents and GoBikers fit beside the map. */
+.rider-panel .rider-section summary { padding: 10px 12px; }
+
+.rider-panel .rider-section summary h2 { font-size: var(--fs-14); }
+
+.rider-panel .rider { gap: 8px; padding: 8px 12px; }
+
+.rider-panel .rider-main b { font-size: var(--fs-13); }
+
+/* What the resident sent, beside the map while their pin's popup is open. */
+.sos-card {
+    padding: 12px;
+    border-bottom: 1px solid var(--line);
+    background: #fff8f7;
+    border-left: 3px solid var(--emer);
+}
+
+.sos-card[hidden] { display: none; }
+
+.sos-card-head {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--sp-2);
+    margin-bottom: 8px;
+}
+
+.sos-card-who { flex: 1; min-width: 0; }
+
+.sos-card-kicker {
+    margin: 0;
+    color: var(--emer);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+}
+
+.sos-card-head h2 {
+    margin: 2px 0 0;
+    overflow: hidden;
+    color: var(--ink);
+    font-size: var(--fs-14);
+    font-weight: 700;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.sos-card-close {
+    display: grid;
+    place-items: center;
+    width: 26px;
+    height: 26px;
+    flex: none;
+    border: 0;
+    border-radius: var(--r-md);
+    background: none;
+    color: var(--ink-3);
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.sos-card-close:hover { background: var(--surface-2); color: var(--ink); }
+
+.sos-card-close:focus-visible { outline: 2px solid var(--focus); outline-offset: 1px; }
+
+.sos-card-facts {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 5px 10px;
+    margin: 0;
+    font-size: var(--fs-12);
+}
+
+.sos-card-facts dt {
+    display: flex;
+    align-items: flex-start;
+    gap: 5px;
+    color: var(--ink-3);
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.sos-card-facts dd {
+    margin: 0;
+    color: var(--ink);
+    font-weight: 600;
+    overflow-wrap: anywhere;
+}
+
+.sos-fact-icon {
+    width: 14px;
+    height: 14px;
+    flex: none;
+    color: var(--brand);
+}
+
+.sos-card-media {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 10px;
+}
+
+.sos-card-photo {
+    display: block;
+    overflow: hidden;
+    border: 1px solid var(--line);
+    border-radius: var(--r-md);
+}
+
+.sos-card-photo img {
+    display: block;
+    width: 100%;
+    max-height: 140px;
+    object-fit: cover;
+}
+
+.sos-card-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    color: var(--brand);
+    font-size: var(--fs-12);
+    font-weight: 600;
+}
+
+.sos-card-more { width: 100%; margin-top: 10px; justify-content: center; }
 
 /* A GoBiker who turned the SOS down stays listed, greyed, so nobody sends them again. */
 .sos-responder.is-declined { opacity: .6; }

@@ -36,13 +36,17 @@ class ResidentSosController extends Controller
     public function store(Request $request): JsonResponse
     {
         $data = $request->validate([
-            // The app sends a typed address and uses the resident's own barangay.
-            // App versions up to 1.0.9 still pick a municipality and barangay instead.
+            // The barangay comes from the resident's profile and the GPS pin does the rest, so the
+            // app no longer asks for a house address. Older apps still send one (kept, shown on the
+            // admin page), and versions up to 1.0.9 pick a municipality and barangay instead.
             'municipality' => ['nullable', 'string', 'max:100'],
             'barangay' => ['nullable', 'string', Rule::exists('barangays', 'name')],
-            'address' => ['required_without:barangay', 'nullable', 'string', 'max:255'],
+            'address' => ['nullable', 'string', 'max:255'],
             'landmark' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string', 'max:1000'],
+            // Asked by the app (both required there). Optional here: older apps send neither.
+            'severity' => ['nullable', Rule::in(array_keys(SosRequest::SEVERITIES))],
+            'injured' => ['nullable', Rule::in(array_keys(SosRequest::INJURED))],
             'latitude' => ['nullable', 'numeric', 'between:-90,90', 'required_with:longitude'],
             'longitude' => ['nullable', 'numeric', 'between:-180,180', 'required_with:latitude'],
             // How good the pin is: the phone's error in metres, and how old the fix was when sent.
@@ -63,7 +67,7 @@ class ResidentSosController extends Controller
         $data['barangay'] ??= $request->user()->barangay;
         if ($data['barangay'] === null) {
             throw ValidationException::withMessages([
-                'address' => 'Please set your barangay in your profile, then send the SOS again.',
+                'barangay' => 'Add your barangay to your profile, then send again.',
             ]);
         }
         $data['municipality'] ??= Barangays::MUNICIPALITY;

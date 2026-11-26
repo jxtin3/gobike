@@ -186,12 +186,16 @@ class GobikerMapController extends Controller
             'from_gobiker' => $sos->fromGobiker(),
             'mobile' => $sos->user?->mobile,
             'barangay' => $sos->barangay,
-            'address' => $sos->address,
             'landmark' => $sos->landmark,
             'description' => $sos->description,
+            // How serious the resident says it is and whether anyone is hurt; null from older apps.
+            'severity' => $sos->severity,
+            'severity_label' => $sos->severity_label,
+            'injured' => $sos->injured,
+            'injured_label' => $sos->injured_label,
             'latitude' => $sos->latitude,
             'longitude' => $sos->longitude,
-            // How far out the pin may be, so the GoBiker knows when to trust the address instead.
+            // How far out the pin may be, so the GoBiker knows when to go by the landmark instead.
             'accuracy' => $sos->location_accuracy,
             'position_at' => $sos->location_recorded_at?->toIso8601String(),
             'created_at' => $sos->created_at?->toIso8601String(),

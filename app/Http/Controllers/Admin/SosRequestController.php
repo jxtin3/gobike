@@ -187,7 +187,8 @@ class SosRequestController extends Controller
             'responders.gobiker:id,name,barangay,photo_path',
         ])
             ->select([
-                'id', 'user_id', 'status', 'barangay', 'address', 'landmark', 'description',
+                'id', 'user_id', 'status', 'barangay', 'landmark', 'description', 'severity', 'injured',
+                'image_path', 'video_path',
                 'latitude', 'longitude', 'location_accuracy', 'location_recorded_at',
                 'assigned_gobiker_id', 'declined_by_gobiker_id', 'decline_reason', 'created_at',
             ])
@@ -207,9 +208,17 @@ class SosRequestController extends Controller
                 'mobile' => $sos->user?->mobile,
                 'resident_photo' => Media::url($sos->user?->photo_path),
                 'barangay' => $sos->barangay,
-                'address' => $sos->address,
                 'landmark' => $sos->landmark,
                 'description' => $sos->description,
+                // For the details card beside the map. Requests from older apps have neither.
+                'severity' => $sos->severity,
+                'severity_label' => $sos->severity_label,
+                'injured' => $sos->injured,
+                'injured_label' => $sos->injured_label,
+                'image_url' => $sos->image_url,
+                'video_url' => $sos->video_url,
+                'created_at' => $sos->created_at?->toIso8601String(),
+                'view_url' => route('admin.operations.sos.show', $sos),
                 'latitude' => $sos->latitude,
                 'longitude' => $sos->longitude,
                 'accuracy' => $sos->location_accuracy,

@@ -126,20 +126,38 @@ class PushNotifier
      */
     public function sosAssigned(SosRequest $sos, User $gobiker): void
     {
-        $where = $sos->address ?: $sos->landmark;
         $assignedAt = $sos->responders()->where('gobiker_id', $gobiker->id)->value('assigned_at');
 
         $this->toUser(
             $gobiker,
             null,
             'SOS: you are assigned',
-            ($sos->user?->name ?? 'A resident').' needs help'.($where ? " at {$where}" : '').'. Tap to see the map.',
+            self::sosAssignedBody($sos),
             [
                 'type' => 'sos_assigned',
                 'id' => (string) $sos->id,
                 'assigned_at' => $assignedAt ? Carbon::parse($assignedAt)->toIso8601String() : '',
             ],
         );
+    }
+
+    /**
+     * "Critical: Maria needs help near the chapel. Someone is injured. Tap to see the map."
+     * Requests from older apps carry no severity or injured answer and simply leave those out.
+     */
+    public static function sosAssignedBody(SosRequest $sos): string
+    {
+        $severity = SosRequest::SEVERITIES[$sos->severity] ?? null;
+        $where = trim((string) $sos->landmark) ?: trim((string) $sos->barangay);
+        $injured = match ($sos->injured) {
+            'yes' => ' Someone is injured.',
+            'unsure' => ' Someone may be injured.',
+            default => '',
+        };
+
+        return ($severity ? "{$severity}: " : '')
+            .($sos->user?->name ?? 'A resident').' needs help'.($where !== '' ? " near {$where}" : '').'.'
+            .$injured.' Tap to see the map.';
     }
 
     /** The resident cancelled an SOS: tell every GoBiker on the way that they need not go. */

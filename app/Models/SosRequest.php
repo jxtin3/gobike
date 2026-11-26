@@ -32,8 +32,26 @@ class SosRequest extends Model
         'declined' => ['responding', 'resolved'], // admin can reassign or close
     ];
 
+    /** How serious the resident says it is, least to most. */
+    public const SEVERITIES = [
+        'low' => 'Low',
+        'moderate' => 'Moderate',
+        'high' => 'High',
+        'critical' => 'Critical',
+    ];
+
+    /** The resident's answer to "Are there injured people?". */
+    public const INJURED = [
+        'yes' => 'Yes',
+        'no' => 'No',
+        'unsure' => 'Not sure',
+    ];
+
+    /** Shown for severity and injured on requests from app versions that did not ask. */
+    public const NOT_GIVEN = 'Not given';
+
     protected $fillable = [
-        'user_id', 'municipality', 'barangay', 'address', 'landmark', 'description',
+        'user_id', 'municipality', 'barangay', 'address', 'landmark', 'description', 'severity', 'injured',
         'latitude', 'longitude', 'location_accuracy', 'location_recorded_at', 'image_path', 'video_path',
         'status', 'handled_by', 'assigned_gobiker_id', 'resolved_by_gobiker_id', 'declined_by_gobiker_id',
         'responded_at', 'resolved_at', 'resolved_by_resident', 'declined_at', 'decline_reason',
@@ -194,6 +212,29 @@ class SosRequest extends Model
     public function getStatusLabelAttribute(): string
     {
         return self::STATUSES[$this->status] ?? ucfirst($this->status);
+    }
+
+    public function getSeverityLabelAttribute(): string
+    {
+        return self::SEVERITIES[$this->severity] ?? self::NOT_GIVEN;
+    }
+
+    public function getInjuredLabelAttribute(): string
+    {
+        return self::INJURED[$this->injured] ?? self::NOT_GIVEN;
+    }
+
+    /**
+     * Where to go, in words: the barangay and the landmark. The resident no longer types a
+     * house address (their barangay comes from the profile and the GPS pin does the rest); an
+     * address saved on older requests shows only on the request's own admin page.
+     */
+    public function getPlaceAttribute(): string
+    {
+        return collect([$this->barangay, $this->landmark])
+            ->map(fn (?string $part) => trim((string) $part))
+            ->filter()
+            ->implode(' · ');
     }
 
     /**
