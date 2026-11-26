@@ -6151,9 +6151,19 @@ body.adm-live-map .rider-panel { max-height: calc(100dvh - 150px); }
 
 body.adm-live-map .rider-panel .rider-section ul { max-height: calc((100dvh - 330px) / 2); min-height: 120px; }
 
+/* An empty list takes no room: its "nobody" line sits right under the heading. */
+.rider-panel .rider-section ul:empty,
+body.adm-live-map .rider-panel .rider-section ul:empty { display: none; }
+
 /* The map key: eight entries in two short columns instead of three stacked rows. */
+.rider-panel .legend-grid {
+    flex: none; /* never grows with the panel, even with both lists folded */
+    overflow: visible;
+}
+
 .legend-grid {
     display: grid;
+    align-content: start;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 4px 10px;
     margin: 0;
