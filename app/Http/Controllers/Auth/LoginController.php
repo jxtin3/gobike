@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
+use App\Support\Mfa;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
@@ -15,6 +17,7 @@ class LoginController extends Controller
         if (Auth::check()) {
             return redirect()->route('admin.dashboard');
         }
+
         return view('auth.login');
     }
 
@@ -33,56 +36,54 @@ class LoginController extends Controller
             $message = "Too many login attempts. Please try again in {$seconds} seconds.";
 
             if ($request->expectsJson()) {
-               return response()->json(['message' => $message], 429);
+                return response()->json(['message' => $message], 429);
             }
 
             return back()->withErrors(['email' => $message])->onlyInput('email');
         }
 
-        if (Auth::attempt($credentials, $request->boolean('remember'))) {
+        // The password is checked without signing in: an admin with two-step login is signed
+        // in only after the code (verifyMfa), so no session or "Remember me" cookie exists before it.
+        $user = Auth::getProvider()->retrieveByCredentials(['email' => $credentials['email']]);
+
+        if ($user && Auth::getProvider()->validateCredentials($user, $credentials)) {
             RateLimiter::clear($emailKey);
-            $request->session()->regenerate();
-            
-            $user = Auth::user();
 
-            if ($user && $user->is_admin && ($user->status ?? 'Active') === 'Active') {
-                // If MFA is enabled, redirect to verification instead of dashboard
-                if ($user->hasMfaEnabled()) {
-                    $request->session()->put('mfa_pending_user', $user->id);
-                    $redirect = redirect()->intended(route('mfa.verify'))->getTargetUrl();
-
-                    if ($request->expectsJson()) {
-                        return response()->json(['redirect' => $redirect, 'mfa_required' => true]);
-                    }
-
-                    return redirect()->intended(route('mfa.verify'));
-                }
-
-                $redirect = redirect()->intended(route('admin.dashboard'))->getTargetUrl();
-                $request->session()->flash('admin_dashboard_entrance', true);
+            if (! $user->is_admin || ($user->status ?? 'Active') !== 'Active') {
+                $message = 'You do not have access to the admin area.';
 
                 if ($request->expectsJson()) {
-                    return response()->json(['redirect' => $redirect]);
+                    return response()->json(['message' => $message], 403);
                 }
 
-                return redirect()->intended(route('admin.dashboard'));
+                return back()->withErrors(['email' => $message]);
             }
 
-            Auth::logout();
-            $request->session()->invalidate();
-            $request->session()->regenerateToken();
+            $request->session()->regenerate();
+            $remember = $request->boolean('remember');
 
-            $message = 'You do not have access to the admin area.';
+            if ($user->hasMfaEnabled()) {
+                $request->session()->put('mfa_pending_user', $user->id);
+                $request->session()->put('mfa_remember', $remember);
+
+                if ($request->expectsJson()) {
+                    return response()->json(['redirect' => route('mfa.verify'), 'mfa_required' => true]);
+                }
+
+                return redirect()->route('mfa.verify');
+            }
+
+            // Admins must have two-step login: set it up before anything else (EnsureMfaVerified).
+            Auth::login($user, $remember);
+            $request->session()->put('mfa_setup_required', true);
 
             if ($request->expectsJson()) {
-                return response()->json(['message' => $message], 403);
+                return response()->json(['redirect' => route('admin.mfa.setup')]);
             }
 
-            return back()->withErrors([
-                'email' => $message,
-            ]);
+            return redirect()->route('admin.mfa.setup');
         }
-        
+
         RateLimiter::hit($emailKey, 60);
         RateLimiter::hit($ipKey, 300);
         $message = 'These credentials do not match our records.';
@@ -121,59 +122,57 @@ class LoginController extends Controller
     }
 
     /**
-     * Verify MFA code and complete login.
+     * The second step of an admin sign-in: the authenticator code, or a backup code.
+     * Five wrong codes lock this sign-in for 5 minutes.
      */
     public function verifyMfa(Request $request)
     {
         $data = $request->validate([
-            'code' => ['required', 'string', 'size:6'],
+            'code' => ['required', 'string', 'max:20'],
         ]);
 
-        $userId = $request->session()->pull('mfa_pending_user');
+        $userId = $request->session()->get('mfa_pending_user');
+        $user = $userId ? User::find($userId) : null;
 
-        if (! $userId) {
-            return redirect()->route('login')->withErrors(['code' => 'Invalid session. Please sign in again.']);
+        if (! $user || ! $user->hasMfaEnabled() || ! $user->is_admin || ($user->status ?? 'Active') !== 'Active') {
+            $request->session()->forget(['mfa_pending_user', 'mfa_remember']);
+
+            return redirect()->route('login')->withErrors(['email' => 'Please sign in again.']);
         }
 
-        $user = \App\Models\User::find($userId);
+        $key = 'mfa:'.$user->id;
+        if (RateLimiter::tooManyAttempts($key, 5)) {
+            $message = 'Too many wrong codes. Try again in '.RateLimiter::availableIn($key).' seconds.';
 
-        if (! $user || ! $user->hasMfaEnabled()) {
-            return redirect()->route('login')->withErrors(['code' => 'MFA not configured for this account.']);
+            return $request->expectsJson()
+                ? response()->json(['message' => $message, 'errors' => ['code' => [$message]]], 429)
+                : back()->withErrors(['code' => $message]);
         }
 
-        $google2fa = app(\PragmaRX\Google2FA\Google2FA::class);
-        $valid = $google2fa->verifyKey($user->mfa_secret, $data['code']);
+        if (! Mfa::verify($user, $data['code'])) {
+            RateLimiter::hit($key, 300);
+            $message = 'That code is wrong. Try the newest code in your authenticator app.';
 
-        // Also check backup codes
-        if (! $valid && $user->mfa_backup_codes) {
-            foreach ($user->mfa_backup_codes as $hashedCode) {
-                if (\Illuminate\Support\Facades\Hash::check($data['code'], $hashedCode)) {
-                    $valid = true;
-                    // Remove used backup code
-                    $user->mfa_backup_codes = array_values(array_filter($user->mfa_backup_codes, fn ($c) => $c !== $hashedCode));
-                    $user->save();
-                    break;
-                }
-            }
+            return $request->expectsJson()
+                ? response()->json(['message' => $message, 'errors' => ['code' => [$message]]], 422)
+                : back()->withErrors(['code' => $message]);
         }
 
-        if (! $valid) {
-            $request->session()->put('mfa_pending_user', $userId);
-            return back()->withErrors(['code' => 'Invalid code.']);
-        }
+        RateLimiter::clear($key);
+        $remember = (bool) $request->session()->pull('mfa_remember', false);
+        $request->session()->forget('mfa_pending_user');
 
-        // MFA verified - sign in the user
-        Auth::login($user, true);
+        Auth::login($user, $remember);
         $request->session()->regenerate();
         $request->session()->put('mfa_verified', true);
         $request->session()->flash('admin_dashboard_entrance', true);
 
-        $redirect = redirect()->intended(route('admin.dashboard'))->getTargetUrl();
+        $redirect = redirect()->intended(route('admin.dashboard'));
 
         if ($request->expectsJson()) {
-            return response()->json(['redirect' => $redirect]);
+            return response()->json(['redirect' => $redirect->getTargetUrl()]);
         }
 
-        return redirect()->intended(route('admin.dashboard'));
+        return $redirect;
     }
 }

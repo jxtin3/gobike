@@ -7,6 +7,7 @@ use App\Jobs\EmailApprovedGoBikers;
 use App\Mail\GoBikerApproved;
 use App\Models\User;
 use App\Support\Media;
+use App\Support\Mfa;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
@@ -278,5 +279,23 @@ class UserController extends Controller
 
         return redirect()->route('admin.operations.users.index', ['filter' => 'pending'])
             ->with('success', "The sign-up from {$user->name} was declined and removed.");
+    }
+
+    // For a resident or GoBiker who lost their phone and backup codes. They sign in again with
+    // only their password and can set up two-step login again in the app.
+    public function resetMfa(User $user): RedirectResponse
+    {
+        if ($user->is_admin) {
+            return back()->with('error', 'An admin resets two-step login on the server: php artisan admin:mfa-reset.');
+        }
+
+        if (! $user->hasMfaEnabled()) {
+            return back()->with('error', "{$user->name} does not use two-step login.");
+        }
+
+        Mfa::disable($user);
+        $user->tokens()->delete();
+
+        return back()->with('success', "Two-step login is off for {$user->name}. They were signed out of the app.");
     }
 }

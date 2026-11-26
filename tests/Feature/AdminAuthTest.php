@@ -1,7 +1,9 @@
 <?php
 
 use App\Models\User;
+use App\Support\Mfa;
 use Illuminate\Support\Facades\Hash;
+use PragmaRX\Google2FA\Google2FA;
 
 it('shows the admin login page', function () {
     $response = $this->get('/login');
@@ -18,12 +20,16 @@ it('allows an admin user to access the dashboard', function () {
         'is_admin' => true,
     ]);
 
-    $response = $this->post('/login', [
+    $secret = Mfa::startSetup($user);
+    Mfa::enable($user, app(Google2FA::class)->getCurrentOtp($secret));
+
+    $this->post('/login', [
         'email' => 'admin@example.com',
         'password' => 'password123',
-    ]);
+    ])->assertRedirect(route('mfa.verify'));
 
-    $response->assertRedirect('/admin');
+    $this->post(route('mfa.verify.submit'), ['code' => app(Google2FA::class)->getCurrentOtp($secret)])
+        ->assertRedirect('/admin');
     $this->assertAuthenticatedAs($user);
 
     $this->get('/admin')
@@ -36,19 +42,22 @@ it('allows an admin user to access the dashboard', function () {
 });
 
 it('preserves the dashboard entrance animation for the ajax login redirect', function () {
-    User::factory()->create([
+    $user = User::factory()->create([
         'email' => 'ajax-admin@example.com',
         'password' => Hash::make('password123'),
         'is_admin' => true,
     ]);
+    $secret = Mfa::startSetup($user);
+    Mfa::enable($user, app(Google2FA::class)->getCurrentOtp($secret));
+    $ajax = ['Accept' => 'application/json', 'X-Requested-With' => 'XMLHttpRequest'];
 
-    $this->withHeaders([
-        'Accept' => 'application/json',
-        'X-Requested-With' => 'XMLHttpRequest',
-    ])->post('/login', [
+    $this->withHeaders($ajax)->post('/login', [
         'email' => 'ajax-admin@example.com',
         'password' => 'password123',
-    ])->assertOk()->assertJsonPath('redirect', route('admin.dashboard'));
+    ])->assertOk()->assertJsonPath('redirect', route('mfa.verify'));
+
+    $this->withHeaders($ajax)->post(route('mfa.verify.submit'), ['code' => app(Google2FA::class)->getCurrentOtp($secret)])
+        ->assertOk()->assertJsonPath('redirect', route('admin.dashboard'));
 
     $this->get('/admin')
         ->assertOk()

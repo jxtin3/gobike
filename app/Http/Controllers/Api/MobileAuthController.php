@@ -8,6 +8,8 @@ use App\Models\User;
 use App\Services\Push\PushNotifier;
 use App\Support\Age;
 use App\Support\Media;
+use App\Support\Mfa;
+use App\Support\PasswordResetCodes;
 use Google\Client as GoogleClient;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -18,7 +20,6 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
-use PragmaRX\Google2FA\Google2FA;
 
 class MobileAuthController extends Controller
 {
@@ -27,7 +28,7 @@ class MobileAuthController extends Controller
         $credentials = $request->validate([
             'email' => ['required', 'email'],
             'password' => ['required', 'string'],
-            'mfa_code' => ['nullable', 'string', 'size:6'],
+            'mfa_code' => ['nullable', 'string', 'max:20'],
         ]);
 
         $user = User::where('email', strtolower(trim($credentials['email'])))->first();
@@ -42,34 +43,22 @@ class MobileAuthController extends Controller
             return $this->inactiveResponse();
         }
 
-        // If MFA is enabled, require a code
+        // Two-step login: the authenticator code, or a backup code.
         if ($user->hasMfaEnabled()) {
             $mfaCode = $credentials['mfa_code'] ?? null;
-            if (! $mfaCode) {
+            if (blank($mfaCode)) {
                 return response()->json([
                     'message' => 'MFA code required.',
                     'mfa_required' => true,
                 ], 422);
             }
 
-            $google2fa = app(Google2FA::class);
-            $valid = $google2fa->verifyKey($user->mfa_secret, $mfaCode);
-
-            // Also check backup codes
-            if (! $valid && $user->mfa_backup_codes) {
-                foreach ($user->mfa_backup_codes as $hashedCode) {
-                    if (Hash::check($mfaCode, $hashedCode)) {
-                        $valid = true;
-                        // Remove used backup code
-                        $user->mfa_backup_codes = array_values(array_filter($user->mfa_backup_codes, fn ($c) => $c !== $hashedCode));
-                        $user->save();
-                        break;
-                    }
-                }
-            }
-
-            if (! $valid) {
-                return response()->json(['message' => 'Invalid MFA code.'], 422);
+            if (! Mfa::verify($user, $mfaCode)) {
+                return response()->json([
+                    'message' => 'That code is wrong. Try the newest code in your authenticator app.',
+                    'mfa_required' => true,
+                    'errors' => ['mfa_code' => ['That code is wrong. Try the newest code in your authenticator app.']],
+                ], 422);
             }
         }
 
@@ -372,10 +361,41 @@ class MobileAuthController extends Controller
         return response()->json(['message' => 'Your account has been deleted.']);
     }
 
-    // ---------- MFA (TOTP) ----------
+    // ---------- Forgot password ----------
+
+    /** Emails a 6-digit code. The answer is the same whether or not the email has an account. */
+    public function forgotPassword(Request $request): JsonResponse
+    {
+        $data = $request->validate(['email' => ['required', 'email', 'max:255']]);
+
+        PasswordResetCodes::send($data['email']);
+
+        return response()->json(['message' => PasswordResetCodes::SENT_MESSAGE]);
+    }
+
+    /** Sets a new password with the emailed code. Every phone is signed out; this does not sign in. */
+    public function resetPassword(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'email' => ['required', 'email', 'max:255'],
+            'code' => ['required', 'string', 'max:20'],
+            'password' => ['required', 'string', 'min:8', 'max:100', 'confirmed'],
+        ]);
+
+        if (! PasswordResetCodes::check($data['email'], $data['code'])) {
+            throw ValidationException::withMessages(['code' => [PasswordResetCodes::WRONG_CODE]]);
+        }
+
+        PasswordResetCodes::reset($data['email'], $data['password']);
+
+        return response()->json(['message' => 'Password changed. Sign in with your new password.']);
+    }
+
+    // ---------- MFA (authenticator app) ----------
 
     /**
-     * Generate a TOTP secret and QR code for the user to scan.
+     * The key to add to the authenticator app. The phone cannot scan a QR code on its own
+     * screen, so the app shows the key to copy and an "Open in authenticator app" link.
      */
     public function mfaSetup(Request $request): JsonResponse
     {
@@ -383,127 +403,84 @@ class MobileAuthController extends Controller
         $user = $request->user();
 
         if ($user->hasMfaEnabled()) {
-            return response()->json(['message' => 'MFA is already enabled.'], 422);
+            return response()->json(['message' => 'Two-step login is already on.'], 422);
         }
 
-        $google2fa = app(Google2FA::class);
-        $secret = $google2fa->generateSecretKey();
-
-        // Store the secret temporarily (will be confirmed on verify)
-        $user->mfa_secret = $secret;
-        $user->save();
-
-        $qrCodeUrl = $google2fa->getQRCodeInline(
-            config('app.name'),
-            $user->email,
-            $secret,
-            200,
-            200,
-        );
+        $secret = Mfa::startSetup($user);
 
         return response()->json([
-            'message' => 'Scan the QR code with your authenticator app.',
+            'message' => 'Add this key to your authenticator app.',
             'secret' => $secret,
-            'qr_code_url' => $qrCodeUrl,
+            'otpauth_url' => Mfa::otpauthUrl($user),
         ]);
     }
 
-    /**
-     * Verify a TOTP code and enable MFA.
-     */
+    /** Turns MFA on with a code from the authenticator app. The backup codes are shown once. */
     public function mfaVerify(Request $request): JsonResponse
     {
-        $data = $request->validate([
-            'code' => ['required', 'string', 'size:6'],
-        ]);
+        $data = $request->validate(['code' => ['required', 'string', 'max:20']]);
 
         /** @var User $user */
         $user = $request->user();
 
+        if ($user->hasMfaEnabled()) {
+            return response()->json(['message' => 'Two-step login is already on.'], 422);
+        }
         if (! $user->mfa_secret) {
-            return response()->json(['message' => 'No MFA setup in progress.'], 422);
+            return response()->json(['message' => 'Start the setup first.'], 422);
         }
 
-        $google2fa = app(Google2FA::class);
-        $valid = $google2fa->verifyKey($user->mfa_secret, $data['code']);
-
-        if (! $valid) {
-            return response()->json(['message' => 'Invalid code.'], 422);
+        $codes = Mfa::enable($user, $data['code']);
+        if ($codes === null) {
+            throw ValidationException::withMessages(['code' => ['That code is wrong. Try the newest code in your authenticator app.']]);
         }
-
-        // Generate backup codes
-        $backupCodes = collect(range(1, 10))->map(fn () => Str::random(8))->all();
-        $hashedCodes = array_map(fn ($code) => Hash::make($code), $backupCodes);
-
-        $user->forceFill([
-            'mfa_enabled_at' => now(),
-            'mfa_backup_codes' => $hashedCodes,
-        ])->save();
 
         return response()->json([
-            'message' => 'MFA enabled successfully.',
-            'backup_codes' => $backupCodes, // Only shown once!
+            'message' => 'Two-step login is on.',
+            'backup_codes' => $codes,
+            'user' => self::userPayload($user),
         ]);
     }
 
-    /**
-     * Disable MFA for the user.
-     */
+    /** Turns MFA off. Needs a current code (or a backup code). */
     public function mfaDisable(Request $request): JsonResponse
     {
-        $data = $request->validate([
-            'code' => ['required', 'string', 'size:6'],
-        ]);
+        $data = $request->validate(['code' => ['required', 'string', 'max:20']]);
 
         /** @var User $user */
         $user = $request->user();
 
         if (! $user->hasMfaEnabled()) {
-            return response()->json(['message' => 'MFA is not enabled.'], 422);
+            return response()->json(['message' => 'Two-step login is not on.'], 422);
+        }
+        if (! Mfa::verify($user, $data['code'])) {
+            throw ValidationException::withMessages(['code' => ['That code is wrong.']]);
         }
 
-        $google2fa = app(Google2FA::class);
-        $valid = $google2fa->verifyKey($user->mfa_secret, $data['code']);
-
-        if (! $valid) {
-            return response()->json(['message' => 'Invalid code.'], 422);
-        }
-
-        $user->forceFill([
-            'mfa_secret' => null,
-            'mfa_enabled_at' => null,
-            'mfa_backup_codes' => null,
-        ])->save();
-
-        return response()->json(['message' => 'MFA disabled.']);
-    }
-
-    /**
-     * Get backup codes (requires current MFA code to verify).
-     */
-    public function mfaBackupCodes(Request $request): JsonResponse
-    {
-        $data = $request->validate([
-            'code' => ['required', 'string', 'size:6'],
-        ]);
-
-        /** @var User $user */
-        $user = $request->user();
-
-        if (! $user->hasMfaEnabled()) {
-            return response()->json(['message' => 'MFA is not enabled.'], 422);
-        }
-
-        $google2fa = app(Google2FA::class);
-        $valid = $google2fa->verifyKey($user->mfa_secret, $data['code']);
-
-        if (! $valid) {
-            return response()->json(['message' => 'Invalid code.'], 422);
-        }
+        Mfa::disable($user);
 
         return response()->json([
-            'backup_codes' => $user->mfa_backup_codes,
+            'message' => 'Two-step login is off.',
+            'user' => self::userPayload($user->refresh()),
         ]);
+    }
+
+    /** New backup codes, shown once; the old ones stop working. Needs a current code. */
+    public function mfaBackupCodes(Request $request): JsonResponse
+    {
+        $data = $request->validate(['code' => ['required', 'string', 'max:20']]);
+
+        /** @var User $user */
+        $user = $request->user();
+
+        if (! $user->hasMfaEnabled()) {
+            return response()->json(['message' => 'Two-step login is not on.'], 422);
+        }
+        if (! Mfa::verify($user, $data['code'])) {
+            throw ValidationException::withMessages(['code' => ['That code is wrong.']]);
+        }
+
+        return response()->json(['backup_codes' => Mfa::newBackupCodes($user)]);
     }
 
     // ---------- helpers ----------

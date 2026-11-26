@@ -80,6 +80,22 @@
                 </form>
             </dd></div>
         @endif
+        @unless ($user->is_admin)
+            <div><dt>Two-step login</dt><dd class="dd-with-action">
+                @if ($user->hasMfaEnabled())
+                    <span class="pill pill-ok"><i class="dot"></i> On</span>
+                    <form method="POST" action="{{ route('admin.operations.users.mfa-reset', $user) }}"
+                          data-confirm-title="Turn off two-step login for {{ $user->name }}?"
+                          data-confirm-text="Do this only if they lost their phone and their backup codes, and you are sure it is really them asking. They are signed out of the app and can sign in with only their password."
+                          data-confirm-ok="Turn off" data-confirm-tone="warn">
+                        @csrf
+                        <button type="submit" class="btn btn-secondary btn-sm"><x-admin.icon name="shield-off" /> Turn off</button>
+                    </form>
+                @else
+                    <span class="pill pill-neutral"><i class="dot"></i> Off</span>
+                @endif
+            </dd></div>
+        @endunless
         <div><dt>Joined</dt><dd>{{ $user->created_at->format('F j, Y') }}</dd></div>
         <div><dt>Last updated</dt><dd>{{ $user->updated_at->format('F j, Y') }}</dd></div>
     </dl>

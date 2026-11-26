@@ -46,10 +46,16 @@ Route::post('/mobile/register', [
 // MFA (TOTP) for mobile app
 Route::middleware(['auth:sanctum', 'throttle:mobile'])->prefix('mobile/mfa')->group(function () {
     Route::post('/setup', [MobileAuthController::class, 'mfaSetup'])->name('api.mobile.mfa.setup');
-    Route::post('/verify', [MobileAuthController::class, 'mfaVerify'])->name('api.mobile.mfa.verify');
-    Route::post('/disable', [MobileAuthController::class, 'mfaDisable'])->name('api.mobile.mfa.disable');
-    Route::get('/backup-codes', [MobileAuthController::class, 'mfaBackupCodes'])->name('api.mobile.mfa.backup-codes');
+    Route::post('/verify', [MobileAuthController::class, 'mfaVerify'])->middleware('throttle:5,1')->name('api.mobile.mfa.verify');
+    Route::post('/disable', [MobileAuthController::class, 'mfaDisable'])->middleware('throttle:5,1')->name('api.mobile.mfa.disable');
+    Route::post('/backup-codes', [MobileAuthController::class, 'mfaBackupCodes'])->middleware('throttle:5,1')->name('api.mobile.mfa.backup-codes');
 });
+
+// Forgot password: a 6-digit code by email, then a new password.
+Route::post('/mobile/password/forgot', [MobileAuthController::class, 'forgotPassword'])
+    ->middleware('throttle:5,1')->name('api.mobile.password.forgot');
+Route::post('/mobile/password/reset', [MobileAuthController::class, 'resetPassword'])
+    ->middleware('throttle:5,1')->name('api.mobile.password.reset');
 
 // goggle
 Route::post('/mobile/google', [

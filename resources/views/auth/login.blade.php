@@ -48,6 +48,10 @@
                     <p>Sign in to manage donations, news, and volunteer operations.</p>
                 </div>
 
+                @if (session('status'))
+                    <div class="login-status" role="status">{{ session('status') }}</div>
+                @endif
+
                 @if ($errors->any())
                     <div class="login-error" role="alert">
                         {{ $errors->first() }}
@@ -135,11 +139,14 @@
                         </button>
                     </div>
 
-                    {{-- Remember me --}}
-                    <label class="login-remember">
-                        <input type="checkbox" name="remember">
-                        Remember me
-                    </label>
+                    {{-- Remember me, and forgot password --}}
+                    <div class="login-row">
+                        <label class="login-remember">
+                            <input type="checkbox" name="remember">
+                            Remember me
+                        </label>
+                        <a href="{{ route('password.request') }}" class="login-forgot">Forgot password?</a>
+                    </div>
 
                     {{-- Submit --}}
                     <button

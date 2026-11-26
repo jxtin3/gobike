@@ -44,31 +44,6 @@
     </fieldset>
 
     <fieldset class="form-section">
-        <legend>Multi-Factor Authentication</legend>
-        @if ($user->hasMfaEnabled())
-            <div class="field">
-                <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
-                    <span class="pill pill-ok" style="font-size: 0.875rem;">MFA Enabled</span>
-                    <form method="POST" action="{{ route('admin.mfa.disable') }}" style="margin: 0;" data-confirm-title="Disable MFA?" data-confirm-text="You will no longer need a 6-digit code to sign in. This makes your account less secure." data-confirm-ok="Disable MFA" data-confirm-tone="warn">
-                        @csrf
-                        <button type="submit" class="btn btn-secondary btn-sm"><x-admin.icon name="shield-off" /> Disable MFA</button>
-                    </form>
-                    <a href="#" class="btn btn-secondary btn-sm" onclick="event.preventDefault(); alert('Backup codes are shown once at setup. If you lost them, disable and re-enable MFA.')"><x-admin.icon name="key" /> View backup codes</a>
-                </div>
-                <span class="hint">You'll enter a 6-digit code from your authenticator app each time you sign in.</span>
-            </div>
-        @else
-            <div class="field">
-                <form method="POST" action="{{ route('admin.mfa.setup') }}" style="margin: 0;">
-                    @csrf
-                    <button type="submit" class="btn btn-primary"><x-admin.icon name="shield-check" /> Enable MFA</button>
-                </form>
-                <span class="hint">Add an extra layer of security. You'll scan a QR code with an authenticator app (Google Authenticator, Authy, 1Password, etc.).</span>
-            </div>
-        @endif
-    </fieldset>
-
-    <fieldset class="form-section">
         <legend>Confirm it's you</legend>
         <div class="field">
             <label for="current_password">Current password</label>
@@ -83,4 +58,36 @@
         <a class="btn btn-secondary" href="{{ route('admin.profile.show') }}">Cancel</a>
     </div>
 </form>
+
+{{-- Its own card: forms cannot sit inside the profile form. --}}
+<section class="form-card" style="margin-top: 1.5rem;">
+    <fieldset class="form-section">
+        <legend>Two-step login</legend>
+        @if ($user->hasMfaEnabled())
+            <div class="field">
+                <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
+                    <span class="pill pill-ok" style="font-size: 0.875rem;">On</span>
+                    <span class="hint">{{ \App\Support\Mfa::backupCodesLeft($user) }} of 10 backup codes left</span>
+                </div>
+                <span class="hint">Each sign-in asks for the 6-digit code from your authenticator app. Admins must keep it on.</span>
+            </div>
+            <form method="POST" action="{{ route('admin.mfa.codes.regenerate') }}" class="field">
+                @csrf
+                <label for="mfa_code">Get new backup codes</label>
+                <input class="input @error('mfa_code') is-invalid @enderror" id="mfa_code" name="mfa_code" type="text"
+                       inputmode="numeric" maxlength="9" autocomplete="one-time-code" placeholder="Code from your authenticator app">
+                <span class="hint">The old backup codes stop working.</span>
+                <x-admin.field-error name="mfa_code" />
+                <div class="form-actions" style="margin-top: 0.75rem;">
+                    <button class="btn btn-secondary" type="submit"><x-admin.icon name="shield" /> Get new backup codes</button>
+                </div>
+            </form>
+        @else
+            <div class="field">
+                <a href="{{ route('admin.mfa.setup') }}" class="btn btn-primary"><x-admin.icon name="shield-check" /> Set up two-step login</a>
+                <span class="hint">You'll scan a QR code with an authenticator app, such as Google Authenticator.</span>
+            </div>
+        @endif
+    </fieldset>
+</section>
 @endsection

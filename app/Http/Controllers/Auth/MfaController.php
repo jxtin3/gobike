@@ -3,111 +3,95 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
+use App\Support\Mfa;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Str;
+use Illuminate\View\View;
 use PragmaRX\Google2FA\Google2FA;
 
+/**
+ * Two-step login for admins: setting it up, and new backup codes. Admins cannot turn it off;
+ * an admin who lost the phone and the backup codes runs `php artisan admin:mfa-reset`.
+ */
 class MfaController extends Controller
 {
-    /**
-     * Show the MFA setup page (QR code + secret).
-     */
-    public function setup(Request $request)
+    public function setup(Request $request): View|RedirectResponse
     {
-        /** @var \App\Models\User $user */
+        /** @var User $user */
         $user = $request->user();
 
         if ($user->hasMfaEnabled()) {
-            return redirect()->route('admin.profile.show')
-                ->with('error', 'MFA is already enabled. Disable it first to set up again.');
+            return redirect()->route('admin.profile.show')->with('status', 'Two-step login is already on.');
         }
 
-        $google2fa = app(Google2FA::class);
-        $secret = $google2fa->generateSecretKey();
+        $secret = Mfa::startSetup($user);
+        $qrCodeUrl = app(Google2FA::class)->getQRCodeInline(config('app.name'), $user->email, $secret, 200);
 
-        // Store the secret temporarily (confirmed on verify)
-        $user->mfa_secret = $secret;
-        $user->save();
-
-        $qrCodeUrl = $google2fa->getQRCodeInline(
-            config('app.name'),
-            $user->email,
-            $secret,
-            200,
-            200,
-        );
-
-        return view('auth.mfa-setup', compact('qrCodeUrl', 'secret'));
+        return view('auth.mfa-setup', [
+            'qrCodeUrl' => $qrCodeUrl,
+            'secret' => trim(chunk_split($secret, 4, ' ')),
+            'required' => (bool) $request->session()->get('mfa_setup_required'),
+        ]);
     }
 
-    /**
-     * Verify a TOTP code and enable MFA.
-     */
-    public function verify(Request $request)
+    public function verify(Request $request): RedirectResponse
     {
-        $data = $request->validate([
-            'code' => ['required', 'string', 'size:6'],
-        ]);
+        $data = $request->validate(['code' => ['required', 'string', 'max:20']]);
 
-        /** @var \App\Models\User $user */
+        /** @var User $user */
         $user = $request->user();
 
-        if (! $user->mfa_secret) {
-            return back()->withErrors(['code' => 'No MFA setup in progress. Please start setup again.']);
+        if ($user->hasMfaEnabled()) {
+            return redirect()->route('admin.profile.show');
         }
 
-        $google2fa = app(Google2FA::class);
-        $valid = $google2fa->verifyKey($user->mfa_secret, $data['code']);
-
-        if (! $valid) {
-            return back()->withErrors(['code' => 'Invalid code.']);
+        $codes = Mfa::enable($user, $data['code']);
+        if ($codes === null) {
+            return back()->withErrors(['code' => 'That code is wrong. Try the newest code in your authenticator app.']);
         }
 
-        // Generate backup codes
-        $backupCodes = collect(range(1, 10))->map(fn () => Str::random(8))->all();
-        $hashedCodes = array_map(fn ($code) => Hash::make($code), $backupCodes);
+        $request->session()->forget('mfa_setup_required');
+        $request->session()->put('mfa_verified', true);
 
-        $user->forceFill([
-            'mfa_enabled_at' => now(),
-            'mfa_backup_codes' => $hashedCodes,
-        ])->save();
-
-        return view('auth.mfa-backup-codes', compact('backupCodes'));
+        return $this->showCodes($request, $codes, 'Two-step login is on.');
     }
 
-    /**
-     * Disable MFA for the user.
-     */
-    public function disable(Request $request)
+    /** New backup codes; the old ones stop working. Needs a current code. */
+    public function regenerateBackupCodes(Request $request): RedirectResponse
     {
-        $data = $request->validate([
-            'code' => ['required', 'string', 'size:6'],
-        ]);
+        $data = $request->validate(['mfa_code' => ['required', 'string', 'max:20']]);
 
-        /** @var \App\Models\User $user */
+        /** @var User $user */
         $user = $request->user();
 
-        if (! $user->hasMfaEnabled()) {
-            return back()->withErrors(['code' => 'MFA is not enabled.']);
+        if (! Mfa::verify($user, $data['mfa_code'])) {
+            return back()->withErrors(['mfa_code' => 'That code is wrong.']);
         }
 
-        $google2fa = app(Google2FA::class);
-        $valid = $google2fa->verifyKey($user->mfa_secret, $data['code']);
+        return $this->showCodes($request, Mfa::newBackupCodes($user), 'New backup codes made. The old ones no longer work.');
+    }
 
-        if (! $valid) {
-            return back()->withErrors(['code' => 'Invalid code.']);
+    /** Shows the codes once: they are only in the flashed session data, never stored plain. */
+    public function backupCodes(Request $request): View|RedirectResponse
+    {
+        $codes = $request->session()->get('mfa_new_codes');
+        if (! $codes) {
+            return redirect()->route('admin.profile.show');
         }
 
-        $user->forceFill([
-            'mfa_secret' => null,
-            'mfa_enabled_at' => null,
-            'mfa_backup_codes' => null,
-        ])->save();
+        return view('auth.mfa-backup-codes', [
+            'backupCodes' => $codes,
+            'title' => $request->session()->get('mfa_codes_title'),
+            'continueUrl' => $request->session()->pull('url.intended', route('admin.dashboard')),
+        ]);
+    }
 
-        return redirect()->route('admin.profile.show')
-            ->with('success', 'MFA disabled.');
+    private function showCodes(Request $request, array $codes, string $title): RedirectResponse
+    {
+        $request->session()->flash('mfa_new_codes', $codes);
+        $request->session()->flash('mfa_codes_title', $title);
+
+        return redirect()->route('admin.mfa.codes');
     }
 }

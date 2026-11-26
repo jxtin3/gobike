@@ -25,6 +25,7 @@ use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Admin\VolunteerApplicationController as AdminVolunteerController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\MfaController;
+use App\Http\Controllers\Auth\PasswordResetController;
 use App\Http\Controllers\ChatbotController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\DonationController;
@@ -39,6 +40,7 @@ use App\Http\Controllers\VolunteerController;
 use App\Http\Controllers\Webhook\PayMongoWebhookController;
 use App\Http\Controllers\Webhook\PayPalWebhookController;
 use App\Http\Middleware\EnsureAdmin;
+use App\Http\Middleware\EnsureMfaVerified;
 use Illuminate\Session\Middleware\AuthenticateSession;
 use Illuminate\Support\Facades\Route;
 
@@ -143,6 +145,12 @@ Route::get('/cookie-policy', [LegalDocumentController::class, 'cookies'])->name(
 // Auth routes
 Route::middleware('guest')->group(function () {
     Route::post('/login', [LoginController::class, 'login']);
+
+    // Forgot password: a 6-digit code by email, then a new password.
+    Route::get('/forgot-password', [PasswordResetController::class, 'request'])->name('password.request');
+    Route::post('/forgot-password', [PasswordResetController::class, 'email'])->middleware('throttle:5,1')->name('password.email');
+    Route::get('/reset-password', [PasswordResetController::class, 'edit'])->name('password.reset');
+    Route::post('/reset-password', [PasswordResetController::class, 'update'])->middleware('throttle:10,1')->name('password.update');
 });
 
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
@@ -153,15 +161,16 @@ Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 Route::get('/mfa/verify', [LoginController::class, 'showMfaVerify'])->name('mfa.verify');
 Route::post('/mfa/verify', [LoginController::class, 'verifyMfa'])->name('mfa.verify.submit');
 
-// MFA setup/disable (requires admin session + MFA verified)
-Route::middleware([EnsureAdmin::class, AuthenticateSession::class, \App\Http\Middleware\EnsureMfaVerified::class])
+// Two-step login setup and backup codes. Admins cannot turn it off (see MfaController).
+Route::middleware([EnsureAdmin::class, AuthenticateSession::class, EnsureMfaVerified::class])
     ->prefix('admin')->name('admin.')->group(function () {
         Route::get('/mfa/setup', [MfaController::class, 'setup'])->name('mfa.setup');
-        Route::post('/mfa/verify', [MfaController::class, 'verify'])->name('mfa.verify');
-        Route::post('/mfa/disable', [MfaController::class, 'disable'])->name('mfa.disable');
+        Route::post('/mfa/verify', [MfaController::class, 'verify'])->middleware('throttle:10,1')->name('mfa.verify');
+        Route::get('/mfa/backup-codes', [MfaController::class, 'backupCodes'])->name('mfa.codes');
+        Route::post('/mfa/backup-codes', [MfaController::class, 'regenerateBackupCodes'])->middleware('throttle:5,1')->name('mfa.codes.regenerate');
     });
 
-Route::middleware([EnsureAdmin::class, AuthenticateSession::class, \App\Http\Middleware\EnsureMfaVerified::class])->prefix('admin')->name('admin.')->group(function () {
+Route::middleware([EnsureAdmin::class, AuthenticateSession::class, EnsureMfaVerified::class])->prefix('admin')->name('admin.')->group(function () {
 
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
     Route::view('/live-map', 'admin.live-map')->name('live-map.index');
@@ -199,6 +208,7 @@ Route::middleware([EnsureAdmin::class, AuthenticateSession::class, \App\Http\Mid
         Route::patch('/users/{user}/approve', [AdminUserController::class, 'approve'])->name('users.approve');
         Route::post('/users/{user}/email-approval', [AdminUserController::class, 'emailApproval'])->name('users.email-approval');
         Route::delete('/users/{user}/decline', [AdminUserController::class, 'decline'])->name('users.decline');
+        Route::post('/users/{user}/mfa-reset', [AdminUserController::class, 'resetMfa'])->name('users.mfa-reset');
 
         // contact form messages
         Route::get('/messages', [ContactMessageController::class, 'index'])->name('messages.index');

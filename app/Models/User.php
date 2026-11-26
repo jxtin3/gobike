@@ -32,7 +32,7 @@ class User extends Authenticatable
      */
     public function getMfaSecretAttribute(): ?string
     {
-        if (! $this->attributes['mfa_secret']) {
+        if (empty($this->attributes['mfa_secret'])) {
             return null;
         }
         return decrypt($this->attributes['mfa_secret']);

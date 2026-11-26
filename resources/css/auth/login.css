@@ -239,6 +239,123 @@
 
 .login-error.hidden { display: none; }
 
+/* ── Status banner (code sent, password changed) ── */
+.login-status {
+    margin-bottom: 1.25rem;
+    padding: 0.75rem 1rem;
+    border: 1px solid #bbf7d0;
+    border-radius: 8px;
+    background: #f0fdf4;
+    font-size: 0.875rem;
+    color: #166534;
+}
+
+/* ── Remember me + Forgot password row ── */
+.login-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.login-forgot,
+.login-links a,
+.login-link-button {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #2563EB;
+    text-decoration: none;
+}
+.login-forgot:hover,
+.login-links a:hover,
+.login-link-button:hover { text-decoration: underline; }
+
+.login-links {
+    margin: 1.5rem 0 0;
+    font-size: 0.875rem;
+    color: #64748b;
+}
+
+.login-link-button {
+    padding: 0;
+    border: 0;
+    background: none;
+    cursor: pointer;
+    font-family: inherit;
+}
+
+/* ── Two-step login: QR code, setup key, backup codes ── */
+.mfa-qr {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+}
+.mfa-qr img {
+    width: 200px;
+    height: 200px;
+    padding: 0.75rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    background: #fff;
+}
+.mfa-key {
+    font-size: 0.8rem;
+    color: #64748b;
+    text-align: center;
+}
+.mfa-key code {
+    display: inline-block;
+    margin-top: 0.25rem;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    background: #f1f5f9;
+    font-size: 0.85rem;
+    letter-spacing: 0.08em;
+    color: #0d1b2a;
+    word-break: break-all;
+}
+.mfa-codes {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+    margin: 0 0 1.25rem;
+    padding: 1rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    background: #f8fafc;
+    list-style: none;
+}
+.mfa-codes li {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 0.95rem;
+    text-align: center;
+    color: #0d1b2a;
+}
+.mfa-actions {
+    display: flex;
+    gap: 0.75rem;
+    margin-bottom: 1.25rem;
+}
+.mfa-actions button {
+    flex: 1;
+    padding: 0.6rem 1rem;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    background: #fff;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #0d1b2a;
+    cursor: pointer;
+}
+.mfa-actions button:hover { border-color: #2563EB; color: #2563EB; }
+
+@media print {
+    .login-split-left, .login-right-brand, .mfa-actions, .login-submit, .login-links { display: none !important; }
+}
+
 /* ── Form layout ── */
 .login-form {
     display: grid;

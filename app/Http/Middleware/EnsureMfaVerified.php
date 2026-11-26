@@ -7,42 +7,60 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpFoundation\Response;
 
+/**
+ * Admins must use two-step login (App\Support\Mfa).
+ *
+ * - MFA on: the session must have passed the code. "Remember me" counts, since the code was
+ *   entered when that cookie was made. Any other session is signed out and asked for the code.
+ * - MFA off, right after a password sign-in: every admin page sends to the setup page until it
+ *   is done.
+ */
 class EnsureMfaVerified
 {
-    /**
-     * Handle an incoming request.
-     *
-     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
-     */
     public function handle(Request $request, Closure $next): Response
     {
-        // Not logged in -> the 'admin' middleware will handle redirect
-        if (! Auth::check()) {
+        if (! Auth::check() || ! Auth::user()->is_admin) {
             return $next($request);
         }
 
         $user = Auth::user();
+        $session = $request->session();
 
-        // Only admins need MFA in the admin area
-        if (! $user->is_admin) {
-            return $next($request);
+        if ($user->hasMfaEnabled()) {
+            if ($session->get('mfa_verified')) {
+                return $next($request);
+            }
+
+            if (Auth::viaRemember()) {
+                $session->put('mfa_verified', true);
+
+                return $next($request);
+            }
+
+            // Signed in without the code (MFA was turned on after this session began).
+            if ($request->isMethod('GET') && ! $request->expectsJson()) {
+                $session->put('url.intended', $request->fullUrl());
+            }
+            Auth::guard('web')->logout();
+            $session->regenerate();
+            $session->put('mfa_pending_user', $user->id);
+            $session->put('mfa_remember', false);
+
+            return redirect()->route('mfa.verify');
         }
 
-        // MFA not enabled -> all good
-        if (! $user->hasMfaEnabled()) {
-            return $next($request);
+        if (Auth::viaRemember()) {
+            $session->put('mfa_setup_required', true);
         }
 
-        // MFA enabled but already verified in this session
-        if ($request->session()->get('mfa_verified')) {
-            return $next($request);
+        if ($session->get('mfa_setup_required') && ! $request->routeIs('admin.mfa.setup', 'admin.mfa.verify')) {
+            if ($request->expectsJson()) {
+                return response()->json(['message' => 'Set up two-step login first.', 'redirect' => route('admin.mfa.setup')], 403);
+            }
+
+            return redirect()->route('admin.mfa.setup');
         }
 
-        // Store intended URL and redirect to MFA verification
-        if (! $request->is('mfa/verify*') && ! $request->is('mfa/disable')) {
-            $request->session()->put('url.intended', $request->url());
-        }
-
-        return redirect()->route('mfa.verify');
+        return $next($request);
     }
 }
