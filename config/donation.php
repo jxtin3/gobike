@@ -18,7 +18,7 @@ return [
 
     'currencies' => [
         'USD' => ['name' => 'US Dollar', 'symbol' => '$', 'decimals' => 2, 'presets' => [25, 50, 165, 1000], 'min' => 2, 'max' => 10000, 'platform_fee' => 1.88, 'fallback_rate' => 1],
-        'PHP' => ['name' => 'Philippine Peso', 'symbol' => '₱', 'decimals' => 2, 'presets' => [500, 1000, 5000, 10000], 'min' => 100, 'max' => 500000, 'platform_fee' => 100, 'fallback_rate' => (float) env('DONATION_USD_TO_PHP', 58.00)],
+        'PHP' => ['name' => 'Philippine Peso', 'symbol' => '₱', 'decimals' => 2, 'presets' => [500, 1000, 5000, 10000], 'min' => 100, 'max' => 500000, 'platform_fee' => 20, 'fallback_rate' => (float) env('DONATION_USD_TO_PHP', 58.00)],
         'EUR' => ['name' => 'Euro', 'symbol' => '€', 'decimals' => 2, 'presets' => [25, 50, 150, 1000], 'min' => 2, 'max' => 10000, 'platform_fee' => 1.75, 'fallback_rate' => 0.92],
         'GBP' => ['name' => 'British Pound', 'symbol' => '£', 'decimals' => 2, 'presets' => [20, 40, 130, 800], 'min' => 2, 'max' => 8000, 'platform_fee' => 1.50, 'fallback_rate' => 0.78],
         'AUD' => ['name' => 'Australian Dollar', 'symbol' => 'A$', 'decimals' => 2, 'presets' => [40, 80, 250, 1500], 'min' => 3, 'max' => 15000, 'platform_fee' => 2.90, 'fallback_rate' => 1.52],

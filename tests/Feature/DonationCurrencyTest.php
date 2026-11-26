@@ -2,6 +2,7 @@
 
 use App\Models\Donation;
 use App\Models\PaypalDonationPlan;
+use App\Models\User;
 use App\Services\ExchangeRateService;
 use App\Services\PayMongoDonationService;
 use App\Services\PayPalDonationService;
@@ -106,11 +107,11 @@ it('charges PHP donations through GCash without converting them', function () {
     $this->postJson(route('donate.checkout'), currencyCheckoutPayload([
         'currency' => 'PHP',
         'amount' => 1000,
-        'platform_fee' => 100,
+        'platform_fee' => 20,
         'payment_method' => 'gcash',
     ]))->assertOk();
 
-    expect((float) Donation::latest('id')->first()->amount_php)->toBe(1100.0);
+    expect((float) Donation::latest('id')->first()->amount_php)->toBe(1020.0);
 });
 
 it('rejects a currency we do not offer', function () {
@@ -121,6 +122,17 @@ it('rejects a currency we do not offer', function () {
 it('only accepts the platform fee shown for the currency', function () {
     $this->postJson(route('donate.checkout'), currencyCheckoutPayload(['currency' => 'EUR', 'platform_fee' => 1.88]))
         ->assertJsonValidationErrors('platform_fee');
+});
+
+it('makes the peso platform fee ₱20, and no longer takes the old ₱100', function () {
+    expect(config('donation.currencies.PHP.platform_fee'))->toBe(20);
+
+    $this->postJson(route('donate.checkout'), currencyCheckoutPayload([
+        'currency' => 'PHP',
+        'amount' => 1000,
+        'platform_fee' => 100,
+        'payment_method' => 'gcash',
+    ]))->assertJsonValidationErrors('platform_fee');
 });
 
 it('applies each currency its own round limits', function (string $currency, float $amount, string $message) {
@@ -224,7 +236,7 @@ it('thanks the donor in their own currency', function () {
 });
 
 it('shows admins the original currency next to the USD equivalent', function () {
-    $admin = App\Models\User::factory()->create(['is_admin' => true]);
+    $admin = User::factory()->create(['is_admin' => true]);
     makeCurrencyDonation(['frequency' => 'once', 'status' => 'paid', 'amount' => 46, 'amount_usd' => 50]);
 
     $this->actingAs($admin)
