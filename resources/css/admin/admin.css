@@ -6165,27 +6165,42 @@ body.adm-live-map .rider-panel .rider-section ul:empty { display: none; }
     display: grid;
     align-content: start;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 4px 10px;
+    gap: 6px 12px;
     margin: 0;
-    padding: 10px 12px;
+    padding: 12px 14px;
     border-bottom: 1px solid var(--line);
     list-style: none;
     font-size: var(--fs-12);
-    color: var(--ink-2);
+    line-height: 1.3;
+    color: var(--ink);
 }
 
 .legend-grid li {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
     min-width: 0;
-    white-space: nowrap;
 }
 
-.legend-grid .status-dot { width: 8px; height: 8px; flex: none; }
+/*
+    Every key mark sits centred in the same 20px slot, rings and halos included, so the
+    columns line up and nothing reaches past the card's edge. Width + 2 x margin = 20px.
+*/
+.legend-grid li > i { flex: none; }
 
-.legend-grid .sos-ring,
-.legend-grid .legend-ring { flex: none; }
+.legend-grid .status-dot { width: 12px; height: 12px; margin: 4px; }
+
+/* A still halo in the key: the pulse belongs to a live GoBiker, not to the legend. */
+.legend-grid .status-dot.s-emergency {
+    animation: none;
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, .25);
+}
+
+.legend-grid .sos-ring { width: 10px; height: 10px; margin: 5px; box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--c); }
+
+.legend-grid .legend-ring { width: 16px; height: 16px; margin: 2px; }
+
+.legend-grid .status-dot.is-old { width: 10px; height: 10px; margin: 5px; }
 
 /* Tighter rows in the side column, so more residents and GoBikers fit beside the map. */
 .rider-panel .rider-section summary { padding: 10px 12px; }
