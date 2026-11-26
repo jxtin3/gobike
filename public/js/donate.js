@@ -8,7 +8,7 @@ const DONATE_REGION_CURRENCY = {
 const DONATE_CURRENCY_KEY = 'donate.currency';
 
 function donateApp(config = {}) {
-    const currencies = config.currencies ?? { USD: { name: 'US Dollar', symbol: '$', decimals: 2, presets: [25, 50, 165, 1000], min: 2, max: 10000, platform_fee: 1.88 } };
+    const currencies = config.currencies ?? { USD: { name: 'US Dollar', symbol: '$', decimals: 2, presets: [25, 50, 165, 1000], min: 2, max: 10000, platform_fee: 0.33 } };
 
     return {
         step: 1,

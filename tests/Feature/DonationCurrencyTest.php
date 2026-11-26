@@ -85,7 +85,7 @@ it('stores the donation in the donor currency with USD and PHP equivalents', fun
     $this->postJson(route('donate.checkout'), currencyCheckoutPayload([
         'currency' => 'EUR',
         'amount' => 46,
-        'platform_fee' => 1.75,
+        'platform_fee' => 0.31,
         'payment_method' => 'gcash',
     ]))->assertOk();
 
@@ -93,10 +93,10 @@ it('stores the donation in the donor currency with USD and PHP equivalents', fun
 
     expect($donation->currency)->toBe('EUR')
         ->and((float) $donation->amount)->toBe(46.0)
-        ->and((float) $donation->platform_fee)->toBe(1.75)
+        ->and((float) $donation->platform_fee)->toBe(0.31)
         ->and((float) $donation->amount_usd)->toBe(50.0)
-        ->and((float) $donation->amount_php)->toBe(round(47.75 / 0.92 * 58, 2))
-        ->and($donation->formatted_total)->toBe('€47.75');
+        ->and((float) $donation->amount_php)->toBe(round(46.31 / 0.92 * 58, 2))
+        ->and($donation->formatted_total)->toBe('€46.31');
 });
 
 it('charges PHP donations through GCash without converting them', function () {
@@ -121,6 +121,22 @@ it('rejects a currency we do not offer', function () {
 
 it('only accepts the platform fee shown for the currency', function () {
     $this->postJson(route('donate.checkout'), currencyCheckoutPayload(['currency' => 'EUR', 'platform_fee' => 1.88]))
+        ->assertJsonValidationErrors('platform_fee');
+});
+
+it('sets every currency platform fee to about ₱20', function () {
+    $currencies = config('donation.currencies');
+    $phpPerUsd = $currencies['PHP']['fallback_rate'];
+
+    foreach ($currencies as $code => $currency) {
+        $inPesos = $currency['platform_fee'] / $currency['fallback_rate'] * $phpPerUsd;
+
+        expect(abs($inPesos - 20))->toBeLessThan(1, "{$code} fee is ₱".round($inPesos, 2));
+    }
+});
+
+it('no longer takes the old $1.88 fee in US dollars', function () {
+    $this->postJson(route('donate.checkout'), currencyCheckoutPayload(['platform_fee' => 1.88]))
         ->assertJsonValidationErrors('platform_fee');
 });
 

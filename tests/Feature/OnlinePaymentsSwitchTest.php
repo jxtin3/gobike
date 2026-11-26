@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Http;
 function switchDonationPayload(): array
 {
     return [
-        'currency' => 'USD', 'amount' => 25, 'platform_fee' => 1.88, 'frequency' => 'once', 'payment_method' => 'gcash',
+        'currency' => 'USD', 'amount' => 25, 'platform_fee' => 0.33, 'frequency' => 'once', 'payment_method' => 'gcash',
         'donor_type' => 'individual', 'first_name' => 'Test', 'last_name' => 'Donor', 'email' => 'donor@example.com',
         'address1' => '123 Test St.', 'city' => 'Test City', 'postcode' => '1000', 'state' => 'Test State', 'country' => 'PH',
     ];

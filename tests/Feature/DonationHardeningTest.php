@@ -9,7 +9,7 @@ function validCheckoutPayload(array $overrides = []): array
     return array_merge([
         'currency' => 'USD',
         'amount' => 25,
-        'platform_fee' => 1.88,
+        'platform_fee' => 0.33,
         'frequency' => 'once',
         'payment_method' => 'gcash',
         'donor_type' => 'individual',
