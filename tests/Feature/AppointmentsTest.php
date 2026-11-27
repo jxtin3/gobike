@@ -73,13 +73,84 @@ it('refuses to ask the same GoBiker twice while their answer is awaited', functi
     expect(Appointment::count())->toBe(1);
 });
 
-it('lets a resident ask the same GoBiker again once that request is declined, cancelled or done', function (string $status) {
+it('lets a resident ask the same GoBiker again once that request is cancelled or done', function (string $status) {
     $first = requestVisit($this->resident, ['gobiker_id' => $this->gobiker->id]);
     $first->update(['status' => $status]);
 
     $this->postJson(route('api.resident.appointments.store'), visitPayload(['gobiker_id' => $this->gobiker->id]))
         ->assertCreated();
-})->with(['declined', 'cancelled', 'completed']);
+})->with(['cancelled', 'completed']);
+
+/** The GoBiker declines this visit from their app. */
+function declineVisit(User $gobiker, Appointment $visit): void
+{
+    Sanctum::actingAs($gobiker);
+    test()->postJson(route('api.gobiker.appointments.decline', $visit))->assertOk();
+}
+
+it('records when a GoBiker declines', function () {
+    $visit = requestVisit($this->resident, ['gobiker_id' => $this->gobiker->id]);
+    declineVisit($this->gobiker, $visit);
+
+    expect($visit->fresh()->declined_at)->not->toBeNull();
+});
+
+it('makes a resident wait 24 hours before asking the GoBiker who declined again', function () {
+    $visit = requestVisit($this->resident, ['gobiker_id' => $this->gobiker->id]);
+    declineVisit($this->gobiker, $visit);
+
+    Sanctum::actingAs($this->resident);
+    $this->postJson(route('api.resident.appointments.store'), visitPayload(['gobiker_id' => $this->gobiker->id]))
+        ->assertUnprocessable()
+        ->assertJsonPath('message', 'Maria Santos declined your last request. You can ask them again in 24 hours, or ask another GoBiker.');
+
+    $this->travel(23)->hours();
+    $this->travel(30)->minutes();
+    $this->postJson(route('api.resident.appointments.store'), visitPayload(['gobiker_id' => $this->gobiker->id]))
+        ->assertUnprocessable()
+        ->assertJsonPath('message', fn (string $m) => str_contains($m, 'again in less than an hour'));
+
+    $this->travel(1)->hours();
+    $this->postJson(route('api.resident.appointments.store'), visitPayload(['gobiker_id' => $this->gobiker->id]))
+        ->assertCreated();
+});
+
+it('still lets the resident ask another GoBiker right after a decline', function () {
+    $visit = requestVisit($this->resident, ['gobiker_id' => $this->gobiker->id]);
+    declineVisit($this->gobiker, $visit);
+
+    requestVisit($this->resident, ['gobiker_id' => anotherGobiker('Jose Lim')->id]);
+});
+
+it('does not start a wait when the resident cancels', function () {
+    $visit = requestVisit($this->resident, ['gobiker_id' => $this->gobiker->id]);
+    $this->postJson(route('api.resident.appointments.cancel', $visit))->assertOk();
+
+    requestVisit($this->resident, ['gobiker_id' => $this->gobiker->id]);
+});
+
+it('does not make another resident wait', function () {
+    $visit = requestVisit($this->resident, ['gobiker_id' => $this->gobiker->id]);
+    declineVisit($this->gobiker, $visit);
+
+    $other = User::factory()->create(['role' => 'User', 'status' => 'Active', 'barangay' => 'Poblacion']);
+    requestVisit($other, ['gobiker_id' => $this->gobiker->id]);
+});
+
+it('tells the app when a declined GoBiker can be asked again', function () {
+    $jose = anotherGobiker('Jose Lim');
+    $visit = requestVisit($this->resident, ['gobiker_id' => $this->gobiker->id]);
+    declineVisit($this->gobiker, $visit);
+
+    Sanctum::actingAs($this->resident);
+    $rows = collect($this->getJson(route('api.resident.gobikers'))->assertOk()->json('gobikers'))->keyBy('id');
+    expect($rows[$this->gobiker->id]['ask_again_at'])->not->toBeNull()
+        ->and($rows[$jose->id]['ask_again_at'])->toBeNull();
+
+    $this->travel(25)->hours();
+    $rows = collect($this->getJson(route('api.resident.gobikers'))->assertOk()->json('gobikers'))->keyBy('id');
+    expect($rows[$this->gobiker->id]['ask_again_at'])->toBeNull();
+});
 
 it('frees a slot when an open request is cancelled or answered', function () {
     $people = [$this->gobiker, anotherGobiker('Jose Lim'), anotherGobiker('Rico Dela')];

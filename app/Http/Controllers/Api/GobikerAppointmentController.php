@@ -114,6 +114,7 @@ class GobikerAppointmentController extends Controller
             ->whereIn('status', ['pending', 'accepted'])
             ->update([
                 'status' => 'declined',
+                'declined_at' => now(),
                 'decline_note' => trim((string) ($data['note'] ?? '')) ?: "{$gobiker->name} can't make this visit. You can ask another GoBiker.",
             ]);
 

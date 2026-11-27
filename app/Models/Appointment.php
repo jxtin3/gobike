@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 
 /** A home check-up visit a resident requested; a GoBiker in their barangay takes it. */
 class Appointment extends Model
@@ -30,6 +32,13 @@ class Appointment extends Model
      */
     public const MAX_OPEN = 3;
 
+    /**
+     * After a GoBiker declines, the resident waits this long before asking that same GoBiker
+     * again, so one person can't keep sending requests to someone who said no. Other GoBikers
+     * stay free to ask; cancelling starts no wait.
+     */
+    public const ASK_AGAIN_HOURS = 24;
+
     public const WINDOWS = [
         'morning' => 'Morning (8 AM – 12 PM)',
         'afternoon' => 'Afternoon (1 PM – 5 PM)',
@@ -37,7 +46,7 @@ class Appointment extends Model
 
     protected $fillable = [
         'resident_id', 'barangay', 'address', 'preferred_date', 'preferred_window', 'reason',
-        'status', 'gobiker_id', 'patient_id', 'decline_note', 'accepted_at', 'completed_at',
+        'status', 'gobiker_id', 'patient_id', 'decline_note', 'accepted_at', 'declined_at', 'completed_at',
     ];
 
     protected function casts(): array
@@ -45,6 +54,7 @@ class Appointment extends Model
         return [
             'preferred_date' => 'date',
             'accepted_at' => 'datetime',
+            'declined_at' => 'datetime',
             'completed_at' => 'datetime',
             'resident_hidden_at' => 'datetime',
         ];
@@ -73,6 +83,24 @@ class Appointment extends Model
     public function isOpen(): bool
     {
         return in_array($this->status, self::OPEN, true);
+    }
+
+    /**
+     * GoBikers who declined this resident within the last ASK_AGAIN_HOURS, keyed by GoBiker id,
+     * with the time the resident may ask them again.
+     *
+     * @return Collection<int, Carbon>
+     */
+    public static function askAgainTimes(int $residentId): Collection
+    {
+        return self::query()
+            ->where('resident_id', $residentId)
+            ->where('status', 'declined')
+            ->whereNotNull('gobiker_id')
+            ->where('declined_at', '>', now()->subHours(self::ASK_AGAIN_HOURS))
+            ->get(['gobiker_id', 'declined_at'])
+            ->groupBy('gobiker_id')
+            ->map(fn (Collection $rows) => $rows->max('declined_at')->copy()->addHours(self::ASK_AGAIN_HOURS));
     }
 
     public function getStatusLabelAttribute(): string

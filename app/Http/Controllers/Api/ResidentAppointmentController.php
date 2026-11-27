@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Appointment;
 use App\Models\User;
 use App\Services\Push\PushNotifier;
+use App\Support\Media;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -42,6 +43,7 @@ class ResidentAppointmentController extends Controller
             ->withCount(['gobikerAppointments as visits_done' => fn ($q) => $q->where('status', 'completed')])
             ->orderBy('name')
             ->get(['id', 'name', 'barangay', 'photo_path']);
+        $askAgain = Appointment::askAgainTimes($request->user()->id);
 
         return response()->json([
             'barangay' => $barangay,
@@ -49,8 +51,10 @@ class ResidentAppointmentController extends Controller
                 'id' => $g->id,
                 'name' => $g->name,
                 'barangay' => $g->barangay,
-                'photo_url' => $g->photo_path ? \App\Support\Media::url($g->photo_path) : null,
+                'photo_url' => $g->photo_path ? Media::url($g->photo_path) : null,
                 'visits_done' => $g->visits_done,
+                // Set while this GoBiker's decline is recent: the app greys them out until then.
+                'ask_again_at' => $askAgain->get($g->id)?->toIso8601String(),
             ])->values(),
         ]);
     }
@@ -87,6 +91,23 @@ class ResidentAppointmentController extends Controller
 
             return response()->json([
                 'message' => "You already asked {$name}. Wait for their answer, or cancel that request first.",
+            ], 422);
+        }
+
+        // A GoBiker who said no can't be asked again straight away.
+        $askAgainAt = $chosen !== null ? Appointment::askAgainTimes($resident->id)->get((int) $chosen) : null;
+        if ($askAgainAt !== null) {
+            $name = User::find($chosen)?->name ?? 'That GoBiker';
+            $minutes = now()->diffInMinutes($askAgainAt, true);
+            $hours = (int) ceil($minutes / 60);
+            $wait = match (true) {
+                $minutes < 60 => 'less than an hour',
+                $hours === 1 => '1 hour',
+                default => "{$hours} hours",
+            };
+
+            return response()->json([
+                'message' => "{$name} declined your last request. You can ask them again in {$wait}, or ask another GoBiker.",
             ], 422);
         }
 
