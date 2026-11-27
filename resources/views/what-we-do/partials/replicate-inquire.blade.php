@@ -144,7 +144,7 @@
                                 <input type="radio" name="payment" value="online" x-model="payment" @checked(old('payment') === 'online')>
                                 <span>
                                     <b>Send inquiry and pay now: <span x-text="peso(total)">₱{{ number_format($classFee, 2) }}</span></b>
-                                    <small>Pay the full training fee securely through PayMongo with GCash or online banking.</small>
+                                    <small>Pay the full training fee securely through {{ config('payments.paymongo') ? 'PayMongo with GCash or online banking' : 'PayPal' }}.</small>
                                 </span>
                             </label>
                             @endif
@@ -201,7 +201,7 @@
                     <p class="gbp-label">Payment &amp; refunds</p>
                     <ul class="gbp-bullets is-small">
                         @if (config('payments.online'))
-                            <li>Pay online now with GCash or online banking, or by check to PRI at least 3 days before the training.</li>
+                            <li>Pay online now with {{ config('payments.paymongo') ? 'GCash or online banking' : 'PayPal' }}, or by check to PRI at least 3 days before the training.</li>
                         @else
                             <li>Pay by check to PRI at least 3 days before the training.</li>
                         @endif

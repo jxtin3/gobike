@@ -7,7 +7,8 @@ use Illuminate\Support\Str;
 
 /**
  * An inquiry from an organization that wants to replicate the Go Bike Project,
- * optionally with the Go Biker's Training fee paid early online through PayMongo.
+ * optionally with the Go Biker's Training fee paid early online through PayMongo,
+ * or through PayPal while PayMongo is switched off (config/payments.php).
  */
 class ReplicationRequest extends Model
 {
@@ -64,6 +65,8 @@ class ReplicationRequest extends Model
         'payment_status',
         'paymongo_session_id',
         'paymongo_payment_id',
+        'paypal_order_id',
+        'paypal_capture_id',
         'paid_at',
         'status',
     ];
@@ -144,12 +147,12 @@ class ReplicationRequest extends Model
             && ! in_array($this->status, ['completed', 'cancelled'], true);
     }
 
-    public function markPaid(?string $gatewayPaymentId = null): void
+    public function markPaid(?string $gatewayPaymentId = null, string $gateway = 'paymongo'): void
     {
         $this->update(array_filter([
             'payment_status' => 'paid',
             'paid_at' => $this->paid_at ?? now(),
-            'paymongo_payment_id' => $gatewayPaymentId,
+            $gateway === 'paypal' ? 'paypal_capture_id' : 'paymongo_payment_id' => $gatewayPaymentId,
         ], fn ($value) => $value !== null));
     }
 }

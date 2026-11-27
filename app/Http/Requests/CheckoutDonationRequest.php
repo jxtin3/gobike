@@ -52,7 +52,7 @@ class CheckoutDonationRequest extends FormRequest
             'frequency' => ['required', Rule::in(['once', 'monthly'])],
             'payment_method' => [
                 'required',
-                Rule::in(['gcash', 'paypal', 'bank']),
+                Rule::in(config('payments.paymongo') ? ['gcash', 'paypal', 'bank'] : ['paypal']),
                 function (string $attribute, mixed $value, \Closure $fail) {
                     if ($this->input('frequency') === 'monthly' && $value !== 'paypal') {
                         $fail('Monthly donations are only available via PayPal.');

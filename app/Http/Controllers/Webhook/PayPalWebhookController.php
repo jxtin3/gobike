@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Webhook;
 
 use App\Http\Controllers\Controller;
 use App\Models\Donation;
+use App\Models\ReplicationRequest;
 use App\Services\PayPalDonationService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -29,6 +30,7 @@ class PayPalWebhookController extends Controller
         match ($payload['event_type'] ?? '') {
             // One-time donations
             'PAYMENT.CAPTURE.COMPLETED' => $this->markPaidFromCapture($resource),
+            // Also the chapter training fee, for someone who approves in PayPal but never comes back.
             'CHECKOUT.ORDER.APPROVED' => $this->captureAndMarkPaid($resource, $paypal),
 
             // Monthly donations (subscriptions); resource.id is the subscription id
@@ -128,6 +130,12 @@ class PayPalWebhookController extends Controller
             $donation = Donation::where('paypal_order_id', $orderId)->first();
         }
 
+        if (! $donation && $orderId) {
+            $this->captureTrainingFee($orderId, $paypal);
+
+            return;
+        }
+
         if (! $donation || $donation->status === 'paid' || ! $orderId) {
             return;
         }
@@ -140,6 +148,33 @@ class PayPalWebhookController extends Controller
 
         if ($paypal->isCaptureSuccessful($capture)) {
             $donation->update(['status' => 'paid']);
+        }
+    }
+
+    /**
+     * A chapter inquiry's training fee paid through PayPal (while PayMongo is switched off).
+     */
+    private function captureTrainingFee(string $orderId, PayPalDonationService $paypal): void
+    {
+        $inquiry = ReplicationRequest::where('paypal_order_id', $orderId)->first();
+
+        if (! $inquiry || $inquiry->isPaid() || $inquiry->payment_status === 'refunded') {
+            return;
+        }
+
+        try {
+            $capture = $paypal->captureOrder($orderId);
+        } catch (\Throwable $e) {
+            Log::error('Training fee PayPal capture from webhook failed', [
+                'replication_request_id' => $inquiry->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return;
+        }
+
+        if ($paypal->isCaptureSuccessful($capture)) {
+            $inquiry->markPaid(PayPalDonationService::captureIdFrom($capture), 'paypal');
         }
     }
 }

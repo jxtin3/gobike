@@ -342,6 +342,11 @@
     grid-template-columns: 1fr 1fr 1fr;
 }
 
+/* Only PayPal is offered (PayMongo switched off): one full-width button. */
+.donate-freq--1col {
+    grid-template-columns: 1fr;
+}
+
 .donate-freq--3col .donate-freq__btn {
     font-size: 0.78rem;
     padding: 0.65rem 0.25rem;

@@ -4,17 +4,17 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\CheckoutDonationRequest;
 use App\Models\Donation;
-use App\Services\PayMongoDonationService;
 use App\Services\ExchangeRateService;
+use App\Services\PayMongoDonationService;
 use App\Services\PayPalDonationService;
 use App\Support\Currency;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\View\View;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
+use Illuminate\View\View;
 use Throwable;
-
 
 class DonationController extends Controller
 {
@@ -80,19 +80,19 @@ class DonationController extends Controller
                 $donation->update(['paymongo_session_id' => $result['session_id']]);
                 $redirectUrl = $result['checkout_url'];
             }
-            } catch (\Throwable $e) {
-                Log::error('Donation checkout failed', [
-                   'donation_id' => $donation->id,
-                   'method' => $donation->payment_method,
-                   'error' => $e->getMessage(),
-                ]);
+        } catch (Throwable $e) {
+            Log::error('Donation checkout failed', [
+                'donation_id' => $donation->id,
+                'method' => $donation->payment_method,
+                'error' => $e->getMessage(),
+            ]);
 
-                $donation->update(['status' => 'failed']);
+            $donation->update(['status' => 'failed']);
 
-                return response()->json([
-                   'message' => 'We could not start the payment right now. Please try again in a moment.',
-                ], 422);
-            }
+            return response()->json([
+                'message' => 'We could not start the payment right now. Please try again in a moment.',
+            ], 422);
+        }
 
         return response()->json([
             'redirect_url' => $redirectUrl,
@@ -105,32 +105,32 @@ class DonationController extends Controller
         PayPalDonationService $paypal,
         PayMongoDonationService $paymongo,
     ): View|RedirectResponse {
-    if ($donation->status !== 'paid') {
-        if ($donation->payment_method === 'paypal' && $donation->frequency === 'monthly' && $request->filled('subscription_id') && $donation->paypal_subscription_id) {
-            try {
-                $subscription = $paypal->getSubscriptionDetails($donation->paypal_subscription_id);
+        if ($donation->status !== 'paid') {
+            if ($donation->payment_method === 'paypal' && $donation->frequency === 'monthly' && $request->filled('subscription_id') && $donation->paypal_subscription_id) {
+                try {
+                    $subscription = $paypal->getSubscriptionDetails($donation->paypal_subscription_id);
 
-                if ($paypal->isSubscriptionActive($subscription)) {
-                    $donation->update(['status' => 'paid', 'subscription_status' => 'active']);
+                    if ($paypal->isSubscriptionActive($subscription)) {
+                        $donation->update(['status' => 'paid', 'subscription_status' => 'active']);
+                    }
+                } catch (Throwable) {
+                    return redirect()
+                        ->route('donate.cancel', $donation)
+                        ->with('error', 'Subscription could not be confirmed. Please try again.');
                 }
-            } catch (\Throwable) {
-                return redirect()
-                    ->route('donate.cancel', $donation)
-                    ->with('error', 'Subscription could not be confirmed. Please try again.');
-            }
-        } elseif ($donation->payment_method === 'paypal' && $request->filled('token') && $donation->paypal_order_id) {
-            try {
-            $capture = $paypal->captureOrder($donation->paypal_order_id);
+            } elseif ($donation->payment_method === 'paypal' && $request->filled('token') && $donation->paypal_order_id) {
+                try {
+                    $capture = $paypal->captureOrder($donation->paypal_order_id);
 
-            if ($paypal->isCaptureSuccessful($capture)) {
-                    $donation->update(['status' => 'paid']);
+                    if ($paypal->isCaptureSuccessful($capture)) {
+                        $donation->update(['status' => 'paid']);
+                    }
+                } catch (Throwable) {
+                    return redirect()
+                        ->route('donate.cancel', $donation)
+                        ->with('error', 'Payment could not be confirmed. Please try again.');
                 }
-            } catch (\Throwable) {
-                return redirect()
-                    ->route('donate.cancel', $donation)
-                    ->with('error', 'Payment could not be confirmed. Please try again.');
-            }
-        } elseif ($donation->paymongo_session_id) {
+            } elseif ($donation->paymongo_session_id) {
                 $session = $paymongo->retrieveCheckoutSession($donation->paymongo_session_id);
 
                 if ($paymongo->isSessionPaid($session)) {
@@ -173,7 +173,7 @@ class DonationController extends Controller
             }
 
             $next = $subscription['billing_info']['next_billing_time'] ?? null;
-            $nextChargeAt = $next && $status === 'active' ? \Illuminate\Support\Carbon::parse($next) : null;
+            $nextChargeAt = $next && $status === 'active' ? Carbon::parse($next) : null;
         } catch (Throwable $e) {
             Log::warning('Could not refresh PayPal subscription', ['donation_id' => $donation->id, 'error' => $e->getMessage()]);
         }
@@ -228,7 +228,8 @@ class DonationController extends Controller
         Donation $donation,
         PayMongoDonationService $paymongo,
     ): RedirectResponse {
-        if (! config('payments.online')) {
+        // PayMongo is switched off (config/payments.php): nothing to retry with.
+        if (! config('payments.online') || ! config('payments.paymongo')) {
             return redirect()->route('donate');
         }
 
@@ -258,6 +259,5 @@ class DonationController extends Controller
                 ->with('error', 'Could not create a new payment session. Please try again in a moment.');
         }
 
-            
     }
 }

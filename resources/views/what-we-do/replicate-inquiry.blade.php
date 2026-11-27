@@ -1,6 +1,6 @@
 {{--
     Status page for one chapter replication inquiry (/replicate-go-bike/inquiry/{uuid}).
-    Shows the hand-off to PayMongo, the payment confirmation, or the option to pay again.
+    Shows the hand-off to PayMongo or PayPal, the payment confirmation, or the option to pay again.
 --}}
 @php
     $amount = '₱'.number_format((float) $inquiry->amount_php, 2);
@@ -36,7 +36,7 @@
                 <p class="gbi-kicker">Inquiry saved &middot; {{ $inquiry->reference }}</p>
                 <h1 class="gbi-title">Taking you to secure payment&hellip;</h1>
                 <p class="gbi-text">
-                    You'll pay {{ $amount }} through PayMongo with GCash or online banking.
+                    You'll pay {{ $amount }} through {{ config('payments.paymongo') ? 'PayMongo with GCash or online banking' : 'PayPal' }}.
                     If the payment page doesn't open, use the button below.
                 </p>
                 <div class="gbi-actions">
@@ -48,7 +48,7 @@
                 <h1 class="gbi-title">Thank you, {{ $inquiry->organization }}!</h1>
                 <p class="gbi-text">
                     We received your payment of {{ $amount }} for the Go Biker's Training. Our team will contact you
-                    within 48 hours to confirm your training schedule. PayMongo has emailed you a payment receipt,
+                    within 48 hours to confirm your training schedule. {{ $inquiry->paypal_capture_id ? 'PayPal' : 'PayMongo' }} has emailed you a payment receipt,
                     and PRI will issue an Official Receipt.
                 </p>
                 <div class="gbi-actions">

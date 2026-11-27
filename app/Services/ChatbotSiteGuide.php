@@ -27,7 +27,8 @@ class ChatbotSiteGuide
         $minAge = VolunteerApplication::MIN_AGE;
 
         // Online payments can be switched off (config/payments.php); then GoBot must not send people to pay online.
-        if (config('payments.online')) {
+        // PayMongo (GCash / online banking) can be switched off on its own; then only PayPal is offered.
+        if (config('payments.online') && config('payments.paymongo')) {
             $donatePage = 'give once or every month.';
             $donateSteps = <<<'STEPS'
 1. Open Donate with the Donate button at the top.
@@ -36,6 +37,15 @@ class ChatbotSiteGuide
 4. Finish on the payment page; a thank-you page confirms the donation. For questions about a donation, use Reach Us.
 STEPS;
             $chapterPayment = 'The training fee can be paid early online (GCash or online banking) or at the training.';
+        } elseif (config('payments.online')) {
+            $donatePage = 'give once or every month.';
+            $donateSteps = <<<'STEPS'
+1. Open Donate with the Donate button at the top.
+2. Choose once or monthly and an amount (USD presets or your own); choose Individual or Organization.
+3. Fill in Your Details, then Payment Details: PayPal.
+4. Finish on the payment page; a thank-you page confirms the donation. For questions about a donation, use Reach Us.
+STEPS;
+            $chapterPayment = 'The training fee can be paid early online through PayPal, or at the training.';
         } else {
             $donatePage = 'online donations are opening soon; the page says how to give in the meantime.';
             $donateSteps = 'Online donations are not open yet: the Donate page says they are opening soon. To give now, or to be told when online donations open, contact Go Bike through Reach Us (email or phone). Do not describe an online donation form or payment steps.';

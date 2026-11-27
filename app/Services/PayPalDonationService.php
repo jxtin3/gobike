@@ -1,12 +1,14 @@
 <?php
 
 namespace App\Services;
+
+use App\Models\Donation;
 use App\Models\PaypalDonationPlan;
+use App\Models\ReplicationRequest;
 use App\Support\Currency;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use App\Models\Donation;
 use RuntimeException;
 use Srmklive\PayPal\Services\PayPal as PayPalClient;
 
@@ -34,39 +36,72 @@ class PayPalDonationService
      */
     public function createOrder(Donation $donation): array
     {
+        return $this->placeOrder(
+            [
+                'reference_id' => $donation->uuid,
+                'description' => 'Go Bike Donation',
+                'amount' => [
+                    'currency_code' => $donation->currency,
+                    'value' => Currency::toDecimalString($donation->total, $donation->currency),
+                ],
+            ],
+            route('donate.success', $donation),
+            route('donate.cancel', $donation),
+        );
+    }
+
+    /**
+     * One-time PayPal order, in pesos, for a chapter inquiry's Go Biker's Training fee
+     * (used while PayMongo is switched off, config/payments.php).
+     *
+     * @return array{approval_url: string, order_id: string}
+     */
+    public function createTrainingOrder(ReplicationRequest $inquiry): array
+    {
+        return $this->placeOrder(
+            [
+                'reference_id' => $inquiry->uuid,
+                'description' => "Go Biker's Training for {$inquiry->organization} ({$inquiry->reference})",
+                'amount' => [
+                    'currency_code' => 'PHP',
+                    'value' => Currency::toDecimalString((float) $inquiry->amount_php, 'PHP'),
+                ],
+            ],
+            route('replicate.inquiry.show', ['replicationRequest' => $inquiry, 'payment' => 'success']),
+            route('replicate.inquiry.show', ['replicationRequest' => $inquiry, 'payment' => 'cancelled']),
+        );
+    }
+
+    /**
+     * @param  array<string, mixed>  $purchaseUnit
+     * @return array{approval_url: string, order_id: string}
+     */
+    private function placeOrder(array $purchaseUnit, string $returnUrl, string $cancelUrl): array
+    {
         $this->ensureConfigured();
 
         $response = $this->client()->createOrder([
             'intent' => 'CAPTURE',
-            'purchase_units' => [
-                [
-                    'reference_id' => $donation->uuid,
-                    'description' => 'Go Bike Donation',
-                    'amount' => [
-                        'currency_code' => $donation->currency,
-                        'value' => Currency::toDecimalString($donation->total, $donation->currency),
-                    ],
-                ],
-            ],
+            'purchase_units' => [$purchaseUnit],
             'application_context' => [
-                'return_url' => route('donate.success', $donation),
-                'cancel_url' => route('donate.cancel', $donation),
+                'return_url' => $returnUrl,
+                'cancel_url' => $cancelUrl,
                 'brand_name' => 'Go Bike',
                 'user_action' => 'PAY_NOW',
             ],
         ]);
 
         if (($response['status'] ?? '') !== 'CREATED') {
-    Log::error('PayPal order creation failed', ['response' => $response]);
+            Log::error('PayPal order creation failed', ['response' => $response]);
 
-    $reason = $response['message']
-        ?? $response['error_description']
-        ?? ($response['details'][0]['description'] ?? null)
-        ?? ($response['name'] ?? null)
-        ?? 'Unexpected response from PayPal.';
+            $reason = $response['message']
+                ?? $response['error_description']
+                ?? ($response['details'][0]['description'] ?? null)
+                ?? ($response['name'] ?? null)
+                ?? 'Unexpected response from PayPal.';
 
-    throw new RuntimeException("PayPal order creation failed: {$reason}");
-}
+            throw new RuntimeException("PayPal order creation failed: {$reason}");
+        }
 
         $approvalUrl = collect($response['links'] ?? [])
             ->firstWhere('rel', 'approve')['href'] ?? null;
@@ -280,8 +315,6 @@ class PayPalDonationService
         return $response->json('access_token');
     }
 
-
-
     /**
      * @return array<string, mixed>
      */
@@ -366,8 +399,6 @@ class PayPalDonationService
         };
     }
 
-
-    
     /**
      * @return array<string, mixed>
      */
@@ -381,8 +412,12 @@ class PayPalDonationService
         return ($response['status'] ?? '') === 'COMPLETED';
     }
 
+    /** The capture id from a captureOrder() response, if there is one. */
+    public static function captureIdFrom(array $response): ?string
+    {
+        return $response['purchase_units'][0]['payments']['captures'][0]['id'] ?? null;
+    }
 
-    
     public function verifyWebhookLocally(array $headers, string $rawBody): bool
     {
         $webhookId = (string) config('paypal.webhook_id');
@@ -418,7 +453,5 @@ class PayPalDonationService
         }
 
         return $this->client()->verifyWebHookLocally($headers, $webhookId, $rawBody);
-    }  
-
-
+    }
 }

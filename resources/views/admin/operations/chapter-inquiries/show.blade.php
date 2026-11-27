@@ -62,6 +62,12 @@
                 @endif
                 <div><dt>PayMongo payment ID</dt><dd>{{ $inquiry->paymongo_payment_id ?: '—' }}</dd></div>
                 <div><dt>PayMongo checkout ID</dt><dd>{{ $inquiry->paymongo_session_id ?: '—' }}</dd></div>
+                @if ($inquiry->paypal_order_id)
+                    <div><dt>PayPal order ID</dt><dd>{{ $inquiry->paypal_order_id }}</dd></div>
+                @endif
+                @if ($inquiry->paypal_capture_id)
+                    <div><dt>PayPal capture ID</dt><dd>{{ $inquiry->paypal_capture_id }}</dd></div>
+                @endif
             </dl>
         </section>
     </div>
@@ -104,13 +110,13 @@
                                 data-confirm-ok="Mark paid" data-confirm-tone="ok"
                             @elseif ($value === 'refunded')
                                 data-confirm-title="Mark this payment as refunded?"
-                                data-confirm-text="Process the refund in the PayMongo dashboard first. This only records it here."
+                                data-confirm-text="Process the refund in the PayPal or PayMongo dashboard first. This only records it here."
                                 data-confirm-ok="Mark refunded"
                             @endif
                         >{{ $label }}</option>
                     @endforeach
                 </select>
-                <p class="hint" id="payment-hint">Online payments are marked paid automatically. Process refunds in the PayMongo dashboard, then set this to Refunded.</p>
+                <p class="hint" id="payment-hint">Online payments are marked paid automatically. Process refunds in the PayPal or PayMongo dashboard, then set this to Refunded.</p>
             </form>
         </section>
 

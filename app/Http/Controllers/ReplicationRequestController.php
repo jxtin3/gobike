@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreReplicationRequest;
 use App\Models\ReplicationRequest;
 use App\Services\PayMongoDonationService;
+use App\Services\PayPalDonationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
@@ -14,11 +15,12 @@ use Throwable;
 
 /**
  * Chapter replication inquiries from the Replicate Go Bike page, with the option
- * to pay the Go Biker's Training fee early online (PayMongo: GCash or online banking).
+ * to pay the Go Biker's Training fee early online: PayMongo (GCash or online banking) while
+ * PayMongo is switched on, otherwise PayPal in pesos (config/payments.php).
  */
 class ReplicationRequestController extends Controller
 {
-    public function store(StoreReplicationRequest $request, PayMongoDonationService $paymongo): RedirectResponse
+    public function store(StoreReplicationRequest $request, PayMongoDonationService $paymongo, PayPalDonationService $paypal): RedirectResponse
     {
         $data = $request->validated();
 
@@ -35,18 +37,31 @@ class ReplicationRequestController extends Controller
             );
         }
 
-        return $this->startCheckout($inquiry, $paymongo, fromForm: true);
+        return $this->startCheckout($inquiry, $paymongo, $paypal, fromForm: true);
     }
 
     /**
-     * Status page for one inquiry: hand-off to PayMongo, payment confirmation, or "pay again".
+     * Status page for one inquiry: hand-off to PayMongo or PayPal, payment confirmation, or "pay again".
      */
-    public function show(Request $request, ReplicationRequest $replicationRequest, PayMongoDonationService $paymongo): View
-    {
+    public function show(
+        Request $request,
+        ReplicationRequest $replicationRequest,
+        PayMongoDonationService $paymongo,
+        PayPalDonationService $paypal,
+    ): View {
         $checkoutUrl = $request->session()->get('checkout_url');
+        $token = $request->query('token');
 
-        // Coming back from PayMongo: confirm the payment directly in case the webhook hasn't arrived yet.
-        if (! $checkoutUrl && $replicationRequest->payment_status === 'pending' && $replicationRequest->paymongo_session_id) {
+        if (! $checkoutUrl
+            && $replicationRequest->payment_status === 'pending'
+            && $replicationRequest->paypal_order_id
+            && is_string($token)
+            && hash_equals($replicationRequest->paypal_order_id, $token)) {
+            // Coming back from PayPal: capture the approved order. If it fails, the inquiry stays
+            // pending so "pay again" still shows.
+            $this->capturePayPal($replicationRequest, $paypal);
+        } elseif (! $checkoutUrl && $replicationRequest->payment_status === 'pending' && $replicationRequest->paymongo_session_id) {
+            // Coming back from PayMongo: confirm the payment directly in case the webhook hasn't arrived yet.
             $session = $paymongo->retrieveCheckoutSession($replicationRequest->paymongo_session_id);
 
             if ($paymongo->isSessionPaid($session)) {
@@ -64,22 +79,37 @@ class ReplicationRequestController extends Controller
     /**
      * Start (or restart) the online payment for an inquiry.
      */
-    public function pay(ReplicationRequest $replicationRequest, PayMongoDonationService $paymongo): RedirectResponse
+    public function pay(ReplicationRequest $replicationRequest, PayMongoDonationService $paymongo, PayPalDonationService $paypal): RedirectResponse
     {
         if (! config('payments.online') || ! $replicationRequest->canPayOnline()) {
             return redirect()->route('replicate.inquiry.show', $replicationRequest);
         }
 
-        return $this->startCheckout($replicationRequest, $paymongo, fromForm: false);
+        return $this->startCheckout($replicationRequest, $paymongo, $paypal, fromForm: false);
     }
 
-    private function startCheckout(ReplicationRequest $inquiry, PayMongoDonationService $paymongo, bool $fromForm): RedirectResponse
-    {
+    private function startCheckout(
+        ReplicationRequest $inquiry,
+        PayMongoDonationService $paymongo,
+        PayPalDonationService $paypal,
+        bool $fromForm,
+    ): RedirectResponse {
+        $usePayMongo = (bool) config('payments.paymongo');
+
         try {
-            $result = $paymongo->createTrainingCheckoutSession($inquiry);
+            if ($usePayMongo) {
+                $result = $paymongo->createTrainingCheckoutSession($inquiry);
+                $updates = ['paymongo_session_id' => $result['session_id']];
+                $checkoutUrl = $result['checkout_url'];
+            } else {
+                $result = $paypal->createTrainingOrder($inquiry);
+                $updates = ['paypal_order_id' => $result['order_id']];
+                $checkoutUrl = $result['approval_url'];
+            }
         } catch (Throwable $e) {
             Log::error('Training payment checkout failed', [
                 'replication_request_id' => $inquiry->id,
+                'gateway' => $usePayMongo ? 'paymongo' : 'paypal',
                 'error' => $e->getMessage(),
             ]);
 
@@ -89,15 +119,38 @@ class ReplicationRequestController extends Controller
             );
         }
 
-        $inquiry->update([
-            'paymongo_session_id' => $result['session_id'],
-            'payment_status' => 'pending',
-        ]);
+        $inquiry->update([...$updates, 'payment_status' => 'pending']);
 
         // Our Content-Security-Policy only lets forms submit to this site, and browsers apply that to
-        // the redirect after a form post too, so a submitted form hands off to PayMongo from our own page.
+        // the redirect after a form post too, so a submitted form hands off to the gateway from our own page.
         return $fromForm
-            ? redirect()->route('replicate.inquiry.show', $inquiry)->with('checkout_url', $result['checkout_url'])
-            : redirect()->away($result['checkout_url']);
+            ? redirect()->route('replicate.inquiry.show', $inquiry)->with('checkout_url', $checkoutUrl)
+            : redirect()->away($checkoutUrl);
+    }
+
+    private function capturePayPal(ReplicationRequest $inquiry, PayPalDonationService $paypal): void
+    {
+        try {
+            $capture = $paypal->captureOrder($inquiry->paypal_order_id);
+        } catch (Throwable $e) {
+            Log::error('Training fee PayPal capture failed', [
+                'replication_request_id' => $inquiry->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return;
+        }
+
+        if ($paypal->isCaptureSuccessful($capture)) {
+            $inquiry->markPaid(PayPalDonationService::captureIdFrom($capture), 'paypal');
+
+            return;
+        }
+
+        Log::error('Training fee PayPal capture was not completed', [
+            'replication_request_id' => $inquiry->id,
+            'status' => $capture['status'] ?? null,
+            'response' => $capture,
+        ]);
     }
 }

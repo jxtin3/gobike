@@ -15,6 +15,7 @@
         paidDonation: @json($paidDonation ?? null),
         cancelledDonation: @json($cancelledDonation ?? null),
         cancelMessage: @json(session('error')),
+        paymongo: @js((bool) config('payments.paymongo')),
     })"
     x-init="init()"
 >
@@ -87,8 +88,8 @@
                 </div>
             @elseif (! isset($paidDonation))
 
-                {{-- PayMongo session-expired retry banner --}}
-                @if(isset($cancelledDonation) && !empty($cancelledDonation->paymongo_session_id))
+                {{-- PayMongo session-expired retry banner (only while PayMongo is switched on) --}}
+                @if(config('payments.paymongo') && isset($cancelledDonation) && !empty($cancelledDonation->paymongo_session_id))
                     <div class="donate-expired-banner" role="alert">
                         <div class="donate-expired-banner__icon">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path stroke-linecap="round" d="M12 8v4m0 4h.01"/></svg>
@@ -346,8 +347,9 @@
                         <span>Secure checkout</span>
                     </div>
 
-                    {{-- Payment method selector --}}
-                    <div class="donate-freq donate-freq--3col">
+                    {{-- Payment method selector (GCash / Online Banking only while PayMongo is on, config/payments.php) --}}
+                    <div class="donate-freq {{ config('payments.paymongo') ? 'donate-freq--3col' : 'donate-freq--1col' }}">
+                        @if (config('payments.paymongo'))
                         <button
                             id="pay-gcash"
                             type="button"
@@ -356,6 +358,7 @@
                             :disabled="freq === 'monthly'"
                             @click="paymentMethod = 'gcash'"
                         >GCash</button>
+                        @endif
                         <button
                             id="pay-paypal"
                             type="button"
@@ -363,6 +366,7 @@
                             :class="{ 'is-active': paymentMethod === 'paypal' }"
                             @click="paymentMethod = 'paypal'"
                         >PayPal</button>
+                        @if (config('payments.paymongo'))
                         <button
                             id="pay-bank"
                             type="button"
@@ -371,8 +375,10 @@
                             :disabled="freq === 'monthly'"
                             @click="paymentMethod = 'bank'"
                         >Online Banking</button>
+                        @endif
                     </div>
 
+                    @if (config('payments.paymongo'))
                     <p class="donate-freq__note" x-show="freq === 'monthly'" x-cloak>
                         You selected Monthly, so PayPal is used to process recurring donations.
                     </p>
@@ -404,6 +410,7 @@
                             </div>
                         </div>
                     </div>
+                    @endif
 
                     {{-- PayPal panel --}}
                     <div x-show="paymentMethod === 'paypal'" x-collapse class="donate-form">
@@ -430,6 +437,7 @@
                     </div>
 
                     {{-- Bank / ATM panel --}}
+                    @if (config('payments.paymongo'))
                     <div x-show="paymentMethod === 'bank'" x-collapse class="donate-form">
                         <div class="donate-pay-panel donate-pay-panel--bank">
                             <p class="donate-pay-panel__title">Pay with Online Banking</p>
@@ -456,6 +464,7 @@
                             </div>
                         </div>
                     </div>
+                    @endif
 
                     {{-- Platform cost cover --}}
                     <div class="donate-form">

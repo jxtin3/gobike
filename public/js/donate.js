@@ -21,7 +21,9 @@ function donateApp(config = {}) {
         customAmount: '',
         donorType: 'individual',
         coverFee: 'yes',
-        paymentMethod: 'gcash',
+        // GCash / Online Banking only while PayMongo is switched on (config/payments.php).
+        paymongo: !!config.paymongo,
+        paymentMethod: config.paymongo ? 'gcash' : 'paypal',
         checkoutUrl: config.checkoutUrl ?? '/donate/checkout',
         isSubmitting: false,
         submitError: '',
@@ -42,6 +44,10 @@ function donateApp(config = {}) {
             }
         },
 
+        offersMethod(method) {
+            return method === 'paypal' || (this.paymongo && (method === 'gcash' || method === 'bank'));
+        },
+
         applyPaidDonation(donation) {
             this.applyAmounts(donation);
             this.step = 4;
@@ -49,7 +55,8 @@ function donateApp(config = {}) {
 
         applyCancelledDonation(donation) {
             this.applyAmounts(donation);
-            this.paymentMethod = donation.payment_method;
+            // Never restore a method this page doesn't offer.
+            this.paymentMethod = this.offersMethod(donation.payment_method) ? donation.payment_method : 'paypal';
             this.freq = donation.frequency;
             this.donorType = donation.donor_type;
             this.form.orgName = donation.org_name ?? '';
